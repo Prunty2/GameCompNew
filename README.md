@@ -1,8 +1,29 @@
-# New Game
+# FSHING
 
-A theme-neutral HTML5 game starter based on the architecture used in the Crazy Games project. It uses strict TypeScript, Vite, Canvas 2D, an HTML/CSS overlay, deterministic fixed-step simulation, Vitest, Playwright, and a safe CrazyGames SDK adapter.
+FSHING is a single-player, side-on 2D fishing delivery game for desktop and mobile browsers. Pilot a weathered boat along one horizontally scrolling lake between Brindle Harbor and Gloam Ferry, drop a hook through a playable underwater cutaway, and deliver the requested catch before it spoils. Fog, rocks, hull damage, and night visibility make speed a risk.
 
-Start with `npm install`, then run `npm run dev`.
+The MVP vertical slice includes:
 
-The current interaction is deliberately generic: move the cyan marker with arrow keys or WASD and collect the gold marker. Replace this prototype after completing `Docs/Game-Brief.md`.
+- Deterministic fixed-step horizontal boat, fishing, contract, freshness, hazard, weather, and day/night simulation
+- One connected lake, two harbors, three fish, three fishing grounds, repeatable contracts, upgrades, repair, rescue, and permit progression
+- Keyboard, pointer, and touch controls plus pause-on-focus-loss
+- Mute, volume, high-contrast, and reduced-motion settings
+- Versioned validated persistence with a local-safe CrazyGames SDK v3 adapter
+- GPT Image 2.0-generated runtime art documented in [`Docs/Asset-Manifest.md`](Docs/Asset-Manifest.md)
 
+## Run locally
+
+```sh
+npm install
+npm run dev
+```
+
+## Verify
+
+```sh
+npm run check
+npm run build
+npm run test:e2e
+```
+
+Product, scope, balance, and slice acceptance criteria live in [`Docs/Game-Brief.md`](Docs/Game-Brief.md).

@@ -1,4 +1,3 @@
-import "@fontsource-variable/nunito/wght.css";
 import "./styles.css";
 import { Game } from "./game/Game";
 import { PlatformService } from "./services/platformService";
@@ -15,9 +14,13 @@ async function bootstrap(): Promise<void> {
   platform.loadingStart();
 
   const game = new Game(canvas, uiRoot, platform, loadSave(platform.saveStorage));
+  await game.prepare();
   platform.loadingStop();
   game.start();
 }
 
-void bootstrap();
-
+void bootstrap().catch((error: unknown) => {
+  console.error(error);
+  const uiRoot = document.querySelector<HTMLElement>("#ui-root");
+  if (uiRoot) uiRoot.innerHTML = `<div class="loading" role="alert">FSHING could not load. Refresh to try again.</div>`;
+});
