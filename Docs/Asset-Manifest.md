@@ -4,7 +4,7 @@ Every authored visual asset used by the MVP was generated with GPT Image 2.0 on 
 
 The untouched generated outputs are preserved in `output/imagegen/`. Runtime copies live in `src/assets/` and are explicitly imported by TypeScript or CSS. HTML and CSS arrange and label the generated interface surfaces. Canvas draws the simulation, camera, line, wake, water movement, visibility, and accessibility indicators; it does not manufacture replacement UI art.
 
-The boat, fish atlas, and world atlas were requested on a uniform `#FF00FF` matte. The renderer removes that matte in memory when the generated sprite is loaded. This preserves the GPT-generated sprite while allowing it to layer over the side-on lake.
+The boat, harbor pier, fish atlas, and world atlas were requested on a uniform `#FF00FF` matte. The renderer removes the atlas and boat mattes in memory; the harbor pier matte is removed during authoring so its long shoreline edge can be tightly cropped without changing the generated subject.
 
 ## Generation record
 
@@ -30,9 +30,17 @@ The boat, fish atlas, and world atlas were requested on a uniform `#FF00FF` matt
 
 ### `world-atlas.png`
 
-- Runtime role: side-view dock, rock, buoy, fishing marker, fog, and night wake
+- Runtime role: buoy, fishing marker, fog, and night wake; the original dock and rock cells remain in the source atlas but are not rendered
 - Generated size: 1536 × 1024
 - Prompt: “Use GPT Image 2.0. Create a strict 3 by 2 sprite atlas for a side-on 2D lake game. Every cell equal size and every object entirely inside its cell with generous padding. Top-left: short wooden dock and mooring posts in strict side profile. Top-middle: jagged rock protruding above the waterline in strict side profile. Top-right: one simple amber buoy in strict side profile. Bottom-left: hanging fishing-ground marker with a small suspended fish-shaped sign and a reed tuft. Bottom-middle: low horizontal fog wisp. Bottom-right: ambiguous dark wake or long lake-creature silhouette just under water, unsettling but non-graphic. Restrained editorial gouache/screen-print style, bold readable silhouettes, muted ink navy, cream, lake teal, weathered wood, and sparse orange. No labels, text, borders, grid lines, cell dividers, water, scenery, additional objects, or shadows outside the objects. Entire canvas background must be perfectly uniform full-bleed pure chroma-magenta #FF00FF with no texture, gradient, checkerboard, or variation.”
+
+### `harbor-pier.png`
+
+- Runtime role: long shoreline-connected pier for both harbors; mirrored at the right shore
+- Generated source size: 1774 × 887
+- Runtime cropped size: 1623 × 386 with authored alpha
+- Generation mode: GPT Image style-transfer using `lake-chart.png` as the painting reference and `world-atlas.png` as the material reference
+- Prompt: “Use case: style-transfer. Asset type: side-view shoreline pier sprite for the FSHING browser game. Image 1 is the authoritative lake panorama and painting-style reference; Image 2 is the existing world sprite atlas and material/detail reference. Create one long, low wooden harbor pier in strict orthographic side profile. The pier must clearly enter from the left canvas edge, continue horizontally across roughly 80% of the canvas, and end over the water with a substantial outer mooring post. Include a row of irregular weathered deck planks, dark supporting pilings below, rope wrapping on the outer post, and one smaller inner post. The left landward end must be cut off flush by the canvas edge so it reads as physically connected to an unseen shoreline, never as a complete floating platform. Use restrained editorial gouache and screen-print illustration matching the supplied lake exactly: soft dry-brush edges, visible aged-paper grain, simplified shapes, subdued detail. Use desaturated weathered gray-brown timber, muted ink navy shadows, gray-cream highlights, and tiny restrained ochre accents. Single continuous pier only, long and horizontal, strict side elevation, with the landward structure touching and exiting the left edge. Use a perfectly uniform full-bleed pure chroma-magenta #FF00FF matte for background removal. No boat, person, buildings, water, shore, reflection, cast shadow, text, labels, border, or grid. Avoid an isolated short floating platform, centered object with space on both ends, top-down view, diagonal perspective, glossy 3D, clip-art, cel shading, hard black outline, saturated orange, or photorealism.”
 
 ### `fshing-wordmark.png`
 

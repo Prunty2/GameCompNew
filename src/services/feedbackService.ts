@@ -38,10 +38,10 @@ export class FeedbackService {
     const filter = this.engineFilter;
     if (!context || !gain || !engine || !filter) return;
     const speed = clamp(speedRatio, 0, 1);
-    const targetGain = active ? 0.018 + speed * 0.055 + (boosting ? 0.024 : 0) : 0.0001;
-    gain.gain.setTargetAtTime(targetGain, context.currentTime, active ? 0.055 : 0.035);
-    engine.frequency.setTargetAtTime(48 + speed * 58 + (boosting ? 18 : 0), context.currentTime, 0.045);
-    filter.frequency.setTargetAtTime(190 + speed * 330 + (boosting ? 180 : 0), context.currentTime, 0.07);
+    const targetGain = active ? 0.011 + speed * 0.007 + (boosting ? 0.003 : 0) : 0.0001;
+    gain.gain.setTargetAtTime(targetGain, context.currentTime, active ? 0.14 : 0.05);
+    engine.frequency.setTargetAtTime(40 + speed * 20 + (boosting ? 5 : 0), context.currentTime, 0.16);
+    filter.frequency.setTargetAtTime(150 + speed * 70 + (boosting ? 20 : 0), context.currentTime, 0.18);
   }
 
   cue(cue: FeedbackCue): void {
@@ -104,11 +104,11 @@ export class FeedbackService {
     const engineFilter = context.createBiquadFilter();
 
     master.gain.value = this.outputVolume();
-    engine.type = "sawtooth";
-    engine.frequency.value = 48;
+    engine.type = "triangle";
+    engine.frequency.value = 40;
     engineGain.gain.value = 0.0001;
     engineFilter.type = "lowpass";
-    engineFilter.frequency.value = 190;
+    engineFilter.frequency.value = 150;
 
     engine.connect(engineFilter);
     engineFilter.connect(engineGain);

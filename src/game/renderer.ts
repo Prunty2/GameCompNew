@@ -1,4 +1,5 @@
 import fishAtlasUrl from "../assets/fish-atlas.png";
+import harborPierUrl from "../assets/harbor-pier.png";
 import lakeChartUrl from "../assets/lake-chart.png";
 import playerBoatUrl from "../assets/player-boat.png";
 import worldAtlasUrl from "../assets/world-atlas.png";
@@ -6,7 +7,6 @@ import {
   BALANCE,
   FISHING_SPOTS,
   HARBORS,
-  ROCKS,
   type FishSpecies,
   type WorldPoint,
 } from "./balance";
@@ -20,6 +20,7 @@ export interface RenderSettings {
 
 interface LoadedArt {
   lake: HTMLImageElement;
+  pier: HTMLImageElement;
   boat: HTMLCanvasElement;
   fish: HTMLCanvasElement;
   world: HTMLCanvasElement;
@@ -29,8 +30,6 @@ export class CanvasRenderer {
   private readonly context: CanvasRenderingContext2D;
   private readonly artReady: Promise<void>;
   private art: LoadedArt | null = null;
-  private collisionFlashUntil = 0;
-  private collisionStartedAt = 0;
 
   constructor(private readonly canvas: HTMLCanvasElement) {
     const context = canvas.getContext("2d");
@@ -38,12 +37,14 @@ export class CanvasRenderer {
     this.context = context;
     this.artReady = Promise.all([
       loadImage(lakeChartUrl),
+      loadImage(harborPierUrl),
       loadImage(playerBoatUrl),
       loadImage(fishAtlasUrl),
       loadImage(worldAtlasUrl),
-    ]).then(([lake, boat, fish, world]) => {
+    ]).then(([lake, pier, boat, fish, world]) => {
       this.art = {
         lake,
+        pier,
         boat: keyMagenta(boat, true),
         fish: keyMagenta(fish, false),
         world: keyMagenta(world, false),
@@ -53,11 +54,6 @@ export class CanvasRenderer {
 
   ready(): Promise<void> {
     return this.artReady;
-  }
-
-  flashCollision(): void {
-    this.collisionStartedAt = performance.now();
-    this.collisionFlashUntil = this.collisionStartedAt + 360;
   }
 
   render(simulation: Simulation, settings: RenderSettings): void {
@@ -71,12 +67,6 @@ export class CanvasRenderer {
       return;
     }
     this.context.save();
-    const now = performance.now();
-    if (!settings.reducedMotion && now < this.collisionFlashUntil) {
-      const remaining = (this.collisionFlashUntil - now) / (this.collisionFlashUntil - this.collisionStartedAt);
-      const shake = Math.sin(now * 0.19) * remaining * 9;
-      this.context.translate(shake, Math.cos(now * 0.23) * remaining * 4);
-    }
     if (simulation.mode === "fishing" && simulation.fishing) {
       this.renderFishing(simulation, settings, width, height);
     } else {
@@ -112,16 +102,8 @@ export class CanvasRenderer {
 
     for (const harbor of HARBORS) {
       const x = this.worldToScreenX(harbor.x, cameraX, width);
-      if (!isNearScreen(x, width, 180)) continue;
-      context.save();
-      if (harbor.id === "gloam") {
-        context.translate(x, 0);
-        context.scale(-1, 1);
-        this.drawWorldCell(0, 0, 0, waterline - 40, 180, 180);
-      } else {
-        this.drawWorldCell(0, 0, x, waterline - 40, 180, 180);
-      }
-      context.restore();
+      if (!isNearScreen(x, width, 540)) continue;
+      this.drawHarborPier(x, waterline, harbor.id === "gloam");
     }
 
     for (const spot of FISHING_SPOTS) {
@@ -137,29 +119,30 @@ export class CanvasRenderer {
       context.fillRect(x - 2, waterline - 114, 4, locked ? 12 : 20);
     }
 
-    for (const rock of ROCKS) {
-      const x = this.worldToScreenX(rock.x, cameraX, width);
-      if (!isNearScreen(x, width, 110)) continue;
-      const size = 104 + rock.radius * 600;
-      this.drawWorldCell(1, 0, x, waterline - 14, size, size);
-      if (settings.highContrast) {
-        context.strokeStyle = "#fff6d8";
-        context.lineWidth = 3;
-        context.beginPath();
-        context.moveTo(x - size * 0.26, waterline + 2);
-        context.lineTo(x + size * 0.28, waterline + 2);
-        context.stroke();
-      }
-    }
-
     this.drawObjective(simulation, cameraX, width, height);
     this.drawBoat(simulation, cameraX, width, waterline, settings);
     this.drawWeather(simulation, cameraX, width, height, settings);
 
-    if (performance.now() < this.collisionFlashUntil) {
-      context.fillStyle = "rgba(255, 112, 27, 0.22)";
-      context.fillRect(0, 0, width, height);
+  }
+
+  private drawHarborPier(x: number, waterline: number, fromRightShore: boolean): void {
+    const art = this.art;
+    if (!art) return;
+    const pierWidth = clamp(this.canvas.clientHeight * 0.56, 320, 520);
+    const pierHeight = pierWidth * (art.pier.naturalHeight / art.pier.naturalWidth);
+    const deckTop = waterline - 32;
+    const drawY = deckTop - pierHeight * 0.43;
+    const outboardOverlap = 24;
+
+    this.context.save();
+    if (fromRightShore) {
+      this.context.translate(x - outboardOverlap, 0);
+      this.context.scale(-1, 1);
+      this.context.drawImage(art.pier, -pierWidth, drawY, pierWidth, pierHeight);
+    } else {
+      this.context.drawImage(art.pier, x + outboardOverlap - pierWidth, drawY, pierWidth, pierHeight);
     }
+    this.context.restore();
   }
 
   private renderFishing(simulation: Simulation, settings: RenderSettings, width: number, height: number): void {
@@ -189,8 +172,6 @@ export class CanvasRenderer {
 
     context.save();
     context.globalAlpha = settings.highContrast ? 0.45 : 0.24;
-    this.drawWorldCell(1, 0, width * 0.12, height * 0.91, 220, 170);
-    this.drawWorldCell(1, 0, width * 0.86, height * 0.95, 290, 210);
     this.drawWorldCell(2, 1, width * 0.7, height * 0.86, 260, 150);
     context.restore();
 
@@ -223,8 +204,7 @@ export class CanvasRenderer {
   }
 
   private drawPanorama(image: HTMLImageElement, cameraX: number, width: number, height: number): number {
-    const viewFraction = 0.59;
-    let sourceWidth = image.naturalWidth * viewFraction;
+    let sourceWidth = image.naturalWidth * BALANCE.cameraViewWidth;
     let sourceHeight = image.naturalHeight;
     const targetAspect = width / height;
     if (sourceWidth / sourceHeight < targetAspect) {
@@ -254,8 +234,8 @@ export class CanvasRenderer {
     const boatWidth = clamp(this.canvas.clientHeight * 0.37, 150, 270);
     const boatHeight = boatWidth * (art.boat.height / art.boat.width);
     const speedRatio = Math.min(1, Math.abs(simulation.boat.speed) / BALANCE.maxSurfaceSpeed);
-    const bob = settings.reducedMotion ? 0 : Math.sin(simulation.elapsed * (2.4 + speedRatio * 1.4)) * (2.2 + speedRatio * 1.7);
-    const tilt = settings.reducedMotion ? 0 : clamp(simulation.boat.speed * 0.24, -0.036, 0.036);
+    const bob = settings.reducedMotion ? 0 : Math.sin(simulation.elapsed * (2 + speedRatio)) * (1.1 + speedRatio * 0.8);
+    const tilt = settings.reducedMotion ? 0 : clamp(simulation.boat.speed * 0.16, -0.02, 0.02);
 
     context.save();
     context.translate(x, waterline + bob);

@@ -4,7 +4,6 @@ import {
   FISH,
   FISHING_SPOTS,
   HARBORS,
-  ROCKS,
   SURFACE_Y,
   harborById,
   spotById,
@@ -27,7 +26,6 @@ export interface BoatState extends WorldPoint {
   facing: -1 | 1;
   speed: number;
   damage: number;
-  collisionCooldown: number;
 }
 
 export interface CargoItem {
@@ -67,7 +65,6 @@ export interface FishingState {
 
 export type SimulationEvent =
   | { type: "caught"; species: FishSpecies }
-  | { type: "collision"; damage: number }
   | { type: "delivered"; payment: number }
   | { type: "docked"; harbor: HarborId }
   | { type: "full-cargo" }
@@ -99,7 +96,6 @@ export interface InteractionPrompt {
   reason?: string;
 }
 
-const BOAT_RADIUS = 0.019;
 const FISHING_HOOK_SPEED = 0.48;
 const FISHING_CATCH_RADIUS = 0.058;
 
@@ -121,7 +117,6 @@ export function createSimulation(seed = 1, progress?: Partial<ProgressState>): S
       facing: 1,
       speed: 0,
       damage: 18,
-      collisionCooldown: 0,
     },
     cargo: [],
     activeContract: null,
@@ -150,9 +145,7 @@ export function updateSimulation(simulation: Simulation, input: InputState, dt: 
   if (simulation.dockedAt) return;
 
   const { boat } = simulation;
-  boat.collisionCooldown = Math.max(0, boat.collisionCooldown - safeDt);
   const travel = Math.sign(clamp(input.travel, -1, 1));
-  if (travel !== 0) boat.facing = travel as -1 | 1;
 
   if (input.brake) {
     boat.speed = moveToward(boat.speed, 0, BALANCE.brakeStrength * safeDt);
@@ -170,11 +163,9 @@ export function updateSimulation(simulation: Simulation, input: InputState, dt: 
   boat.speed = clamp(boat.speed, -maximumSpeed, maximumSpeed);
   if (Math.abs(boat.speed) > 0.004) boat.facing = boat.speed < 0 ? -1 : 1;
 
-  const previousX = boat.x;
   boat.x = clamp(boat.x + boat.speed * safeDt, 0.045, 0.955);
   boat.y = SURFACE_Y;
   if (boat.x === 0.045 || boat.x === 0.955) boat.speed *= 0.2;
-  resolveRockCrossing(simulation, previousX);
 }
 
 export function interact(simulation: Simulation): InteractionPrompt | null {
@@ -430,24 +421,6 @@ function updateFishing(simulation: Simulation, input: InputState, dt: number): v
 function ageCargo(simulation: Simulation, dt: number): void {
   const freshnessLoss = (100 / BALANCE.freshnessLifetime) * dt;
   for (const item of simulation.cargo) item.freshness = Math.max(0, item.freshness - freshnessLoss);
-}
-
-function resolveRockCrossing(simulation: Simulation, previousX: number): void {
-  const { boat } = simulation;
-  if (boat.collisionCooldown > 0 || Math.abs(boat.speed) <= BALANCE.interactionMaxSpeed) return;
-  for (const rock of ROCKS) {
-    const radius = BOAT_RADIUS + rock.radius;
-    const isInside = Math.abs(boat.x - rock.x) <= radius;
-    const crossed = (previousX - rock.x) * (boat.x - rock.x) <= 0;
-    if (!isInside && !crossed) continue;
-    const impactSpeed = Math.abs(boat.speed);
-    const damage = Math.ceil(BALANCE.collisionBaseDamage + BALANCE.collisionSpeedDamage * impactSpeed);
-    boat.speed *= 0.42;
-    boat.collisionCooldown = 1.2;
-    simulation.events.push({ type: "collision", damage });
-    damageBoat(simulation, damage);
-    return;
-  }
 }
 
 function rescue(simulation: Simulation): void {

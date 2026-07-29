@@ -50,7 +50,7 @@ FSHING is not intended to reproduce Dredge in 2D. Its distinct focus is a repeat
 4. Cast a hook and steer it toward the requested fish while avoiding unwanted catches and obstacles.
 5. Store the catch in limited cargo space; freshness begins decreasing.
 6. Choose a safe or fast route to the delivery harbor.
-7. Avoid rocks, storms, darkness, and other lake dangers that can damage the boat or delay the delivery.
+7. Navigate storms, darkness, and other lake dangers that can damage the boat or delay the delivery.
 8. Deliver fresh fish to earn money.
 9. Purchase upgrades and unlock access to more dangerous regions with rarer fish and better rewards.
 10. Accept another delivery and repeat.
@@ -64,7 +64,7 @@ The game takes place along one connected side-on lake route divided into regions
 ### Region progression
 
 - **Starting waters:** Calm, bright, forgiving routes, common fish, and short deliveries.
-- **Outer lake:** Longer routes, changing weather, rocks, stronger currents, and more valuable fish.
+- **Outer lake:** Longer routes, changing weather, stronger currents, and more valuable fish.
 - **Dark waters:** Poor visibility, disturbing events, severe hazards, rare fish, and the highest-paying contracts.
 
 Regions are unlocked through purchased permits or boat upgrades. Locked boundaries must be communicated naturally through gates, hazardous water, harbor authorities, or equipment requirements rather than invisible walls alone.
@@ -109,7 +109,7 @@ Fishing is an active supporting mechanic rather than the entire game.
 2. Available fish silhouettes or movement cues appear beneath the water.
 3. The player drops the line from the boat into the water directly below.
 4. The camera cuts below the surface while the hook descends through a bounded side-view fishing space.
-5. The player steers the hook toward a fish while avoiding rocks, weeds, debris, or unwanted species.
+5. The player steers the hook toward a fish while avoiding weeds, debris, or unwanted species.
 6. Contact with a valid fish catches it and uses available cargo capacity.
 
 Fish should have recognizable silhouettes and movement patterns so catches do not depend on color alone. Rarer fish can move faster, hide deeper, or require improved fishing equipment. For the minimum viable release, the hook interaction should remain short and use steering rather than a separate tension or reeling system.
@@ -121,10 +121,10 @@ The boat uses direct horizontal side-scrolling movement:
 - Hold left or right to apply thrust in that direction
 - Releasing thrust allows short, readable momentum before water drag slows the boat
 - Brake reduces speed quickly without instantly snapping the boat to a stop
-- The boat faces its current travel direction and rocks subtly with acceleration and weather
-- Surface collisions depend on horizontal impact speed
+- The boat faces its current travel direction and uses restrained bob and tilt so motion remains calm and readable
+- Boat movement stays on the open horizontal surface without fixed collision obstacles
 
-The handling should feel responsive and forgiving rather than physically realistic. Direction changes have enough weight to make rocks and freshness meaningful, but the player can always recover without a complicated turning arc.
+The handling should feel smooth, measured, and forgiving rather than physically realistic. Acceleration builds gradually, direction changes retain readable momentum, and the lower cruising speed gives the player time to plan without a complicated turning arc.
 
 ### Controls
 
@@ -146,19 +146,21 @@ All essential actions must work without hover. Touch targets must be large enoug
 
 Keyboard actions can be rebound from the Controls submenu within Settings. Bindings persist with the rest of the validated settings; assigning an occupied key swaps the two actions, and Escape remains an always-available pause fallback.
 
+The How to play menu presents the core loop as four step-by-step field-note cards. Previous and Next controls move through one card at a time, with the main Back action kept separate below the card navigation.
+
 ## Hazards, damage, and night
 
 ### Environmental hazards
 
 Dangerous lake conditions provide the main delivery pressure alongside freshness. Hazards may include:
 
-- Rocks, wreckage, and narrow passages
+- Wreckage and narrow passages
 - Strong currents that alter the boat's path
 - Rain, fog, and storms that reduce control or visibility
 - Floating debris
 - Disturbing nighttime entities or false navigation cues
 
-Collisions damage the boat. Damage can reduce maximum speed or handling and creates a repair cost at harbor. At critical damage, the player is rescued and returned to the nearest harbor, losing some cargo freshness and money rather than losing the full save.
+Dangerous conditions can damage the boat. Damage can reduce maximum speed or handling and creates a repair cost at harbor. At critical damage, the player is rescued and returned to the nearest harbor, losing some cargo freshness and money rather than losing the full save.
 
 ### Night and visibility
 
@@ -215,6 +217,7 @@ The game uses a cozy illustrated 2D style with unsettling nighttime transformati
 
 - Side-profile boats with readable hull, cabin, cargo, lamp, and facing direction
 - Layered side-view sky, distant shoreline, near reeds, waterline, docks, and underwater space
+- Harbor piers extend inward from their shoreline edge and visually connect to land instead of floating as isolated platforms
 - Warm harbor lights contrasted against cool lake colors
 - Clear daytime navigation landmarks
 - Night palettes that preserve gameplay readability while hiding distant threats
@@ -235,7 +238,7 @@ The visual design must communicate fish type, hazards, freshness, damage, and in
 
 Audio should support both comfort and unease:
 
-- Gentle engine loop with pitch related to speed
+- Quiet, low engine thrum with only a restrained pitch and volume increase at top speed
 - Water, wake, rain, wind, docking, collision, and fishing feedback
 - Warm harbor ambience
 - Sparse daytime music
@@ -259,7 +262,9 @@ The first playable minutes should teach systems through one short delivery:
 6. Return and deliver the fish.
 7. Spend the reward toward the first upgrade.
 
-Tutorial prompts should disappear after the action is successfully performed and remain available from a help menu. The title screen contains only the FSHING logo, Play, and Settings so the lake remains the visual focus. Navigation has no permanent status bar: world markers, a directional arrow, contextual actions, and short messages carry the active objective. Cargo details, freshness, damage, money, and upgrades are reviewed at harbor. Keyboard players can pause with Escape or their configured pause key; the navigation view has no permanent pause button.
+Tutorial prompts should disappear after the action is successfully performed and remain available from a help menu. The title screen places its menu on the right, leads with one unmistakable start action, and provides secondary How to play and Settings actions while keeping the lake as the visual focus. The harbor screen presents the current delivery as a three-step job route (catch, freshness, destination) before cargo or upgrades, with plain-language guidance about the immediate next action. Navigation has no permanent status bar: world markers, a directional arrow, contextual actions, and short messages carry the active objective. Cargo details, freshness, damage, money, and upgrades are reviewed at harbor. Keyboard players can pause with Escape or their configured pause key; the navigation view has no permanent pause button.
+
+Menu presentation follows shipped adventure-game conventions rather than general web-app patterns. The lake remains visible behind overlays; each screen has one dominant action; job information uses a physical dispatch-ticket treatment; and cargo, upgrades, settings, and help are subordinate rows or pages rather than equal-weight cards. Orange is reserved for the current or available action, while completed and informational states stay neutral. All menu screens share the same squared dockside frame, condensed display typography, visible focus treatment, and restrained horizontal transitions.
 
 ## Persistence
 
@@ -301,7 +306,7 @@ Save data is versioned, validated, clamped, and migrated. CrazyGames data storag
 - Cargo, speed, and light upgrades
 - Region unlocking
 - Day/night cycle with reduced nighttime visibility
-- Rocks and at least one changing lake condition
+- At least one changing lake condition
 - Boat damage, repair, and rescue
 - Brief tutorial and lightweight dialogue
 - Persistent progression and settings
@@ -390,7 +395,7 @@ The two-month schedule requires an eight-week plan. The minimum viable game take
 ### Week 5 — Night, hazards, and progression
 
 - Implement day/night transitions and visibility.
-- Add boat damage, rescue, rocks, and one dangerous weather condition.
+- Add boat damage, rescue, and one dangerous weather condition.
 - Add purchasable lights and region access.
 - Introduce nighttime visual and audio horror effects.
 
@@ -494,7 +499,7 @@ This slice proves the complete accept–fish–deliver–upgrade loop through a 
 2. Hold right to leave the dock. The camera follows the boat while distant shoreline and near reeds move at different rates.
 3. Brake beneath the hanging Sunward Shoal marker and drop the line.
 4. Enter a side-view underwater cutaway, steer the hook down and sideways, and catch the round Reedfin by silhouette.
-5. Return to the surface, watch freshness fall, cross the lake, and avoid rocks protruding through the waterline.
+5. Return to the surface, watch freshness fall, and cross the lake through changing conditions.
 6. Dock at Gloam Ferry, complete the delivery, and buy one cargo, engine, or lamp upgrade.
 7. Continue with seeded repeatable contracts and purchase the permit required to fish in Outer Gloam.
 
@@ -506,7 +511,7 @@ The tutorial is action-based and a new player should complete the first delivery
 - A side-follow camera with generated panoramic scenery, layered parallax, a readable waterline, and underwater cutaway fishing.
 - Three fishing grounds and three side-profile fish: round **Reedfin**, long **Needle Pike**, and fork-tailed **Gloam Gill**.
 - Authored tutorial contract followed by seeded repeatable contracts selected from unlocked fish.
-- Cargo freshness, payment scaling, limited capacity, upgrades, repair, critical-damage rescue, surface rocks, fog, and day/night pressure.
+- Cargo freshness, payment scaling, limited capacity, upgrades, repair, critical-damage rescue, fog, and day/night pressure.
 - Direct left/right/brake keyboard and touch travel controls plus direct two-axis hook steering.
 - Quiet title, harbor, contract, pause, settings, help, contextual prompt, and result overlays using a completely new image-generated visual system.
 
@@ -516,13 +521,12 @@ All durations use simulation seconds; horizontal positions use normalized world 
 
 | Value | Initial setting |
 | --- | --- |
-| Horizontal thrust | 0.30 units/s² |
-| Engine boost thrust | 0.42 units/s² |
-| Base maximum surface speed | 0.16 units/s |
+| Horizontal thrust | 0.055 units/s² |
+| Engine boost thrust | 0.085 units/s² |
+| Base maximum surface speed | 0.08 units/s |
 | Brake strength | 0.72 units/s² |
-| Passive water drag | 0.72 per second |
-| Camera view width | 0.42 world units |
-| Collision damage | 10 plus 95 × impact speed |
+| Passive water drag | 0.62 per second |
+| Camera view width | 0.59 world units |
 | Critical rescue threshold | 100 damage |
 | Freshness lifetime | 150 seconds |
 | Tutorial minimum freshness | 35% |
@@ -547,8 +551,9 @@ Every authored visual asset in this slice is generated with GPT Image 2.0. No pr
 | `fshing-wordmark.png` | Restrained title-screen identity |
 | `lake-chart.png` | Side-on panoramic sky, distant shore, waterline, and lake atmosphere |
 | `player-boat.png` | Player vessel in strict side profile on a chroma-key matte |
+| `harbor-pier.png` | Long weathered side-view harbor pier that extends from either shoreline |
 | `fish-atlas.png` | Side-profile Reedfin, Needle Pike, Gloam Gill, and hook sprites on a chroma-key matte |
-| `world-atlas.png` | Side-view dock, rock, buoy, fishing marker, fog, and night-wake sprites on a chroma-key matte |
+| `world-atlas.png` | Side-view buoy, fishing marker, fog, night-wake, and retained legacy sprites on a chroma-key matte |
 | `ui-panel.png` | Minimal full-bleed dark menu and harbor surface |
 | `ui-button.png` | Minimal full-bleed primary action surface |
 | `ui-icons.png` | Cargo, freshness, hull, time, shells, objective, engine, lamp, permit, repair, sound, and pause pictograms |
@@ -559,8 +564,8 @@ Generated files are explicitly imported from `src/assets/`. Prompts and generati
 
 - The same seed and inputs produce the same horizontal boat, contract, fish, weather, and day/night state.
 - A fresh save can travel from the left harbor to a fishing ground, catch the correct fish below the surface, reach the right harbor, deliver it, and purchase an upgrade.
-- Camera tracking, left/right facing, braking, off-screen objective indication, and rock collision are readable at desktop and mobile landscape sizes.
-- Wrong fish, full cargo, spoiled cargo, collision damage, repair, rescue, and a locked fishing ground have readable outcomes.
+- Camera tracking, left/right facing, braking, and off-screen objective indication are readable at desktop and mobile landscape sizes.
+- Wrong fish, full cargo, spoiled cargo, repair, rescue, and a locked fishing ground have readable outcomes.
 - Progression and accessibility settings survive reload; malformed save data is validated and clamped.
 - Keyboard, pointer, and touch controls can travel, interact, fish, pause, and navigate overlays.
 - Focus loss pauses simulation and reports the gameplay lifecycle stop through `PlatformService`.

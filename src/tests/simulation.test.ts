@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { BALANCE, ROCKS, harborById, spotById } from "../game/balance";
+import { BALANCE, harborById, spotById } from "../game/balance";
 import {
   acceptAvailableContract,
   buyPermit,
@@ -87,18 +87,22 @@ describe("FSHING side-on simulation", () => {
     expect(simulation.boat.x).toBeLessThan(0.11);
   });
 
-  test("crossing a rock too quickly causes deterministic damage without blocking the route", () => {
+  test("accelerates gradually and respects the reduced maximum speed", () => {
     const simulation = createSimulation();
     undock(simulation);
-    const rock = ROCKS[0];
-    if (!rock) throw new Error("Expected at least one rock.");
-    simulation.boat.x = rock.x - rock.radius - 0.012;
-    simulation.boat.speed = 0.14;
-    const damageBefore = simulation.boat.damage;
-    updateSimulation(simulation, idle, 0.1);
-    expect(simulation.boat.damage).toBeGreaterThan(damageBefore);
-    expect(simulation.boat.x).toBeGreaterThan(rock.x - rock.radius - 0.012);
-    expect(simulation.events.some((event) => event.type === "collision")).toBe(true);
+    updateSimulation(simulation, { ...idle, travel: 1 }, 0.1);
+    expect(simulation.boat.speed).toBeCloseTo(BALANCE.horizontalThrust * 0.1);
+    expect(simulation.boat.speed).toBeLessThan(BALANCE.maxSurfaceSpeed);
+
+    for (let index = 0; index < 60; index += 1) {
+      updateSimulation(simulation, { ...idle, travel: 1 }, 1 / 60);
+    }
+    expect(simulation.boat.speed).toBeLessThan(BALANCE.maxSurfaceSpeed);
+
+    for (let index = 0; index < 120; index += 1) {
+      updateSimulation(simulation, { ...idle, travel: 1 }, 1 / 60);
+    }
+    expect(simulation.boat.speed).toBe(BALANCE.maxSurfaceSpeed);
   });
 
   test("completes the tutorial contract and buys the first upgrade", () => {
@@ -161,7 +165,7 @@ describe("FSHING side-on simulation", () => {
     const unlockedTravel = createSimulation();
     undock(unlockedTravel);
     unlockedTravel.boat.x = 0.7;
-    for (let index = 0; index < 120; index += 1) {
+    for (let index = 0; index < 240; index += 1) {
       updateSimulation(unlockedTravel, { ...idle, travel: 1 }, 1 / 120);
     }
     expect(unlockedTravel.boat.x).toBeGreaterThan(0.76);

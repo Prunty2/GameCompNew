@@ -46,6 +46,7 @@ import {
 const FIXED_STEP = 1 / 120;
 const MAX_FRAME = 0.05;
 const UI_REFRESH_INTERVAL = 100;
+const HELP_STEP_COUNT = 4;
 
 type OverlayScreen = "title" | "harbor" | "pause" | "settings" | "controls" | "help" | null;
 
@@ -73,7 +74,10 @@ export class Game {
   private started = false;
   private overlay: OverlayScreen = "title";
   private overlayReturn: OverlayScreen = "pause";
+  private helpStep = 0;
   private toastTimer: number | undefined;
+  private tutorialDismissTimer: number | undefined;
+  private dismissedTutorialText: string | null = null;
   private readonly interfaceReady = Promise.all([
     preloadImage(wordmarkUrl),
     preloadImage(uiButtonUrl),
@@ -147,7 +151,10 @@ export class Game {
   private buildUi(): void {
     this.uiRoot.innerHTML = `
       <div class="game-ui">
-        <div class="tutorial-callout" id="tutorial-callout" role="status"></div>
+        <button class="tutorial-callout" id="tutorial-callout" type="button" data-action="dismiss-tutorial" title="Dismiss instruction" hidden>
+          <span class="tutorial-label" aria-hidden="true">Next</span>
+          <span class="tutorial-message" aria-live="polite"></span>
+        </button>
         <output class="toast" id="toast" aria-live="polite"></output>
         <div class="feedback-flash" id="feedback-flash" aria-hidden="true"></div>
 
@@ -204,12 +211,6 @@ export class Game {
         this.pulseFeedback("catch");
         this.showToast(`${FISH[event.species].name} secured. Freshness is falling.`);
         break;
-      case "collision":
-        this.feedback.cue("collision");
-        this.pulseFeedback("collision");
-        this.renderer.flashCollision();
-        this.showToast(`Rock impact · +${event.damage} hull damage`);
-        break;
       case "delivered":
         this.feedback.cue("delivery");
         this.pulseFeedback("delivery");
@@ -250,8 +251,19 @@ export class Game {
     const tutorial = this.uiRoot.querySelector<HTMLElement>("#tutorial-callout");
     const tutorialText = tutorialPrompt(simulation);
     if (tutorial) {
-      tutorial.textContent = tutorialText ?? "";
-      tutorial.hidden = !tutorialText || this.overlay !== null;
+      if (this.dismissedTutorialText && tutorialText !== this.dismissedTutorialText) {
+        this.dismissedTutorialText = null;
+      }
+      const tutorialMessage = tutorial.querySelector<HTMLElement>(".tutorial-message");
+      if (tutorialMessage) tutorialMessage.textContent = tutorialText ?? "";
+      const shouldShow = Boolean(tutorialText) && this.overlay === null && tutorialText !== this.dismissedTutorialText;
+      if (shouldShow) {
+        window.clearTimeout(this.tutorialDismissTimer);
+        tutorial.classList.remove("is-dismissing");
+        tutorial.hidden = false;
+      } else if (!tutorial.classList.contains("is-dismissing")) {
+        tutorial.hidden = true;
+      }
     }
 
     const action = this.uiRoot.querySelector<HTMLButtonElement>("#context-action");
@@ -305,8 +317,15 @@ export class Game {
         <div class="title-panel">
           <img class="wordmark" src="${wordmarkUrl}" alt="FSHING" />
           <div class="title-actions">
-            <button class="primary-button title-play-button" type="button" data-action="start">Play</button>
-            <button class="menu-button" type="button" data-action="open-settings">Settings</button>
+            <button class="primary-button title-play-button" type="button" data-action="start" aria-label="Play">
+              <span class="title-play-icon" aria-hidden="true">01</span>
+              <span><strong>Begin voyage</strong></span>
+              <b aria-hidden="true">ENTER</b>
+            </button>
+            <div class="title-secondary-actions">
+              <button class="menu-button" type="button" data-action="open-help"><span aria-hidden="true">02</span><strong>How to play</strong></button>
+              <button class="menu-button" type="button" data-action="open-settings"><span aria-hidden="true">03</span><strong>Settings</strong></button>
+            </div>
           </div>
         </div>
       </section>`;
@@ -320,22 +339,34 @@ export class Game {
     const deliverable = contract?.destination === harborId
       && this.simulation.cargo.some((item) => item.species === contract.species && item.freshness >= contract.minimumFreshness);
     const contractMarkup = available
-      ? `<div class="contract-card">
-          <span class="card-kicker">Available contract</span>
-          <h3>${available.title}</h3>
-          <dl><div><dt>Catch</dt><dd>${FISH[available.species].name}</dd></div><div><dt>Deliver</dt><dd>${harborById(available.destination).name}</dd></div><div><dt>Minimum</dt><dd>${available.minimumFreshness}% fresh</dd></div><div><dt>Reward</dt><dd>${available.reward} shells</dd></div></dl>
-          <button class="primary-button" type="button" data-action="accept-contract">Accept contract</button>
+      ? `<div class="contract-card job-ticket">
+          <div class="job-ticket-heading">
+            <div><span class="card-kicker">Your next job</span><h3>${available.title}</h3></div>
+            <span class="reward-stamp"><small>Reward</small><strong>${available.reward}</strong><span>shells</span></span>
+          </div>
+          <ol class="job-route" aria-label="Job steps">
+            <li><span>1</span><div><small>Catch</small><strong>${FISH[available.species].name}</strong></div></li>
+            <li><span>2</span><div><small>Keep it</small><strong>${available.minimumFreshness}% fresh</strong></div></li>
+            <li><span>3</span><div><small>Deliver to</small><strong>${harborById(available.destination).name}</strong></div></li>
+          </ol>
+          <button class="primary-button mission-button" type="button" data-action="accept-contract" aria-label="Accept contract">
+            <span><strong>Take this job</strong></span><b aria-hidden="true">→</b>
+          </button>
         </div>`
       : contract
-        ? `<div class="contract-card ${deliverable ? "is-ready" : ""}">
-            <span class="card-kicker">Active contract</span>
+        ? `<div class="contract-card job-ticket ${deliverable ? "is-ready" : ""}">
+            <span class="card-kicker">${deliverable ? "Ready to hand in" : "Job in progress"}</span>
             <h3>${contract.title}</h3>
-            <p>${FISH[contract.species].name} to ${harborById(contract.destination).name} · ${contract.minimumFreshness}% minimum</p>
+            <ol class="job-route" aria-label="Job steps">
+              <li class="is-complete"><span>✓</span><div><small>Job</small><strong>Accepted</strong></div></li>
+              <li class="${this.simulation.cargo.some((item) => item.species === contract.species) ? "is-complete" : ""}"><span>2</span><div><small>Catch</small><strong>${FISH[contract.species].name}</strong></div></li>
+              <li class="${deliverable ? "is-current" : ""}"><span>3</span><div><small>Deliver to</small><strong>${harborById(contract.destination).name}</strong></div></li>
+            </ol>
             ${contract.destination === harborId
-              ? `<button class="primary-button" type="button" data-action="deliver" ${deliverable ? "" : "disabled"}>${deliverable ? "Complete delivery" : "Required fresh catch missing"}</button>`
-              : `<p class="route-note">Your destination lies across the lake.</p>`}
+              ? `<button class="primary-button mission-button" type="button" data-action="deliver" ${deliverable ? "" : "disabled"}>${deliverable ? "<span><strong>Complete delivery</strong></span><b aria-hidden=\"true\">→</b>" : "Catch is missing or no longer fresh enough"}</button>`
+              : `<p class="next-step"><strong>Next:</strong> Leave the harbor and follow the orange destination marker across the lake.</p>`}
           </div>`
-        : `<div class="contract-card"><span class="card-kicker">Contract board</span><p>No new work is posted here yet.</p></div>`;
+        : `<div class="contract-card empty-job"><span class="card-kicker">No job posted</span><h3>You are free to explore</h3><p>Head onto the lake, fish for cargo, or return later for new delivery work.</p></div>`;
 
     const cargoMarkup = this.simulation.cargo.length === 0
       ? `<p class="empty-state">The hold is empty.</p>`
@@ -345,16 +376,23 @@ export class Game {
       <section class="screen-overlay harbor-screen" role="dialog" aria-labelledby="harbor-title">
         <div class="art-panel harbor-panel side-sheet">
           <header class="panel-heading">
-            <div><span class="panel-eyebrow">${harborId === "brindle" ? "LEFT SHORE / 01" : "RIGHT SHORE / 02"}</span><h2 id="harbor-title">${harbor.name}</h2><p>${harbor.subtitle}</p></div>
-            <span class="shell-balance"><span class="ui-icon icon-shells" aria-hidden="true"></span>${this.simulation.progress.money}</span>
+            <div><h2 id="harbor-title">${harbor.name}</h2><p>${harbor.subtitle}</p></div>
+            <span class="shell-balance"><span class="ui-icon icon-shells" aria-hidden="true"></span><span><small>Your money</small><strong>${this.simulation.progress.money} shells</strong></span></span>
           </header>
-          <p class="dialogue">${harborId === "brindle" ? "“Read the water. The lamp can lie.”" : "“The outer water remembers every boat.”"}</p>
+          <div class="harbor-intro">
+            <div><span class="panel-eyebrow">Current task</span><h3>${available ? "Choose the posted delivery" : deliverable ? "Hand in your catch" : contract ? "Continue your delivery" : "Prepare for the lake"}</h3></div>
+            <p>${available ? "Take the job below. The game will point you to the right fish, then to the delivery harbor." : deliverable ? "Your requested fish is ready. Complete the delivery to get paid." : contract ? "Your current job stays active until it is delivered." : "There is no active delivery, so you can explore or improve your boat."}</p>
+          </div>
           <div class="harbor-grid">
-            <section aria-labelledby="contract-heading"><h3 id="contract-heading" class="section-title">Delivery board</h3>${contractMarkup}</section>
-            <section aria-labelledby="cargo-heading"><h3 id="cargo-heading" class="section-title">Cargo · ${this.simulation.cargo.length}/${cargoCapacity(this.simulation)}</h3><div class="cargo-list">${cargoMarkup}</div></section>
+            <section class="mission-section" aria-labelledby="contract-heading"><h3 id="contract-heading" class="section-title">Delivery job</h3>${contractMarkup}</section>
+            <aside class="cargo-section" aria-labelledby="cargo-heading">
+              <div class="section-heading"><h3 id="cargo-heading" class="section-title">Your cargo</h3><span>${this.simulation.cargo.length} / ${cargoCapacity(this.simulation)} spaces</span></div>
+              <div class="cargo-list">${cargoMarkup}</div>
+              <p class="cargo-help">Fish lose freshness while you travel. Deliver the requested catch before it drops below the job minimum.</p>
+            </aside>
           </div>
           <section class="services" aria-labelledby="service-heading">
-            <h3 id="service-heading" class="section-title">Shipwright & permits</h3>
+            <div class="section-heading"><div><h3 id="service-heading" class="section-title">Dock services</h3><p>Permanent boat improvements and repairs.</p></div></div>
             <div class="service-grid">
               ${this.upgradeCard("cargo", "Cargo hold", "Carry one more fish per tier.")}
               ${this.upgradeCard("engine", "Engine", "16% more forward speed per tier.")}
@@ -363,7 +401,7 @@ export class Game {
               ${harborId === "gloam" ? `<article class="service-card"><span class="ui-icon icon-permit" aria-hidden="true"></span><div><h4>Outer Gloam permit</h4><p>${this.simulation.progress.outerUnlocked ? "Granted" : `${BALANCE.permitCost} shells`}</p></div><button class="small-button" type="button" data-action="buy-permit" ${this.simulation.progress.outerUnlocked || this.simulation.progress.money < BALANCE.permitCost ? "disabled" : ""}>${this.simulation.progress.outerUnlocked ? "Owned" : "Buy"}</button></article>` : ""}
             </div>
           </section>
-          <footer class="panel-actions"><button class="text-button" type="button" data-action="open-help">How to play</button><button class="primary-button" type="button" data-action="undock">Back to lake →</button></footer>
+          <footer class="panel-actions"><button class="text-button" type="button" data-action="open-help">How to play</button><button class="leave-button" type="button" data-action="undock" aria-label="Back to lake →"><span>Return to open water</span><strong>Back to lake</strong><b aria-hidden="true">→</b></button></footer>
         </div>
       </section>`;
   }
@@ -378,7 +416,7 @@ export class Game {
   private pauseScreen(): string {
     return `
       <section class="screen-overlay sheet-overlay" role="dialog" aria-labelledby="pause-title">
-        <div class="art-panel compact-panel side-sheet"><span class="panel-eyebrow">RUN SUSPENDED</span><h2 id="pause-title">Paused</h2><p>The lake, cargo, and clock are stopped.</p>
+        <div class="art-panel compact-panel side-sheet"><h2 id="pause-title">Paused</h2><p>The lake, cargo, and clock are stopped.</p>
           <div class="stacked-actions"><button class="primary-button" type="button" data-action="resume">Return to water</button><button class="text-button" type="button" data-action="open-settings">Settings</button><button class="text-button" type="button" data-action="open-help">How to play</button><button class="text-button" type="button" data-action="title">Title screen</button></div>
         </div>
       </section>`;
@@ -388,12 +426,12 @@ export class Game {
     const settings = this.save.settings;
     return `
       <section class="screen-overlay sheet-overlay" role="dialog" aria-labelledby="settings-title">
-        <div class="art-panel compact-panel side-sheet"><span class="panel-eyebrow">ACCESS / AUDIO</span><h2 id="settings-title">Settings</h2>
+        <div class="art-panel compact-panel side-sheet"><h2 id="settings-title">Settings</h2>
           <label class="toggle-row"><span><strong>Mute</strong><small>Silence all game audio.</small></span><input type="checkbox" data-setting="muted" ${settings.muted ? "checked" : ""}></label>
           <label class="range-row"><span><strong>Volume</strong><small>Overall game volume.</small></span><input type="range" min="0" max="1" step="0.05" value="${settings.volume}" data-setting="volume"></label>
           <label class="toggle-row"><span><strong>High contrast</strong><small>Brighter markers and stronger outlines.</small></span><input type="checkbox" data-setting="highContrast" ${settings.highContrast ? "checked" : ""}></label>
           <label class="toggle-row"><span><strong>Reduced motion</strong><small>Stops decorative pulses and drifting threats.</small></span><input type="checkbox" data-setting="reducedMotion" ${settings.reducedMotion ? "checked" : ""}></label>
-          <button class="settings-link" type="button" data-action="open-controls"><span><strong>Controls</strong><small>Rebind keyboard actions.</small></span><span aria-hidden="true">→</span></button>
+          <button class="settings-link" type="button" data-action="open-controls"><span><strong>Controls</strong></span><span aria-hidden="true">→</span></button>
           <button class="primary-button" type="button" data-action="back">Done</button>
         </div>
       </section>`;
@@ -410,7 +448,7 @@ export class Game {
     }).join("");
     return `
       <section class="screen-overlay sheet-overlay" role="dialog" aria-labelledby="controls-title">
-        <div class="art-panel controls-panel side-sheet"><span class="panel-eyebrow">SETTINGS / INPUT</span><h2 id="controls-title">Controls</h2>
+        <div class="art-panel controls-panel side-sheet"><h2 id="controls-title">Controls</h2>
           <p class="binding-help">Choose an action, then press its new key. If that key is already used, the two actions swap.</p>
           <div class="binding-list">${rows}</div>
           <div class="controls-actions">
@@ -422,16 +460,41 @@ export class Game {
   }
 
   private helpScreen(): string {
+    const steps = [
+      {
+        title: "Take a job",
+        body: "At a harbor, choose the delivery job. It tells you exactly which fish to catch and where to take it.",
+      },
+      {
+        title: "Follow the marker",
+        body: `Use <kbd>${formatKey(this.save.settings.controls.left)}</kbd> and <kbd>${formatKey(this.save.settings.controls.right)}</kbd> to move. Brake with <kbd>${formatKey(this.save.settings.controls.brake)}</kbd>, then press <kbd>${formatKey(this.save.settings.controls.action)}</kbd> at the fishing marker.`,
+      },
+      {
+        title: "Catch the right fish",
+        body: "Steer the hook with the movement keys or touch pad until it meets the requested fish silhouette.",
+      },
+      {
+        title: "Deliver it fresh",
+        body: "Follow the orange harbor marker and dock. Fish lose freshness on the way, so do not linger.",
+      },
+    ];
+    const step = steps[this.helpStep] ?? steps[0];
+    const progress = steps.map((_, index) => `<span class="${index === this.helpStep ? "is-current" : ""}" aria-hidden="true"></span>`).join("");
     return `
       <section class="screen-overlay sheet-overlay" role="dialog" aria-labelledby="help-title">
-        <div class="art-panel help-panel side-sheet"><span class="panel-eyebrow">FIELD NOTES / CONTROLS</span><h2 id="help-title">How to play</h2>
-          <div class="help-grid">
-            <article><h3>Travel</h3><p><kbd>${formatKey(this.save.settings.controls.left)}</kbd> and <kbd>${formatKey(this.save.settings.controls.right)}</kbd> apply horizontal thrust. Release to coast, <kbd>${formatKey(this.save.settings.controls.brake)}</kbd> brakes, and <kbd>${formatKey(this.save.settings.controls.boost)}</kbd> boosts.</p></article>
-            <article><h3>Stop</h3><p>Brake beneath a hanging fishing marker or beside a dock, then press <kbd>${formatKey(this.save.settings.controls.action)}</kbd>. Crossing rocks quickly damages the hull.</p></article>
-            <article><h3>Fish</h3><p>Guide the hook in two axes with the same directions or drag the touch pad. Catch the requested silhouette.</p></article>
-            <article><h3>Deliver</h3><p>Freshness falls as you travel. Dock at the requested harbor before the catch drops below its minimum.</p></article>
-            <article><h3>Survive</h3><p>Rocks damage the hull. At critical damage, rescue costs up to 20 shells and loses cargo—but never your whole save.</p></article>
-            <article><h3>Night</h3><p>After dusk, trust the bearing and lamp. Fog and distant wakes reduce information without hiding critical HUD details.</p></article>
+        <div class="art-panel help-panel side-sheet"><h2 id="help-title">How to play</h2>
+          <p class="help-intro">Take a delivery job, catch the requested fish, and get it to the other harbor while it is still fresh.</p>
+          <div class="help-progress">
+            <span>Step <strong>${this.helpStep + 1}</strong> of ${steps.length}</span>
+            <div class="help-progress-track" role="img" aria-label="Step ${this.helpStep + 1} of ${steps.length}">${progress}</div>
+          </div>
+          <article class="help-card" aria-live="polite">
+            <span class="help-card-number" aria-hidden="true">${String(this.helpStep + 1).padStart(2, "0")}</span>
+            <div><h3>${step.title}</h3><p>${step.body}</p></div>
+          </article>
+          <div class="help-navigation" aria-label="Instruction navigation">
+            <button class="help-nav-button" type="button" data-action="help-previous" ${this.helpStep === 0 ? "disabled" : ""}><span aria-hidden="true">←</span> Previous</button>
+            <button class="help-nav-button is-forward" type="button" data-action="help-next" ${this.helpStep === steps.length - 1 ? "disabled" : ""}>Next <span aria-hidden="true">→</span></button>
           </div>
           <button class="primary-button" type="button" data-action="back">Back</button>
         </div>
@@ -446,7 +509,9 @@ export class Game {
     if (!wasPlaying && willPlay) this.platform.gameplayStart();
     this.renderOverlay();
     this.refreshHud();
-    if (next !== null) requestAnimationFrame(() => this.uiRoot.querySelector<HTMLElement>("#overlay-host button")?.focus());
+    if (next !== null) {
+      requestAnimationFrame(() => this.uiRoot.querySelector<HTMLElement>("#overlay-host button")?.focus({ preventScroll: true }));
+    }
   }
 
   private beginVoyage(): void {
@@ -494,6 +559,19 @@ export class Game {
     const action = target.dataset.action;
     this.feedback.cue("ui");
     switch (action) {
+      case "dismiss-tutorial": {
+        const tutorial = this.uiRoot.querySelector<HTMLButtonElement>("#tutorial-callout");
+        const message = tutorial?.querySelector<HTMLElement>(".tutorial-message")?.textContent;
+        if (!tutorial || !message) break;
+        window.clearTimeout(this.tutorialDismissTimer);
+        this.dismissedTutorialText = message;
+        tutorial.classList.add("is-dismissing");
+        this.tutorialDismissTimer = window.setTimeout(() => {
+          tutorial.hidden = true;
+          tutorial.classList.remove("is-dismissing");
+        }, this.save.settings.reducedMotion ? 0 : 280);
+        break;
+      }
       case "start": this.beginVoyage(); break;
       case "interact": this.handleInteract(); break;
       case "resume": this.setOverlay(null); break;
@@ -524,7 +602,27 @@ export class Game {
         });
         break;
       }
-      case "open-help": this.overlayReturn = this.overlay; this.setOverlay("help"); break;
+      case "open-help":
+        this.helpStep = 0;
+        this.overlayReturn = this.overlay;
+        this.setOverlay("help");
+        break;
+      case "help-previous":
+        this.helpStep = Math.max(0, this.helpStep - 1);
+        this.renderOverlay();
+        requestAnimationFrame(() => {
+          const nextFocus = this.helpStep === 0 ? "help-next" : "help-previous";
+          this.uiRoot.querySelector<HTMLButtonElement>(`[data-action="${nextFocus}"]`)?.focus();
+        });
+        break;
+      case "help-next":
+        this.helpStep = Math.min(HELP_STEP_COUNT - 1, this.helpStep + 1);
+        this.renderOverlay();
+        requestAnimationFrame(() => {
+          const nextFocus = this.helpStep === HELP_STEP_COUNT - 1 ? "help-previous" : "help-next";
+          this.uiRoot.querySelector<HTMLButtonElement>(`[data-action="${nextFocus}"]`)?.focus();
+        });
+        break;
       case "back": this.setOverlay(this.overlayReturn); break;
       case "title": this.started = false; this.setOverlay("title"); break;
       case "undock": undock(this.simulation); this.setOverlay(null); break;

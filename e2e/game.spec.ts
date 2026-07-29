@@ -1,5 +1,13 @@
 import { expect, test } from "@playwright/test";
 
+async function expectHorizontallyCentered(page: import("@playwright/test").Page, selector: string): Promise<void> {
+  const offset = await page.locator(selector).evaluate((element) => {
+    const bounds = element.getBoundingClientRect();
+    return Math.abs((bounds.left + bounds.width / 2) - window.innerWidth / 2);
+  });
+  expect(offset).toBeLessThanOrEqual(1);
+}
+
 test.beforeEach(async ({ page }) => {
   await page.route("https://sdk.crazygames.com/**", (route) => route.abort());
 });
@@ -7,10 +15,12 @@ test.beforeEach(async ({ page }) => {
 test("completes the tutorial delivery, buys an upgrade, and persists it", async ({ page }) => {
   await page.goto("/?e2e=1");
   await expect(page.getByRole("img", { name: "FSHING" })).toBeVisible();
-  await page.getByRole("button", { name: "Play" }).click();
+  await page.getByRole("button", { name: "Play", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Brindle Harbor" })).toBeVisible();
   await page.getByRole("button", { name: "Accept contract" }).click();
   await expect(page.locator("#tutorial-callout")).toContainText("Sunward Shoal");
+  await page.locator("#tutorial-callout").click();
+  await expect(page.locator("#tutorial-callout")).toBeHidden();
 
   await page.evaluate(() => window.__FSHING_TEST__?.sailToSpot("sunwardShoal"));
   await page.getByRole("button", { name: "Drop line · Sunward Shoal" }).click();
@@ -28,25 +38,29 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await expect(cargoService).toContainText("T1");
 
   await page.reload();
-  await page.getByRole("button", { name: "Play" }).click();
+  await page.getByRole("button", { name: "Play", exact: true }).click();
   await expect(page.locator(".service-card").filter({ hasText: "Cargo hold · T1" })).toBeVisible();
 });
 
 test("settings, keyboard pause, and local SDK fallback remain usable", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Settings" }).click();
+  await expectHorizontallyCentered(page, ".compact-panel");
   await page.getByText("High contrast").click();
   await page.getByText("Reduced motion").click();
   await page.getByRole("button", { name: "Controls" }).click();
+  await expectHorizontallyCentered(page, ".controls-panel");
   await page.getByRole("button", { name: "Rebind Pause" }).click();
   await page.keyboard.press("KeyO");
   await expect(page.getByRole("button", { name: "Rebind Pause" })).toHaveText("O");
   await page.getByRole("button", { name: "Done" }).click();
   await page.getByRole("button", { name: "Done" }).click();
-  await page.getByRole("button", { name: "Play" }).click();
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await expectHorizontallyCentered(page, ".harbor-panel");
   await page.getByRole("button", { name: "Back to lake →" }).click();
   await page.keyboard.press("o");
   await expect(page.getByRole("heading", { name: "Paused" })).toBeVisible();
+  await expectHorizontallyCentered(page, ".compact-panel");
   await page.getByRole("button", { name: "Return to water" }).click();
   await expect(page.locator(".hud")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Pause and options" })).toHaveCount(0);
@@ -54,10 +68,37 @@ test("settings, keyboard pause, and local SDK fallback remain usable", async ({ 
   await expect(page.locator("body")).toHaveClass(/reduced-motion/);
 });
 
+test("how to play instructions advance one card at a time", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "How to play" }).click();
+
+  await expect(page.getByText("Step 1 of 4")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Take a job" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Previous" })).toBeDisabled();
+
+  await page.getByRole("button", { name: "Next" }).click();
+  await expect(page.getByText("Step 2 of 4")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Follow the marker" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Take a job" })).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Previous" }).click();
+  await expect(page.getByText("Step 1 of 4")).toBeVisible();
+
+  for (let step = 1; step < 4; step += 1) {
+    await page.getByRole("button", { name: "Next" }).click();
+  }
+  await expect(page.getByText("Step 4 of 4")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Deliver it fresh" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Next" })).toBeDisabled();
+
+  await page.getByRole("button", { name: "Back", exact: true }).click();
+  await expect(page.getByRole("img", { name: "FSHING" })).toBeVisible();
+});
+
 test("touch controls are available at a mobile landscape viewport", async ({ page }) => {
   await page.setViewportSize({ width: 844, height: 390 });
   await page.goto("/");
-  await page.getByRole("button", { name: "Play" }).click();
+  await page.getByRole("button", { name: "Play", exact: true }).click();
   await page.getByRole("button", { name: "Back to lake →" }).click();
   await expect(page.getByRole("button", { name: "Move right" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Move left" })).toBeVisible();
@@ -68,7 +109,7 @@ test("touch controls are available at a mobile landscape viewport", async ({ pag
 
 test("keyboard input moves the boat horizontally and flips its side profile", async ({ page }) => {
   await page.goto("/?e2e=1");
-  await page.getByRole("button", { name: "Play" }).click();
+  await page.getByRole("button", { name: "Play", exact: true }).click();
   await page.getByRole("button", { name: "Accept contract" }).click();
   const startX = await page.evaluate(() => window.__FSHING_TEST__?.boatX() ?? 0);
 
