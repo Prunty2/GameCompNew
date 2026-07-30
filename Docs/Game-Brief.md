@@ -112,7 +112,7 @@ Fishing is an active supporting mechanic rather than the entire game.
 5. The player steers the hook toward a fish while avoiding weeds, debris, or unwanted species.
 6. Contact with a valid fish catches it and uses available cargo capacity.
 
-Fish should have recognizable silhouettes and movement patterns so catches do not depend on color alone. Rarer fish can move faster, hide deeper, or require improved fishing equipment. For the minimum viable release, the hook interaction should remain short and use steering rather than a separate tension or reeling system.
+Fish should have recognizable silhouettes and movement patterns so catches do not depend on color alone. During fishing, a specimen card shows the requested fish sprite beside its name and plain-language shape cue, while a labeled bracket follows the matching fish in the water. Rarer fish can move faster, hide deeper, or require improved fishing equipment. For the minimum viable release, the hook interaction should remain short and use steering rather than a separate tension or reeling system.
 
 ## Boat handling
 
@@ -146,7 +146,7 @@ All essential actions must work without hover. Touch targets must be large enoug
 
 Keyboard actions can be rebound from the Controls submenu within Settings. Bindings persist with the rest of the validated settings; assigning an occupied key swaps the two actions, and Escape remains an always-available pause fallback.
 
-The How to play menu presents the core loop as four step-by-step field-note cards. Previous and Next controls move through one card at a time, with the main Back action kept separate below the card navigation.
+The How to play menu presents the core loop as four step-by-step dockside briefing cards without a subtitle beneath the page heading. Previous and Next controls move through one card at a time, with the main Back action kept separate below the card navigation.
 
 ## Hazards, damage, and night
 
@@ -262,9 +262,9 @@ The first playable minutes should teach systems through one short delivery:
 6. Return and deliver the fish.
 7. Spend the reward toward the first upgrade.
 
-Tutorial prompts should disappear after the action is successfully performed and remain available from a help menu. The title screen places its menu on the right, leads with one unmistakable start action, and provides secondary How to play and Settings actions while keeping the lake as the visual focus. The harbor screen presents the current delivery as a three-step job route (catch, freshness, destination) before cargo or upgrades, with plain-language guidance about the immediate next action. Navigation has no permanent status bar: world markers, a directional arrow, contextual actions, and short messages carry the active objective. Cargo details, freshness, damage, money, and upgrades are reviewed at harbor. Keyboard players can pause with Escape or their configured pause key; the navigation view has no permanent pause button.
+Tutorial prompts should disappear after the action is successfully performed and remain available from a help menu. The title screen places its menu on the right, leads with one unmistakable start action, and provides secondary How to play and Settings actions while keeping the lake as the visual focus. The first harbor visit reveals systems in three stages: the player first sees only a guided, gently pulsing delivery ticket and must accept it before leaving; accepting the job reveals cargo and freshness information; completing that first delivery reveals upgrades and repairs. Later harbor visits present the current delivery as a three-step job route (catch, freshness, destination) before cargo or upgrades, with plain-language guidance about the immediate next action. Navigation has no permanent status bar: world markers, a directional arrow, contextual actions, and short messages carry the active objective. Cargo details, freshness, damage, money, and upgrades are reviewed at harbor once introduced. Keyboard players can pause with Escape or their configured pause key; the navigation view has no permanent pause button.
 
-Menu presentation follows shipped adventure-game conventions rather than general web-app patterns. The lake remains visible behind overlays; each screen has one dominant action; job information uses a physical dispatch-ticket treatment; and cargo, upgrades, settings, and help are subordinate rows or pages rather than equal-weight cards. Orange is reserved for the current or available action, while completed and informational states stay neutral. All menu screens share the same squared dockside frame, condensed display typography, visible focus treatment, and restrained horizontal transitions.
+Menu presentation follows shipped adventure-game conventions rather than general web-app patterns. The lake remains visible behind overlays; each screen has one dominant action; job information uses a physical dispatch-ticket treatment; and cargo, upgrades, settings, and help are subordinate rows or pages rather than equal-weight cards. Orange is reserved for the current or available action, while completed and informational states stay neutral. The title and Settings screens use smooth pill-shaped actions with compact right-edge arrow icons and no decorative numbering or left-edge bars. Other menu screens retain the squared dockside frame, condensed display typography, visible focus treatment, and restrained horizontal transitions.
 
 ## Persistence
 

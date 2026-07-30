@@ -318,13 +318,12 @@ export class Game {
           <img class="wordmark" src="${wordmarkUrl}" alt="FSHING" />
           <div class="title-actions">
             <button class="primary-button title-play-button" type="button" data-action="start" aria-label="Play">
-              <span class="title-play-icon" aria-hidden="true">01</span>
-              <span><strong>Begin voyage</strong></span>
-              <b aria-hidden="true">ENTER</b>
+              <strong>Begin voyage</strong>
+              <span class="menu-arrow" aria-hidden="true">→</span>
             </button>
             <div class="title-secondary-actions">
-              <button class="menu-button" type="button" data-action="open-help"><span aria-hidden="true">02</span><strong>How to play</strong></button>
-              <button class="menu-button" type="button" data-action="open-settings"><span aria-hidden="true">03</span><strong>Settings</strong></button>
+              <button class="menu-button" type="button" data-action="open-help"><strong>How to play</strong><span class="menu-arrow" aria-hidden="true">→</span></button>
+              <button class="menu-button" type="button" data-action="open-settings"><strong>Settings</strong><span class="menu-arrow" aria-hidden="true">→</span></button>
             </div>
           </div>
         </div>
@@ -338,8 +337,11 @@ export class Game {
     const available = this.simulation.availableContract?.origin === harborId ? this.simulation.availableContract : null;
     const deliverable = contract?.destination === harborId
       && this.simulation.cargo.some((item) => item.species === contract.species && item.freshness >= contract.minimumFreshness);
+    const isFirstJobOffer = this.simulation.progress.completedContracts === 0 && available?.id === "morning-order";
+    const showCargo = !isFirstJobOffer;
+    const showServices = this.simulation.progress.completedContracts > 0;
     const contractMarkup = available
-      ? `<div class="contract-card job-ticket">
+      ? `<div class="contract-card job-ticket ${isFirstJobOffer ? "is-guided" : ""}">
           <div class="job-ticket-heading">
             <div><span class="card-kicker">Your next job</span><h3>${available.title}</h3></div>
             <span class="reward-stamp"><small>Reward</small><strong>${available.reward}</strong><span>shells</span></span>
@@ -379,19 +381,19 @@ export class Game {
             <div><h2 id="harbor-title">${harbor.name}</h2><p>${harbor.subtitle}</p></div>
             <span class="shell-balance"><span class="ui-icon icon-shells" aria-hidden="true"></span><span><small>Your money</small><strong>${this.simulation.progress.money} shells</strong></span></span>
           </header>
-          <div class="harbor-intro">
-            <div><span class="panel-eyebrow">Current task</span><h3>${available ? "Choose the posted delivery" : deliverable ? "Hand in your catch" : contract ? "Continue your delivery" : "Prepare for the lake"}</h3></div>
-            <p>${available ? "Take the job below. The game will point you to the right fish, then to the delivery harbor." : deliverable ? "Your requested fish is ready. Complete the delivery to get paid." : contract ? "Your current job stays active until it is delivered." : "There is no active delivery, so you can explore or improve your boat."}</p>
+          <div class="harbor-intro ${isFirstJobOffer ? "is-first-step" : ""}">
+            <div><span class="panel-eyebrow">${isFirstJobOffer ? "First voyage" : "Current task"}</span><h3>${isFirstJobOffer ? "Accept your first delivery to begin" : available ? "Choose the posted delivery" : deliverable ? "Hand in your catch" : contract ? "Continue your delivery" : "Prepare for the lake"}</h3></div>
+            ${isFirstJobOffer ? "" : `<p>${available ? "Take the job below. The game will point you to the right fish, then to the delivery harbor." : deliverable ? "Your requested fish is ready. Complete the delivery to get paid." : contract ? "Your current job stays active until it is delivered." : "There is no active delivery, so you can explore or improve your boat."}</p>`}
           </div>
-          <div class="harbor-grid">
-            <section class="mission-section" aria-labelledby="contract-heading"><h3 id="contract-heading" class="section-title">Delivery job</h3>${contractMarkup}</section>
-            <aside class="cargo-section" aria-labelledby="cargo-heading">
+          <div class="harbor-grid ${showCargo ? "" : "is-mission-only"}">
+            <section class="mission-section" aria-labelledby="contract-heading"><h3 id="contract-heading" class="section-title">${isFirstJobOffer ? "First delivery" : "Delivery job"}</h3>${contractMarkup}</section>
+            ${showCargo ? `<aside class="cargo-section" aria-labelledby="cargo-heading">
               <div class="section-heading"><h3 id="cargo-heading" class="section-title">Your cargo</h3><span>${this.simulation.cargo.length} / ${cargoCapacity(this.simulation)} spaces</span></div>
               <div class="cargo-list">${cargoMarkup}</div>
               <p class="cargo-help">Fish lose freshness while you travel. Deliver the requested catch before it drops below the job minimum.</p>
-            </aside>
+            </aside>` : ""}
           </div>
-          <section class="services" aria-labelledby="service-heading">
+          ${showServices ? `<section class="services" aria-labelledby="service-heading">
             <div class="section-heading"><div><h3 id="service-heading" class="section-title">Dock services</h3><p>Permanent boat improvements and repairs.</p></div></div>
             <div class="service-grid">
               ${this.upgradeCard("cargo", "Cargo hold", "Carry one more fish per tier.")}
@@ -400,8 +402,8 @@ export class Game {
               <article class="service-card"><span class="ui-icon icon-repair" aria-hidden="true"></span><div><h4>Repair hull</h4><p>${Math.ceil(this.simulation.boat.damage)} damage · ${repairCost(this.simulation)} shells</p></div><button class="small-button" type="button" data-action="repair" ${this.simulation.boat.damage <= 0 || this.simulation.progress.money <= 0 ? "disabled" : ""}>Repair</button></article>
               ${harborId === "gloam" ? `<article class="service-card"><span class="ui-icon icon-permit" aria-hidden="true"></span><div><h4>Outer Gloam permit</h4><p>${this.simulation.progress.outerUnlocked ? "Granted" : `${BALANCE.permitCost} shells`}</p></div><button class="small-button" type="button" data-action="buy-permit" ${this.simulation.progress.outerUnlocked || this.simulation.progress.money < BALANCE.permitCost ? "disabled" : ""}>${this.simulation.progress.outerUnlocked ? "Owned" : "Buy"}</button></article>` : ""}
             </div>
-          </section>
-          <footer class="panel-actions"><button class="text-button" type="button" data-action="open-help">How to play</button><button class="leave-button" type="button" data-action="undock" aria-label="Back to lake →"><span>Return to open water</span><strong>Back to lake</strong><b aria-hidden="true">→</b></button></footer>
+          </section>` : ""}
+          <footer class="panel-actions ${isFirstJobOffer ? "is-guided" : ""}"><button class="text-button" type="button" data-action="open-help">How to play</button>${isFirstJobOffer ? "" : `<button class="leave-button" type="button" data-action="undock" aria-label="Back to lake →"><span>Return to open water</span><strong>Back to lake</strong><b aria-hidden="true">→</b></button>`}</footer>
         </div>
       </section>`;
   }
@@ -425,14 +427,40 @@ export class Game {
   private settingsScreen(): string {
     const settings = this.save.settings;
     return `
-      <section class="screen-overlay sheet-overlay" role="dialog" aria-labelledby="settings-title">
-        <div class="art-panel compact-panel side-sheet"><h2 id="settings-title">Settings</h2>
-          <label class="toggle-row"><span><strong>Mute</strong><small>Silence all game audio.</small></span><input type="checkbox" data-setting="muted" ${settings.muted ? "checked" : ""}></label>
-          <label class="range-row"><span><strong>Volume</strong><small>Overall game volume.</small></span><input type="range" min="0" max="1" step="0.05" value="${settings.volume}" data-setting="volume"></label>
-          <label class="toggle-row"><span><strong>High contrast</strong><small>Brighter markers and stronger outlines.</small></span><input type="checkbox" data-setting="highContrast" ${settings.highContrast ? "checked" : ""}></label>
-          <label class="toggle-row"><span><strong>Reduced motion</strong><small>Stops decorative pulses and drifting threats.</small></span><input type="checkbox" data-setting="reducedMotion" ${settings.reducedMotion ? "checked" : ""}></label>
-          <button class="settings-link" type="button" data-action="open-controls"><span><strong>Controls</strong></span><span aria-hidden="true">→</span></button>
-          <button class="primary-button" type="button" data-action="back">Done</button>
+      <section class="screen-overlay settings-overlay" role="dialog" aria-labelledby="settings-title">
+        <div class="settings-panel side-sheet">
+          <header class="settings-heading">
+            <h2 id="settings-title">Settings</h2>
+            <p>Set up the lake to suit you.</p>
+          </header>
+          <div class="settings-list">
+            <label class="setting-option setting-toggle">
+              <span class="setting-copy"><strong>Mute</strong><small>Silence all game audio.</small></span>
+              <input class="setting-input" type="checkbox" data-setting="muted" ${settings.muted ? "checked" : ""}>
+              <span class="setting-switch" aria-hidden="true"><span></span></span>
+            </label>
+            <label class="setting-option setting-volume">
+              <span class="setting-copy"><strong>Volume</strong><small>Overall game volume.</small></span>
+              <input type="range" min="0" max="1" step="0.05" value="${settings.volume}" data-setting="volume">
+            </label>
+            <label class="setting-option setting-toggle">
+              <span class="setting-copy"><strong>High contrast</strong><small>Brighter markers and stronger outlines.</small></span>
+              <input class="setting-input" type="checkbox" data-setting="highContrast" ${settings.highContrast ? "checked" : ""}>
+              <span class="setting-switch" aria-hidden="true"><span></span></span>
+            </label>
+            <label class="setting-option setting-toggle">
+              <span class="setting-copy"><strong>Reduced motion</strong><small>Stops decorative pulses and drifting threats.</small></span>
+              <input class="setting-input" type="checkbox" data-setting="reducedMotion" ${settings.reducedMotion ? "checked" : ""}>
+              <span class="setting-switch" aria-hidden="true"><span></span></span>
+            </label>
+            <button class="setting-option settings-link" type="button" data-action="open-controls">
+              <span class="setting-copy"><strong>Controls</strong><small>Review or rebind every action.</small></span>
+              <span class="menu-arrow" aria-hidden="true">→</span>
+            </button>
+          </div>
+          <button class="primary-button settings-done" type="button" data-action="back">
+            <strong>Done</strong><span class="menu-arrow" aria-hidden="true">→</span>
+          </button>
         </div>
       </section>`;
   }
@@ -483,7 +511,6 @@ export class Game {
     return `
       <section class="screen-overlay sheet-overlay" role="dialog" aria-labelledby="help-title">
         <div class="art-panel help-panel side-sheet"><h2 id="help-title">How to play</h2>
-          <p class="help-intro">Take a delivery job, catch the requested fish, and get it to the other harbor while it is still fresh.</p>
           <div class="help-progress">
             <span>Step <strong>${this.helpStep + 1}</strong> of ${steps.length}</span>
             <div class="help-progress-track" role="img" aria-label="Step ${this.helpStep + 1} of ${steps.length}">${progress}</div>

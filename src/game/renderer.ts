@@ -5,6 +5,7 @@ import playerBoatUrl from "../assets/player-boat.png";
 import worldAtlasUrl from "../assets/world-atlas.png";
 import {
   BALANCE,
+  FISH,
   FISHING_SPOTS,
   HARBORS,
   type FishSpecies,
@@ -175,8 +176,12 @@ export class CanvasRenderer {
     this.drawWorldCell(2, 1, width * 0.7, height * 0.86, 260, 150);
     context.restore();
 
+    const targetSpecies = FISHING_SPOTS.find((spot) => spot.id === fishing.spot)?.species;
     for (const target of fishing.targets) {
       const point = this.fishingToScreen(target, width, height);
+      if (target.species === targetSpecies) {
+        this.drawFishingTargetMarker(point, target.species, width, height, settings.highContrast);
+      }
       this.drawFish(target.species, point, target.direction, width, height, settings.highContrast);
     }
 
@@ -192,15 +197,7 @@ export class CanvasRenderer {
     context.lineWidth = 2;
     context.strokeRect(hook.x - 20, hook.y - 20, 40, 40);
 
-    const species = FISHING_SPOTS.find((spot) => spot.id === fishing.spot)?.species;
-    if (species) {
-      context.fillStyle = "rgba(4, 18, 29, 0.78)";
-      context.fillRect(20, 82, 188, 38);
-      context.fillStyle = "#f5e7c8";
-      context.font = "800 13px system-ui, sans-serif";
-      context.textBaseline = "middle";
-      context.fillText(`TARGET  ${fishShortName(species)}`, 34, 101);
-    }
+    if (targetSpecies) this.drawFishingTargetGuide(targetSpecies, width, height, settings.highContrast);
   }
 
   private drawPanorama(image: HTMLImageElement, cameraX: number, width: number, height: number): number {
@@ -379,6 +376,115 @@ export class CanvasRenderer {
         fishHeight * 0.68,
       );
     }
+  }
+
+  private drawFishingTargetMarker(
+    point: WorldPoint,
+    species: FishSpecies,
+    width: number,
+    height: number,
+    highContrast: boolean,
+  ): void {
+    const { context } = this;
+    const scale = clamp(Math.min(width, height) * 0.17, 82, 142);
+    const markerWidth = species === "needlePike" ? scale * 1.36 : scale * 0.96;
+    const markerHeight = species === "needlePike" ? scale * 0.68 : scale * 0.9;
+    const left = point.x - markerWidth / 2;
+    const top = point.y - markerHeight / 2;
+    const corner = Math.max(12, scale * 0.15);
+
+    context.save();
+    context.strokeStyle = highContrast ? "#fff6d8" : "#ff7b21";
+    context.lineWidth = highContrast ? 4 : 3;
+    context.beginPath();
+    context.moveTo(left + corner, top);
+    context.lineTo(left, top);
+    context.lineTo(left, top + corner);
+    context.moveTo(left + markerWidth - corner, top);
+    context.lineTo(left + markerWidth, top);
+    context.lineTo(left + markerWidth, top + corner);
+    context.moveTo(left, top + markerHeight - corner);
+    context.lineTo(left, top + markerHeight);
+    context.lineTo(left + corner, top + markerHeight);
+    context.moveTo(left + markerWidth, top + markerHeight - corner);
+    context.lineTo(left + markerWidth, top + markerHeight);
+    context.lineTo(left + markerWidth - corner, top + markerHeight);
+    context.stroke();
+
+    const label = "TARGET";
+    context.font = "900 11px system-ui, sans-serif";
+    const labelWidth = context.measureText(label).width + 18;
+    const labelX = point.x - labelWidth / 2;
+    const guideRight = clamp(width * 0.04, 18, 42) + clamp(width * 0.26, 250, 330);
+    const guideBottom = clamp(height * 0.075, 22, 68) + clamp(height * 0.12, 78, 96);
+    const overlapsGuide = labelX < guideRight && labelX + labelWidth > 0 && top - 22 < guideBottom + 6;
+    const labelY = overlapsGuide ? top + markerHeight + 2 : top - 22;
+    context.fillStyle = highContrast ? "#fff6d8" : "#ff7b21";
+    context.fillRect(labelX, labelY, labelWidth, 20);
+    context.fillStyle = "#04121d";
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+    context.fillText(label, point.x, labelY + 10);
+    context.restore();
+  }
+
+  private drawFishingTargetGuide(
+    species: FishSpecies,
+    width: number,
+    height: number,
+    highContrast: boolean,
+  ): void {
+    const { context } = this;
+    const fish = FISH[species];
+    const cells: Record<FishSpecies, [number, number]> = {
+      reedfin: [0, 0],
+      needlePike: [1, 0],
+      gloamGill: [0, 1],
+    };
+    const [column, row] = cells[species];
+    const cardX = clamp(width * 0.04, 18, 42);
+    const cardY = clamp(height * 0.075, 22, 68);
+    const cardWidth = clamp(width * 0.26, 250, 330);
+    const cardHeight = clamp(height * 0.12, 78, 96);
+    const portraitSize = cardHeight - 18;
+    const portraitX = cardX + 10;
+    const portraitY = cardY + 9;
+
+    context.save();
+    context.fillStyle = "rgba(4, 18, 29, 0.9)";
+    context.fillRect(cardX, cardY, cardWidth, cardHeight);
+    context.fillStyle = highContrast ? "#fff6d8" : "#ff7b21";
+    context.fillRect(cardX, cardY, 5, cardHeight);
+    context.strokeStyle = highContrast ? "#fff6d8" : "rgba(245, 231, 200, 0.5)";
+    context.lineWidth = highContrast ? 2 : 1;
+    context.strokeRect(cardX + 0.5, cardY + 0.5, cardWidth - 1, cardHeight - 1);
+    context.fillStyle = "rgba(255, 255, 255, 0.06)";
+    context.fillRect(portraitX, portraitY, portraitSize, portraitSize);
+
+    const previewWidth = species === "needlePike" ? portraitSize * 1.08 : portraitSize * 0.86;
+    const previewHeight = species === "needlePike" ? portraitSize * 0.55 : portraitSize * 0.86;
+    this.drawFishCell(
+      column,
+      row,
+      portraitX + portraitSize / 2,
+      portraitY + portraitSize / 2,
+      previewWidth,
+      previewHeight,
+    );
+
+    const textX = portraitX + portraitSize + 14;
+    context.textAlign = "left";
+    context.textBaseline = "alphabetic";
+    context.fillStyle = highContrast ? "#fff6d8" : "#ff7b21";
+    context.font = "800 10px system-ui, sans-serif";
+    context.fillText("CATCH THIS FISH", textX, cardY + cardHeight * 0.31);
+    context.fillStyle = "#f5e7c8";
+    context.font = "900 16px system-ui, sans-serif";
+    context.fillText(fishShortName(species), textX, cardY + cardHeight * 0.56);
+    context.fillStyle = "#b8c8c3";
+    context.font = "700 11px system-ui, sans-serif";
+    context.fillText(fish.shape.toUpperCase(), textX, cardY + cardHeight * 0.77);
+    context.restore();
   }
 
   private drawFishCell(column: number, row: number, x: number, y: number, width: number, height: number): void {
