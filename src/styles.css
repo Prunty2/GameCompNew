@@ -4109,3 +4109,148 @@ kbd {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+/* Full-bleed title composition: the lake is the surface, not a panel backdrop. */
+.title-screen {
+  align-items: center;
+  justify-content: center;
+  padding: max(18px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right))
+    max(18px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
+  background:
+    radial-gradient(circle at 50% 43%, transparent 10%, rgb(4 20 27 / 12%) 55%, rgb(4 20 27 / 48%) 100%),
+    linear-gradient(rgb(6 28 36 / 10%), rgb(6 28 36 / 30%));
+  backdrop-filter: none;
+}
+
+.title-panel {
+  width: min(680px, 94vw);
+  min-width: 0;
+  height: auto;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  transform: translateY(-4vh);
+  background: transparent;
+  box-shadow: none;
+}
+
+.title-panel .wordmark {
+  width: min(680px, 94vw);
+  margin: clamp(-150px, -10vw, -92px) 0 clamp(-116px, -7.5vw, -68px);
+  filter:
+    drop-shadow(0 4px 2px rgb(1 10 18 / 72%))
+    drop-shadow(0 15px 24px rgb(1 10 18 / 46%));
+}
+
+.title-actions {
+  width: min(380px, 82vw);
+  margin: 0;
+  gap: 12px;
+}
+
+.title-actions .title-play-button,
+.title-actions .title-settings-button {
+  width: 100%;
+  border-radius: 14px;
+}
+
+.title-actions .title-play-button {
+  position: relative;
+  display: flex;
+  min-height: 64px;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 58px;
+  border: 0;
+  background: var(--menu-signal);
+  color: var(--menu-ink);
+  box-shadow: 0 5px 0 var(--menu-signal-dark), 0 14px 30px rgb(2 15 21 / 30%);
+  text-align: center;
+}
+
+.title-actions .title-play-icon {
+  position: absolute;
+  left: 20px;
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: rgb(11 38 48 / 14%);
+  font-size: 0.86rem;
+}
+
+.title-actions .title-play-button strong {
+  font-family: var(--display-face);
+  font-size: 1.25rem;
+  font-weight: 850;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  text-transform: none;
+}
+
+.title-actions .title-settings-button {
+  display: flex;
+  min-height: 52px;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 20px;
+  border: 1px solid rgb(247 241 227 / 52%);
+  background: rgb(7 31 40 / 64%);
+  color: var(--menu-paper);
+  box-shadow: 0 10px 24px rgb(2 15 21 / 18%);
+  backdrop-filter: blur(5px);
+}
+
+.title-actions .title-settings-button strong {
+  font-size: 0.88rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+.title-actions .title-settings-button:hover,
+.title-actions .title-settings-button:focus-visible {
+  border-color: var(--menu-signal);
+  background: rgb(7 31 40 / 80%);
+}
+
+@media (max-height: 650px) {
+  .title-panel {
+    transform: translateY(-2vh);
+  }
+
+  .title-panel .wordmark {
+    width: min(540px, 82vw);
+    margin-block: -116px -88px;
+  }
+
+  .title-actions .title-play-button {
+    min-height: 56px;
+  }
+
+  .title-actions .title-settings-button {
+    min-height: 46px;
+  }
+}
+
+@media (max-width: 600px) {
+  .title-panel {
+    width: 100%;
+    padding: 0;
+    transform: translateY(-3vh);
+  }
+
+  .title-panel .wordmark {
+    width: min(560px, 112vw);
+    max-width: none;
+    margin-block: -116px -86px;
+  }
+
+  .title-actions {
+    width: min(340px, 88vw);
+  }
+}

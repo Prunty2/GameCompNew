@@ -89,7 +89,7 @@ export class CanvasRenderer {
     if (!art) return;
     const { context } = this;
     const cameraX = this.cameraX(simulation);
-    const waterline = this.drawPanorama(art.lake, cameraX, width, height);
+    const waterline = this.drawPanorama(art.lake, cameraX, width, height, settings.cinematic);
     const region = regionAt(simulation.boat.x);
 
     context.save();
@@ -324,8 +324,15 @@ export class CanvasRenderer {
     this.drawFishingTargetGuide(targetSpecies, width, height, settings.highContrast);
   }
 
-  private drawPanorama(image: HTMLImageElement, cameraX: number, width: number, height: number): number {
-    let sourceWidth = image.naturalWidth * BALANCE.cameraViewWidth;
+  private drawPanorama(
+    image: HTMLImageElement,
+    cameraX: number,
+    width: number,
+    height: number,
+    cinematic: boolean,
+  ): number {
+    const viewWidth = cinematic ? 0.54 : BALANCE.cameraViewWidth;
+    let sourceWidth = image.naturalWidth * viewWidth;
     let sourceHeight = image.naturalHeight;
     const targetAspect = width / height;
     if (sourceWidth / sourceHeight < targetAspect) {
