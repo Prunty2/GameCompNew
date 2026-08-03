@@ -72,7 +72,8 @@ const FIXED_STEP = 1 / 120;
 const MAX_FRAME = 0.05;
 const UI_REFRESH_INTERVAL = 100;
 const HELP_STEP_COUNT = 6;
-const PAUSE_EXIT_DURATION = 340;
+const SCENE_COVER_DURATION = 120;
+const SCENE_REVEAL_DURATION = 160;
 
 type OverlayScreen =
   | "title"
@@ -115,7 +116,9 @@ export class Game {
   private helpStep = 0;
   private toastTimer: number | undefined;
   private tutorialDismissTimer: number | undefined;
-  private pauseTransitionTimer: number | undefined;
+  private sceneTransitioning = false;
+  private sceneTransitionTarget: OverlayScreen | undefined;
+  private queuedOverlay: { next: OverlayScreen } | null = null;
   private dismissedTutorialText: string | null = null;
   private pendingSpot: SpotId | null = null;
   private surveyResult: SurveyResult | null = null;
@@ -156,11 +159,11 @@ export class Game {
     this.accumulator += delta;
 
     if (this.input.consumePause() && this.started) {
-      if (this.overlay === null) this.setOverlay("pause");
+      if (this.overlay === null || this.sceneTransitioning && this.sceneTransitionTarget === null) this.setOverlay("pause");
       else if (this.overlay === "pause") this.setOverlay(null);
     }
 
-    if (this.started && this.overlay === null) {
+    if (this.started && this.overlay === null && !this.sceneTransitioning) {
       while (this.accumulator >= FIXED_STEP) {
         updateSimulation(this.simulation, this.input.read(), FIXED_STEP);
         this.accumulator -= FIXED_STEP;
@@ -177,7 +180,7 @@ export class Game {
     this.feedback.updateEngine(
       Math.abs(this.simulation.boat.speed) / engineMaximum,
       currentInput.boost,
-      this.started && this.overlay === null && this.simulation.mode === "cruising",
+      this.started && this.overlay === null && !this.sceneTransitioning && this.simulation.mode === "cruising",
     );
     this.renderer.render(this.simulation, {
       ...this.save.settings,
@@ -218,6 +221,11 @@ export class Game {
         </section>
 
         <div class="overlay-host" id="overlay-host"></div>
+        <div class="scene-transition" id="scene-transition" aria-hidden="true">
+          <span class="scene-transition-panel scene-transition-panel-top"></span>
+          <span class="scene-transition-panel scene-transition-panel-bottom"></span>
+          <span class="scene-transition-waterline"></span>
+        </div>
       </div>`;
 
     this.uiRoot.addEventListener("click", this.onClick);
@@ -782,24 +790,42 @@ export class Game {
   }
 
   private setOverlay(next: OverlayScreen): void {
-    if (this.overlay === "pause" && next === null && !this.save.settings.reducedMotion) {
-      if (this.pauseTransitionTimer !== undefined) return;
-      const pauseScreen = this.uiRoot.querySelector<HTMLElement>(".pause-screen");
-      if (pauseScreen) {
-        pauseScreen.classList.add("is-closing");
-        this.pauseTransitionTimer = window.setTimeout(() => {
-          this.pauseTransitionTimer = undefined;
-          this.commitOverlay(null);
-        }, PAUSE_EXIT_DURATION);
-        return;
-      }
+    if (this.sceneTransitioning) {
+      this.queuedOverlay = { next };
+      return;
+    }
+    if (next === this.overlay) return;
+    if (this.save.settings.reducedMotion) {
+      this.commitOverlay(next);
+      return;
     }
 
-    if (this.pauseTransitionTimer !== undefined) {
-      window.clearTimeout(this.pauseTransitionTimer);
-      this.pauseTransitionTimer = undefined;
+    if (this.overlay === "pause" && next === null) {
+      const pauseScreen = this.uiRoot.querySelector<HTMLElement>(".pause-screen");
+      pauseScreen?.classList.add("is-closing");
     }
-    this.commitOverlay(next);
+
+    const transition = this.uiRoot.querySelector<HTMLElement>("#scene-transition");
+    if (!transition) {
+      this.commitOverlay(next);
+      return;
+    }
+
+    this.sceneTransitioning = true;
+    this.sceneTransitionTarget = next;
+    transition.className = "scene-transition is-covering";
+    window.setTimeout(() => {
+      this.commitOverlay(next);
+      transition.className = "scene-transition is-revealing";
+      window.setTimeout(() => {
+        transition.className = "scene-transition";
+        this.sceneTransitioning = false;
+        this.sceneTransitionTarget = undefined;
+        const queuedOverlay = this.queuedOverlay;
+        this.queuedOverlay = null;
+        if (queuedOverlay && queuedOverlay.next !== this.overlay) this.setOverlay(queuedOverlay.next);
+      }, SCENE_REVEAL_DURATION);
+    }, SCENE_COVER_DURATION);
   }
 
   private commitOverlay(next: OverlayScreen): void {
