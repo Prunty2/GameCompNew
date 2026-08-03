@@ -12,12 +12,14 @@ These instructions apply to the entire repository. If a subdirectory later needs
 
 The goal is to keep `main` playable and make concurrent work easy to combine.
 
+Every repository change, including documentation and configuration updates, must be made on a new short-lived branch and submitted through a pull request. Never commit or push changes directly to `main`.
+
 ### Before starting
 
 1. Read this file, `README.md`, and the relevant sections of `Docs/Game-Brief.md`.
 2. Run `git status --short` and inspect current changes before editing. Treat every pre-existing change as another person's work.
 3. Agree on one owner, a narrow scope, affected files, and an acceptance check for the task. Record this in the issue, task, pull request, or team chat.
-4. Create a short-lived branch from an up-to-date `main`. Use a descriptive name such as `liam/fishing-input` or `codex/save-validation`; do not work directly on `main`.
+4. Create a new short-lived branch from an up-to-date `main` for every change. Use a descriptive name such as `liam/fishing-input` or `codex/save-validation`; do not reuse a branch or work directly on `main`.
 5. Check whether someone else owns the same files or system. Coordinate before changing a shared hotspot.
 
 Do not begin a broad refactor as part of an unrelated feature. If the requested work depends on a refactor, separate it into its own agreed task or commit.
@@ -69,6 +71,8 @@ Prefer adding a focused module over making several people edit a shared coordina
 - Never rewrite history on `main`. Only force-push a personal branch when nobody else is using it, and use `--force-with-lease`.
 
 ### Handoff and review
+
+Open a pull request for every change before it can be merged into `main`, regardless of the size or type of the change.
 
 Every handoff or pull request should include:
 
