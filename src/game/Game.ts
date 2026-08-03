@@ -72,6 +72,7 @@ const FIXED_STEP = 1 / 120;
 const MAX_FRAME = 0.05;
 const UI_REFRESH_INTERVAL = 100;
 const HELP_STEP_COUNT = 6;
+const PAUSE_EXIT_DURATION = 340;
 const SCENE_COVER_DURATION = 120;
 const SCENE_REVEAL_DURATION = 160;
 
@@ -116,9 +117,10 @@ export class Game {
   private helpStep = 0;
   private toastTimer: number | undefined;
   private tutorialDismissTimer: number | undefined;
+  private pauseTransitionTimer: number | undefined;
   private sceneTransitioning = false;
   private sceneTransitionTarget: OverlayScreen | undefined;
-  private queuedOverlay: { next: OverlayScreen } | null = null;
+  private queuedOverlay: { next: OverlayScreen; useSceneTransition: boolean } | null = null;
   private dismissedTutorialText: string | null = null;
   private pendingSpot: SpotId | null = null;
   private surveyResult: SurveyResult | null = null;
@@ -789,20 +791,34 @@ export class Game {
     return `<section class="screen-overlay sheet-overlay" role="dialog"><div class="art-panel compact-panel side-sheet"><h2>${title}</h2><p>${body}</p><button class="primary-button" type="button" data-action="${action}">${label}</button></div></section>`;
   }
 
-  private setOverlay(next: OverlayScreen): void {
+  private setOverlay(next: OverlayScreen, useSceneTransition = false): void {
     if (this.sceneTransitioning) {
-      this.queuedOverlay = { next };
+      this.queuedOverlay = { next, useSceneTransition };
       return;
     }
     if (next === this.overlay) return;
-    if (this.save.settings.reducedMotion) {
-      this.commitOverlay(next);
-      return;
+
+    if (this.overlay === "pause" && next === null && !this.save.settings.reducedMotion) {
+      if (this.pauseTransitionTimer !== undefined) return;
+      const pauseScreen = this.uiRoot.querySelector<HTMLElement>(".pause-screen");
+      if (pauseScreen) {
+        pauseScreen.classList.add("is-closing");
+        this.pauseTransitionTimer = window.setTimeout(() => {
+          this.pauseTransitionTimer = undefined;
+          this.commitOverlay(null);
+        }, PAUSE_EXIT_DURATION);
+        return;
+      }
     }
 
-    if (this.overlay === "pause" && next === null) {
-      const pauseScreen = this.uiRoot.querySelector<HTMLElement>(".pause-screen");
-      pauseScreen?.classList.add("is-closing");
+    if (this.pauseTransitionTimer !== undefined) {
+      window.clearTimeout(this.pauseTransitionTimer);
+      this.pauseTransitionTimer = undefined;
+    }
+
+    if (!useSceneTransition || this.save.settings.reducedMotion) {
+      this.commitOverlay(next);
+      return;
     }
 
     const transition = this.uiRoot.querySelector<HTMLElement>("#scene-transition");
@@ -823,7 +839,9 @@ export class Game {
         this.sceneTransitionTarget = undefined;
         const queuedOverlay = this.queuedOverlay;
         this.queuedOverlay = null;
-        if (queuedOverlay && queuedOverlay.next !== this.overlay) this.setOverlay(queuedOverlay.next);
+        if (queuedOverlay && queuedOverlay.next !== this.overlay) {
+          this.setOverlay(queuedOverlay.next, queuedOverlay.useSceneTransition);
+        }
       }, SCENE_REVEAL_DURATION);
     }, SCENE_COVER_DURATION);
   }
@@ -843,8 +861,8 @@ export class Game {
 
   private beginVoyage(): void {
     this.started = true;
-    if (this.simulation.dockedAt) this.setOverlay("harbor");
-    else this.setOverlay(null);
+    if (this.simulation.dockedAt) this.setOverlay("harbor", true);
+    else this.setOverlay(null, true);
   }
 
   private syncSave(): void {
@@ -959,7 +977,7 @@ export class Game {
         });
         break;
       case "back": this.setOverlay(this.overlayReturn); break;
-      case "title": this.started = false; this.setOverlay("title"); break;
+      case "title": this.started = false; this.setOverlay("title", true); break;
       case "undock":
         if (this.simulation.activeContract
           && this.simulation.cargo.some((item) => item.species === this.simulation.activeContract?.species)

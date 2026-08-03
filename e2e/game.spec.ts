@@ -36,7 +36,7 @@ test("main menu presents only centered play and settings actions", async ({ page
   expect(bounds.every(({ center }) => Math.abs(center - viewportCenter) <= 1)).toBe(true);
 });
 
-test("a quick waterline transition connects menus and gameplay", async ({ page }) => {
+test("the waterline transition is reserved for entering and leaving the title", async ({ page }) => {
   await page.goto("/");
   const transition = page.locator("#scene-transition");
 
@@ -47,13 +47,20 @@ test("a quick waterline transition connects menus and gameplay", async ({ page }
 
   await page.getByRole("button", { name: "Accept contract" }).click();
   await expect(page.locator(".screen-overlay")).toHaveCount(0);
+  await expect(transition).not.toHaveClass(/is-(covering|revealing)/);
+
   await page.keyboard.press("Escape");
-  await expect(transition).toHaveClass(/is-(covering|revealing)/);
   await expect(page.getByRole("heading", { name: "Paused" })).toBeVisible();
+  await expect(transition).not.toHaveClass(/is-(covering|revealing)/);
 
   await page.getByRole("button", { name: "Resume" }).click();
-  await expect(transition).toHaveClass(/is-(covering|revealing)/);
   await expect(page.getByRole("heading", { name: "Paused" })).toHaveCount(0);
+  await expect(transition).not.toHaveClass(/is-(covering|revealing)/);
+
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "Title screen" }).click();
+  await expect(transition).toHaveClass(/is-(covering|revealing)/);
+  await expect(page.getByRole("button", { name: "Play", exact: true })).toBeVisible();
 });
 
 test("pause blurs the lake and slides the compact menu in and out", async ({ page }) => {

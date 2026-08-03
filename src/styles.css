@@ -524,21 +524,22 @@ input:focus-visible {
   position: absolute;
   left: 0;
   width: 100%;
-  height: calc(50% + 1px);
-  background:
-    linear-gradient(90deg, rgb(14 55 65 / 96%), rgb(5 29 39 / 99%) 42% 58%, rgb(14 55 65 / 96%)),
-    var(--menu-ink);
+  height: calc(50% + 32px);
+  background: linear-gradient(90deg, rgb(14 55 65 / 84%), rgb(5 29 39 / 92%) 42% 58%, rgb(14 55 65 / 84%));
+  backdrop-filter: blur(10px) saturate(0.78);
   will-change: transform;
 }
 
 .scene-transition-panel-top {
   top: 0;
-  border-bottom: 1px solid rgb(184 201 195 / 18%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0 calc(100% - 32px), transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0 calc(100% - 32px), transparent 100%);
 }
 
 .scene-transition-panel-bottom {
   bottom: 0;
-  border-top: 1px solid rgb(184 201 195 / 18%);
+  -webkit-mask-image: linear-gradient(to top, #000 0 calc(100% - 32px), transparent 100%);
+  mask-image: linear-gradient(to top, #000 0 calc(100% - 32px), transparent 100%);
 }
 
 .scene-transition-waterline {
@@ -547,10 +548,10 @@ input:focus-visible {
   top: 50%;
   left: 50%;
   width: min(520px, 72vw);
-  height: 3px;
+  height: 2px;
   border-radius: 999px;
   background: var(--menu-signal);
-  box-shadow: 0 0 18px rgb(232 164 77 / 58%);
+  box-shadow: 0 0 10px rgb(232 164 77 / 42%);
 }
 
 .scene-transition.is-covering .scene-transition-panel-top {
