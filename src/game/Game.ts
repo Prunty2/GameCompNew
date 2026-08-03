@@ -403,19 +403,13 @@ export class Game {
       <section class="screen-overlay title-screen" role="dialog" aria-label="FSHING main menu">
         <div class="title-panel">
           <img class="wordmark" src="${wordmarkUrl}" alt="FSHING" />
-          <p class="title-tagline">Read the lake. Protect its fish. Complete the research season.</p>
           <div class="title-actions">
             <button class="primary-button title-play-button" type="button" data-action="start" aria-label="Play">
               <span class="title-play-icon" aria-hidden="true">▶</span>
               <strong>Play</strong>
             </button>
-            <div class="title-secondary-actions">
-              <button class="menu-button" type="button" data-action="open-help"><strong>How to play</strong></button>
-              <button class="menu-button" type="button" data-action="open-field-guide"><strong>Field guide</strong></button>
-              <button class="menu-button" type="button" data-action="open-settings"><strong>Settings</strong></button>
-            </div>
+            <button class="menu-button title-settings-button" type="button" data-action="open-settings"><strong>Settings</strong></button>
           </div>
-          <p class="title-controls">A / D to steer&nbsp;&nbsp;·&nbsp;&nbsp;Space to interact</p>
         </div>
       </section>`;
   }

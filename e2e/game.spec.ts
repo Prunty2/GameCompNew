@@ -12,31 +12,28 @@ test.beforeEach(async ({ page }) => {
   await page.route("https://sdk.crazygames.com/**", (route) => route.abort());
 });
 
-test("main menu presents one primary action and three balanced secondary actions", async ({ page }) => {
+test("main menu presents only centered play and settings actions", async ({ page }) => {
   await page.goto("/");
 
   const actions = page.locator(".title-actions button");
-  await expect(actions).toHaveCount(4);
+  await expect(actions).toHaveCount(2);
+  await expect(page.getByRole("button", { name: "Play", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Settings" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "How to play" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Field guide" })).toHaveCount(0);
+  await expect(page.locator(".title-tagline, .title-controls")).toHaveCount(0);
 
   const bounds = await actions.evaluateAll((buttons) => buttons.map((button) => {
     const rect = button.getBoundingClientRect();
-    const label = button.querySelector("strong")?.getBoundingClientRect();
     return {
-      bottom: rect.bottom,
-      height: rect.height,
-      labelHeight: label?.height ?? 0,
-      top: rect.top,
+      center: rect.left + rect.width / 2,
       width: rect.width,
     };
   }));
+  const viewportCenter = await page.evaluate(() => window.innerWidth / 2);
 
-  expect(bounds[0].width).toBeGreaterThan(bounds[1].width);
-  expect(new Set(bounds.slice(1).map(({ width }) => width)).size).toBe(1);
-  expect(new Set(bounds.slice(1).map(({ height }) => height)).size).toBe(1);
-  expect(bounds[0].bottom).toBeLessThan(bounds[1].top);
-  expect(new Set(bounds.slice(1).map(({ top }) => top)).size).toBe(1);
-  expect(bounds[1].labelHeight).toBeLessThanOrEqual(bounds[1].height);
-  await expect(page.getByRole("button", { name: "How to play" }).locator("strong")).toHaveCSS("white-space", "nowrap");
+  expect(bounds[0].width).toBe(bounds[1].width);
+  expect(bounds.every(({ center }) => Math.abs(center - viewportCenter) <= 1)).toBe(true);
 });
 
 test("completes the tutorial delivery, buys an upgrade, and persists it", async ({ page }) => {
@@ -118,6 +115,7 @@ test("settings, keyboard pause, and local SDK fallback remain usable", async ({ 
 
 test("how to play instructions advance one card at a time", async ({ page }) => {
   await page.goto("/");
+  await page.getByRole("button", { name: "Play", exact: true }).click();
   await page.getByRole("button", { name: "How to play" }).click();
 
   await expect(page.getByText("Step 1 of 6")).toBeVisible();
@@ -140,7 +138,7 @@ test("how to play instructions advance one card at a time", async ({ page }) => 
   await expect(page.getByRole("button", { name: "Next" })).toBeDisabled();
 
   await page.getByRole("button", { name: "Back", exact: true }).click();
-  await expect(page.getByRole("img", { name: "FSHING" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Brindle Harbor" })).toBeVisible();
 });
 
 test("touch controls are available at a mobile landscape viewport", async ({ page }) => {
@@ -179,6 +177,7 @@ test("keyboard input moves the boat horizontally and flips its side profile", as
 
 test("field guide exposes regions, depth access, and non-colour population labels", async ({ page }) => {
   await page.goto("/");
+  await page.getByRole("button", { name: "Play", exact: true }).click();
   await page.getByRole("button", { name: "Field guide" }).click();
   await expect(page.getByRole("heading", { name: "Lake field guide" })).toBeVisible();
   await expect(page.getByText("Brindle Coast")).toBeVisible();
@@ -187,5 +186,5 @@ test("field guide exposes regions, depth access, and non-colour population label
   await expect(page.getByText("Healthy · 100%", { exact: true }).first()).toBeVisible();
   await expect(page.getByText("T5 · 41–50 m")).toBeVisible();
   await page.getByRole("button", { name: "Back", exact: true }).click();
-  await expect(page.getByRole("img", { name: "FSHING" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Brindle Harbor" })).toBeVisible();
 });
