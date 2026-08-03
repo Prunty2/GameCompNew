@@ -2,25 +2,26 @@
 
 ## Project summary
 
-**FSHING** is a single-player, side-on 2D delivery and fishing game for web browsers. The player pilots a small boat along a horizontally scrolling lake between settlements built at opposite shores. Towns request particular fish, so the player must travel to fishing grounds, drop and steer a hook through the water beneath the boat, then return before the cargo spoils.
+**FSHING** is a single-player, side-on environmental-science fishing and delivery game for web browsers. The player pilots a research boat along a horizontally scrolling lake, reads water-quality evidence, predicts which fish is adapted to each ecosystem, fishes at the appropriate depth, and plans a delivery using distance, speed, time, freshness, hazard, and population data.
 
-The lake is inviting during the day but becomes disturbing after dark. Darkness reduces visibility, hazardous conditions damage the boat, and unsettling events make nighttime journeys increasingly dangerous. Money from successful deliveries buys more cargo space, greater speed, stronger lights, and access to new regions.
+The lake is inviting during the day but becomes difficult after dark. Darkness reduces visibility and marked conditions damage the boat. Successful deliveries fund larger boat classes, greater speed, stronger lights, deeper sampling lines, and access to three visually and scientifically distinct regions. Fishing lowers a species population; releasing catches and allowing time for recovery makes sustainability a playable system rather than a paragraph of exposition.
 
-The game has no conventional ending. Its repeating loop continues indefinitely, while completing every delivery tier, unlocking every region, and purchasing every upgrade provides a clear state of mastery.
+After eight completed research deliveries, the player receives a season report summarising prediction accuracy, route decisions, conservation work, and lake health. The loop remains playable afterward, while discovering all nine species, unlocking every region, and purchasing every upgrade provides longer-term mastery.
 
 ## Design pillars
 
-1. **Deliveries drive every decision.** Fishing, route choice, upgrades, and risk management exist to support requested deliveries.
-2. **Simple to start, satisfying to master.** Side-scrolling boat momentum and direct hook steering should feel immediately understandable but reward precision.
-3. **A cozy lake with a disturbing underside.** Daytime is calm and illustrated; nighttime steadily becomes threatening and genuinely frightening.
-4. **Short objectives inside a continuous game.** Individual deliveries provide quick goals suitable for a browser session while progression persists between visits.
-5. **Small, polished scope.** A compact lake with meaningful routes is preferable to a large, empty world.
+1. **Evidence before action.** Players read depth, temperature, dissolved oxygen, turbidity, and habitat before predicting a species.
+2. **Mathematics affects the voyage.** Route estimates expose the relationship `time = distance ÷ speed`; the safer and faster options have visible trade-offs.
+3. **Ecology reacts to the player.** Catching, releasing, protection thresholds, natural recovery, and ecosystem bonuses make population management meaningful.
+4. **Simple to start, satisfying to master.** Boat momentum and direct hook steering are immediate, while better predictions, deeper lines, and route judgement provide mastery.
+5. **A broad lake with purposeful stops.** Six research buoys, three hazards, two harbors, three ecosystems, and six depth bands make the enlarged route readable.
+6. **Accessible evidence.** Shapes, numbers, labels, icons, and text repeat every important colour signal.
 
 ## Inspiration and originality
 
 ### Inspiration
 
-The main inspiration is *Dredge*, particularly its fishing journeys, boat progression, and contrast between calm daytime travel and dangerous nights.
+*Dredge* informed the broad contrast between calm travel and risky darkness. *Cat Goes Fishing* was examined as a competitor because its clear equipment, exploration, species-discovery, and catalogue progression are easy to understand. FSHING retains only those abstract genre patterns and transforms them into an original environmental-science loop. No names, fish designs, dialogue, interface layouts, balance values, art, code, map, or behaviours were copied.
 
 ### Points of originality
 
@@ -32,42 +33,137 @@ FSHING is not intended to reproduce Dredge in 2D. Its distinct focus is a repeat
 - Its compact lake and short delivery contracts are designed for drop-in browser play.
 - Progress comes from opening efficient delivery routes and mastering acceleration, braking, and hazard timing along a side-on lake.
 - Horror is delivered through 2D visibility, sound, environmental changes, and lake hazards rather than a large story campaign.
+- Water surveys, scientific explanations, population simulation, explicit route calculations, and a season evaluation distinguish the learning purpose from either inspiration.
 
 ## Audience and platform
 
 - **Platform:** Desktop and mobile web, distributed as a static CrazyGames HTML5 build.
 - **Genre:** Side-scrolling delivery, fishing, and light survival game.
 - **Mode:** Single-player.
-- **Audience:** Players who enjoy accessible vehicle handling, collection, upgrades, and atmospheric horror.
+- **Audience:** Year 7–10 students and casual players who enjoy accessible vehicle handling, collection, upgrades, and learning through short decisions.
+- **STEM purpose:** Practise interpreting environmental measurements, matching adaptations to habitats, reasoning about population sustainability, and applying distance–speed–time relationships.
 - **Content tone:** Cozy during the day. Night sequences may become genuinely disturbing, but should avoid graphic violence and remain suitable for a broad browser-game audience.
 - **Session pattern:** Continuous saved game with delivery-sized objectives that can usually be completed in approximately 3–8 minutes.
 
 ## Core gameplay loop
 
-1. Visit a harbor and choose a requested fish delivery.
-2. Review the destination, reward, required fish, and freshness requirements.
-3. Pilot the boat to an appropriate fishing area.
-4. Cast a hook and steer it toward the requested fish while avoiding unwanted catches and obstacles.
-5. Store the catch in limited cargo space; freshness begins decreasing.
-6. Choose a safe or fast route to the delivery harbor.
-7. Navigate storms, darkness, and other lake dangers that can damage the boat or delay the delivery.
-8. Deliver fresh fish to earn money.
-9. Purchase upgrades and unlock access to more dangerous regions with rarer fish and better rewards.
-10. Accept another delivery and repeat.
+1. Visit a harbor and accept a requested fish delivery.
+2. Pilot to one of six clearly anchored waterline research buoys.
+3. Read the water measurements and predict the requested resident species.
+4. Review immediate explanatory feedback, then steer the hook toward the fish.
+5. Store the catch; freshness falls and the species population decreases.
+6. Compare survey and express routes from the catch site to the destination using distance, estimated time, predicted freshness, and hazard multipliers.
+7. Navigate three visible hazards, darkness, and fog. Faster travel increases hazard damage.
+8. Deliver the fish and compare the same catch-to-harbor prediction with the actual result.
+9. Release unneeded catches, monitor populations, and purchase boat, engine, lamp, or line upgrades.
+10. Review field-journal mastery and the end-of-season evaluation, then repeat.
 
 Failed or poor deliveries should cost time and potential income, but should not erase the player's entire save. The player should always have a low-risk way to recover.
 
+## STEM learning design
+
+### Learning outcomes
+
+After a complete research season, the target player should be able to:
+
+1. Interpret depth, temperature, dissolved oxygen, turbidity, and habitat as evidence rather than isolated facts.
+2. Explain how at least two visible adaptations suit a fish to its habitat.
+3. Apply `time = distance ÷ speed` to compare two routes.
+4. Explain why a faster journey can preserve freshness while increasing collision risk.
+5. Predict how repeated harvesting, release, protection thresholds, and recovery affect a population.
+6. Use prediction-versus-result feedback to revise a decision.
+
+The game deliberately places the question before the answer. A survey asks the player to make a prediction, records it, immediately explains the best-supported species, and then lets the player test that evidence underwater. The field guide retains the result so learning is visible over time.
+
+### Learning loop and feedback
+
+```mermaid
+flowchart LR
+  A["Accept research delivery"] --> B["Travel to research buoy"]
+  B --> C["Read water-quality evidence"]
+  C --> D["Predict requested resident"]
+  D --> E["Receive explanation"]
+  E --> F["Fish within unlocked depth"]
+  F --> G["Population decreases and freshness starts"]
+  G --> H["Compare catch-to-harbor routes"]
+  H --> I["Navigate marked hazards"]
+  I --> J["Compare predicted and actual freshness"]
+  J --> K["Deliver or release"]
+  K --> L["Upgrade and review field guide"]
+  L --> A
+```
+
+Feedback uses three levels:
+
+- **Immediate:** selected-answer state, written explanation, catch feedback, warning buoy, damage message.
+- **After a crossing:** predicted versus actual freshness, payment, and healthy-ecosystem bonus.
+- **Across the season:** prediction accuracy, number of route plans, population health, conservation score, species discoveries, and a reflection prompt.
+
+### Computational thinking
+
+- **Decomposition:** travel, survey, fishing, population, contract, hazard, rendering, input, persistence, and platform integration are separate responsibilities.
+- **Pattern recognition:** every research site exposes the same measurement structure, allowing players to notice warmer shallows, colder depths, oxygen needs, and body-shape patterns.
+- **Abstraction:** normalized horizontal position represents an 18 km lake; six line tiers represent depth bands; populations are bounded 0–100 indices.
+- **Algorithms:** fixed-step movement, seeded target movement, clamped save migration, route estimation, catch depletion, delivery recovery, and contract selection are deterministic.
+- **Evaluation:** automated tests compare expected states; in-game prediction/result screens let the player evaluate their own model.
+
+### Core pseudocode
+
+```text
+SURVEY(site, prediction, contractTarget)
+  expected ← contractTarget IF contractTarget is a documented site resident
+             ELSE site.primarySpecies
+  surveysCompleted ← surveysCompleted + 1
+  IF prediction = expected
+    correctPredictions ← correctPredictions + 1
+  ENDIF
+  add expected to discoveredSpecies
+  RETURN explanation(site.readings, expected.adaptations)
+```
+
+```text
+CATCH(species)
+  IF cargo is full THEN reject catch
+  IF population[species] ≤ 15 THEN protect species and reject catch
+  cargo.add(species, freshness = 100)
+  depletion ← 7 + (species.depthTier × 2)
+  population[species] ← MAX(0, population[species] - depletion)
+```
+
+```text
+PLAN_ROUTE(contract, engineTier)
+  distanceKm ← ABS(destinationHarborX - catchSiteX) × 18
+  engineFactor ← 1 + (engineTier × 0.11)
+  safeSpeed ← 0.05 × 0.92 × engineFactor × 18
+  fastSpeed ← 0.05 × 1.12 × engineFactor × 18
+  safeTime ← distanceKm ÷ safeSpeed
+  fastTime ← distanceKm ÷ fastSpeed
+  predictedFreshness ← 100 - (time × 0.667)
+  safeHazardMultiplier ← 0.70
+  fastHazardMultiplier ← 1.45
+```
+
+```text
+DELIVER(catch)
+  payment ← baseReward × freshnessFactor
+  IF at least 7 species have population ≥ 55 THEN payment ← payment + 12
+  FOR EACH species
+    population[species] ← MIN(100, population[species] + slowRecoveryByDepth)
+  ENDFOR
+  show predictedFreshness versus actualFreshness
+```
+
 ## World structure
 
-The game takes place along one connected side-on lake route divided into regions. The camera follows the boat horizontally while layered shore, sky, water, docks, and hazards establish depth without 3D. The initial release should prioritize a dense, readable route rather than a physically long empty map.
+The game takes place along one connected side-on lake route divided into regions. The camera follows the boat horizontally while layered shore, sky, water, docks, and hazards establish depth without 3D. The full lake should span at least three landscape view widths, making a cross-lake delivery feel like a journey while keeping each stretch anchored by a harbor, fishing ground, boundary, or visible landmark.
 
 ### Region progression
 
-- **Starting waters:** Calm, bright, forgiving routes, common fish, and short deliveries.
-- **Outer lake:** Longer routes, changing weather, stronger currents, and more valuable fish.
-- **Dark waters:** Poor visibility, disturbing events, severe hazards, rare fish, and the highest-paying contracts.
+- **Brindle Coast:** Warm blue-green water, calm weather, common surface fish, and short deliveries.
+- **Mosswater Reach:** Green water, heavier vegetation, deeper fish, changing weather, and stronger currents.
+- **Violet Gloam:** Cold violet water, poor visibility, disturbing events, severe hazards, and the rarest deep fish.
 
-Regions are unlocked through purchased permits or boat upgrades. Locked boundaries must be communicated naturally through gates, hazardous water, harbor authorities, or equipment requirements rather than invisible walls alone.
+The connected surface route remains navigable, but each region has a distinct color treatment, named fishing grounds, and fish population. Deeper fishing layers are unlocked through line-depth upgrades, while the outermost grounds also require a harbor permit. Locked depth is shown directly in the fishing view rather than enforced by an unexplained invisible boundary.
 
 ### Harbors
 
@@ -97,7 +193,7 @@ Each contract defines:
 
 The contract screen must show enough information for the player to make a route decision. Early contracts request common fish in nearby waters. Later contracts combine rarer catches, distant destinations, difficult conditions, and tighter freshness expectations.
 
-Fresh deliveries pay the full reward. Lower freshness reduces the payment. Fully spoiled fish cannot complete a contract, but may be discarded or sold for a negligible amount. Exact freshness rates and rewards must be centralized in balance data and tested before release.
+Fresh deliveries pay the full reward. Lower freshness reduces the payment. Fully spoiled fish cannot complete a contract. Any unneeded catch can be released at harbor, reversing that catch's modelled population cost and adding to the player’s conservation score. Exact freshness rates and rewards are centralized in balance data and covered by deterministic tests.
 
 To keep the repeating game playable after all authored contract tiers are complete, the game may generate contracts from validated combinations of unlocked fish, regions, quantities, and destinations.
 
@@ -113,6 +209,19 @@ Fishing is an active supporting mechanic rather than the entire game.
 6. Contact with a valid fish catches it and uses available cargo capacity.
 
 Fish should have recognizable silhouettes and movement patterns so catches do not depend on color alone. Rarer fish can move faster, hide deeper, or require improved fishing equipment. For the minimum viable release, the hook interaction should remain short and use steering rather than a separate tension or reeling system.
+
+The lake contains nine readable species across six depth tiers. Surface species are available immediately. Each line-depth upgrade extends the hook into another visible band of water, revealing more valuable fish and eventually the Violet Gloam abyss. Fish below the current line limit remain visible behind a clearly labelled depth boundary so the next upgrade has an understandable benefit.
+
+Each site owns a fixed three-species resident set, and the underwater view spawns two individuals of each resident. This keeps the scene busy without placing cold, deep species in warm shallows. A contract may request any resident at its assigned site; the prediction screen uses that contract species as its supported answer.
+
+| Site | Resident species |
+| --- | --- |
+| Sunward Shoal | Reedfin, Sun Perch, Silver Dart |
+| Silver Bay | Silver Dart, Sun Perch, Needle Pike |
+| Needle Run | Needle Pike, Silver Dart, Mossback |
+| Mosswater Pool | Mossback, Lantern Eel, Needle Pike |
+| Outer Gloam | Gloam Gill, Violet Ray, Lantern Eel |
+| Blackwater Trench | Abyss Crown, Violet Ray, Gloam Gill |
 
 ## Boat handling
 
@@ -146,7 +255,7 @@ All essential actions must work without hover. Touch targets must be large enoug
 
 Keyboard actions can be rebound from the Controls submenu within Settings. Bindings persist with the rest of the validated settings; assigning an occupied key swaps the two actions, and Escape remains an always-available pause fallback.
 
-The How to play menu presents the core loop as four step-by-step field-note cards. Previous and Next controls move through one card at a time, with the main Back action kept separate below the card navigation.
+The How to play menu presents the core loop as six step-by-step field-note cards: accept, travel, predict, catch, plan, and conserve. Previous and Next controls move through one card at a time, with the main Back action kept separate below the card navigation.
 
 ## Hazards, damage, and night
 
@@ -185,12 +294,13 @@ Money is earned primarily from completed deliveries and spent on permanent impro
 
 ### Core upgrade paths
 
-- **Cargo capacity:** Carry more requested fish and combine deliveries efficiently.
+- **Boat and cargo:** Each tier increases capacity and visibly grows the vessel through named classes, from the starter skiff to a lakebreaker.
 - **Engine speed:** Reach fishing areas and destinations before fish spoil.
 - **Lights:** See hazards and resist nighttime visibility penalties.
+- **Line depth:** Reach progressively deeper fish and new underwater color zones.
 - **Region access:** Purchase permits or equipment needed to enter new waters.
 
-Repair costs provide a money sink and reinforce careful navigation. Prices should rise by upgrade tier without requiring excessive repetition. The player should regularly face a useful decision between upgrading carrying capacity, improving travel time, or entering a more profitable region.
+Core boat upgrades have six tiers. Repair costs provide a money sink and reinforce careful navigation. Prices rise by upgrade tier without requiring excessive repetition. The player should regularly face a useful decision between building a larger boat, improving travel time, strengthening night visibility, or reaching a deeper and more profitable fishing world.
 
 The game is considered content-complete when the player has unlocked every region and purchased the maximum tier of every upgrade. Play can continue afterward through repeatable or generated deliveries.
 
@@ -236,19 +346,19 @@ The visual design must communicate fish type, hazards, freshness, damage, and in
 
 ## Audio design
 
-Audio should support both comfort and unease:
+The implemented vertical slice uses original procedural Web Audio rather than external sound files:
 
-- Quiet, low engine thrum with only a restrained pitch and volume increase at top speed
-- Water, wake, rain, wind, docking, collision, and fishing feedback
-- Warm harbor ambience
-- Sparse daytime music
-- Reduced or altered music at night
-- Directional-feeling threat cues represented through stereo where available
-- Subtle sounds beyond the visible area
+| Cue | Implementation | Purpose | Equivalent non-audio feedback |
+| --- | --- | --- | --- |
+| Engine and boost | Filtered triangle oscillator; pitch and gain follow speed | Communicate acceleration without a loud loop | Boat motion, wake, and boost-control state |
+| UI and cast | Short sine sweep; filtered noise plus descending tone | Confirm an input and line drop | Focus/pressed state and visible hook |
+| Catch, delivery, upgrade | Distinct rising triangle/sine patterns | Separate three positive outcomes | Named toast, flash, result panel, and changed values |
+| Collision and denial | Low sawtooth/noise impact or descending square tone | Signal damage or unavailable action | Hazard sign/name, damage toast, denial reason |
+| Dock | Two restrained descending triangle tones | Confirm safe arrival | Harbor overlay and dock state |
 
-Moment-to-moment feedback should remain restrained but immediate. Boat speed and boost affect the engine tone, button and control presses have a short physical response, casting and catches use distinct cues, and impacts combine sound, haptics where available, a brief flash, and reduced-motion-aware camera shake. Mute and volume apply to all generated feedback.
+Optional device vibration mirrors these cue categories. Saved mute and volume settings control the master gain. Audio is never the only signal, and engine audio drops to silence whenever gameplay is paused by an overlay or focus loss.
 
-The game must include a mute control and save its setting. Important dangers must also have visible feedback. Audio should pause or reduce appropriately when the game loses focus.
+Future soundscape work may add water, weather, harbor ambience, sparse music, and region-specific atmosphere, while preserving mute, visible warnings, and reduced-motion accessibility.
 
 ## Interface and onboarding
 
@@ -257,14 +367,14 @@ The first playable minutes should teach systems through one short delivery:
 1. Apply horizontal thrust, brake, and dock at the starting harbor.
 2. Accept a nearby request for one common fish.
 3. Follow a marked route to a fishing area.
-4. Cast and steer the hook into the requested fish.
-5. Observe the freshness indicator.
-6. Return and deliver the fish.
-7. Spend the reward toward the first upgrade.
+4. Read the water evidence, predict the requested resident, and review the explanation.
+5. Cast and steer the hook into the requested fish.
+6. Compare two catch-to-harbor routes as freshness starts.
+7. Return, compare predicted with actual freshness, deliver, and buy the first upgrade.
 
-Tutorial prompts should disappear after the action is successfully performed and remain available from a help menu. The title screen places its menu on the right, leads with one unmistakable start action, and provides secondary How to play and Settings actions while keeping the lake as the visual focus. The harbor screen presents the current delivery as a three-step job route (catch, freshness, destination) before cargo or upgrades, with plain-language guidance about the immediate next action. Navigation has no permanent status bar: world markers, a directional arrow, contextual actions, and short messages carry the active objective. Cargo details, freshness, damage, money, and upgrades are reviewed at harbor. Keyboard players can pause with Escape or their configured pause key; the navigation view has no permanent pause button.
+Tutorial prompts should disappear after the action is successfully performed and remain available from a help menu. The centered title panel leads with one unmistakable Play action and provides secondary How to play, Field guide, and Settings actions while keeping the lake visible. The harbor screen presents the current delivery as a three-step job route before cargo or upgrades, with plain-language guidance about the immediate next action. Navigation has no permanent status bar: world markers, hazard signs, a directional arrow, contextual actions, and short messages carry the active objective. Cargo details, freshness, damage, money, populations, and upgrades are reviewed in the harbor or field guide. Keyboard players can pause with Escape or their configured pause key.
 
-Menu presentation follows shipped adventure-game conventions rather than general web-app patterns. The lake remains visible behind overlays; each screen has one dominant action; job information uses a physical dispatch-ticket treatment; and cargo, upgrades, settings, and help are subordinate rows or pages rather than equal-weight cards. Orange is reserved for the current or available action, while completed and informational states stay neutral. All menu screens share the same squared dockside frame, condensed display typography, visible focus treatment, and restrained horizontal transitions.
+Menu presentation follows familiar shipped game conventions rather than general web-app patterns. The title screen uses a centered, clearly bounded menu with a large Play action followed by How to play and Settings. The lake remains visible behind overlays; each screen has one dominant action; job information uses a physical dispatch-ticket treatment; and cargo, upgrades, settings, and help are subordinate rows or pages rather than equal-weight cards. Warm amber is reserved for the current or available action, while completed and informational states stay neutral. Deep teal, soft sea-glass, warm ivory, and restrained coral form the shared palette. All menu screens use the same softly rounded dockside frame, readable display typography, visible focus treatment, and restrained transitions.
 
 ## Persistence
 
@@ -273,8 +383,9 @@ The game automatically saves stable progression, including:
 - Money
 - Purchased upgrade tiers
 - Unlocked regions
-- Active or available contract state where appropriate
-- Tutorial completion
+- Boat, engine, lamp, and line-depth upgrade tiers
+- Fish population values and discovered species
+- Survey accuracy, route-plan count, conservation score, and season-completion state
 - Settings such as mute, high contrast, and reduced motion
 - Keyboard control bindings
 
@@ -295,16 +406,20 @@ Save data is versioned, validated, clamped, and migrated. CrazyGames data storag
 
 ## Scope
 
-### Minimum viable game
+### Implemented vertical slice
 
-- One connected lake containing two harbors and two regions
+- One connected lake containing two harbors and three regions
 - Responsive side-scrolling boat movement
 - Docking and harbor interfaces
 - Delivery contracts and freshness
 - One complete steer-the-hook fishing interaction
-- At least three visually distinct fish
+- Nine visually distinct fish across six depth bands
 - Cargo, speed, and light upgrades
-- Region unlocking
+- Region and depth unlocking
+- Evidence-based water surveys and explanatory prediction feedback
+- Route mathematics with safe/fast risk trade-offs
+- Fish populations, protection, release, recovery, and ecosystem bonuses
+- Persistent scientific field guide and end-of-season mastery report
 - Day/night cycle with reduced nighttime visibility
 - At least one changing lake condition
 - Boat damage, repair, and rescue
@@ -314,14 +429,12 @@ Save data is versioned, validated, clamped, and migrated. CrazyGames data storag
 - CrazyGames SDK integration
 - Unit and browser tests for the complete gameplay loop
 
-### Stretch goals
+### Future stretch goals
 
-- Third lake region and additional harbor
 - More fish behaviors and fishing obstacles
 - Procedurally assembled repeatable contracts
 - Currents, fog, and severe storms
 - More elaborate nighttime entities and false landmarks
-- Additional upgrade tiers
 - Optional contract bonuses and chained deliveries
 - Expanded ambient dialogue
 
@@ -338,18 +451,15 @@ Save data is versioned, validated, clamped, and migrated. CrazyGames data storag
 - Fishing-line tension simulation
 - Large open world
 
-## Team organisation
+## Submission ownership
 
-All team members contribute to game design and testing. Each feature should still have one clear owner.
+This document is the planning record for **Saxon Rigg-Smith's individual Assessment 3 submission**.
 
-| Team member | Primary responsibilities |
+| Submission owner | Recorded responsibilities |
 | --- | --- |
-| Liam | Lead programming, technical design, integration, builds, and test coordination |
-| David | Audio direction, sound production, gameplay design, and playtesting |
-| Harrison | Lightweight dialogue, tutorial wording, atmosphere, gameplay design, and playtesting |
-| Saxon | Visual direction, UI and asset production, gameplay design, and visual QA |
+| Saxon Rigg-Smith | Game concept, STEM design, interface and visual direction, asset specifications, implementation integration, testing, evaluation, and final submission |
 
-Liam owns final integration decisions where systems overlap. Saxon defines asset specifications with Liam before production. David and Harrison should deliver audio and text in small, testable batches rather than waiting for the final week.
+Any contribution by another person must be added here with the exact asset, code, feedback, or testing work they supplied before the portfolio is submitted. The current submission does not attribute project ownership to an unverified team.
 
 ## Eight-week production plan
 
@@ -435,7 +545,7 @@ The two-month schedule requires an eight-week plan. The minimum viable game take
 - Keep the main branch playable and integrate small changes frequently.
 - Assign one owner and a clear acceptance test to each task.
 - Use placeholder assets early, then replace them according to agreed dimensions and naming.
-- Hold at least one team playtest and task review each week.
+- Hold at least one stakeholder playtest and task review each week.
 - Record bugs with reproduction steps, expected behavior, severity, and owner.
 - Prioritize blockers, save corruption, input failures, and unreadable gameplay before cosmetic issues.
 - Stop adding minimum-viable features after Week 6 and stop adding all features after Week 7 begins.
@@ -452,6 +562,10 @@ The two-month schedule requires an eight-week plan. The minimum viable game take
 - Cargo limits
 - Upgrade prices, effects, and maximum tiers
 - Region unlocking
+- Survey correctness, explanation target, discovery, and accuracy
+- Population depletion, release recovery, protection, and delivery recovery
+- Safe/fast route estimates and hazard multipliers
+- Season-completion threshold and mastery statistics
 - Save validation, migration, and clamping
 - Deterministic fishing behavior where gameplay randomness is used
 
@@ -459,7 +573,10 @@ The two-month schedule requires an eight-week plan. The minimum viable game take
 
 - Start from a new save
 - Complete the tutorial delivery
+- Make a water-evidence prediction before fishing
+- Catch the requested fish, then compare and choose a catch-to-harbor route
 - Catch and deliver a fish
+- View prediction-versus-result feedback and the field guide
 - Purchase and retain an upgrade after reload
 - Recover from critical boat damage
 - Navigate menus with keyboard and pointer
@@ -471,7 +588,11 @@ The two-month schedule requires an eight-week plan. The minimum viable game take
 
 - Is horizontal boat travel enjoyable within the first minute?
 - Can players tell where to obtain the requested fish?
+- Can players explain which measurements supported their species prediction?
+- Does the prediction feedback correct a misconception without feeling punitive?
 - Do freshness and hazards create interesting route decisions without feeling unfair?
+- Can players explain the speed–time–risk trade-off after one crossing?
+- Do population labels change fishing or release decisions?
 - Can players understand why a delivery lost value or failed?
 - Is nighttime frightening while remaining readable and avoidable?
 - Does each upgrade create a noticeable improvement?
@@ -482,6 +603,8 @@ The two-month schedule requires an eight-week plan. The minimum viable game take
 The release is successful when:
 
 - A new player can complete the tutorial delivery without verbal help.
+- A player can identify at least one habitat adaptation from the survey feedback.
+- Route estimates and population consequences are visible before the relevant decision.
 - The delivery loop remains understandable after returning to the game later.
 - Boat handling is responsive on keyboard and touch.
 - Night changes player behavior and creates tension without unavoidable failure.
@@ -495,13 +618,14 @@ This slice proves the complete accept–fish–deliver–upgrade loop through a 
 
 ### Player journey
 
-1. Start at **Brindle Harbor** on the left shore and accept **The Morning Order**, requesting one Reedfin for **Gloam Ferry** on the far right.
-2. Hold right to leave the dock. The camera follows the boat while distant shoreline and near reeds move at different rates.
-3. Brake beneath the hanging Sunward Shoal marker and drop the line.
-4. Enter a side-view underwater cutaway, steer the hook down and sideways, and catch the round Reedfin by silhouette.
-5. Return to the surface, watch freshness fall, and cross the lake through changing conditions.
-6. Dock at Gloam Ferry, complete the delivery, and buy one cargo, engine, or lamp upgrade.
-7. Continue with seeded repeatable contracts and purchase the permit required to fish in Outer Gloam.
+1. Start at **Brindle Harbor** and accept **The Morning Order**, requesting one Reedfin for **Gloam Ferry**.
+2. Brake beside the water-connected Sunward Shoal research buoy.
+3. Read 4 m depth, 21°C temperature, 8.4 mg/L dissolved oxygen, low turbidity, and reed habitat; predict the Reedfin from three silhouettes.
+4. Read the adaptation explanation, enter the underwater cutaway, and catch the Reedfin.
+5. As freshness begins, compare survey and express estimates from Sunward Shoal to Gloam Ferry, then choose one.
+6. Watch freshness and population change while crossing the lake past visible hazards.
+7. Dock at Gloam Ferry, compare predicted with actual freshness, collect the payment, and buy a boat, engine, lamp, or line-depth upgrade.
+8. Continue with seeded contracts, grow the boat through seven classes, protect vulnerable populations, and unlock Outer Gloam.
 
 The tutorial is action-based and a new player should complete the first delivery in roughly two to four minutes.
 
@@ -509,7 +633,7 @@ The tutorial is action-based and a new player should complete the first delivery
 
 - One continuous horizontal lake route with Brindle Harbor at the left edge and Gloam Ferry at the right edge.
 - A side-follow camera with generated panoramic scenery, layered parallax, a readable waterline, and underwater cutaway fishing.
-- Three fishing grounds and three side-profile fish: round **Reedfin**, long **Needle Pike**, and fork-tailed **Gloam Gill**.
+- Six water-connected fishing grounds and nine silhouette-and-color-distinct fish across the Brindle Coast, Mosswater Reach, and Violet Gloam.
 - Authored tutorial contract followed by seeded repeatable contracts selected from unlocked fish.
 - Cargo freshness, payment scaling, limited capacity, upgrades, repair, critical-damage rescue, fog, and day/night pressure.
 - Direct left/right/brake keyboard and touch travel controls plus direct two-axis hook steering.
@@ -521,24 +645,35 @@ All durations use simulation seconds; horizontal positions use normalized world 
 
 | Value | Initial setting |
 | --- | --- |
-| Horizontal thrust | 0.055 units/s² |
-| Engine boost thrust | 0.085 units/s² |
-| Base maximum surface speed | 0.08 units/s |
+| Horizontal thrust | 0.034 units/s² |
+| Engine boost thrust | 0.057 units/s² |
+| Base maximum surface speed | 0.05 units/s |
 | Brake strength | 0.72 units/s² |
 | Passive water drag | 0.62 per second |
-| Camera view width | 0.59 world units |
+| Camera view width | 0.30 world units |
 | Critical rescue threshold | 100 damage |
 | Freshness lifetime | 150 seconds |
 | Tutorial minimum freshness | 35% |
 | Tutorial reward | 90 shells |
-| Cargo capacity | 1 fish, then 2 at tier 1 |
-| Cargo upgrade | 60 shells |
-| Engine upgrade | 70 shells; +16% maximum speed |
-| Lamp upgrade | 70 shells; +24% night visibility |
+| Healthy-ecosystem bonus | 6 shells for 5 healthy species; 12 for 7 |
+| Cargo capacity | 1 fish, then +1 per boat tier up to 7 |
+| Boat and cargo upgrade | 60 shells base; six tiers |
+| Engine upgrade | 70 shells base; +11% maximum speed per tier; six tiers |
+| Lamp upgrade | 70 shells base; six tiers |
+| Line-depth upgrade | 55 shells base; six tiers unlock progressively deeper water |
 | Outer Gloam permit | 85 shells |
 | Repair price | 1 shell per 2 damage, rounded up |
 | Full day/night cycle | 210 seconds; final 70 seconds are night |
 | Fog cycle | 48 seconds; readable warning precedes dense fog |
+| Catch population cost | 7 + (fish depth tier × 2) points |
+| Protected threshold | 15 population points |
+| Harbor release recovery | Reverses that catch's 7 + (depth tier × 2) point cost |
+| Delivery recovery | 1–2 points per species, slower at depth |
+| Empty-contract harbor recovery | Up to 8 points per visit, slower at depth, until an unlocked stock is viable |
+| Survey/express hazard multiplier | 0.70 / 1.45 |
+| Route distance | Catch site to destination harbor, scaled by 18 km per world unit |
+| Route freshness loss | 0.667 percentage points per model minute |
+| Research season report | After 8 completed deliveries |
 
 Delivery payment scales linearly from 45% of the base reward at the minimum freshness to 100% at full freshness. Spoiled fish cannot complete a contract. Rescue returns the boat to the nearest harbor, empties cargo, repairs 55 damage, and deducts at most 20 shells so the save cannot become unrecoverable.
 
@@ -552,7 +687,8 @@ Every authored visual asset in this slice is generated with GPT Image 2.0. No pr
 | `lake-chart.png` | Side-on panoramic sky, distant shore, waterline, and lake atmosphere |
 | `player-boat.png` | Player vessel in strict side profile on a chroma-key matte |
 | `harbor-pier.png` | Long weathered side-view harbor pier that extends from either shoreline |
-| `fish-atlas.png` | Side-profile Reedfin, Needle Pike, Gloam Gill, and hook sprites on a chroma-key matte |
+| `fish-atlas.png` | Fishing-hook sprite and retained original fish reference cells |
+| `fish-atlas-v2.png` | Nine independently generated, silhouette-distinct species in a strict 3 × 3 atlas |
 | `world-atlas.png` | Side-view buoy, fishing marker, fog, night-wake, and retained legacy sprites on a chroma-key matte |
 | `ui-panel.png` | Minimal full-bleed dark menu and harbor surface |
 | `ui-button.png` | Minimal full-bleed primary action surface |

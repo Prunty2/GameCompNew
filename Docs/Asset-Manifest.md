@@ -1,6 +1,6 @@
 # FSHING asset manifest
 
-Every authored visual asset used by the MVP was generated with GPT Image 2.0 on 24 July 2026. No bitmap, SVG, icon, texture, panel, button, logo, scenery plate, or game sprite was created with drawing code.
+The initial authored visual set was generated with GPT Image 2.0 on 24 July 2026. The expanded nine-species fish atlas was generated with OpenAI's built-in image-generation tool on 31 July 2026. No bitmap, SVG, icon, texture, panel, button, logo, scenery plate, or game sprite was created with drawing code.
 
 The untouched generated outputs are preserved in `output/imagegen/`. Runtime copies live in `src/assets/` and are explicitly imported by TypeScript or CSS. HTML and CSS arrange and label the generated interface surfaces. Canvas draws the simulation, camera, line, wake, water movement, visibility, and accessibility indicators; it does not manufacture replacement UI art.
 
@@ -24,9 +24,17 @@ The boat, harbor pier, fish atlas, and world atlas were requested on a uniform `
 
 ### `fish-atlas.png`
 
-- Runtime role: Reedfin, Needle Pike, Gloam Gill, and fishing hook
+- Runtime role: original three-fish reference atlas; the hook cell remains in active use
 - Generated size: 1254 × 1254
 - Prompt: “Use GPT Image 2.0. Create a strict 2 by 2 sprite atlas for a side-on 2D fishing game. Every cell equal size and every object entirely inside its cell with generous padding. Top-left: round-bodied Reedfin with broad fan fins. Top-right: long needle-like pike with sharp pointed snout. Bottom-left: compact eerie Gloam Gill with forked tail and a single eye-like side marking. Bottom-right: simple J-shaped fishing hook with short swivel, no long line. All three fish in STRICT orthographic side profile facing right, with bold distinct silhouettes. Restrained editorial gouache/screen-print style, muted lake teal, cream, ink navy, and sparse orange accents. No labels, text, borders, cell dividers, bubbles, plants, scenery, water, shadows, or extra objects. Entire canvas behind all cells must be perfectly uniform full-bleed pure chroma-magenta #FF00FF with no texture, gradient, checkerboard, or variation.”
+
+### `fish-atlas-v2.png`
+
+- Runtime role: nine distinct fish sprites in the exact row-major order Reedfin, Sun Perch, Silver Dart, Needle Pike, Mossback, Lantern Eel, Gloam Gill, Violet Ray, and Abyss Crown
+- Generated size: 1254 × 1254
+- Generation mode: OpenAI built-in image generation, using `fish-atlas.png` for sprite treatment and `lake-chart.png` for palette/painting context
+- Prompt: “Create one original strict 3 × 3 sprite atlas for FSHING. Use the supplied fish atlas only for the restrained editorial gouache/screen-print treatment and the lake image only for its desaturated teal, cream, ink-navy and sparse amber palette. Put exactly one complete fish in each equal cell with generous padding, strict orthographic side profile facing right, no overlap, and a uniform full-bleed chroma-magenta matte. Row 1: round Reedfin with fan fins; tall Sun Perch with crest; slim Silver Dart with split tail. Row 2: long Needle Pike with pointed snout; heavy Mossback with leaf-like fins; snake-like Lantern Eel with a small lure. Row 3: Gloam Gill with fork tail and eye marking; wide Violet Ray with ribbon tail; armoured Abyss Crown with crowned head and pale sensory eye. Make all nine silhouettes immediately different at gameplay size. No text, labels, borders, grid lines, hook, water, bubbles, plants, scenery, shadows, extra objects, copied characters, or designs from another fishing game.”
+- Originality note: species names, silhouettes, arrangement, palette direction, and prompt were authored specifically for FSHING. The output does not reproduce assets from *Cat Goes Fishing* or another commercial game.
 
 ### `world-atlas.png`
 
@@ -65,6 +73,25 @@ The boat, harbor pier, fish atlas, and world atlas were requested on a uniform `
 - Runtime role: twelve status, objective, upgrade, setting, and pause pictograms
 - Generated size: 1448 × 1086
 - Prompt: “Use GPT Image 2.0. Create a strict 4 by 3 icon atlas for a restrained side-on 2D lake game's HTML interface. Twelve equal rectangular cells in exact row-major order: cargo crate, fish freshness with leaf and fish, damaged boat hull, clock/time, shell currency, objective compass arrow, engine, boat lamp, stamped permit paper, repair wrench, speaker/sound, pause bars. One centered icon per cell. Minimal bold cream line-and-solid pictograms with sparse safety-orange accents on a uniform edge-to-edge deep ink-navy painted background. Icons must remain highly legible at 20 pixels and differ by silhouette, not color alone. No circles or medallions around icons, no labels, no letters, no numbers, no decorative frames, no cell borders, no grid lines, no gradients, no transparency, no checkerboard. Keep exact equal-cell alignment and generous inner padding.”
+
+## Procedural audio assets
+
+FSHING bundles no external audio files. `src/services/feedbackService.ts` creates the implemented sound and haptic feedback at runtime:
+
+| Cue | Source/implementation | Runtime role | Accessible equivalent |
+| --- | --- | --- | --- |
+| Engine/boost | Filtered triangle oscillator with speed-controlled pitch and gain | Communicate movement intensity | Boat movement, wake, and boost state |
+| UI | Short sine sweep | Confirm a menu/control action | Pressed/focus state |
+| Cast | Filtered noise plus descending sine | Confirm that the line entered the water | Visible hook descent |
+| Catch | Noise transient plus two rising tones | Confirm a secured fish | Catch toast, flash, cargo update |
+| Collision | Low noise plus descending sawtooth | Communicate hull damage | Named hazard and damage toast |
+| Dock | Two descending triangle tones | Confirm arrival | Harbor overlay |
+| Delivery | Three-tone rising sequence | Confirm job completion | Delivery result and payment |
+| Deny | Descending square tone | Mark an unavailable action | Written reason and disabled state |
+| Upgrade | Two rising tones | Confirm permanent progression | New tier/class text |
+| Haptics | Optional `navigator.vibrate` patterns per cue | Reinforce action category | Never required to understand state |
+
+The saved mute and volume controls apply to the master gain. Sounds are original parameterised synthesis, not recordings or adaptations of another game.
 
 ## Runtime constraints
 

@@ -5,7 +5,18 @@ import uiPanelUrl from "../assets/ui-panel.png";
 import { FeedbackService, type FeedbackCue } from "../services/feedbackService";
 import type { PlatformService } from "../services/platformService";
 import { saveGame, type SaveData } from "../services/saveGame";
-import { BALANCE, FISH, harborById, spotById, type FishSpecies, type HarborId, type SpotId, type UpgradeId } from "./balance";
+import {
+  BALANCE,
+  FISH,
+  REGIONS,
+  boatClassAt,
+  harborById,
+  spotById,
+  type FishSpecies,
+  type HarborId,
+  type SpotId,
+  type UpgradeId,
+} from "./balance";
 import {
   CONTROL_ACTIONS,
   CONTROL_LABELS,
@@ -22,33 +33,59 @@ import {
   buyPermit,
   buyUpgrade,
   cargoCapacity,
+  chooseRoute,
   consumeEvents,
   createSimulation,
   damageBoat,
   dayProgress,
   deliverContract,
-  discardCargo,
   getInteractionPrompt,
   interact,
   isNight,
+  learningAccuracy,
   moveBoatForTesting,
+  recordSurvey,
+  releaseCargo,
   repairBoat,
   repairCost,
   resolveCatch,
+  startFishing,
   tutorialPrompt,
   undock,
   updateSimulation,
   upgradeCost,
+  type RouteChoice,
   type Simulation,
   type SimulationEvent,
 } from "./simulation";
+import {
+  FISH_SCIENCE,
+  WATER_READINGS,
+  averagePopulation,
+  estimateRoute,
+  populationLabel,
+  surveyChoices,
+  type SurveyResult,
+} from "./stem";
 
 const FIXED_STEP = 1 / 120;
 const MAX_FRAME = 0.05;
 const UI_REFRESH_INTERVAL = 100;
-const HELP_STEP_COUNT = 4;
+const HELP_STEP_COUNT = 6;
 
-type OverlayScreen = "title" | "harbor" | "pause" | "settings" | "controls" | "help" | null;
+type OverlayScreen =
+  | "title"
+  | "harbor"
+  | "pause"
+  | "settings"
+  | "controls"
+  | "help"
+  | "survey"
+  | "routePlan"
+  | "deliveryResult"
+  | "fieldGuide"
+  | "seasonReport"
+  | null;
 
 declare global {
   interface Window {
@@ -78,6 +115,9 @@ export class Game {
   private toastTimer: number | undefined;
   private tutorialDismissTimer: number | undefined;
   private dismissedTutorialText: string | null = null;
+  private pendingSpot: SpotId | null = null;
+  private surveyResult: SurveyResult | null = null;
+  private seasonReportQueued = false;
   private readonly interfaceReady = Promise.all([
     preloadImage(wordmarkUrl),
     preloadImage(uiButtonUrl),
@@ -130,7 +170,7 @@ export class Game {
       this.input.consumeAction();
     }
 
-    const engineMaximum = BALANCE.maxSurfaceSpeed * (1 + this.simulation.progress.upgrades.engine * 0.16);
+    const engineMaximum = BALANCE.maxSurfaceSpeed * (1 + this.simulation.progress.upgrades.engine * 0.11);
     const currentInput = this.input.read();
     this.feedback.updateEngine(
       Math.abs(this.simulation.boat.speed) / engineMaximum,
@@ -189,8 +229,14 @@ export class Game {
 
   private handleInteract(): void {
     if (this.simulation.mode === "fishing") return;
-    const prompt = interact(this.simulation);
-    if (prompt?.kind === "fishing" && prompt.enabled) this.feedback.cue("cast");
+    const prompt = getInteractionPrompt(this.simulation);
+    if (prompt?.kind === "fishing" && prompt.enabled && prompt.spot) {
+      this.pendingSpot = prompt.spot;
+      this.surveyResult = null;
+      this.setOverlay("survey");
+      return;
+    }
+    interact(this.simulation);
     if (prompt && !prompt.enabled && prompt.reason) this.showToast(prompt.reason);
     this.handleSimulationEvents();
   }
@@ -210,11 +256,18 @@ export class Game {
         this.feedback.cue("catch");
         this.pulseFeedback("catch");
         this.showToast(`${FISH[event.species].name} secured. Freshness is falling.`);
+        if (
+          this.simulation.activeContract?.species === event.species
+          && !this.simulation.routeChoice
+        ) {
+          this.setOverlay("routePlan");
+        }
         break;
       case "delivered":
         this.feedback.cue("delivery");
         this.pulseFeedback("delivery");
         this.showToast(`Delivery complete · +${event.payment} shells`);
+        this.setOverlay("deliveryResult");
         break;
       case "docked":
         this.feedback.cue("dock");
@@ -222,11 +275,15 @@ export class Game {
         break;
       case "full-cargo":
         this.feedback.cue("deny");
-        this.showToast("Cargo hold full. Deliver or discard a catch.");
+        this.showToast("Cargo hold full. Deliver or release a catch.");
         break;
       case "locked-region":
         this.feedback.cue("deny");
         this.showToast("Outer Gloam is permit water. Turn back or buy access at Gloam Ferry.");
+        break;
+      case "depth-locked":
+        this.feedback.cue("deny");
+        this.showToast(`Upgrade line depth to tier ${event.tier} to fish this water.`);
         break;
       case "rescued":
         this.feedback.cue("collision");
@@ -241,6 +298,21 @@ export class Game {
       case "permit":
         this.feedback.cue("upgrade");
         this.showToast("Outer Gloam permit granted. Keep your lamp close.");
+        break;
+      case "hazard-hit":
+        this.feedback.cue("collision");
+        this.pulseFeedback("collision");
+        this.showToast(`${event.name} · hull +${event.damage} damage`);
+        break;
+      case "population-protected":
+        this.feedback.cue("deny");
+        this.showToast(`${FISH[event.species].name} is protected while its population recovers.`);
+        break;
+      case "released":
+        this.showToast(`${FISH[event.species].name} released · population +${event.restored}`);
+        break;
+      case "season-complete":
+        this.seasonReportQueued = true;
         break;
     }
   }
@@ -308,6 +380,21 @@ export class Game {
       case "help":
         host.innerHTML = this.helpScreen();
         break;
+      case "survey":
+        host.innerHTML = this.surveyScreen();
+        break;
+      case "routePlan":
+        host.innerHTML = this.routePlanScreen();
+        break;
+      case "deliveryResult":
+        host.innerHTML = this.deliveryResultScreen();
+        break;
+      case "fieldGuide":
+        host.innerHTML = this.fieldGuideScreen();
+        break;
+      case "seasonReport":
+        host.innerHTML = this.seasonReportScreen();
+        break;
     }
   }
 
@@ -316,17 +403,19 @@ export class Game {
       <section class="screen-overlay title-screen" role="dialog" aria-label="FSHING main menu">
         <div class="title-panel">
           <img class="wordmark" src="${wordmarkUrl}" alt="FSHING" />
+          <p class="title-tagline">Read the lake. Protect its fish. Complete the research season.</p>
           <div class="title-actions">
             <button class="primary-button title-play-button" type="button" data-action="start" aria-label="Play">
-              <span class="title-play-icon" aria-hidden="true">01</span>
-              <span><strong>Begin voyage</strong></span>
-              <b aria-hidden="true">ENTER</b>
+              <span class="title-play-icon" aria-hidden="true">▶</span>
+              <strong>Play</strong>
             </button>
             <div class="title-secondary-actions">
-              <button class="menu-button" type="button" data-action="open-help"><span aria-hidden="true">02</span><strong>How to play</strong></button>
-              <button class="menu-button" type="button" data-action="open-settings"><span aria-hidden="true">03</span><strong>Settings</strong></button>
+              <button class="menu-button" type="button" data-action="open-help"><strong>How to play</strong></button>
+              <button class="menu-button" type="button" data-action="open-field-guide"><strong>Field guide</strong></button>
+              <button class="menu-button" type="button" data-action="open-settings"><strong>Settings</strong></button>
             </div>
           </div>
+          <p class="title-controls">A / D to steer&nbsp;&nbsp;·&nbsp;&nbsp;Space to interact</p>
         </div>
       </section>`;
   }
@@ -366,11 +455,11 @@ export class Game {
               ? `<button class="primary-button mission-button" type="button" data-action="deliver" ${deliverable ? "" : "disabled"}>${deliverable ? "<span><strong>Complete delivery</strong></span><b aria-hidden=\"true\">→</b>" : "Catch is missing or no longer fresh enough"}</button>`
               : `<p class="next-step"><strong>Next:</strong> Leave the harbor and follow the orange destination marker across the lake.</p>`}
           </div>`
-        : `<div class="contract-card empty-job"><span class="card-kicker">No job posted</span><h3>You are free to explore</h3><p>Head onto the lake, fish for cargo, or return later for new delivery work.</p></div>`;
+        : `<div class="contract-card empty-job"><span class="card-kicker">Ecological recovery</span><h3>No catch contract is safe yet</h3><p>Every unlocked contract stock is protected. Each return to harbor restores the lake; leave and dock again to continue recovery.</p></div>`;
 
     const cargoMarkup = this.simulation.cargo.length === 0
       ? `<p class="empty-state">The hold is empty.</p>`
-      : this.simulation.cargo.map((item, index) => `<div class="cargo-row"><span>${FISH[item.species].name}<small>${Math.ceil(item.freshness)}% fresh</small></span><button class="small-button" type="button" data-action="discard" data-index="${index}">Discard</button></div>`).join("");
+      : this.simulation.cargo.map((item, index) => `<div class="cargo-row"><span>${FISH[item.species].name}<small>${Math.ceil(item.freshness)}% fresh · ${populationLabel(this.simulation.progress.populations[item.species])} population</small></span><button class="small-button" type="button" data-action="release" data-index="${index}">Release</button></div>`).join("");
 
     return `
       <section class="screen-overlay harbor-screen" role="dialog" aria-labelledby="harbor-title">
@@ -380,28 +469,29 @@ export class Game {
             <span class="shell-balance"><span class="ui-icon icon-shells" aria-hidden="true"></span><span><small>Your money</small><strong>${this.simulation.progress.money} shells</strong></span></span>
           </header>
           <div class="harbor-intro">
-            <div><span class="panel-eyebrow">Current task</span><h3>${available ? "Choose the posted delivery" : deliverable ? "Hand in your catch" : contract ? "Continue your delivery" : "Prepare for the lake"}</h3></div>
-            <p>${available ? "Take the job below. The game will point you to the right fish, then to the delivery harbor." : deliverable ? "Your requested fish is ready. Complete the delivery to get paid." : contract ? "Your current job stays active until it is delivered." : "There is no active delivery, so you can explore or improve your boat."}</p>
+            <div><span class="panel-eyebrow">Current task</span><h3>${available ? "Choose the posted delivery" : deliverable ? "Hand in your catch" : contract ? "Continue your delivery" : "Let protected stocks recover"}</h3></div>
+            <p>${available ? "Take the job below. The game will point you to the right fish, then to the delivery harbor." : deliverable ? "Your requested fish is ready. Complete the delivery to get paid." : contract ? "Your current job stays active until it is delivered." : "No impossible contract will be posted. Return visits restore populations until a catch is sustainable again."}</p>
           </div>
           <div class="harbor-grid">
             <section class="mission-section" aria-labelledby="contract-heading"><h3 id="contract-heading" class="section-title">Delivery job</h3>${contractMarkup}</section>
             <aside class="cargo-section" aria-labelledby="cargo-heading">
               <div class="section-heading"><h3 id="cargo-heading" class="section-title">Your cargo</h3><span>${this.simulation.cargo.length} / ${cargoCapacity(this.simulation)} spaces</span></div>
               <div class="cargo-list">${cargoMarkup}</div>
-              <p class="cargo-help">Fish lose freshness while you travel. Deliver the requested catch before it drops below the job minimum.</p>
+              <p class="cargo-help">Fish lose freshness while you travel. Release an unneeded catch to help its population recover.</p>
             </aside>
           </div>
           <section class="services" aria-labelledby="service-heading">
             <div class="section-heading"><div><h3 id="service-heading" class="section-title">Dock services</h3><p>Permanent boat improvements and repairs.</p></div></div>
             <div class="service-grid">
-              ${this.upgradeCard("cargo", "Cargo hold", "Carry one more fish per tier.")}
-              ${this.upgradeCard("engine", "Engine", "16% more forward speed per tier.")}
+              ${this.upgradeCard("cargo", `Boat · ${boatClassAt(this.simulation.progress.upgrades.cargo)}`, "Grow the boat and add one cargo space.")}
+              ${this.upgradeCard("engine", "Engine", "11% more forward speed per tier.")}
               ${this.upgradeCard("lamp", "Lamp", "Wider readable water at night.")}
+              ${this.upgradeCard("line", "Line depth", "Reach the next deep-water fish tier.")}
               <article class="service-card"><span class="ui-icon icon-repair" aria-hidden="true"></span><div><h4>Repair hull</h4><p>${Math.ceil(this.simulation.boat.damage)} damage · ${repairCost(this.simulation)} shells</p></div><button class="small-button" type="button" data-action="repair" ${this.simulation.boat.damage <= 0 || this.simulation.progress.money <= 0 ? "disabled" : ""}>Repair</button></article>
               ${harborId === "gloam" ? `<article class="service-card"><span class="ui-icon icon-permit" aria-hidden="true"></span><div><h4>Outer Gloam permit</h4><p>${this.simulation.progress.outerUnlocked ? "Granted" : `${BALANCE.permitCost} shells`}</p></div><button class="small-button" type="button" data-action="buy-permit" ${this.simulation.progress.outerUnlocked || this.simulation.progress.money < BALANCE.permitCost ? "disabled" : ""}>${this.simulation.progress.outerUnlocked ? "Owned" : "Buy"}</button></article>` : ""}
             </div>
           </section>
-          <footer class="panel-actions"><button class="text-button" type="button" data-action="open-help">How to play</button><button class="leave-button" type="button" data-action="undock" aria-label="Back to lake →"><span>Return to open water</span><strong>Back to lake</strong><b aria-hidden="true">→</b></button></footer>
+          <footer class="panel-actions"><div><button class="text-button" type="button" data-action="open-help">How to play</button><button class="text-button" type="button" data-action="open-field-guide">Field guide</button></div><button class="leave-button" type="button" data-action="undock" aria-label="Back to lake →"><span>Return to open water</span><strong>Back to lake</strong><b aria-hidden="true">→</b></button></footer>
         </div>
       </section>`;
   }
@@ -417,7 +507,7 @@ export class Game {
     return `
       <section class="screen-overlay sheet-overlay" role="dialog" aria-labelledby="pause-title">
         <div class="art-panel compact-panel side-sheet"><h2 id="pause-title">Paused</h2><p>The lake, cargo, and clock are stopped.</p>
-          <div class="stacked-actions"><button class="primary-button" type="button" data-action="resume">Return to water</button><button class="text-button" type="button" data-action="open-settings">Settings</button><button class="text-button" type="button" data-action="open-help">How to play</button><button class="text-button" type="button" data-action="title">Title screen</button></div>
+          <div class="stacked-actions"><button class="primary-button" type="button" data-action="resume">Return to water</button><button class="text-button" type="button" data-action="open-field-guide">Field guide</button><button class="text-button" type="button" data-action="open-settings">Settings</button><button class="text-button" type="button" data-action="open-help">How to play</button><button class="text-button" type="button" data-action="title">Title screen</button></div>
         </div>
       </section>`;
   }
@@ -470,12 +560,20 @@ export class Game {
         body: `Use <kbd>${formatKey(this.save.settings.controls.left)}</kbd> and <kbd>${formatKey(this.save.settings.controls.right)}</kbd> to move. Brake with <kbd>${formatKey(this.save.settings.controls.brake)}</kbd>, then press <kbd>${formatKey(this.save.settings.controls.action)}</kbd> at the fishing marker.`,
       },
       {
-        title: "Catch the right fish",
-        body: "Steer the hook with the movement keys or touch pad until it meets the requested fish silhouette.",
+        title: "Read and predict",
+        body: "Use temperature, dissolved oxygen, depth, turbidity and habitat evidence to predict which fish is best adapted to each site.",
       },
       {
-        title: "Deliver it fresh",
-        body: "Follow the orange harbor marker and dock. Fish lose freshness on the way, so do not linger.",
+        title: "Catch the right fish",
+        body: "Steer the hook with the movement keys or touch pad. Upgrade line depth to cross the amber depth boundary and reach rarer fish.",
+      },
+      {
+        title: "Plan the crossing",
+        body: "Compare distance, travel time and predicted freshness. A fast route saves time but makes marked hazards more damaging.",
+      },
+      {
+        title: "Fish sustainably",
+        body: "Check population labels in the field guide. Release unneeded catches, avoid protected species, and keep the ecosystem healthy for a bonus.",
       },
     ];
     const step = steps[this.helpStep] ?? steps[0];
@@ -499,6 +597,151 @@ export class Game {
           <button class="primary-button" type="button" data-action="back">Back</button>
         </div>
       </section>`;
+  }
+
+  private surveyScreen(): string {
+    const spotId = this.pendingSpot;
+    if (!spotId) return this.messageScreen("Survey unavailable", "Return to the lake and stop beside a marked research buoy.", "cancel-survey", "Back to water");
+    const spot = spotById(spotId);
+    const reading = WATER_READINGS[spotId];
+    const researchTarget = this.simulation.activeContract?.spot === spotId
+      ? this.simulation.activeContract.species
+      : undefined;
+    const choices = surveyChoices(spotId, researchTarget);
+    const result = this.surveyResult;
+    const choicesMarkup = choices.map((species) => {
+      const fish = FISH[species];
+      const isExpected = result?.expected === species;
+      return `<button class="science-choice ${isExpected ? "is-answer" : ""}" type="button" data-action="survey-choice" data-species="${species}" ${result ? "disabled" : ""}>
+        <strong>${fish.name}</strong><span>${fish.shape}</span><small>Typical depth tier ${fish.depthTier}</small>
+      </button>`;
+    }).join("");
+    const feedback = result
+      ? `<div class="evidence-result ${result.correct ? "is-correct" : "is-rethink"}" role="status">
+          <span class="result-mark" aria-hidden="true">${result.correct ? "✓" : "↻"}</span>
+          <div><h3>${result.correct ? "Prediction supported" : `Evidence points to ${FISH[result.expected].name}`}</h3><p>${result.explanation}</p></div>
+        </div>
+        <button class="primary-button" type="button" data-action="continue-fishing">Use the evidence and drop the line</button>`
+      : `<p class="science-prompt">Which species is best adapted to these conditions? Make a prediction from the evidence—not the colour alone.</p>`;
+    return `
+      <section class="screen-overlay sheet-overlay science-overlay" role="dialog" aria-labelledby="survey-title">
+        <div class="art-panel science-panel side-sheet">
+          <header class="science-heading"><div><span class="panel-eyebrow">Water survey · ${spot.name}</span><h2 id="survey-title">Read the lake</h2></div><span class="depth-badge">Depth ${reading.depthM} m</span></header>
+          <div class="reading-grid" aria-label="Water-quality readings">
+            <div><small>Temperature</small><strong>${reading.temperatureC}°C</strong></div>
+            <div><small>Dissolved oxygen</small><strong>${reading.oxygenMgL.toFixed(1)} mg/L</strong></div>
+            <div><small>Turbidity</small><strong>${capitalise(reading.turbidity)}</strong></div>
+            <div><small>Habitat</small><strong>${capitalise(reading.habitat)}</strong></div>
+          </div>
+          <p class="evidence-clue"><strong>Field note:</strong> ${reading.clue}</p>
+          ${feedback}
+          <div class="science-choices" aria-label="Species predictions">${choicesMarkup}</div>
+          ${result ? "" : `<button class="text-button" type="button" data-action="cancel-survey">Cancel survey</button>`}
+        </div>
+      </section>`;
+  }
+
+  private routePlanScreen(): string {
+    const contract = this.simulation.activeContract;
+    if (!contract) return this.messageScreen("No active crossing", "Accept a research delivery at the harbor first.", "route-back", "Back to harbor");
+    const estimate = estimateRoute(contract, this.simulation.progress.upgrades.engine);
+    const origin = spotById(contract.spot);
+    return `
+      <section class="screen-overlay sheet-overlay science-overlay" role="dialog" aria-labelledby="route-title">
+        <div class="art-panel science-panel route-panel side-sheet">
+          <header class="science-heading"><div><span class="panel-eyebrow">Applied mathematics</span><h2 id="route-title">Plan your crossing</h2></div><span class="depth-badge">${estimate.distanceKm.toFixed(1)} km</span></header>
+          <p class="route-equation"><strong>time = distance ÷ speed</strong><span>${origin.name} → ${harborById(contract.destination).name}</span></p>
+          <div class="route-grid">
+            <article class="route-card is-safe">
+              <span class="route-kicker">Lower risk</span><h3>Survey route</h3>
+              <dl><div><dt>Estimated time</dt><dd>${estimate.safeMinutes.toFixed(1)} min</dd></div><div><dt>Predicted freshness</dt><dd>${estimate.safeArrivalFreshness}%</dd></div><div><dt>Hazard damage</dt><dd>× 0.70</dd></div></dl>
+              <button class="primary-button" type="button" data-action="choose-route" data-route="safe">Choose survey route</button>
+            </article>
+            <article class="route-card is-fast">
+              <span class="route-kicker">Higher risk</span><h3>Express route</h3>
+              <dl><div><dt>Estimated time</dt><dd>${estimate.fastMinutes.toFixed(1)} min</dd></div><div><dt>Predicted freshness</dt><dd>${estimate.fastArrivalFreshness}%</dd></div><div><dt>Hazard damage</dt><dd>× 1.45</dd></div></dl>
+              <button class="primary-button" type="button" data-action="choose-route" data-route="fast">Choose express route</button>
+            </article>
+          </div>
+          <p class="route-note">Your engine tier changes both estimates. Yellow warning buoys mark hazards on the lake.</p>
+        </div>
+      </section>`;
+  }
+
+  private deliveryResultScreen(): string {
+    const result = this.simulation.lastDeliveryResult;
+    if (!result) return this.messageScreen("No delivery result", "Complete a delivery to compare your estimate with the result.", "continue-after-delivery", "Back to harbor");
+    const difference = result.actualFreshness - result.predictedFreshness;
+    return `
+      <section class="screen-overlay sheet-overlay science-overlay" role="dialog" aria-labelledby="delivery-result-title">
+        <div class="art-panel science-panel result-panel side-sheet">
+          <span class="completion-seal" aria-hidden="true">✓</span>
+          <span class="panel-eyebrow">Prediction versus result</span>
+          <h2 id="delivery-result-title">Delivery analysed</h2>
+          <div class="result-comparison">
+            <div><small>Predicted freshness</small><strong>${result.predictedFreshness}%</strong></div>
+            <span aria-hidden="true">→</span>
+            <div><small>Actual freshness</small><strong>${result.actualFreshness}%</strong></div>
+          </div>
+          <p class="result-explanation">The ${result.route === "fast" ? "express" : "survey"} route took ${result.travelSeconds} in-game seconds. The result was ${Math.abs(difference)} percentage points ${difference >= 0 ? "above" : "below"} the estimate.</p>
+          <div class="payment-summary"><span>Delivery payment</span><strong>${result.payment} shells</strong>${result.populationBonus > 0 ? `<small>Includes ${result.populationBonus}-shell healthy-ecosystem bonus</small>` : `<small>Keep at least five populations healthy to earn an ecosystem bonus.</small>`}</div>
+          <button class="primary-button" type="button" data-action="continue-after-delivery">Continue at harbor</button>
+        </div>
+      </section>`;
+  }
+
+  private fieldGuideScreen(): string {
+    const species = Object.keys(FISH) as FishSpecies[];
+    const discovered = new Set(this.simulation.progress.discovered);
+    const fishMarkup = species.map((id) => {
+      const fish = FISH[id];
+      const profile = FISH_SCIENCE[id];
+      const population = this.simulation.progress.populations[id];
+      const known = discovered.has(id);
+      return `<article class="field-card ${known ? "is-known" : "is-unknown"}">
+        <header><div><span class="field-tier">Depth tier ${fish.depthTier}</span><h3>${known ? fish.name : "Unconfirmed species"}</h3></div><span class="population-chip is-${populationLabel(population).toLowerCase()}">${populationLabel(population)} · ${population}%</span></header>
+        <p><strong>Silhouette:</strong> ${fish.shape}</p>
+        <p><strong>${known ? "Habitat" : "Research clue"}:</strong> ${known ? profile.habitat : profile.evidence}</p>
+        ${known ? `<p><strong>Food-web role:</strong> ${profile.ecologicalRole}</p><small>${profile.temperatureRangeC[0]}–${profile.temperatureRangeC[1]}°C · needs at least ${profile.minimumOxygenMgL.toFixed(1)} mg/L oxygen</small>` : `<small>Survey or catch this species to confirm its full record.</small>`}
+      </article>`;
+    }).join("");
+    const regionMarkup = REGIONS.map((region) => `<div class="region-key"><span style="--region-colour:${region.surfaceTint}"></span><strong>${region.name}</strong><small>${Math.round(region.startX * 100)}–${Math.round(region.endX * 100)}% across lake</small></div>`).join("");
+    return `
+      <section class="screen-overlay guide-overlay" role="dialog" aria-labelledby="guide-title">
+        <div class="art-panel guide-panel">
+          <header class="guide-heading"><div><span class="panel-eyebrow">Scientific field journal</span><h2 id="guide-title">Lake field guide</h2><p>Use evidence and population data to decide where—and whether—to fish.</p></div>
+            <div class="mastery-summary"><span><strong>${discovered.size}</strong><small>of ${species.length} species</small></span><span><strong>${learningAccuracy(this.simulation)}%</strong><small>prediction accuracy</small></span><span><strong>${averagePopulation(this.simulation.progress.populations)}%</strong><small>lake health</small></span></div>
+          </header>
+          <section class="ecosystem-map" aria-labelledby="ecosystem-map-title"><h3 id="ecosystem-map-title">Ecosystems and depth access</h3><div class="region-keys">${regionMarkup}</div><div class="depth-scale"><span>T0 · 0–8 m</span><span>T1 · 8–14 m</span><span>T2 · 14–23 m</span><span>T3 · 23–34 m</span><span>T4 · 34–41 m</span><span>T5 · 41–50 m</span></div><p>Your line is tier ${this.simulation.progress.upgrades.line}; amber boundaries underwater show your current maximum depth.</p></section>
+          <div class="field-grid">${fishMarkup}</div>
+          <footer class="guide-actions"><p>Population labels are also written in text, so colour is never the only signal.</p><button class="primary-button" type="button" data-action="back">Back</button></footer>
+        </div>
+      </section>`;
+  }
+
+  private seasonReportScreen(): string {
+    const learning = this.simulation.progress.learning;
+    const average = averagePopulation(this.simulation.progress.populations);
+    const accuracy = learningAccuracy(this.simulation);
+    return `
+      <section class="screen-overlay sheet-overlay science-overlay" role="dialog" aria-labelledby="season-title">
+        <div class="art-panel science-panel result-panel side-sheet">
+          <span class="panel-eyebrow">End-of-season evaluation</span><h2 id="season-title">Research season complete</h2>
+          <p>You completed ${this.simulation.progress.completedContracts} deliveries and unlocked a reusable evidence record. You can keep exploring and improving every result.</p>
+          <div class="report-grid">
+            <div><small>Species predictions</small><strong>${learning.correctPredictions} / ${learning.surveysCompleted}</strong><span>${accuracy}% accuracy</span></div>
+            <div><small>Route plans</small><strong>${learning.routePlans}</strong><span>distance–time decisions</span></div>
+            <div><small>Lake health</small><strong>${average}%</strong><span>${populationLabel(average)}</span></div>
+            <div><small>Conservation</small><strong>${learning.conservationScore}</strong><span>population points restored</span></div>
+          </div>
+          <p class="reflection-prompt"><strong>Reflect:</strong> Which water reading was most useful? When was the faster route worth its extra risk? What would you change to protect a vulnerable species?</p>
+          <button class="primary-button" type="button" data-action="continue-season">Continue researching</button>
+        </div>
+      </section>`;
+  }
+
+  private messageScreen(title: string, body: string, action: string, label: string): string {
+    return `<section class="screen-overlay sheet-overlay" role="dialog"><div class="art-panel compact-panel side-sheet"><h2>${title}</h2><p>${body}</p><button class="primary-button" type="button" data-action="${action}">${label}</button></div></section>`;
   }
 
   private setOverlay(next: OverlayScreen): void {
@@ -526,6 +769,10 @@ export class Game {
       upgrades: { ...this.simulation.progress.upgrades },
       outerUnlocked: this.simulation.progress.outerUnlocked,
       completedContracts: this.simulation.progress.completedContracts,
+      populations: { ...this.simulation.progress.populations },
+      discovered: [...this.simulation.progress.discovered],
+      learning: { ...this.simulation.progress.learning },
+      seasonCompleted: this.simulation.progress.seasonCompleted,
     };
     saveGame(this.platform.saveStorage, this.save);
   }
@@ -607,6 +854,10 @@ export class Game {
         this.overlayReturn = this.overlay;
         this.setOverlay("help");
         break;
+      case "open-field-guide":
+        this.overlayReturn = this.overlay;
+        this.setOverlay("fieldGuide");
+        break;
       case "help-previous":
         this.helpStep = Math.max(0, this.helpStep - 1);
         this.renderOverlay();
@@ -625,14 +876,59 @@ export class Game {
         break;
       case "back": this.setOverlay(this.overlayReturn); break;
       case "title": this.started = false; this.setOverlay("title"); break;
-      case "undock": undock(this.simulation); this.setOverlay(null); break;
+      case "undock":
+        if (this.simulation.activeContract
+          && this.simulation.cargo.some((item) => item.species === this.simulation.activeContract?.species)
+          && !this.simulation.routeChoice) {
+          this.setOverlay("routePlan");
+        } else {
+          undock(this.simulation);
+          this.setOverlay(null);
+        }
+        break;
       case "accept-contract":
         if (acceptAvailableContract(this.simulation)) {
           this.syncSave();
           undock(this.simulation);
           this.setOverlay(null);
-          this.showToast("Contract accepted. Follow the orange route marker.");
+          this.showToast("Contract accepted. Survey the marked habitat first.");
         }
+        break;
+      case "choose-route": {
+        const route = target.dataset.route as RouteChoice | undefined;
+        if ((route === "safe" || route === "fast") && chooseRoute(this.simulation, route)) {
+          this.syncSave();
+          if (this.simulation.dockedAt) undock(this.simulation);
+          this.setOverlay(null);
+          this.showToast(`${route === "fast" ? "Express" : "Survey"} route selected. Watch the warning buoys.`);
+        }
+        break;
+      }
+      case "route-back": this.setOverlay("harbor"); break;
+      case "survey-choice": {
+        const species = target.dataset.species as FishSpecies | undefined;
+        if (!this.pendingSpot || !species || !(species in FISH) || this.surveyResult) break;
+        const researchTarget = this.simulation.activeContract?.spot === this.pendingSpot
+          ? this.simulation.activeContract.species
+          : undefined;
+        this.surveyResult = recordSurvey(this.simulation, this.pendingSpot, species, researchTarget);
+        this.syncSave();
+        this.renderOverlay();
+        this.feedback.cue(this.surveyResult.correct ? "upgrade" : "deny");
+        break;
+      }
+      case "continue-fishing":
+        if (this.pendingSpot && this.surveyResult && startFishing(this.simulation, this.pendingSpot)) {
+          this.feedback.cue("cast");
+          this.pendingSpot = null;
+          this.surveyResult = null;
+          this.setOverlay(null);
+        }
+        break;
+      case "cancel-survey":
+        this.pendingSpot = null;
+        this.surveyResult = null;
+        this.setOverlay(null);
         break;
       case "deliver":
         if (deliverContract(this.simulation) !== null) {
@@ -640,6 +936,15 @@ export class Game {
           this.renderOverlay();
         }
         break;
+      case "continue-after-delivery":
+        if (this.seasonReportQueued) {
+          this.seasonReportQueued = false;
+          this.setOverlay("seasonReport");
+        } else {
+          this.setOverlay("harbor");
+        }
+        break;
+      case "continue-season": this.setOverlay("harbor"); break;
       case "buy-upgrade": {
         const upgrade = target.dataset.upgrade as UpgradeId | undefined;
         if (upgrade && buyUpgrade(this.simulation, upgrade)) {
@@ -661,9 +966,12 @@ export class Game {
           this.showToast("The shipwright sets the hull true.");
         }
         break;
-      case "discard": {
+      case "release": {
         const index = Number(target.dataset.index);
-        if (discardCargo(this.simulation, index)) this.renderOverlay();
+        if (releaseCargo(this.simulation, index)) {
+          this.handleSimulationEvents();
+          this.renderOverlay();
+        }
         break;
       }
       case "leave-fishing":
@@ -718,7 +1026,11 @@ export class Game {
 }
 
 function upgradeName(upgrade: UpgradeId): string {
-  return { cargo: "Cargo hold", engine: "Engine", lamp: "Lamp" }[upgrade];
+  return { cargo: "Boat and cargo", engine: "Engine", lamp: "Lamp", line: "Line depth" }[upgrade];
+}
+
+function capitalise(value: string): string {
+  return value.length === 0 ? value : `${value[0]?.toUpperCase()}${value.slice(1)}`;
 }
 
 function preloadImage(source: string): Promise<void> {

@@ -24,22 +24,33 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
 
   await page.evaluate(() => window.__FSHING_TEST__?.sailToSpot("sunwardShoal"));
   await page.getByRole("button", { name: "Drop line · Sunward Shoal" }).click();
-  await expect(page.getByText(/Guide the hook into the round Reedfin/)).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Read the lake" })).toBeVisible();
+  await expect(page.getByText("8.4 mg/L")).toBeVisible();
+  await page.getByRole("button", { name: /Reedfin/ }).click();
+  await expect(page.getByRole("heading", { name: "Prediction supported" })).toBeVisible();
+  await page.getByRole("button", { name: "Use the evidence and drop the line" }).click();
+  await expect(page.getByText(/Guide the hook toward the Reedfin/)).toBeVisible();
   await page.evaluate(() => window.__FSHING_TEST__?.catchSpecies("reedfin"));
+  await expect(page.getByRole("heading", { name: "Plan your crossing" })).toBeVisible();
+  await expect(page.getByText("time = distance ÷ speed")).toBeVisible();
+  await expect(page.getByText("Sunward Shoal → Gloam Ferry")).toBeVisible();
+  await page.getByRole("button", { name: "Choose survey route" }).click();
   await expect(page.locator("#tutorial-callout")).toContainText("Gloam Ferry");
 
   await page.evaluate(() => window.__FSHING_TEST__?.sailToHarbor("gloam"));
   await page.getByRole("button", { name: "Dock · Gloam Ferry" }).click();
   await expect(page.getByRole("heading", { name: "Gloam Ferry" })).toBeVisible();
   await page.getByRole("button", { name: "Complete delivery" }).click();
-  await expect(page.getByText(/Delivery complete/)).toBeVisible();
-  const cargoService = page.locator(".service-card").filter({ hasText: "Cargo hold" });
+  await expect(page.getByRole("heading", { name: "Delivery analysed" })).toBeVisible();
+  await expect(page.getByText("Prediction versus result")).toBeVisible();
+  await page.getByRole("button", { name: "Continue at harbor" }).click();
+  const cargoService = page.locator(".service-card").filter({ hasText: "Boat · Skiff" });
   await cargoService.getByRole("button", { name: "Upgrade" }).click();
-  await expect(cargoService).toContainText("T1");
+  await expect(page.locator(".service-card").filter({ hasText: "Boat · Wide skiff · T1" })).toBeVisible();
 
   await page.reload();
   await page.getByRole("button", { name: "Play", exact: true }).click();
-  await expect(page.locator(".service-card").filter({ hasText: "Cargo hold · T1" })).toBeVisible();
+  await expect(page.locator(".service-card").filter({ hasText: "Boat · Wide skiff · T1" })).toBeVisible();
 });
 
 test("settings, keyboard pause, and local SDK fallback remain usable", async ({ page }) => {
@@ -72,23 +83,23 @@ test("how to play instructions advance one card at a time", async ({ page }) => 
   await page.goto("/");
   await page.getByRole("button", { name: "How to play" }).click();
 
-  await expect(page.getByText("Step 1 of 4")).toBeVisible();
+  await expect(page.getByText("Step 1 of 6")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Take a job" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Previous" })).toBeDisabled();
 
   await page.getByRole("button", { name: "Next" }).click();
-  await expect(page.getByText("Step 2 of 4")).toBeVisible();
+  await expect(page.getByText("Step 2 of 6")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Follow the marker" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Take a job" })).toHaveCount(0);
 
   await page.getByRole("button", { name: "Previous" }).click();
-  await expect(page.getByText("Step 1 of 4")).toBeVisible();
+  await expect(page.getByText("Step 1 of 6")).toBeVisible();
 
-  for (let step = 1; step < 4; step += 1) {
+  for (let step = 1; step < 6; step += 1) {
     await page.getByRole("button", { name: "Next" }).click();
   }
-  await expect(page.getByText("Step 4 of 4")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Deliver it fresh" })).toBeVisible();
+  await expect(page.getByText("Step 6 of 6")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Fish sustainably" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Next" })).toBeDisabled();
 
   await page.getByRole("button", { name: "Back", exact: true }).click();
@@ -127,4 +138,17 @@ test("keyboard input moves the boat horizontally and flips its side profile", as
   await page.waitForTimeout(600);
   await page.keyboard.up("KeyA");
   expect(await page.evaluate(() => window.__FSHING_TEST__?.facing())).toBe(-1);
+});
+
+test("field guide exposes regions, depth access, and non-colour population labels", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Field guide" }).click();
+  await expect(page.getByRole("heading", { name: "Lake field guide" })).toBeVisible();
+  await expect(page.getByText("Brindle Coast")).toBeVisible();
+  await expect(page.getByText("Mosswater Reach")).toBeVisible();
+  await expect(page.getByText("Violet Gloam")).toBeVisible();
+  await expect(page.getByText("Healthy · 100%", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("T5 · 41–50 m")).toBeVisible();
+  await page.getByRole("button", { name: "Back", exact: true }).click();
+  await expect(page.getByRole("img", { name: "FSHING" })).toBeVisible();
 });
