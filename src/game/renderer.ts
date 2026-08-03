@@ -15,6 +15,7 @@ import {
   type FishSpecies,
   type WorldPoint,
 } from "./balance";
+import { calculatePanoramaLayout } from "./panorama";
 import { fogIntensity, isNight, maxFishingDepth, objective, type Simulation } from "./simulation";
 import { populationLabel } from "./stem";
 
@@ -332,20 +333,26 @@ export class CanvasRenderer {
     cinematic: boolean,
   ): number {
     const viewWidth = cinematic ? 0.54 : BALANCE.cameraViewWidth;
-    let sourceWidth = image.naturalWidth * viewWidth;
-    let sourceHeight = image.naturalHeight;
-    const targetAspect = width / height;
-    if (sourceWidth / sourceHeight < targetAspect) {
-      sourceHeight = sourceWidth / targetAspect;
-    } else {
-      sourceWidth = sourceHeight * targetAspect;
-    }
-    const maxSourceX = image.naturalWidth - sourceWidth;
-    const sourceX = clamp(cameraX * image.naturalWidth - sourceWidth / 2, 0, maxSourceX);
-    const sourceY = Math.max(0, (image.naturalHeight - sourceHeight) * 0.42);
-    this.context.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, width, height);
-    const authoredWaterline = image.naturalHeight * 0.61;
-    return clamp(((authoredWaterline - sourceY) / sourceHeight) * height, height * 0.54, height * 0.88);
+    const layout = calculatePanoramaLayout({
+      imageWidth: image.naturalWidth,
+      imageHeight: image.naturalHeight,
+      cameraX,
+      viewWidth,
+      viewportWidth: width,
+      viewportHeight: height,
+    });
+    this.context.drawImage(
+      image,
+      layout.sourceX,
+      layout.sourceY,
+      layout.sourceWidth,
+      layout.sourceHeight,
+      0,
+      0,
+      width,
+      height,
+    );
+    return layout.waterline;
   }
 
   private drawBoat(
