@@ -16,7 +16,7 @@ interface PanoramaLayoutInput {
 }
 
 const AUTHORED_WATERLINE_RATIO = 0.61;
-const DISPLAYED_WATERLINE_RATIO = 0.62;
+const DISPLAYED_WATERLINE_RATIO = 0.78;
 
 export function calculatePanoramaLayout(input: PanoramaLayoutInput): PanoramaLayout {
   let sourceWidth = input.imageWidth * input.viewWidth;

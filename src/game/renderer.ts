@@ -332,7 +332,7 @@ export class CanvasRenderer {
     height: number,
     cinematic: boolean,
   ): number {
-    const viewWidth = cinematic ? 0.54 : BALANCE.cameraViewWidth;
+    const viewWidth = cinematic ? 0.54 : BALANCE.cameraViewWidth * 1.4;
     const layout = calculatePanoramaLayout({
       imageWidth: image.naturalWidth,
       imageHeight: image.naturalHeight,

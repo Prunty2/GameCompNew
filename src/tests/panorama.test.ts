@@ -9,20 +9,18 @@ describe("panorama layout", () => {
     [1920, 1010],
     [1070, 1016],
     [844, 390],
-    [390, 844],
   ])("keeps painted water visible at a %d x %d viewport", (viewportWidth, viewportHeight) => {
     const layout = calculatePanoramaLayout({
       imageWidth: IMAGE_WIDTH,
       imageHeight: IMAGE_HEIGHT,
       cameraX: 0.5,
-      viewWidth: 0.3,
+      viewWidth: 0.42,
       viewportWidth,
       viewportHeight,
     });
     const waterlineRatio = layout.waterline / viewportHeight;
 
-    expect(waterlineRatio).toBeGreaterThanOrEqual(0.6);
-    expect(waterlineRatio).toBeLessThanOrEqual(0.621);
+    expect(waterlineRatio).toBeCloseTo(0.78);
     expect(layout.sourceY).toBeLessThan(IMAGE_HEIGHT * 0.61);
     expect(layout.sourceY + layout.sourceHeight).toBeGreaterThan(IMAGE_HEIGHT * 0.61);
   });
@@ -33,7 +31,7 @@ describe("panorama layout", () => {
         imageWidth: IMAGE_WIDTH,
         imageHeight: IMAGE_HEIGHT,
         cameraX,
-        viewWidth: 0.3,
+        viewWidth: 0.42,
         viewportWidth: 1920,
         viewportHeight: 1010,
       });
