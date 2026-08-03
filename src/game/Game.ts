@@ -72,6 +72,7 @@ const FIXED_STEP = 1 / 120;
 const MAX_FRAME = 0.05;
 const UI_REFRESH_INTERVAL = 100;
 const HELP_STEP_COUNT = 6;
+const PAUSE_EXIT_DURATION = 340;
 
 type OverlayScreen =
   | "title"
@@ -114,6 +115,7 @@ export class Game {
   private helpStep = 0;
   private toastTimer: number | undefined;
   private tutorialDismissTimer: number | undefined;
+  private pauseTransitionTimer: number | undefined;
   private dismissedTutorialText: string | null = null;
   private pendingSpot: SpotId | null = null;
   private surveyResult: SurveyResult | null = null;
@@ -502,9 +504,22 @@ export class Game {
 
   private pauseScreen(): string {
     return `
-      <section class="screen-overlay sheet-overlay" role="dialog" aria-labelledby="pause-title">
-        <div class="art-panel compact-panel side-sheet"><h2 id="pause-title">Paused</h2><p>The lake, cargo, and clock are stopped.</p>
-          <div class="stacked-actions"><button class="primary-button" type="button" data-action="resume">Return to water</button><button class="text-button" type="button" data-action="open-field-guide">Field guide</button><button class="text-button" type="button" data-action="open-settings">Settings</button><button class="text-button" type="button" data-action="open-help">How to play</button><button class="text-button" type="button" data-action="title">Title screen</button></div>
+      <section class="screen-overlay pause-screen" role="dialog" aria-labelledby="pause-title">
+        <div class="pause-menu">
+          <img class="wordmark pause-wordmark" src="${wordmarkUrl}" alt="FSHING" />
+          <h2 id="pause-title">Paused</h2>
+          <div class="pause-actions">
+            <button class="primary-button pause-resume-button" type="button" data-action="resume">
+              <span class="title-play-icon" aria-hidden="true">▶</span>
+              <strong>Resume</strong>
+            </button>
+            <div class="pause-secondary-actions">
+              <button class="menu-button" type="button" data-action="open-field-guide"><strong>Field guide</strong></button>
+              <button class="menu-button" type="button" data-action="open-settings"><strong>Settings</strong></button>
+              <button class="menu-button" type="button" data-action="open-help"><strong>How to play</strong></button>
+              <button class="menu-button" type="button" data-action="title"><strong>Title screen</strong></button>
+            </div>
+          </div>
         </div>
       </section>`;
   }
@@ -767,6 +782,27 @@ export class Game {
   }
 
   private setOverlay(next: OverlayScreen): void {
+    if (this.overlay === "pause" && next === null && !this.save.settings.reducedMotion) {
+      if (this.pauseTransitionTimer !== undefined) return;
+      const pauseScreen = this.uiRoot.querySelector<HTMLElement>(".pause-screen");
+      if (pauseScreen) {
+        pauseScreen.classList.add("is-closing");
+        this.pauseTransitionTimer = window.setTimeout(() => {
+          this.pauseTransitionTimer = undefined;
+          this.commitOverlay(null);
+        }, PAUSE_EXIT_DURATION);
+        return;
+      }
+    }
+
+    if (this.pauseTransitionTimer !== undefined) {
+      window.clearTimeout(this.pauseTransitionTimer);
+      this.pauseTransitionTimer = undefined;
+    }
+    this.commitOverlay(next);
+  }
+
+  private commitOverlay(next: OverlayScreen): void {
     const wasPlaying = this.started && this.overlay === null;
     const willPlay = this.started && next === null;
     this.overlay = next;

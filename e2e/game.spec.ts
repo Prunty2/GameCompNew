@@ -36,6 +36,31 @@ test("main menu presents only centered play and settings actions", async ({ page
   expect(bounds.every(({ center }) => Math.abs(center - viewportCenter) <= 1)).toBe(true);
 });
 
+test("pause blurs the lake and slides the compact menu in and out", async ({ page }) => {
+  await page.goto("/");
+  const titleLogoWidth = await page.locator(".title-panel .wordmark").evaluate((element) => element.getBoundingClientRect().width);
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.getByRole("button", { name: "Accept contract" }).click();
+
+  await page.keyboard.press("Escape");
+  const pauseScreen = page.locator(".pause-screen");
+  const pauseMenu = page.locator(".pause-menu");
+  await expect(pauseScreen).toBeVisible();
+  await expect(pauseScreen).toHaveCSS("animation-name", "pause-blur-in");
+  await expect(pauseMenu).toHaveCSS("animation-name", "pause-menu-in");
+  await expect(page.getByRole("button", { name: "Resume" })).toBeFocused();
+  await expect(page.locator(".pause-actions button")).toHaveCount(5);
+  await expectHorizontallyCentered(page, ".pause-menu");
+
+  const pauseLogoWidth = await page.locator(".pause-wordmark").evaluate((element) => element.getBoundingClientRect().width);
+  expect(pauseLogoWidth).toBeLessThan(titleLogoWidth);
+
+  await page.getByRole("button", { name: "Resume" }).click();
+  await expect(pauseScreen).toHaveClass(/is-closing/);
+  await expect(pauseMenu).toHaveCSS("animation-name", "pause-menu-out");
+  await expect(pauseScreen).toHaveCount(0);
+});
+
 test("completes the tutorial delivery, buys an upgrade, and persists it", async ({ page }) => {
   await page.goto("/?e2e=1");
   await expect(page.getByRole("img", { name: "FSHING" })).toBeVisible();
@@ -105,8 +130,8 @@ test("settings, keyboard pause, and local SDK fallback remain usable", async ({ 
   await page.getByRole("button", { name: "Accept contract" }).click();
   await page.keyboard.press("o");
   await expect(page.getByRole("heading", { name: "Paused" })).toBeVisible();
-  await expectHorizontallyCentered(page, ".compact-panel");
-  await page.getByRole("button", { name: "Return to water" }).click();
+  await expectHorizontallyCentered(page, ".pause-menu");
+  await page.getByRole("button", { name: "Resume" }).click();
   await expect(page.locator(".hud")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Pause and options" })).toHaveCount(0);
   await expect(page.locator("body")).toHaveClass(/high-contrast/);
