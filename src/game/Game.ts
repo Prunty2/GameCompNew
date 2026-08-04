@@ -73,6 +73,7 @@ const MAX_FRAME = 0.05;
 const UI_REFRESH_INTERVAL = 100;
 const HELP_STEP_COUNT = 6;
 const PAUSE_EXIT_DURATION = 340;
+const SETTINGS_EXIT_DURATION = 340;
 const SCENE_COVER_DURATION = 120;
 const SCENE_REVEAL_DURATION = 160;
 
@@ -113,11 +114,13 @@ export class Game {
   private lastUiRefresh = 0;
   private started = false;
   private overlay: OverlayScreen = "title";
+  private overlaySource: OverlayScreen = null;
   private overlayReturn: OverlayScreen = "pause";
   private helpStep = 0;
   private toastTimer: number | undefined;
   private tutorialDismissTimer: number | undefined;
   private pauseTransitionTimer: number | undefined;
+  private settingsTransitionTimer: number | undefined;
   private sceneTransitioning = false;
   private sceneTransitionTarget: OverlayScreen | undefined;
   private queuedOverlay: { next: OverlayScreen; useSceneTransition: boolean } | null = null;
@@ -186,7 +189,8 @@ export class Game {
     );
     this.renderer.render(this.simulation, {
       ...this.save.settings,
-      cinematic: this.overlay === "title",
+      cinematic: this.overlay === "title"
+        || (this.overlay === "settings" || this.overlay === "controls") && this.overlayReturn === "title",
     });
     if (time - this.lastUiRefresh >= UI_REFRESH_INTERVAL) {
       this.refreshHud();
@@ -406,8 +410,9 @@ export class Game {
   }
 
   private titleScreen(): string {
+    const returnClass = this.overlaySource === "settings" ? " is-settings-return" : "";
     return `
-      <section class="screen-overlay title-screen" role="dialog" aria-label="FSHING main menu">
+      <section class="screen-overlay title-screen${returnClass}" role="dialog" aria-label="FSHING main menu">
         <div class="title-panel">
           <img class="wordmark" src="${wordmarkUrl}" alt="FSHING" />
           <div class="title-actions">
@@ -508,8 +513,9 @@ export class Game {
   }
 
   private pauseScreen(): string {
+    const returnClass = this.overlaySource === "settings" ? " is-settings-return" : "";
     return `
-      <section class="screen-overlay pause-screen" role="dialog" aria-labelledby="pause-title">
+      <section class="screen-overlay pause-screen${returnClass}" role="dialog" aria-labelledby="pause-title">
         <div class="pause-menu">
           <img class="wordmark pause-wordmark" src="${wordmarkUrl}" alt="FSHING" />
           <h2 id="pause-title">Paused</h2>
@@ -531,12 +537,13 @@ export class Game {
 
   private settingsScreen(): string {
     const settings = this.save.settings;
+    const entryClass = this.overlaySource === "title" ? " is-title-entry" : "";
     return `
-      <section class="screen-overlay settings-overlay" role="dialog" aria-labelledby="settings-title">
-        <div class="settings-panel side-sheet">
+      <section class="screen-overlay settings-overlay${entryClass}" role="dialog" aria-labelledby="settings-title">
+        <div class="settings-panel settings-menu">
+          <img class="wordmark settings-wordmark" src="${wordmarkUrl}" alt="FSHING" />
           <header class="settings-heading">
             <h2 id="settings-title">Settings</h2>
-            <p>Set up the lake to suit you.</p>
           </header>
           <div class="settings-list">
             <label class="setting-option setting-toggle">
@@ -580,13 +587,17 @@ export class Game {
         </div>`;
     }).join("");
     return `
-      <section class="screen-overlay sheet-overlay" role="dialog" aria-labelledby="controls-title">
-        <div class="art-panel controls-panel side-sheet"><h2 id="controls-title">Controls</h2>
-          <p class="binding-help">Choose an action, then press its new key. If that key is already used, the two actions swap.</p>
+      <section class="screen-overlay controls-overlay" role="dialog" aria-labelledby="controls-title">
+        <div class="controls-panel controls-menu">
+          <img class="wordmark controls-wordmark" src="${wordmarkUrl}" alt="FSHING" />
+          <header class="controls-heading">
+            <h2 id="controls-title">Controls</h2>
+            <p class="binding-help">Choose an action, then press its new key. Occupied keys swap actions.</p>
+          </header>
           <div class="binding-list">${rows}</div>
           <div class="controls-actions">
             <button class="text-button" type="button" data-action="reset-controls">Reset defaults</button>
-            <button class="primary-button" type="button" data-action="close-controls">Done</button>
+            <button class="primary-button controls-done" type="button" data-action="close-controls">Done</button>
           </div>
         </div>
       </section>`;
@@ -793,6 +804,29 @@ export class Game {
     }
     if (next === this.overlay) return;
 
+    if (
+      this.overlay === "settings"
+      && (next === "title" || next === "pause")
+      && this.overlayReturn === next
+      && !this.save.settings.reducedMotion
+    ) {
+      if (this.settingsTransitionTimer !== undefined) return;
+      const settingsScreen = this.uiRoot.querySelector<HTMLElement>(".settings-overlay");
+      if (settingsScreen) {
+        settingsScreen.classList.add("is-closing", `is-closing-to-${next}`);
+        this.settingsTransitionTimer = window.setTimeout(() => {
+          this.settingsTransitionTimer = undefined;
+          this.commitOverlay(next);
+        }, SETTINGS_EXIT_DURATION);
+        return;
+      }
+    }
+
+    if (this.settingsTransitionTimer !== undefined) {
+      window.clearTimeout(this.settingsTransitionTimer);
+      this.settingsTransitionTimer = undefined;
+    }
+
     if (this.overlay === "pause" && next === null && !this.save.settings.reducedMotion) {
       if (this.pauseTransitionTimer !== undefined) return;
       const pauseScreen = this.uiRoot.querySelector<HTMLElement>(".pause-screen");
@@ -844,6 +878,7 @@ export class Game {
   private commitOverlay(next: OverlayScreen): void {
     const wasPlaying = this.started && this.overlay === null;
     const willPlay = this.started && next === null;
+    this.overlaySource = this.overlay;
     this.overlay = next;
     if (wasPlaying && !willPlay) this.platform.gameplayStop();
     if (!wasPlaying && willPlay) this.platform.gameplayStart();

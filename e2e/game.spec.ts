@@ -82,10 +82,45 @@ test("pause blurs the lake and slides the compact menu in and out", async ({ pag
   const pauseLogoWidth = await page.locator(".pause-wordmark").evaluate((element) => element.getBoundingClientRect().width);
   expect(pauseLogoWidth).toBeLessThan(titleLogoWidth);
 
+  await page.getByRole("button", { name: "Settings" }).click();
+  const settingsScreen = page.locator(".settings-overlay");
+  const settingsMenu = page.locator(".settings-menu");
+  await expect(settingsScreen).toBeVisible();
+  await page.getByRole("button", { name: "Done" }).click();
+  await expect(settingsScreen).toHaveClass(/is-closing-to-pause/);
+  await expect(settingsMenu).toHaveCSS("animation-name", "settings-menu-out");
+  await expect(settingsScreen).toHaveCount(0);
+  await expect(pauseScreen).toHaveClass(/is-settings-return/);
+  await expect(pauseScreen).toHaveCSS("animation-name", "none");
+  await expect(pauseMenu).toHaveCSS("animation-name", "menu-handoff-in");
+
   await page.getByRole("button", { name: "Resume" }).click();
   await expect(pauseScreen).toHaveClass(/is-closing/);
   await expect(pauseMenu).toHaveCSS("animation-name", "pause-menu-out");
   await expect(pauseScreen).toHaveCount(0);
+});
+
+test("settings reverses its title transition when closing", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByRole("button", { name: "Settings" })).toBeVisible();
+  const titleLakeFrame = await page.locator("#game-canvas").evaluate((element) => (element as HTMLCanvasElement).toDataURL());
+
+  await page.getByRole("button", { name: "Settings" }).click();
+  const settingsScreen = page.locator(".settings-overlay");
+  const settingsMenu = page.locator(".settings-menu");
+  await expect(settingsScreen).toHaveClass(/is-title-entry/);
+
+  await page.getByRole("button", { name: "Done" }).click();
+  await expect(settingsScreen).toHaveClass(/is-closing-to-title/);
+  await expect(settingsScreen).toHaveCSS("animation-name", "settings-backdrop-out");
+  await expect(settingsMenu).toHaveCSS("animation-name", "settings-menu-out");
+  await expect(settingsScreen).toHaveCount(0);
+  await expect(page.locator(".title-screen")).toHaveClass(/is-settings-return/);
+  await expect(page.locator(".title-panel")).toHaveCSS("animation-name", "menu-handoff-in");
+  await expect(page.getByRole("button", { name: "Play", exact: true })).toBeVisible();
+
+  const returnedLakeFrame = await page.locator("#game-canvas").evaluate((element) => (element as HTMLCanvasElement).toDataURL());
+  expect(returnedLakeFrame).toBe(titleLakeFrame);
 });
 
 test("completes the tutorial delivery, buys an upgrade, and persists it", async ({ page }) => {
@@ -138,15 +173,27 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
 
 test("settings, keyboard pause, and local SDK fallback remain usable", async ({ page }) => {
   await page.goto("/");
+  await expect(page.getByRole("button", { name: "Settings" })).toBeVisible();
+  const titleLakeFrame = await page.locator("#game-canvas").evaluate((element) => (element as HTMLCanvasElement).toDataURL());
   await page.getByRole("button", { name: "Settings" }).click();
   await expect(page.locator(".settings-panel")).toBeVisible();
-  await expect(page.getByText("Set up the lake to suit you.")).toBeVisible();
+  await expect(page.locator(".settings-overlay")).toHaveClass(/is-title-entry/);
+  await expect(page.locator(".settings-overlay")).toHaveCSS("animation-name", "settings-backdrop-in");
+  const settingsLakeFrame = await page.locator("#game-canvas").evaluate((element) => (element as HTMLCanvasElement).toDataURL());
+  expect(settingsLakeFrame).toBe(titleLakeFrame);
+  await expect(page.locator(".settings-wordmark")).toBeVisible();
+  await expectHorizontallyCentered(page, ".settings-panel");
   await expect(page.locator(".setting-option")).toHaveCount(5);
-  await expect(page.locator(".settings-done")).toHaveCSS("border-radius", "999px");
+  await expect(page.locator(".settings-done")).toHaveCSS("border-radius", "14px");
+  await expect(page.locator(".settings-overlay")).toHaveCSS("backdrop-filter", "blur(8px) saturate(0.78)");
   await page.getByText("High contrast").click();
   await page.getByText("Reduced motion").click();
   await page.getByRole("button", { name: "Controls" }).click();
   await expectHorizontallyCentered(page, ".controls-panel");
+  await expect(page.locator(".controls-wordmark")).toBeVisible();
+  await expect(page.locator(".binding-row")).toHaveCount(6);
+  await expect(page.locator(".binding-row").first()).toHaveCSS("border-radius", "12px");
+  await expect(page.locator(".controls-overlay")).toHaveCSS("backdrop-filter", "blur(8px) saturate(0.78)");
   await page.getByRole("button", { name: "Rebind Pause" }).click();
   await page.keyboard.press("KeyO");
   await expect(page.getByRole("button", { name: "Rebind Pause" })).toHaveText("O");
