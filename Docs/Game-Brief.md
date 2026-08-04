@@ -233,6 +233,8 @@ The boat uses direct horizontal side-scrolling movement:
 - The boat faces its current travel direction and uses restrained bob and tilt so motion remains calm and readable
 - Boat movement stays on the open horizontal surface without fixed collision obstacles
 
+The lake panorama and every surface sprite share one normalized world-space camera projection. The camera owns a single visible span, clamped left edge, and speed-based look-ahead; background crop bounds, harbors, buoys, hazards, objectives, weather lighting, and the boat all derive their screen positions from that same projection. This prevents scenery and gameplay objects from drifting at different apparent speeds while preserving a wider, static title-screen view.
+
 The handling should feel smooth, measured, and forgiving rather than physically realistic. Acceleration builds gradually, direction changes retain readable momentum, and the lower cruising speed gives the player time to plan without a complicated turning arc.
 
 ### Controls
