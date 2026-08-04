@@ -471,9 +471,9 @@ export class Game {
       : this.simulation.cargo.map((item, index) => `<div class="cargo-row"><span>${FISH[item.species].name}<small>${Math.ceil(item.freshness)}% fresh · ${populationLabel(this.simulation.progress.populations[item.species])} population</small></span><button class="small-button" type="button" data-action="release" data-index="${index}">Release</button></div>`).join("");
 
     return `
-      <section class="screen-overlay harbor-screen${isFirstJobOffer ? " is-first-voyage" : ""}" role="dialog" aria-labelledby="harbor-title">
+      <section class="screen-overlay harbor-screen is-first-voyage${isFirstJobOffer ? " is-first-job-offer" : " is-expanded-harbor"}" role="dialog" aria-labelledby="harbor-title">
         <div class="art-panel harbor-panel side-sheet">
-          ${isFirstJobOffer ? `<img class="wordmark harbor-wordmark" src="${wordmarkUrl}" alt="FSHING" />` : ""}
+          <img class="wordmark harbor-wordmark" src="${wordmarkUrl}" alt="FSHING" />
           <header class="panel-heading">
             <div><h2 id="harbor-title">${harbor.name}</h2><p>${harbor.subtitle}</p></div>
             <span class="shell-balance"><span class="ui-icon icon-shells" aria-hidden="true"></span><span><small>Your money</small><strong>${this.simulation.progress.money} shells</strong></span></span>

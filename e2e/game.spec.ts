@@ -173,6 +173,9 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
 
   await page.reload();
   await page.getByRole("button", { name: "Play", exact: true }).click();
+  await expect(page.locator(".harbor-screen")).toHaveClass(/is-expanded-harbor/);
+  await expect(page.locator(".harbor-wordmark")).toBeVisible();
+  await expect(page.locator(".harbor-panel")).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
   await expect(page.locator(".service-card").filter({ hasText: "Boat · Wide skiff · T1" })).toBeVisible();
 });
 

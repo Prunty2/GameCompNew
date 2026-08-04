@@ -5413,3 +5413,227 @@ kbd {
     min-height: 46px;
   }
 }
+
+/* Progressed saves keep the same menu shell while expanding into dock management. */
+.harbor-screen.is-first-voyage.is-expanded-harbor {
+  align-items: flex-start;
+  padding-top: max(100px, env(safe-area-inset-top));
+}
+
+.harbor-screen.is-first-voyage.is-expanded-harbor .harbor-panel {
+  width: min(980px, 94vw);
+  margin: 0 auto;
+}
+
+.harbor-screen.is-first-voyage.is-expanded-harbor .harbor-wordmark {
+  width: min(210px, 48vw);
+  margin-block: -66px -34px;
+}
+
+.harbor-screen.is-first-voyage.is-expanded-harbor .harbor-intro {
+  max-width: 680px;
+  margin-inline: auto;
+}
+
+.harbor-screen.is-first-voyage.is-expanded-harbor .harbor-intro p {
+  max-width: 620px;
+  margin: 5px auto 0;
+  color: var(--menu-fog);
+}
+
+.harbor-screen.is-first-voyage.is-expanded-harbor .harbor-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(250px, 0.75fr);
+  gap: 10px;
+}
+
+.harbor-screen.is-first-voyage.is-expanded-harbor .mission-section,
+.harbor-screen.is-first-voyage.is-expanded-harbor .cargo-section {
+  min-width: 0;
+}
+
+.harbor-screen.is-first-voyage.is-expanded-harbor .mission-section > .section-title {
+  position: static;
+  width: auto;
+  height: auto;
+  margin: 0 0 8px;
+  overflow: visible;
+  clip: auto;
+  color: var(--menu-fog);
+  white-space: normal;
+}
+
+.harbor-screen.is-first-voyage.is-expanded-harbor .cargo-section,
+.harbor-screen.is-first-voyage.is-expanded-harbor .services,
+.harbor-screen.is-first-voyage.is-expanded-harbor .empty-job {
+  border: 1px solid rgb(247 241 227 / 48%);
+  border-radius: 14px;
+  background: rgb(7 31 40 / 78%);
+  color: var(--menu-paper);
+  box-shadow: 0 18px 42px rgb(2 15 21 / 24%);
+  backdrop-filter: blur(5px);
+}
+
+.harbor-screen.is-first-voyage.is-expanded-harbor .cargo-section {
+  padding: 14px;
+}
+
+.harbor-screen.is-first-voyage.is-expanded-harbor .cargo-section .section-heading {
+  margin-bottom: 8px;
+}
+
+.harbor-screen.is-first-voyage.is-expanded-harbor .cargo-section .section-title,
+.harbor-screen.is-first-voyage.is-expanded-harbor .empty-job h3,
+.harbor-screen.is-first-voyage.is-expanded-harbor .services .section-title,
+.harbor-screen.is-first-voyage.is-expanded-harbor .service-card h4 {
+  color: var(--menu-paper);
+}
+
+.harbor-screen.is-first-voyage.is-expanded-harbor .empty-job {
+  padding: 18px;
+}
+
+.harbor-screen.is-first-voyage.is-expanded-harbor .empty-job p,
+.harbor-screen.is-first-voyage.is-expanded-harbor .empty-state,
+.harbor-screen.is-first-voyage.is-expanded-harbor .cargo-help,
+.harbor-screen.is-first-voyage.is-expanded-harbor .cargo-row small,
+.harbor-screen.is-first-voyage.is-expanded-harbor .services .section-heading p,
+.harbor-screen.is-first-voyage.is-expanded-harbor .service-card p {
+  color: var(--menu-fog);
+}
+
+.harbor-screen.is-first-voyage.is-expanded-harbor .cargo-row {
+  border-color: rgb(247 241 227 / 22%);
+  color: var(--menu-paper);
+}
+
+.harbor-screen.is-first-voyage.is-expanded-harbor .cargo-help {
+  border-color: rgb(247 241 227 / 24%);
+}
+
+.harbor-screen.is-first-voyage.is-expanded-harbor .services {
+  margin: 10px 0 0;
+  padding: 14px;
+}
+
+.harbor-screen.is-first-voyage.is-expanded-harbor .service-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+  border: 0;
+}
+
+.harbor-screen.is-first-voyage.is-expanded-harbor .service-card {
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid rgb(247 241 227 / 24%);
+  border-radius: 12px;
+  background: rgb(247 241 227 / 6%);
+}
+
+.harbor-screen.is-first-voyage.is-expanded-harbor .service-card .small-button {
+  width: auto;
+  min-width: 76px;
+  min-height: 40px;
+  grid-column: 3;
+  grid-row: 1;
+  align-self: center;
+  border: 1px solid rgb(247 241 227 / 48%);
+  border-radius: 10px;
+  background: rgb(7 31 40 / 72%);
+  color: var(--menu-paper);
+}
+
+.harbor-screen.is-first-voyage.is-expanded-harbor .service-card .small-button:hover:not(:disabled),
+.harbor-screen.is-first-voyage.is-expanded-harbor .service-card .small-button:focus-visible {
+  border-color: var(--menu-signal);
+  background: var(--menu-signal);
+  color: var(--menu-ink);
+  transform: translateY(-1px);
+}
+
+.harbor-screen.is-first-voyage.is-expanded-harbor .service-card .small-button:disabled {
+  opacity: 0.46;
+}
+
+.harbor-screen.is-first-voyage.is-expanded-harbor .panel-actions {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  margin: 10px 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.harbor-screen.is-first-voyage.is-expanded-harbor .panel-actions > div {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.harbor-screen.is-first-voyage.is-expanded-harbor .leave-button {
+  min-width: 210px;
+  min-height: 54px;
+  padding: 10px 18px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--menu-signal);
+  color: var(--menu-ink);
+  box-shadow: 0 5px 0 var(--menu-signal-dark), 0 14px 30px rgb(2 15 21 / 30%);
+}
+
+.harbor-screen.is-first-voyage.is-expanded-harbor .leave-button span {
+  display: none;
+}
+
+.harbor-screen.is-first-voyage.is-expanded-harbor .leave-button strong {
+  color: var(--menu-ink);
+  text-transform: none;
+}
+
+.harbor-screen.is-first-voyage.is-expanded-harbor .leave-button b {
+  grid-row: 1;
+}
+
+.high-contrast .harbor-screen.is-first-voyage.is-expanded-harbor .cargo-section,
+.high-contrast .harbor-screen.is-first-voyage.is-expanded-harbor .services,
+.high-contrast .harbor-screen.is-first-voyage.is-expanded-harbor .empty-job,
+.high-contrast .harbor-screen.is-first-voyage.is-expanded-harbor .service-card {
+  border-color: #fff;
+}
+
+@media (max-width: 760px) {
+  .harbor-screen.is-first-voyage.is-expanded-harbor {
+    padding-top: max(94px, env(safe-area-inset-top));
+  }
+
+  .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-panel {
+    width: min(500px, 92vw);
+  }
+
+  .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-grid,
+  .harbor-screen.is-first-voyage.is-expanded-harbor .service-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .harbor-screen.is-first-voyage.is-expanded-harbor .panel-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .harbor-screen.is-first-voyage.is-expanded-harbor .leave-button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 430px) {
+  .harbor-screen.is-first-voyage.is-expanded-harbor .service-card {
+    grid-template-columns: 28px minmax(0, 1fr);
+  }
+
+  .harbor-screen.is-first-voyage.is-expanded-harbor .service-card .small-button {
+    width: 100%;
+    grid-column: 1 / -1;
+    grid-row: auto;
+  }
+}
