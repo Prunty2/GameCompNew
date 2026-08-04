@@ -453,7 +453,7 @@ export class Game {
       ? `<div class="contract-card job-ticket ${isFirstJobOffer ? "is-guided" : ""}">
           <div class="job-ticket-heading">
             <div><span class="card-kicker">Your next job</span><h3>${available.title}</h3></div>
-            <span class="reward-stamp"><small>Reward</small><strong>${available.reward}</strong><span>shells</span></span>
+            <span class="reward-stamp" aria-label="${available.reward} shell reward"><span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${available.reward}</strong></span>
           </div>
           <ol class="job-route" aria-label="Job steps">
             <li><span>1</span><div><small>Catch</small><strong>${FISH[available.species].name}</strong></div></li>
@@ -494,7 +494,7 @@ export class Game {
           };
 
     const harborTabs = !isFirstJobOffer
-      ? `<nav class="harbor-tabs" aria-label="Harbor sections">
+      ? `<nav class="harbor-tabs" aria-label="Harbor sections" style="--harbor-tab-count: ${availableSections.length}">
           ${availableSections.map((section) => `<button class="harbor-tab ${activeSection === section ? "is-active" : ""}" type="button" data-action="harbor-section" data-harbor-section="${section}" aria-label="${capitalise(section)}" aria-pressed="${activeSection === section}"><span class="ui-icon icon-${HARBOR_SECTION_ICON[section]}" aria-hidden="true"></span><span>${capitalise(section)}</span></button>`).join("")}
         </nav>`
       : "";
@@ -521,9 +521,8 @@ export class Game {
     return `
       <section class="screen-overlay harbor-screen is-first-voyage${isFirstJobOffer ? " is-first-job-offer" : " is-expanded-harbor"} is-harbor-${activeSection}" role="dialog" aria-labelledby="harbor-title">
         <div class="art-panel harbor-panel side-sheet">
-          <img class="wordmark harbor-wordmark" src="${wordmarkUrl}" alt="FSHING" />
-          <header class="panel-heading">
-            <div><h2 id="harbor-title">${harbor.name}</h2><p>${harbor.subtitle}</p></div>
+          <header class="panel-heading harbor-header">
+            <div class="harbor-title-block"><img class="wordmark harbor-wordmark" src="${wordmarkUrl}" alt="FSHING" /><div><h2 id="harbor-title">${harbor.name}</h2><p>${harbor.subtitle}</p></div></div>
             <span class="shell-balance" aria-label="${this.simulation.progress.money} shells"><span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${this.simulation.progress.money}</strong></span>
           </header>
           <div class="harbor-intro ${isFirstJobOffer ? "is-first-step" : ""}">
@@ -532,7 +531,7 @@ export class Game {
           </div>
           ${harborTabs}
           <div class="harbor-content is-${activeSection}">${activeContent}</div>
-          <footer class="panel-actions ${isFirstJobOffer ? "is-guided" : ""}"><div><button class="text-button harbor-utility-button" type="button" data-action="open-help" aria-label="How to play"><span class="ui-icon icon-objective" aria-hidden="true"></span><strong>Help</strong></button><button class="text-button harbor-utility-button" type="button" data-action="open-field-guide" aria-label="Field guide"><span class="ui-icon icon-freshness" aria-hidden="true"></span><strong>Guide</strong></button></div>${isFirstJobOffer ? "" : `<button class="leave-button" type="button" data-action="undock" aria-label="Back to lake →"><strong>Lake</strong><b aria-hidden="true">→</b></button>`}</footer>
+          <footer class="panel-actions ${isFirstJobOffer ? "is-guided" : ""}"><div><button class="text-button harbor-utility-button" type="button" data-action="open-help" aria-label="How to play"><span class="ui-icon icon-objective" aria-hidden="true"></span><strong>Help</strong></button><button class="text-button harbor-utility-button" type="button" data-action="open-field-guide" aria-label="Field guide"><span class="ui-icon icon-freshness" aria-hidden="true"></span><strong>Guide</strong></button></div>${isFirstJobOffer ? "" : `<button class="leave-button" type="button" data-action="undock" aria-label="Back to lake →"><strong>Return to Lake</strong><b aria-hidden="true">→</b></button>`}</footer>
         </div>
       </section>`;
   }

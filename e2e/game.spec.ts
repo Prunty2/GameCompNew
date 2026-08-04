@@ -132,7 +132,7 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await expect(page.locator(".harbor-screen")).toHaveClass(/is-first-voyage/);
   await expect(page.locator(".harbor-wordmark")).toBeVisible();
   await expectHorizontallyCentered(page, ".harbor-panel");
-  await expect(page.locator(".harbor-panel")).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expect(page.locator(".harbor-panel")).toHaveCSS("background-color", "rgba(4, 24, 32, 0.9)");
   await expect(page.locator(".mission-button")).toHaveCSS("border-radius", "14px");
   await expect(page.locator(".job-ticket")).toHaveClass(/is-guided/);
   await expect(page.getByRole("heading", { name: "Your cargo" })).toHaveCount(0);
@@ -163,6 +163,14 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await expect(page.getByRole("heading", { name: "Gloam Ferry" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Your cargo" })).toHaveCount(0);
   const deliveryPanelBounds = await page.locator(".harbor-panel").boundingBox();
+  const deliveryTabsBounds = await page.locator(".harbor-tabs").boundingBox();
+  const deliveryCardBounds = await page.locator(".job-ticket").boundingBox();
+  const deliveryFooterBounds = await page.locator(".panel-actions").boundingBox();
+  expect(Math.abs((deliveryTabsBounds?.x ?? 0) - (deliveryCardBounds?.x ?? 0))).toBeLessThanOrEqual(1);
+  expect(Math.abs((deliveryTabsBounds?.width ?? 0) - (deliveryCardBounds?.width ?? 0))).toBeLessThanOrEqual(1);
+  expect(Math.abs((deliveryTabsBounds?.x ?? 0) - (deliveryFooterBounds?.x ?? 0))).toBeLessThanOrEqual(1);
+  expect(Math.abs((deliveryTabsBounds?.width ?? 0) - (deliveryFooterBounds?.width ?? 0))).toBeLessThanOrEqual(1);
+  await expect(page.locator(".harbor-intro")).toHaveCSS("text-align", "left");
   await page.getByRole("button", { name: "Cargo", exact: true }).click();
   await expect(page.getByRole("button", { name: "Cargo", exact: true })).toBeFocused();
   await expect(page.locator(".harbor-tab .ui-icon")).toHaveCount(2);
@@ -193,12 +201,18 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await expect(page.locator(".service-card").filter({ hasText: "+1 space · Wide skiff" }).locator(".service-tier")).toHaveText("T1");
   const harborFitsViewport = await page.locator(".harbor-screen").evaluate((element) => element.scrollHeight <= element.clientHeight);
   expect(harborFitsViewport).toBe(true);
+  await page.setViewportSize({ width: 390, height: 844 });
+  const guideBounds = await page.locator(".harbor-utility-button").nth(1).boundingBox();
+  const lakeBounds = await page.locator(".leave-button").boundingBox();
+  expect((guideBounds?.x ?? 0) + (guideBounds?.width ?? 0)).toBeLessThanOrEqual(lakeBounds?.x ?? 0);
+  await expect(page.getByRole("button", { name: "Back to lake →" })).toContainText("Return to Lake");
+  await page.setViewportSize({ width: 1280, height: 720 });
 
   await page.reload();
   await page.getByRole("button", { name: "Play", exact: true }).click();
   await expect(page.locator(".harbor-screen")).toHaveClass(/is-expanded-harbor/);
   await expect(page.locator(".harbor-wordmark")).toBeVisible();
-  await expect(page.locator(".harbor-panel")).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expect(page.locator(".harbor-panel")).toHaveCSS("background-color", "rgba(4, 24, 32, 0.9)");
   await expect(page.getByRole("region", { name: "Dock services" })).toHaveCount(0);
   await page.getByRole("button", { name: "Services", exact: true }).click();
   await expect(page.locator(".service-card").filter({ hasText: "+1 space · Wide skiff" }).locator(".service-tier")).toHaveText("T1");
