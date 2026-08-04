@@ -93,6 +93,12 @@ type OverlayScreen =
 
 type HarborSection = "delivery" | "cargo" | "services";
 
+const HARBOR_SECTION_ICON: Record<HarborSection, string> = {
+  delivery: "objective",
+  cargo: "cargo",
+  services: "repair",
+};
+
 declare global {
   interface Window {
     __FSHING_TEST__?: {
@@ -478,18 +484,18 @@ export class Game {
       : this.simulation.cargo.map((item, index) => `<div class="cargo-row"><span>${FISH[item.species].name}<small>${Math.ceil(item.freshness)}% fresh · ${populationLabel(this.simulation.progress.populations[item.species])} population</small></span><button class="small-button" type="button" data-action="release" data-index="${index}">Release</button></div>`).join("");
 
     const sectionHeading = activeSection === "cargo"
-      ? { eyebrow: "Cargo hold", title: "Manage your catch", body: "Review freshness or release an unneeded fish to help its population recover." }
+      ? { eyebrow: "Cargo hold", title: "Manage your catch", body: "" }
       : activeSection === "services"
-        ? { eyebrow: "Dock services", title: "Improve your boat", body: "Spend shells on permanent equipment upgrades and hull repairs." }
+        ? { eyebrow: "Dock services", title: "Improve your boat", body: "" }
         : {
             eyebrow: isFirstJobOffer ? "First voyage" : "Current task",
             title: isFirstJobOffer ? "Accept your first delivery to begin" : available ? "Choose the posted delivery" : deliverable ? "Hand in your catch" : contract ? "Continue your delivery" : "Let protected stocks recover",
-            body: isFirstJobOffer ? "" : available ? "Take the job below. The game will point you to the right fish, then to the delivery harbor." : deliverable ? "Your requested fish is ready. Complete the delivery to get paid." : contract ? "Your current job stays active until it is delivered." : "No impossible contract will be posted. Return visits restore populations until a catch is sustainable again.",
+            body: isFirstJobOffer ? "" : available ? "Choose a job, then follow its marker." : deliverable ? "Turn in the requested fish for payment." : contract ? "Your current job remains active." : "Return visits restore protected fish stocks.",
           };
 
     const harborTabs = !isFirstJobOffer
       ? `<nav class="harbor-tabs" aria-label="Harbor sections">
-          ${availableSections.map((section) => `<button class="harbor-tab ${activeSection === section ? "is-active" : ""}" type="button" data-action="harbor-section" data-harbor-section="${section}" aria-pressed="${activeSection === section}">${capitalise(section)}</button>`).join("")}
+          ${availableSections.map((section) => `<button class="harbor-tab ${activeSection === section ? "is-active" : ""}" type="button" data-action="harbor-section" data-harbor-section="${section}" aria-label="${capitalise(section)}" aria-pressed="${activeSection === section}"><span class="ui-icon icon-${HARBOR_SECTION_ICON[section]}" aria-hidden="true"></span><span>${capitalise(section)}</span></button>`).join("")}
         </nav>`
       : "";
 
@@ -500,15 +506,14 @@ export class Game {
           <p class="cargo-help">Fish lose freshness while you travel. Release an unneeded catch to help its population recover.</p>
         </aside>`
       : activeSection === "services"
-        ? `<section class="services" aria-labelledby="service-heading">
-            <div class="section-heading"><div><h3 id="service-heading" class="section-title">Dock services</h3><p>Permanent boat improvements and repairs.</p></div></div>
+        ? `<section class="services" aria-label="Dock services">
             <div class="service-grid">
-              ${this.upgradeCard("cargo", `Boat · ${boatClassAt(this.simulation.progress.upgrades.cargo)}`, "Grow the boat and add one cargo space.")}
-              ${this.upgradeCard("engine", "Engine", "11% more forward speed per tier.")}
-              ${this.upgradeCard("lamp", "Lamp", "Wider readable water at night.")}
-              ${this.upgradeCard("line", "Line depth", "Reach the next deep-water fish tier.")}
-              <article class="service-card"><span class="ui-icon icon-repair" aria-hidden="true"></span><div><h4>Repair hull</h4><p>${Math.ceil(this.simulation.boat.damage)} damage · ${repairCost(this.simulation)} shells</p></div><button class="small-button" type="button" data-action="repair" ${this.simulation.boat.damage <= 0 || this.simulation.progress.money <= 0 ? "disabled" : ""}>Repair</button></article>
-              ${harborId === "gloam" ? `<article class="service-card"><span class="ui-icon icon-permit" aria-hidden="true"></span><div><h4>Outer Gloam permit</h4><p>${this.simulation.progress.outerUnlocked ? "Granted" : `${BALANCE.permitCost} shells`}</p></div><button class="small-button" type="button" data-action="buy-permit" ${this.simulation.progress.outerUnlocked || this.simulation.progress.money < BALANCE.permitCost ? "disabled" : ""}>${this.simulation.progress.outerUnlocked ? "Owned" : "Buy"}</button></article>` : ""}
+              ${this.upgradeCard("cargo", "Cargo", `+1 space · ${boatClassAt(this.simulation.progress.upgrades.cargo)}`)}
+              ${this.upgradeCard("engine", "Engine", "+11% speed")}
+              ${this.upgradeCard("lamp", "Lamp", "Wider night view")}
+              ${this.upgradeCard("line", "Line depth", "Next depth tier")}
+              <article class="service-card"><span class="ui-icon icon-repair" aria-hidden="true"></span><div><h4>Repair hull</h4><p><span>${Math.ceil(this.simulation.boat.damage)} damage</span><span class="service-cost" aria-label="${repairCost(this.simulation)} shells"><span class="ui-icon icon-shells" aria-hidden="true"></span>${repairCost(this.simulation)}</span></p></div><button class="small-button" type="button" data-action="repair" ${this.simulation.boat.damage <= 0 || this.simulation.progress.money <= 0 ? "disabled" : ""}><span aria-hidden="true">+</span><span>Repair</span></button></article>
+              ${harborId === "gloam" ? `<article class="service-card"><span class="ui-icon icon-permit" aria-hidden="true"></span><div><h4>Outer permit</h4><p>${this.simulation.progress.outerUnlocked ? "Granted" : `<span>Outer water</span><span class="service-cost" aria-label="${BALANCE.permitCost} shells"><span class="ui-icon icon-shells" aria-hidden="true"></span>${BALANCE.permitCost}</span>`}</p></div><button class="small-button" type="button" data-action="buy-permit" ${this.simulation.progress.outerUnlocked || this.simulation.progress.money < BALANCE.permitCost ? "disabled" : ""}><span aria-hidden="true">✓</span><span>${this.simulation.progress.outerUnlocked ? "Owned" : "Buy"}</span></button></article>` : ""}
             </div>
           </section>`
         : `<section class="mission-section" aria-labelledby="contract-heading"><h3 id="contract-heading" class="section-title">${isFirstJobOffer ? "First delivery" : "Delivery job"}</h3>${contractMarkup}</section>`;
@@ -519,7 +524,7 @@ export class Game {
           <img class="wordmark harbor-wordmark" src="${wordmarkUrl}" alt="FSHING" />
           <header class="panel-heading">
             <div><h2 id="harbor-title">${harbor.name}</h2><p>${harbor.subtitle}</p></div>
-            <span class="shell-balance"><span class="ui-icon icon-shells" aria-hidden="true"></span><span><small>Your money</small><strong>${this.simulation.progress.money} shells</strong></span></span>
+            <span class="shell-balance" aria-label="${this.simulation.progress.money} shells"><span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${this.simulation.progress.money}</strong></span>
           </header>
           <div class="harbor-intro ${isFirstJobOffer ? "is-first-step" : ""}">
             <div><span class="panel-eyebrow">${sectionHeading.eyebrow}</span><h3>${sectionHeading.title}</h3></div>
@@ -527,7 +532,7 @@ export class Game {
           </div>
           ${harborTabs}
           <div class="harbor-content is-${activeSection}">${activeContent}</div>
-          <footer class="panel-actions ${isFirstJobOffer ? "is-guided" : ""}"><div><button class="text-button" type="button" data-action="open-help">How to play</button><button class="text-button" type="button" data-action="open-field-guide">Field guide</button></div>${isFirstJobOffer ? "" : `<button class="leave-button" type="button" data-action="undock" aria-label="Back to lake →"><span>Return to open water</span><strong>Back to lake</strong><b aria-hidden="true">→</b></button>`}</footer>
+          <footer class="panel-actions ${isFirstJobOffer ? "is-guided" : ""}"><div><button class="text-button harbor-utility-button" type="button" data-action="open-help" aria-label="How to play"><span class="ui-icon icon-objective" aria-hidden="true"></span><strong>Help</strong></button><button class="text-button harbor-utility-button" type="button" data-action="open-field-guide" aria-label="Field guide"><span class="ui-icon icon-freshness" aria-hidden="true"></span><strong>Guide</strong></button></div>${isFirstJobOffer ? "" : `<button class="leave-button" type="button" data-action="undock" aria-label="Back to lake →"><strong>Lake</strong><b aria-hidden="true">→</b></button>`}</footer>
         </div>
       </section>`;
   }
@@ -536,7 +541,7 @@ export class Game {
     const tier = this.simulation.progress.upgrades[upgrade];
     const maximum = tier >= BALANCE.maxUpgradeTier;
     const cost = upgradeCost(upgrade, tier);
-    return `<article class="service-card"><span class="ui-icon icon-${upgrade}" aria-hidden="true"></span><div><h4>${title} · T${tier}</h4><p>${maximum ? "Maximum tier" : `${detail} ${cost} shells`}</p></div><button class="small-button" type="button" data-action="buy-upgrade" data-upgrade="${upgrade}" ${maximum || this.simulation.progress.money < cost ? "disabled" : ""}>${maximum ? "Max" : "Upgrade"}</button></article>`;
+    return `<article class="service-card"><span class="ui-icon icon-${upgrade}" aria-hidden="true"></span><div><h4>${title}<span class="service-tier">T${tier}</span></h4><p>${maximum ? "Maximum tier" : `<span>${detail}</span><span class="service-cost" aria-label="${cost} shells"><span class="ui-icon icon-shells" aria-hidden="true"></span>${cost}</span>`}</p></div><button class="small-button" type="button" data-action="buy-upgrade" data-upgrade="${upgrade}" aria-label="${maximum ? `${title} at maximum tier` : `Upgrade ${title}`}" ${maximum || this.simulation.progress.money < cost ? "disabled" : ""}><span aria-hidden="true">↑</span><span>${maximum ? "Max" : "Upgrade"}</span></button></article>`;
   }
 
   private pauseScreen(): string {

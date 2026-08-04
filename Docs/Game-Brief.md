@@ -176,7 +176,7 @@ Each harbor acts as a compact service point. A harbor may provide:
 
 The first release should reuse a consistent harbor interface rather than build fully explorable towns.
 
-The harbor interface opens on Delivery and separates Cargo and Dock services into focused submenus. Only one harbor function is visible at a time, the selected submenu keeps keyboard focus, and each submenu must fit supported desktop, portrait, and short-landscape viewports without page scrolling. Switching submenus leaves the wordmark, harbor heading, tab bar, and footer fixed while only the inner content changes.
+The harbor interface opens on Delivery and separates Cargo and Dock services into focused submenus. Only one harbor function is visible at a time, the selected submenu keeps keyboard focus, and each submenu must fit supported desktop, portrait, and short-landscape viewports without page scrolling. Switching submenus leaves the wordmark, harbor heading, tab bar, and footer fixed while only the inner content changes. Tabs, service types, shell costs, help, and field-guide actions use the shared pictogram family with short visible labels; repeated explanatory sentences are removed when the icon and local heading already communicate the action.
 
 ## Delivery system
 

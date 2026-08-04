@@ -136,7 +136,7 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await expect(page.locator(".mission-button")).toHaveCSS("border-radius", "14px");
   await expect(page.locator(".job-ticket")).toHaveClass(/is-guided/);
   await expect(page.getByRole("heading", { name: "Your cargo" })).toHaveCount(0);
-  await expect(page.getByRole("heading", { name: "Dock services" })).toHaveCount(0);
+  await expect(page.getByRole("region", { name: "Dock services" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Back to lake →" })).toHaveCount(0);
   await page.getByRole("button", { name: "Accept contract" }).click();
   await expect(page.locator("#tutorial-callout")).toContainText("Sunward Shoal");
@@ -165,27 +165,32 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   const deliveryPanelBounds = await page.locator(".harbor-panel").boundingBox();
   await page.getByRole("button", { name: "Cargo", exact: true }).click();
   await expect(page.getByRole("button", { name: "Cargo", exact: true })).toBeFocused();
+  await expect(page.locator(".harbor-tab .ui-icon")).toHaveCount(2);
   await expect(page.getByRole("heading", { name: "Your cargo" })).toBeVisible();
   const cargoPanelBounds = await page.locator(".harbor-panel").boundingBox();
   expect(Math.abs((cargoPanelBounds?.y ?? 0) - (deliveryPanelBounds?.y ?? 0))).toBeLessThanOrEqual(1);
   expect(Math.abs((cargoPanelBounds?.height ?? 0) - (deliveryPanelBounds?.height ?? 0))).toBeLessThanOrEqual(1);
-  await expect(page.getByRole("heading", { name: "Dock services" })).toHaveCount(0);
+  await expect(page.getByRole("region", { name: "Dock services" })).toHaveCount(0);
   await page.getByRole("button", { name: "Delivery", exact: true }).click();
   await page.getByRole("button", { name: "Complete delivery" }).click();
   await expect(page.getByRole("heading", { name: "Delivery analysed" })).toBeVisible();
   await expect(page.getByText("Prediction versus result")).toBeVisible();
   await page.getByRole("button", { name: "Continue at harbor" }).click();
-  await expect(page.getByRole("heading", { name: "Dock services" })).toHaveCount(0);
+  await expect(page.getByRole("region", { name: "Dock services" })).toHaveCount(0);
   const deliveryHubBounds = await page.locator(".harbor-panel").boundingBox();
   await page.getByRole("button", { name: "Services", exact: true }).click();
   await expect(page.getByRole("button", { name: "Services", exact: true })).toBeFocused();
-  await expect(page.getByRole("heading", { name: "Dock services" })).toBeVisible();
+  await expect(page.locator(".harbor-tab .ui-icon")).toHaveCount(3);
+  await expect(page.getByRole("region", { name: "Dock services" })).toBeVisible();
+  await expect(page.locator(".service-card > .ui-icon")).toHaveCount(6);
+  await expect(page.locator(".harbor-utility-button")).toHaveCount(2);
   const servicesPanelBounds = await page.locator(".harbor-panel").boundingBox();
   expect(Math.abs((servicesPanelBounds?.y ?? 0) - (deliveryHubBounds?.y ?? 0))).toBeLessThanOrEqual(1);
   expect(Math.abs((servicesPanelBounds?.height ?? 0) - (deliveryHubBounds?.height ?? 0))).toBeLessThanOrEqual(1);
-  const cargoService = page.locator(".service-card").filter({ hasText: "Boat · Skiff" });
-  await cargoService.getByRole("button", { name: "Upgrade" }).click();
-  await expect(page.locator(".service-card").filter({ hasText: "Boat · Wide skiff · T1" })).toBeVisible();
+  const cargoService = page.locator(".service-card").filter({ hasText: "+1 space · Skiff" });
+  await expect(cargoService.locator(".service-cost")).toHaveAttribute("aria-label", "60 shells");
+  await cargoService.getByRole("button", { name: "Upgrade Cargo" }).click();
+  await expect(page.locator(".service-card").filter({ hasText: "+1 space · Wide skiff" }).locator(".service-tier")).toHaveText("T1");
   const harborFitsViewport = await page.locator(".harbor-screen").evaluate((element) => element.scrollHeight <= element.clientHeight);
   expect(harborFitsViewport).toBe(true);
 
@@ -194,9 +199,9 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await expect(page.locator(".harbor-screen")).toHaveClass(/is-expanded-harbor/);
   await expect(page.locator(".harbor-wordmark")).toBeVisible();
   await expect(page.locator(".harbor-panel")).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
-  await expect(page.getByRole("heading", { name: "Dock services" })).toHaveCount(0);
+  await expect(page.getByRole("region", { name: "Dock services" })).toHaveCount(0);
   await page.getByRole("button", { name: "Services", exact: true }).click();
-  await expect(page.locator(".service-card").filter({ hasText: "Boat · Wide skiff · T1" })).toBeVisible();
+  await expect(page.locator(".service-card").filter({ hasText: "+1 space · Wide skiff" }).locator(".service-tier")).toHaveText("T1");
 });
 
 test("settings, keyboard pause, and local SDK fallback remain usable", async ({ page }) => {

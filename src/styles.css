@@ -173,7 +173,37 @@ input:focus-visible {
 .icon-objective { background-position: 33.333% 50%; }
 .icon-engine { background-position: 66.667% 50%; }
 .icon-lamp { background-position: 100% 50%; }
-.icon-line { background-position: 33.333% 0; }
+.icon-line {
+  position: relative;
+  overflow: hidden;
+  background-color: #04152b;
+  background-image: none;
+}
+
+.icon-line::before {
+  position: absolute;
+  top: 14%;
+  left: 47%;
+  width: 7%;
+  height: 52%;
+  border-radius: 999px;
+  background: linear-gradient(to bottom, #fff0cf 0 38%, #f46f21 38% 62%, #fff0cf 62% 100%);
+  content: "";
+}
+
+.icon-line::after {
+  position: absolute;
+  top: 53%;
+  left: 44%;
+  width: 27%;
+  height: 25%;
+  border-right: max(2px, 0.08em) solid #f46f21;
+  border-bottom: max(2px, 0.08em) solid #f46f21;
+  border-radius: 0 0 85% 0;
+  content: "";
+  transform: rotate(12deg);
+  transform-origin: top left;
+}
 .icon-permit { background-position: 0 100%; }
 .icon-repair { background-position: 33.333% 100%; }
 .icon-sound { background-position: 66.667% 100%; }
@@ -5673,8 +5703,19 @@ kbd {
 }
 
 .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-panel .shell-balance {
+  gap: 6px;
   margin-top: 7px;
-  padding-block: 5px;
+  padding: 5px 9px 5px 5px;
+}
+
+.harbor-screen.is-first-voyage.is-expanded-harbor .harbor-panel .shell-balance > .ui-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+}
+
+.harbor-screen.is-first-voyage.is-expanded-harbor .harbor-panel .shell-balance strong {
+  font-size: 0.95rem;
 }
 
 .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-intro {
@@ -5698,7 +5739,11 @@ kbd {
 }
 
 .harbor-screen .harbor-tab {
+  display: flex;
   min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   padding: 8px 12px;
   border: 1px solid rgb(247 241 227 / 48%);
   border-radius: 12px;
@@ -5710,6 +5755,19 @@ kbd {
   font-weight: 850;
   letter-spacing: 0.02em;
   transition: background 140ms ease, border-color 140ms ease, color 140ms ease, transform 120ms ease;
+}
+
+.harbor-screen .harbor-tab .ui-icon {
+  width: 27px;
+  height: 27px;
+  border: 1px solid rgb(247 241 227 / 18%);
+  border-radius: 8px;
+  box-shadow: 0 3px 8px rgb(2 15 21 / 24%);
+}
+
+.harbor-screen .harbor-tab.is-active .ui-icon {
+  border-color: rgb(7 31 40 / 28%);
+  box-shadow: none;
 }
 
 .harbor-tab:hover,
@@ -5787,15 +5845,7 @@ kbd {
 }
 
 .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .services {
-  padding: 12px;
-}
-
-.harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .services > .section-heading {
-  margin-bottom: 7px;
-}
-
-.harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .services > .section-heading p {
-  margin-top: 2px;
+  padding: 13px;
 }
 
 .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .service-grid {
@@ -5805,18 +5855,65 @@ kbd {
 }
 
 .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .service-card {
-  min-height: 58px;
-  padding: 8px 9px;
+  min-height: 64px;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  gap: 10px;
+  padding: 8px 10px 8px 8px;
+}
+
+.harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .service-card > .ui-icon {
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgb(247 241 227 / 20%);
+  border-radius: 11px;
+  box-shadow: 0 5px 12px rgb(2 15 21 / 26%);
+}
+
+.harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .service-card h4 {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .service-tier {
+  color: var(--menu-signal);
+  font-family: var(--body-face);
+  font-size: 0.56rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
 }
 
 .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .service-card p {
+  display: flex;
   min-height: 0;
+  align-items: center;
+  gap: 7px;
+  margin-top: 3px;
   font-size: 0.58rem;
 }
 
+.harbor-screen.is-first-voyage.is-expanded-harbor .service-cost {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--menu-paper);
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.harbor-screen.is-first-voyage.is-expanded-harbor .service-cost .ui-icon {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+}
+
 .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .service-card .small-button {
+  display: inline-flex;
   min-width: 70px;
   min-height: 38px;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
 }
 
 .harbor-screen.is-first-voyage.is-expanded-harbor .panel-actions {
@@ -5827,6 +5924,33 @@ kbd {
 .harbor-screen.is-first-voyage.is-expanded-harbor .leave-button {
   min-width: 170px;
   min-height: 48px;
+}
+
+.harbor-screen.is-first-voyage.is-expanded-harbor .harbor-utility-button {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border: 1px solid rgb(247 241 227 / 42%);
+  border-radius: 12px;
+  background: rgb(7 31 40 / 64%);
+  color: var(--menu-paper);
+  letter-spacing: 0.03em;
+  text-transform: none;
+}
+
+.harbor-screen.is-first-voyage.is-expanded-harbor .harbor-utility-button:hover,
+.harbor-screen.is-first-voyage.is-expanded-harbor .harbor-utility-button:focus-visible {
+  border-color: var(--menu-signal);
+  color: var(--menu-signal);
+}
+
+.harbor-screen.is-first-voyage.is-expanded-harbor .harbor-utility-button .ui-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
 }
 
 .reduced-motion .harbor-content {
@@ -5877,7 +6001,14 @@ kbd {
 
   .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .service-card {
     min-height: 50px;
+    grid-template-columns: 34px minmax(0, 1fr) auto;
     padding-block: 5px;
+  }
+
+  .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .service-card > .ui-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
   }
 
   .harbor-screen.is-first-voyage.is-expanded-harbor .panel-actions {
@@ -5915,6 +6046,17 @@ kbd {
     grid-template-columns: 1fr;
   }
 
+  .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .service-card {
+    min-height: 52px;
+    padding-block: 5px;
+  }
+
+  .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .service-card > .ui-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+  }
+
   .harbor-screen.is-first-voyage.is-expanded-harbor .panel-actions {
     grid-template-columns: minmax(0, 1fr) minmax(120px, 0.8fr);
   }
@@ -5933,7 +6075,7 @@ kbd {
 
 @media (max-width: 430px) {
   .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .service-card {
-    grid-template-columns: 28px minmax(0, 1fr) auto;
+    grid-template-columns: 38px minmax(0, 1fr) auto;
   }
 
   .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .service-card .small-button {
@@ -5954,7 +6096,7 @@ kbd {
   }
 
   .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .service-card {
-    grid-template-columns: 24px minmax(0, 1fr);
+    grid-template-columns: 32px minmax(0, 1fr);
   }
 
   .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .service-card .small-button {
