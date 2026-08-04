@@ -55,14 +55,6 @@ export interface RegionDefinition {
   deep: string;
 }
 
-export interface HazardDefinition {
-  id: string;
-  name: string;
-  x: number;
-  severity: number;
-  warning: string;
-}
-
 export const BALANCE = {
   horizontalThrust: 0.034,
   engineBoostThrust: 0.057,
@@ -74,8 +66,6 @@ export const BALANCE = {
   routeFreshnessLossPerMinute: 2 / 3,
   safeRouteSpeedMultiplier: 0.92,
   fastRouteSpeedMultiplier: 1.12,
-  safeHazardDamageMultiplier: 0.7,
-  fastHazardDamageMultiplier: 1.45,
   dayLength: 210,
   nightStart: 140,
   fogLength: 48,
@@ -130,12 +120,6 @@ export const REGIONS: readonly RegionDefinition[] = [
   { id: "brindleCoast", name: "Brindle Coast", startX: 0, endX: 0.4, surfaceTint: "#2d91a0", shallow: "#3d9da4", middle: "#236874", deep: "#0b2c3b" },
   { id: "mosswaterReach", name: "Mosswater Reach", startX: 0.4, endX: 0.69, surfaceTint: "#4f876e", shallow: "#4c9078", middle: "#285f57", deep: "#102f37" },
   { id: "violetGloam", name: "Violet Gloam", startX: 0.69, endX: 1, surfaceTint: "#62527f", shallow: "#596f88", middle: "#383d69", deep: "#181b3d" },
-];
-
-export const HAZARDS: readonly HazardDefinition[] = [
-  { id: "crosswind", name: "Crosswind squall", x: 0.43, severity: 9, warning: "Rough water ahead" },
-  { id: "driftwood", name: "Driftwood field", x: 0.66, severity: 13, warning: "Floating debris ahead" },
-  { id: "gloamWake", name: "Unmarked wake", x: 0.82, severity: 17, warning: "Unidentified wake ahead" },
 ];
 
 export const BOAT_CLASSES = ["Skiff", "Wide skiff", "Lake cutter", "Cabin cutter", "Trawler", "Deepwater trawler", "Lakebreaker"] as const;

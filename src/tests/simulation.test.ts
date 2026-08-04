@@ -268,7 +268,7 @@ describe("FSHING side-on simulation", () => {
     expect(simulation.events.some((event) => event.type === "population-protected")).toBe(true);
   });
 
-  test("makes route estimates explicit and fast crossings risk more hazard damage", () => {
+  test("makes route estimates explicit and keeps surface crossings unobstructed", () => {
     const safe = createSimulation();
     const fast = createSimulation();
     if (!safe.availableContract) throw new Error("Expected a contract.");
@@ -290,11 +290,14 @@ describe("FSHING side-on simulation", () => {
     fast.boat.x = 0.429;
     safe.boat.speed = 0.04;
     fast.boat.speed = 0.04;
+    const safeDamage = safe.boat.damage;
+    const fastDamage = fast.boat.damage;
     updateSimulation(safe, idle, 0.1);
     updateSimulation(fast, idle, 0.1);
-    expect(safe.triggeredHazards).toContain("crosswind");
-    expect(fast.triggeredHazards).toContain("crosswind");
-    expect(fast.boat.damage).toBeGreaterThan(safe.boat.damage);
+    expect(safe.boat.x).toBeGreaterThan(0.43);
+    expect(fast.boat.x).toBeGreaterThan(0.43);
+    expect(safe.boat.damage).toBe(safeDamage);
+    expect(fast.boat.damage).toBe(fastDamage);
     expect(safe.progress.learning.routePlans).toBe(1);
   });
 

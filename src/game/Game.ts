@@ -311,11 +311,6 @@ export class Game {
         this.feedback.cue("upgrade");
         this.showToast("Outer Gloam permit granted. Keep your lamp close.");
         break;
-      case "hazard-hit":
-        this.feedback.cue("collision");
-        this.pulseFeedback("collision");
-        this.showToast(`${event.name} · hull +${event.damage} damage`);
-        break;
       case "population-protected":
         this.feedback.cue("deny");
         this.showToast(`${FISH[event.species].name} is protected while its population recovers.`);
@@ -617,7 +612,7 @@ export class Game {
       },
       {
         title: "Plan the crossing",
-        body: "Compare distance, travel time and predicted freshness. A fast route saves time but makes marked hazards more damaging.",
+        body: "Compare distance, travel time and predicted freshness. A faster crossing preserves more of the catch.",
       },
       {
         title: "Fish sustainably",
@@ -700,17 +695,17 @@ export class Game {
           <p class="route-equation"><strong>time = distance ÷ speed</strong><span>${origin.name} → ${harborById(contract.destination).name}</span></p>
           <div class="route-grid">
             <article class="route-card is-safe">
-              <span class="route-kicker">Lower risk</span><h3>Survey route</h3>
-              <dl><div><dt>Estimated time</dt><dd>${estimate.safeMinutes.toFixed(1)} min</dd></div><div><dt>Predicted freshness</dt><dd>${estimate.safeArrivalFreshness}%</dd></div><div><dt>Hazard damage</dt><dd>× 0.70</dd></div></dl>
+              <span class="route-kicker">Steady pace</span><h3>Survey route</h3>
+              <dl><div><dt>Estimated time</dt><dd>${estimate.safeMinutes.toFixed(1)} min</dd></div><div><dt>Predicted freshness</dt><dd>${estimate.safeArrivalFreshness}%</dd></div><div><dt>Travel speed</dt><dd>× ${BALANCE.safeRouteSpeedMultiplier.toFixed(2)}</dd></div></dl>
               <button class="primary-button" type="button" data-action="choose-route" data-route="safe">Choose survey route</button>
             </article>
             <article class="route-card is-fast">
-              <span class="route-kicker">Higher risk</span><h3>Express route</h3>
-              <dl><div><dt>Estimated time</dt><dd>${estimate.fastMinutes.toFixed(1)} min</dd></div><div><dt>Predicted freshness</dt><dd>${estimate.fastArrivalFreshness}%</dd></div><div><dt>Hazard damage</dt><dd>× 1.45</dd></div></dl>
+              <span class="route-kicker">Faster pace</span><h3>Express route</h3>
+              <dl><div><dt>Estimated time</dt><dd>${estimate.fastMinutes.toFixed(1)} min</dd></div><div><dt>Predicted freshness</dt><dd>${estimate.fastArrivalFreshness}%</dd></div><div><dt>Travel speed</dt><dd>× ${BALANCE.fastRouteSpeedMultiplier.toFixed(2)}</dd></div></dl>
               <button class="primary-button" type="button" data-action="choose-route" data-route="fast">Choose express route</button>
             </article>
           </div>
-          <p class="route-note">Your engine tier changes both estimates. Yellow warning buoys mark hazards on the lake.</p>
+          <p class="route-note">Your engine tier changes both estimates. Surface travel stays open and unobstructed.</p>
         </div>
       </section>`;
   }
@@ -1002,7 +997,7 @@ export class Game {
           this.syncSave();
           if (this.simulation.dockedAt) undock(this.simulation);
           this.setOverlay(null);
-          this.showToast(`${route === "fast" ? "Express" : "Survey"} route selected. Watch the warning buoys.`);
+          this.showToast(`${route === "fast" ? "Express" : "Survey"} route selected. Open water ahead.`);
         }
         break;
       }
