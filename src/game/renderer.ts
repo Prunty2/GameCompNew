@@ -14,6 +14,7 @@ import {
   type FishSpecies,
   type WorldPoint,
 } from "./balance";
+import { createSideScrollCamera, worldToScreenX, type SideScrollCamera } from "./camera";
 import { calculatePanoramaLayout } from "./panorama";
 import { fogIntensity, isNight, maxFishingDepth, objective, type Simulation } from "./simulation";
 import { populationLabel } from "./stem";
@@ -88,8 +89,8 @@ export class CanvasRenderer {
     const art = this.art;
     if (!art) return;
     const { context } = this;
-    const cameraX = this.cameraX(simulation);
-    const waterline = this.drawPanorama(art.lake, cameraX, width, height, settings.cinematic);
+    const camera = this.camera(simulation, settings.cinematic);
+    const waterline = this.drawPanorama(art.lake, camera, width, height);
     const region = regionAt(simulation.boat.x);
 
     context.save();
@@ -129,13 +130,13 @@ export class CanvasRenderer {
     context.restore();
 
     for (const harbor of HARBORS) {
-      const x = this.worldToScreenX(harbor.x, cameraX, width);
+      const x = worldToScreenX(harbor.x, camera, width);
       if (!isNearScreen(x, width, 540)) continue;
       this.drawHarborPier(x, waterline, harbor.id === "gloam");
     }
 
     for (const spot of FISHING_SPOTS) {
-      const x = this.worldToScreenX(spot.x, cameraX, width);
+      const x = worldToScreenX(spot.x, camera, width);
       if (!isNearScreen(x, width, 140)) continue;
       const permitLocked = spot.requiresPermit && !simulation.progress.outerUnlocked;
       const depthLocked = spot.requiredDepthTier > simulation.progress.upgrades.line;
@@ -174,9 +175,9 @@ export class CanvasRenderer {
       context.restore();
     }
 
-    this.drawObjective(simulation, cameraX, width, height);
-    this.drawBoat(simulation, cameraX, width, waterline, settings);
-    this.drawWeather(simulation, cameraX, width, height, settings);
+    this.drawObjective(simulation, camera, width, height);
+    this.drawBoat(simulation, camera, width, waterline, settings);
+    this.drawWeather(simulation, camera, width, height, settings);
 
   }
 
@@ -288,17 +289,14 @@ export class CanvasRenderer {
 
   private drawPanorama(
     image: HTMLImageElement,
-    cameraX: number,
+    camera: SideScrollCamera,
     width: number,
     height: number,
-    cinematic: boolean,
   ): number {
-    const viewWidth = cinematic ? 0.54 : BALANCE.cameraViewWidth * 1.4;
     const layout = calculatePanoramaLayout({
       imageWidth: image.naturalWidth,
       imageHeight: image.naturalHeight,
-      cameraX,
-      viewWidth,
+      camera,
       viewportWidth: width,
       viewportHeight: height,
     });
@@ -318,7 +316,7 @@ export class CanvasRenderer {
 
   private drawBoat(
     simulation: Simulation,
-    cameraX: number,
+    camera: SideScrollCamera,
     width: number,
     waterline: number,
     settings: RenderSettings,
@@ -326,7 +324,7 @@ export class CanvasRenderer {
     const art = this.art;
     if (!art) return;
     const { context } = this;
-    const x = this.worldToScreenX(simulation.boat.x, cameraX, width);
+    const x = worldToScreenX(simulation.boat.x, camera, width);
     const boatScale = 1 + simulation.progress.upgrades.cargo * 0.055;
     const boatWidth = clamp(this.canvas.clientHeight * 0.37 * boatScale, 150, 360);
     const boatHeight = boatWidth * (art.boat.height / art.boat.width);
@@ -372,9 +370,9 @@ export class CanvasRenderer {
     }
   }
 
-  private drawObjective(simulation: Simulation, cameraX: number, width: number, height: number): void {
+  private drawObjective(simulation: Simulation, camera: SideScrollCamera, width: number, height: number): void {
     const goal = objective(simulation);
-    const x = this.worldToScreenX(goal.point.x, cameraX, width);
+    const x = worldToScreenX(goal.point.x, camera, width);
     const clampedX = clamp(x, 30, width - 30);
     const edge = x < 0 ? -1 : x > width ? 1 : 0;
     const y = height * 0.27;
@@ -403,7 +401,7 @@ export class CanvasRenderer {
 
   private drawWeather(
     simulation: Simulation,
-    cameraX: number,
+    camera: SideScrollCamera,
     width: number,
     height: number,
     settings: RenderSettings,
@@ -423,7 +421,7 @@ export class CanvasRenderer {
     }
 
     if (!isNight(simulation)) return;
-    const boatX = this.worldToScreenX(simulation.boat.x, cameraX, width);
+    const boatX = worldToScreenX(simulation.boat.x, camera, width);
     const lampTier = simulation.progress.upgrades.lamp;
     const radius = Math.min(width, height) * (0.25 + lampTier * 0.055);
     const darkness = settings.highContrast ? 0.58 : 0.76;
@@ -638,15 +636,13 @@ export class CanvasRenderer {
     );
   }
 
-  private cameraX(simulation: Simulation): number {
-    const halfView = BALANCE.cameraViewWidth / 2;
-    const lookAhead = simulation.boat.speed * 0.24;
-    return clamp(simulation.boat.x + lookAhead, halfView, 1 - halfView);
-  }
-
-  private worldToScreenX(worldX: number, cameraX: number, width: number): number {
-    const left = cameraX - BALANCE.cameraViewWidth / 2;
-    return ((worldX - left) / BALANCE.cameraViewWidth) * width;
+  private camera(simulation: Simulation, cinematic: boolean): SideScrollCamera {
+    return createSideScrollCamera({
+      focusX: simulation.boat.x,
+      velocityX: cinematic ? 0 : simulation.boat.speed,
+      viewWidth: cinematic ? 0.54 : BALANCE.cameraViewWidth,
+      lookAheadTime: 0.24,
+    });
   }
 
   private fishingToScreen(point: WorldPoint, width: number, height: number): WorldPoint {
