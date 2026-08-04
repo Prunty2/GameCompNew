@@ -683,12 +683,15 @@ Every authored visual asset in this slice is generated with GPT Image 2.0. No pr
 | `harbor-pier.png` | Long weathered side-view harbor pier that extends from either shoreline |
 | `fish-atlas.png` | Fishing-hook sprite and retained original fish reference cells |
 | `fish-atlas-v2.png` | Nine independently generated, silhouette-distinct species in a strict 3 × 3 atlas |
-| `world-atlas.png` | Side-view buoy, fishing marker, fog, night-wake, and retained legacy sprites on a chroma-key matte |
+| `fishing-spots-atlas.png` | Six site-specific research landmarks in a strict 3 × 2 atlas, with unique silhouettes for every fishing ground |
+| `world-atlas.png` | Side-view buoy, fog, night-wake, and retained legacy sprites on a chroma-key matte |
 | `ui-panel.png` | Minimal full-bleed dark menu and harbor surface |
 | `ui-button.png` | Minimal full-bleed primary action surface |
 | `ui-icons.png` | Cargo, freshness, hull, time, shells, objective, engine, lamp, permit, repair, sound, and pause pictograms |
 
 Generated files are explicitly imported from `src/assets/`. Prompts and generation settings are recorded in `Docs/Asset-Manifest.md`; authoring intermediates remain outside the production bundle.
+
+Each surface fishing ground uses its own generated research landmark rather than a shared generic sign. The landmark silhouette and material treatment communicate site identity, while adjacent Canvas text repeats the site name, access requirement, target species, and population condition so recognition never depends on colour or sprite detail alone.
 
 ### Slice acceptance tests
 
