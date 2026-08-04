@@ -161,21 +161,33 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await page.evaluate(() => window.__FSHING_TEST__?.sailToHarbor("gloam"));
   await page.getByRole("button", { name: "Dock · Gloam Ferry" }).click();
   await expect(page.getByRole("heading", { name: "Gloam Ferry" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Your cargo" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Cargo", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Cargo", exact: true })).toBeFocused();
   await expect(page.getByRole("heading", { name: "Your cargo" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Dock services" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Delivery", exact: true }).click();
   await page.getByRole("button", { name: "Complete delivery" }).click();
   await expect(page.getByRole("heading", { name: "Delivery analysed" })).toBeVisible();
   await expect(page.getByText("Prediction versus result")).toBeVisible();
   await page.getByRole("button", { name: "Continue at harbor" }).click();
+  await expect(page.getByRole("heading", { name: "Dock services" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Services", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Services", exact: true })).toBeFocused();
+  await expect(page.getByRole("heading", { name: "Dock services" })).toBeVisible();
   const cargoService = page.locator(".service-card").filter({ hasText: "Boat · Skiff" });
   await cargoService.getByRole("button", { name: "Upgrade" }).click();
   await expect(page.locator(".service-card").filter({ hasText: "Boat · Wide skiff · T1" })).toBeVisible();
+  const harborFitsViewport = await page.locator(".harbor-screen").evaluate((element) => element.scrollHeight <= element.clientHeight);
+  expect(harborFitsViewport).toBe(true);
 
   await page.reload();
   await page.getByRole("button", { name: "Play", exact: true }).click();
   await expect(page.locator(".harbor-screen")).toHaveClass(/is-expanded-harbor/);
   await expect(page.locator(".harbor-wordmark")).toBeVisible();
   await expect(page.locator(".harbor-panel")).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expect(page.getByRole("heading", { name: "Dock services" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Services", exact: true }).click();
   await expect(page.locator(".service-card").filter({ hasText: "Boat · Wide skiff · T1" })).toBeVisible();
 });
 

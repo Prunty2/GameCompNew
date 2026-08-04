@@ -176,6 +176,8 @@ Each harbor acts as a compact service point. A harbor may provide:
 
 The first release should reuse a consistent harbor interface rather than build fully explorable towns.
 
+The harbor interface opens on Delivery and separates Cargo and Dock services into focused submenus. Only one harbor function is visible at a time, the selected submenu keeps keyboard focus, and each submenu must fit supported desktop, portrait, and short-landscape viewports without page scrolling.
+
 ## Delivery system
 
 Deliveries are the main source of income and direction.

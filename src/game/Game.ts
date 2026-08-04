@@ -91,6 +91,8 @@ type OverlayScreen =
   | "seasonReport"
   | null;
 
+type HarborSection = "delivery" | "cargo" | "services";
+
 declare global {
   interface Window {
     __FSHING_TEST__?: {
@@ -116,6 +118,7 @@ export class Game {
   private overlay: OverlayScreen = "title";
   private overlaySource: OverlayScreen = null;
   private overlayReturn: OverlayScreen = "pause";
+  private harborSection: HarborSection = "delivery";
   private helpStep = 0;
   private toastTimer: number | undefined;
   private tutorialDismissTimer: number | undefined;
@@ -287,6 +290,7 @@ export class Game {
         break;
       case "docked":
         this.feedback.cue("dock");
+        this.harborSection = "delivery";
         this.setOverlay("harbor");
         break;
       case "full-cargo":
@@ -304,6 +308,7 @@ export class Game {
       case "rescued":
         this.feedback.cue("collision");
         this.showToast(`Harbor rescue · ${event.cost} shells · cargo lost`);
+        this.harborSection = "delivery";
         this.setOverlay("harbor");
         break;
       case "upgrade":
@@ -436,6 +441,8 @@ export class Game {
     const isFirstJobOffer = this.simulation.progress.completedContracts === 0 && available?.id === "morning-order";
     const showCargo = !isFirstJobOffer;
     const showServices = this.simulation.progress.completedContracts > 0;
+    const availableSections: HarborSection[] = ["delivery", ...(showCargo ? ["cargo" as const] : []), ...(showServices ? ["services" as const] : [])];
+    const activeSection: HarborSection = availableSections.includes(this.harborSection) ? this.harborSection : "delivery";
     const contractMarkup = available
       ? `<div class="contract-card job-ticket ${isFirstJobOffer ? "is-guided" : ""}">
           <div class="job-ticket-heading">
@@ -470,27 +477,30 @@ export class Game {
       ? `<p class="empty-state">The hold is empty.</p>`
       : this.simulation.cargo.map((item, index) => `<div class="cargo-row"><span>${FISH[item.species].name}<small>${Math.ceil(item.freshness)}% fresh · ${populationLabel(this.simulation.progress.populations[item.species])} population</small></span><button class="small-button" type="button" data-action="release" data-index="${index}">Release</button></div>`).join("");
 
-    return `
-      <section class="screen-overlay harbor-screen is-first-voyage${isFirstJobOffer ? " is-first-job-offer" : " is-expanded-harbor"}" role="dialog" aria-labelledby="harbor-title">
-        <div class="art-panel harbor-panel side-sheet">
-          <img class="wordmark harbor-wordmark" src="${wordmarkUrl}" alt="FSHING" />
-          <header class="panel-heading">
-            <div><h2 id="harbor-title">${harbor.name}</h2><p>${harbor.subtitle}</p></div>
-            <span class="shell-balance"><span class="ui-icon icon-shells" aria-hidden="true"></span><span><small>Your money</small><strong>${this.simulation.progress.money} shells</strong></span></span>
-          </header>
-          <div class="harbor-intro ${isFirstJobOffer ? "is-first-step" : ""}">
-            <div><span class="panel-eyebrow">${isFirstJobOffer ? "First voyage" : "Current task"}</span><h3>${isFirstJobOffer ? "Accept your first delivery to begin" : available ? "Choose the posted delivery" : deliverable ? "Hand in your catch" : contract ? "Continue your delivery" : "Let protected stocks recover"}</h3></div>
-            ${isFirstJobOffer ? "" : `<p>${available ? "Take the job below. The game will point you to the right fish, then to the delivery harbor." : deliverable ? "Your requested fish is ready. Complete the delivery to get paid." : contract ? "Your current job stays active until it is delivered." : "No impossible contract will be posted. Return visits restore populations until a catch is sustainable again."}</p>`}
-          </div>
-          <div class="harbor-grid ${showCargo ? "" : "is-mission-only"}">
-            <section class="mission-section" aria-labelledby="contract-heading"><h3 id="contract-heading" class="section-title">${isFirstJobOffer ? "First delivery" : "Delivery job"}</h3>${contractMarkup}</section>
-            ${showCargo ? `<aside class="cargo-section" aria-labelledby="cargo-heading">
-              <div class="section-heading"><h3 id="cargo-heading" class="section-title">Your cargo</h3><span>${this.simulation.cargo.length} / ${cargoCapacity(this.simulation)} spaces</span></div>
-              <div class="cargo-list">${cargoMarkup}</div>
-              <p class="cargo-help">Fish lose freshness while you travel. Release an unneeded catch to help its population recover.</p>
-            </aside>` : ""}
-          </div>
-          ${showServices ? `<section class="services" aria-labelledby="service-heading">
+    const sectionHeading = activeSection === "cargo"
+      ? { eyebrow: "Cargo hold", title: "Manage your catch", body: "Review freshness or release an unneeded fish to help its population recover." }
+      : activeSection === "services"
+        ? { eyebrow: "Dock services", title: "Improve your boat", body: "Spend shells on permanent equipment upgrades and hull repairs." }
+        : {
+            eyebrow: isFirstJobOffer ? "First voyage" : "Current task",
+            title: isFirstJobOffer ? "Accept your first delivery to begin" : available ? "Choose the posted delivery" : deliverable ? "Hand in your catch" : contract ? "Continue your delivery" : "Let protected stocks recover",
+            body: isFirstJobOffer ? "" : available ? "Take the job below. The game will point you to the right fish, then to the delivery harbor." : deliverable ? "Your requested fish is ready. Complete the delivery to get paid." : contract ? "Your current job stays active until it is delivered." : "No impossible contract will be posted. Return visits restore populations until a catch is sustainable again.",
+          };
+
+    const harborTabs = !isFirstJobOffer
+      ? `<nav class="harbor-tabs" aria-label="Harbor sections">
+          ${availableSections.map((section) => `<button class="harbor-tab ${activeSection === section ? "is-active" : ""}" type="button" data-action="harbor-section" data-harbor-section="${section}" aria-pressed="${activeSection === section}">${capitalise(section)}</button>`).join("")}
+        </nav>`
+      : "";
+
+    const activeContent = activeSection === "cargo"
+      ? `<aside class="cargo-section" aria-labelledby="cargo-heading">
+          <div class="section-heading"><h3 id="cargo-heading" class="section-title">Your cargo</h3><span>${this.simulation.cargo.length} / ${cargoCapacity(this.simulation)} spaces</span></div>
+          <div class="cargo-list">${cargoMarkup}</div>
+          <p class="cargo-help">Fish lose freshness while you travel. Release an unneeded catch to help its population recover.</p>
+        </aside>`
+      : activeSection === "services"
+        ? `<section class="services" aria-labelledby="service-heading">
             <div class="section-heading"><div><h3 id="service-heading" class="section-title">Dock services</h3><p>Permanent boat improvements and repairs.</p></div></div>
             <div class="service-grid">
               ${this.upgradeCard("cargo", `Boat · ${boatClassAt(this.simulation.progress.upgrades.cargo)}`, "Grow the boat and add one cargo space.")}
@@ -500,7 +510,23 @@ export class Game {
               <article class="service-card"><span class="ui-icon icon-repair" aria-hidden="true"></span><div><h4>Repair hull</h4><p>${Math.ceil(this.simulation.boat.damage)} damage · ${repairCost(this.simulation)} shells</p></div><button class="small-button" type="button" data-action="repair" ${this.simulation.boat.damage <= 0 || this.simulation.progress.money <= 0 ? "disabled" : ""}>Repair</button></article>
               ${harborId === "gloam" ? `<article class="service-card"><span class="ui-icon icon-permit" aria-hidden="true"></span><div><h4>Outer Gloam permit</h4><p>${this.simulation.progress.outerUnlocked ? "Granted" : `${BALANCE.permitCost} shells`}</p></div><button class="small-button" type="button" data-action="buy-permit" ${this.simulation.progress.outerUnlocked || this.simulation.progress.money < BALANCE.permitCost ? "disabled" : ""}>${this.simulation.progress.outerUnlocked ? "Owned" : "Buy"}</button></article>` : ""}
             </div>
-          </section>` : ""}
+          </section>`
+        : `<section class="mission-section" aria-labelledby="contract-heading"><h3 id="contract-heading" class="section-title">${isFirstJobOffer ? "First delivery" : "Delivery job"}</h3>${contractMarkup}</section>`;
+
+    return `
+      <section class="screen-overlay harbor-screen is-first-voyage${isFirstJobOffer ? " is-first-job-offer" : " is-expanded-harbor"} is-harbor-${activeSection}" role="dialog" aria-labelledby="harbor-title">
+        <div class="art-panel harbor-panel side-sheet">
+          <img class="wordmark harbor-wordmark" src="${wordmarkUrl}" alt="FSHING" />
+          <header class="panel-heading">
+            <div><h2 id="harbor-title">${harbor.name}</h2><p>${harbor.subtitle}</p></div>
+            <span class="shell-balance"><span class="ui-icon icon-shells" aria-hidden="true"></span><span><small>Your money</small><strong>${this.simulation.progress.money} shells</strong></span></span>
+          </header>
+          <div class="harbor-intro ${isFirstJobOffer ? "is-first-step" : ""}">
+            <div><span class="panel-eyebrow">${sectionHeading.eyebrow}</span><h3>${sectionHeading.title}</h3></div>
+            ${sectionHeading.body ? `<p>${sectionHeading.body}</p>` : ""}
+          </div>
+          ${harborTabs}
+          <div class="harbor-content is-${activeSection}">${activeContent}</div>
           <footer class="panel-actions ${isFirstJobOffer ? "is-guided" : ""}"><div><button class="text-button" type="button" data-action="open-help">How to play</button><button class="text-button" type="button" data-action="open-field-guide">Field guide</button></div>${isFirstJobOffer ? "" : `<button class="leave-button" type="button" data-action="undock" aria-label="Back to lake →"><span>Return to open water</span><strong>Back to lake</strong><b aria-hidden="true">→</b></button>`}</footer>
         </div>
       </section>`;
@@ -892,6 +918,7 @@ export class Game {
 
   private beginVoyage(): void {
     this.started = true;
+    this.harborSection = "delivery";
     if (this.simulation.dockedAt) this.setOverlay("harbor", true);
     else this.setOverlay(null, true);
   }
@@ -1009,6 +1036,14 @@ export class Game {
         break;
       case "back": this.setOverlay(this.overlayReturn); break;
       case "title": this.started = false; this.setOverlay("title", true); break;
+      case "harbor-section": {
+        const section = target.dataset.harborSection as HarborSection | undefined;
+        if (!section || !(["delivery", "cargo", "services"] as HarborSection[]).includes(section)) break;
+        this.harborSection = section;
+        this.renderOverlay();
+        requestAnimationFrame(() => this.uiRoot.querySelector<HTMLButtonElement>(`[data-harbor-section="${section}"]`)?.focus({ preventScroll: true }));
+        break;
+      }
       case "undock":
         if (this.simulation.activeContract
           && this.simulation.cargo.some((item) => item.species === this.simulation.activeContract?.species)
@@ -1037,7 +1072,7 @@ export class Game {
         }
         break;
       }
-      case "route-back": this.setOverlay("harbor"); break;
+      case "route-back": this.harborSection = "delivery"; this.setOverlay("harbor"); break;
       case "survey-choice": {
         const species = target.dataset.species as FishSpecies | undefined;
         if (!this.pendingSpot || !species || !(species in FISH) || this.surveyResult) break;
@@ -1074,10 +1109,11 @@ export class Game {
           this.seasonReportQueued = false;
           this.setOverlay("seasonReport");
         } else {
+          this.harborSection = "delivery";
           this.setOverlay("harbor");
         }
         break;
-      case "continue-season": this.setOverlay("harbor"); break;
+      case "continue-season": this.harborSection = "delivery"; this.setOverlay("harbor"); break;
       case "buy-upgrade": {
         const upgrade = target.dataset.upgrade as UpgradeId | undefined;
         if (upgrade && buyUpgrade(this.simulation, upgrade)) {
