@@ -138,8 +138,14 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
 
 test("settings, keyboard pause, and local SDK fallback remain usable", async ({ page }) => {
   await page.goto("/");
+  await expect(page.getByRole("button", { name: "Settings" })).toBeVisible();
+  const titleLakeFrame = await page.locator("#game-canvas").evaluate((element) => (element as HTMLCanvasElement).toDataURL());
   await page.getByRole("button", { name: "Settings" }).click();
   await expect(page.locator(".settings-panel")).toBeVisible();
+  await expect(page.locator(".settings-overlay")).toHaveClass(/is-title-entry/);
+  await expect(page.locator(".settings-overlay")).toHaveCSS("animation-name", "settings-backdrop-in");
+  const settingsLakeFrame = await page.locator("#game-canvas").evaluate((element) => (element as HTMLCanvasElement).toDataURL());
+  expect(settingsLakeFrame).toBe(titleLakeFrame);
   await expect(page.locator(".settings-wordmark")).toBeVisible();
   await expectHorizontallyCentered(page, ".settings-panel");
   await expect(page.locator(".setting-option")).toHaveCount(5);

@@ -113,6 +113,7 @@ export class Game {
   private lastUiRefresh = 0;
   private started = false;
   private overlay: OverlayScreen = "title";
+  private overlaySource: OverlayScreen = null;
   private overlayReturn: OverlayScreen = "pause";
   private helpStep = 0;
   private toastTimer: number | undefined;
@@ -186,7 +187,8 @@ export class Game {
     );
     this.renderer.render(this.simulation, {
       ...this.save.settings,
-      cinematic: this.overlay === "title",
+      cinematic: this.overlay === "title"
+        || (this.overlay === "settings" || this.overlay === "controls") && this.overlayReturn === "title",
     });
     if (time - this.lastUiRefresh >= UI_REFRESH_INTERVAL) {
       this.refreshHud();
@@ -531,8 +533,9 @@ export class Game {
 
   private settingsScreen(): string {
     const settings = this.save.settings;
+    const entryClass = this.overlaySource === "title" ? " is-title-entry" : "";
     return `
-      <section class="screen-overlay settings-overlay" role="dialog" aria-labelledby="settings-title">
+      <section class="screen-overlay settings-overlay${entryClass}" role="dialog" aria-labelledby="settings-title">
         <div class="settings-panel settings-menu">
           <img class="wordmark settings-wordmark" src="${wordmarkUrl}" alt="FSHING" />
           <header class="settings-heading">
@@ -848,6 +851,7 @@ export class Game {
   private commitOverlay(next: OverlayScreen): void {
     const wasPlaying = this.started && this.overlay === null;
     const willPlay = this.started && next === null;
+    this.overlaySource = this.overlay;
     this.overlay = next;
     if (wasPlaying && !willPlay) this.platform.gameplayStop();
     if (!wasPlaying && willPlay) this.platform.gameplayStart();

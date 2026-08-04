@@ -4567,6 +4567,17 @@ kbd {
   }
 }
 
+@keyframes settings-backdrop-in {
+  from {
+    background-color: rgb(4 20 27 / 0%);
+    backdrop-filter: blur(0) saturate(1);
+  }
+  to {
+    background-color: rgb(4 20 27 / 48%);
+    backdrop-filter: blur(8px) saturate(0.78);
+  }
+}
+
 .settings-overlay {
   align-items: center;
   justify-content: center;
@@ -4575,6 +4586,10 @@ kbd {
   overflow: auto;
   background: rgb(4 20 27 / 48%);
   backdrop-filter: blur(8px) saturate(0.78);
+}
+
+.settings-overlay.is-title-entry {
+  animation: settings-backdrop-in 180ms ease-out both;
 }
 
 .settings-panel.settings-menu {
