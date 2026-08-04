@@ -149,6 +149,10 @@ test("settings, keyboard pause, and local SDK fallback remain usable", async ({ 
   await page.getByText("Reduced motion").click();
   await page.getByRole("button", { name: "Controls" }).click();
   await expectHorizontallyCentered(page, ".controls-panel");
+  await expect(page.locator(".controls-wordmark")).toBeVisible();
+  await expect(page.locator(".binding-row")).toHaveCount(6);
+  await expect(page.locator(".binding-row").first()).toHaveCSS("border-radius", "12px");
+  await expect(page.locator(".controls-overlay")).toHaveCSS("backdrop-filter", "blur(8px) saturate(0.78)");
   await page.getByRole("button", { name: "Rebind Pause" }).click();
   await page.keyboard.press("KeyO");
   await expect(page.getByRole("button", { name: "Rebind Pause" })).toHaveText("O");

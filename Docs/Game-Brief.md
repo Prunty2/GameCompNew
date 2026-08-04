@@ -253,7 +253,7 @@ The handling should feel smooth, measured, and forgiving rather than physically 
 
 All essential actions must work without hover. Touch targets must be large enough for mobile play, and the interface must respect display safe areas.
 
-Keyboard actions can be rebound from the Controls submenu within Settings. Bindings persist with the rest of the validated settings; assigning an occupied key swaps the two actions, and Escape remains an always-available pause fallback.
+Keyboard actions can be rebound from the Controls submenu within Settings. Controls uses the same centered, panel-free lake treatment as its parent, with bindings arranged as a compact two-column input map on wide and landscape screens and one column on narrow portrait screens. Bindings persist with the rest of the validated settings; assigning an occupied key swaps the two actions, and Escape remains an always-available pause fallback.
 
 The How to play menu presents the core loop as six step-by-step field-note cards: accept, travel, predict, catch, plan, and conserve. Previous and Next controls move through one card at a time, with the main Back action kept separate below the card navigation.
 

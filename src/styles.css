@@ -4748,3 +4748,234 @@ kbd {
     width: min(150px, 34vw);
   }
 }
+
+/* Control rebinding continues the panel-free Settings composition. */
+.controls-overlay {
+  align-items: center;
+  justify-content: center;
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+    max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  overflow: auto;
+  background: rgb(4 20 27 / 48%);
+  backdrop-filter: blur(8px) saturate(0.78);
+}
+
+.controls-panel.controls-menu {
+  width: min(680px, 92vw);
+  min-width: 0;
+  max-height: none;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  background-image: none;
+  box-shadow: none;
+  color: var(--menu-paper);
+  animation: settings-menu-in 220ms cubic-bezier(0.18, 0.82, 0.24, 1) both;
+}
+
+.controls-wordmark {
+  display: block;
+  width: min(230px, 54vw);
+  margin: -72px auto -38px;
+  filter:
+    drop-shadow(0 3px 2px rgb(1 10 18 / 72%))
+    drop-shadow(0 11px 18px rgb(1 10 18 / 38%));
+}
+
+.controls-heading {
+  margin-bottom: 14px;
+  text-align: center;
+}
+
+.controls-panel.controls-menu .controls-heading h2 {
+  margin: 0;
+  color: var(--menu-paper);
+  font-family: var(--display-face);
+  font-size: clamp(1.4rem, 4vh, 1.95rem);
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  text-shadow: 0 3px 12px rgb(1 10 18 / 72%);
+  text-transform: none;
+}
+
+.controls-panel.controls-menu .binding-help {
+  max-width: none;
+  margin: 7px auto 0;
+  color: var(--menu-fog);
+  font-size: 0.68rem;
+  line-height: 1.35;
+}
+
+.controls-panel.controls-menu .binding-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  border: 0;
+}
+
+.controls-panel.controls-menu .binding-row {
+  display: grid;
+  min-height: 68px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 9px 12px 9px 18px;
+  border: 1px solid rgb(247 241 227 / 48%);
+  border-radius: 12px;
+  background: rgb(7 31 40 / 72%);
+  box-shadow: 0 10px 24px rgb(2 15 21 / 18%);
+  backdrop-filter: blur(5px);
+}
+
+.controls-panel.controls-menu .binding-row > span {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+  text-align: left;
+}
+
+.controls-panel.controls-menu .binding-row strong {
+  font-family: var(--display-face);
+  font-size: 0.92rem;
+  font-weight: 850;
+  letter-spacing: 0.015em;
+  line-height: 1;
+}
+
+.controls-panel.controls-menu .binding-row small {
+  overflow: hidden;
+  color: var(--menu-fog);
+  font-size: 0.6rem;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.controls-panel.controls-menu .binding-button {
+  min-width: 70px;
+  min-height: 40px;
+  padding: 7px 12px;
+  border: 1px solid var(--menu-signal);
+  border-radius: 10px;
+  background: rgb(7 31 40 / 72%);
+  color: var(--menu-signal);
+  font-size: 0.78rem;
+  transition:
+    background 160ms ease,
+    color 160ms ease,
+    transform 120ms ease;
+}
+
+.controls-panel.controls-menu .binding-button:hover,
+.controls-panel.controls-menu .binding-button:focus-visible,
+.controls-panel.controls-menu .binding-button.is-listening {
+  border-color: var(--menu-signal);
+  background: var(--menu-signal);
+  color: var(--menu-ink);
+  transform: translateY(-1px);
+}
+
+.controls-panel.controls-menu .binding-button.is-listening {
+  min-width: 112px;
+}
+
+.controls-panel.controls-menu .controls-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.controls-panel.controls-menu .controls-actions button {
+  width: 100%;
+  min-height: 54px;
+  border-radius: 14px;
+}
+
+.controls-panel.controls-menu .controls-actions .text-button {
+  border: 1px solid rgb(247 241 227 / 48%);
+  background: rgb(7 31 40 / 72%);
+  color: var(--menu-paper);
+}
+
+.controls-panel.controls-menu .controls-actions .text-button:hover,
+.controls-panel.controls-menu .controls-actions .text-button:focus-visible {
+  border-color: var(--menu-signal);
+  background: rgb(7 31 40 / 88%);
+  color: var(--menu-paper);
+}
+
+.controls-panel.controls-menu .controls-actions .controls-done {
+  border: 0;
+  background: var(--menu-signal);
+  color: var(--menu-ink);
+  box-shadow: 0 5px 0 var(--menu-signal-dark), 0 14px 30px rgb(2 15 21 / 30%);
+  font-family: var(--display-face);
+  font-size: 1.04rem;
+  font-weight: 850;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+.high-contrast .controls-panel.controls-menu .binding-row,
+.high-contrast .controls-panel.controls-menu .controls-actions .text-button {
+  border-color: #fff;
+}
+
+.reduced-motion .controls-panel.controls-menu {
+  animation: none;
+}
+
+@media (max-height: 620px) and (min-width: 601px) {
+  .controls-wordmark {
+    width: min(190px, 34vw);
+    margin-block: -62px -30px;
+  }
+
+  .controls-heading {
+    margin-bottom: 9px;
+  }
+
+  .controls-panel.controls-menu .controls-heading h2 {
+    font-size: 1.2rem;
+  }
+
+  .controls-panel.controls-menu .binding-help {
+    font-size: 0.58rem;
+  }
+
+  .controls-panel.controls-menu .binding-row {
+    min-height: 52px;
+    padding-block: 6px;
+  }
+
+  .controls-panel.controls-menu .binding-row small {
+    display: none;
+  }
+
+  .controls-panel.controls-menu .controls-actions button {
+    min-height: 46px;
+  }
+}
+
+@media (max-width: 600px) {
+  .controls-overlay {
+    align-items: flex-start;
+  }
+
+  .controls-panel.controls-menu {
+    width: min(390px, 92vw);
+    margin: auto;
+  }
+
+  .controls-panel.controls-menu .binding-list {
+    grid-template-columns: 1fr;
+  }
+
+  .controls-panel.controls-menu .binding-row {
+    min-height: 60px;
+  }
+}

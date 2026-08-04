@@ -580,13 +580,17 @@ export class Game {
         </div>`;
     }).join("");
     return `
-      <section class="screen-overlay sheet-overlay" role="dialog" aria-labelledby="controls-title">
-        <div class="art-panel controls-panel side-sheet"><h2 id="controls-title">Controls</h2>
-          <p class="binding-help">Choose an action, then press its new key. If that key is already used, the two actions swap.</p>
+      <section class="screen-overlay controls-overlay" role="dialog" aria-labelledby="controls-title">
+        <div class="controls-panel controls-menu">
+          <img class="wordmark controls-wordmark" src="${wordmarkUrl}" alt="FSHING" />
+          <header class="controls-heading">
+            <h2 id="controls-title">Controls</h2>
+            <p class="binding-help">Choose an action, then press its new key. Occupied keys swap actions.</p>
+          </header>
           <div class="binding-list">${rows}</div>
           <div class="controls-actions">
             <button class="text-button" type="button" data-action="reset-controls">Reset defaults</button>
-            <button class="primary-button" type="button" data-action="close-controls">Done</button>
+            <button class="primary-button controls-done" type="button" data-action="close-controls">Done</button>
           </div>
         </div>
       </section>`;
