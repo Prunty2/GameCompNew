@@ -140,9 +140,11 @@ test("settings, keyboard pause, and local SDK fallback remain usable", async ({ 
   await page.goto("/");
   await page.getByRole("button", { name: "Settings" }).click();
   await expect(page.locator(".settings-panel")).toBeVisible();
-  await expect(page.getByText("Set up the lake to suit you.")).toBeVisible();
+  await expect(page.locator(".settings-wordmark")).toBeVisible();
+  await expectHorizontallyCentered(page, ".settings-panel");
   await expect(page.locator(".setting-option")).toHaveCount(5);
-  await expect(page.locator(".settings-done")).toHaveCSS("border-radius", "999px");
+  await expect(page.locator(".settings-done")).toHaveCSS("border-radius", "14px");
+  await expect(page.locator(".settings-overlay")).toHaveCSS("backdrop-filter", "blur(8px) saturate(0.78)");
   await page.getByText("High contrast").click();
   await page.getByText("Reduced motion").click();
   await page.getByRole("button", { name: "Controls" }).click();

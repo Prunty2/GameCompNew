@@ -533,10 +533,10 @@ export class Game {
     const settings = this.save.settings;
     return `
       <section class="screen-overlay settings-overlay" role="dialog" aria-labelledby="settings-title">
-        <div class="settings-panel side-sheet">
+        <div class="settings-panel settings-menu">
+          <img class="wordmark settings-wordmark" src="${wordmarkUrl}" alt="FSHING" />
           <header class="settings-heading">
             <h2 id="settings-title">Settings</h2>
-            <p>Set up the lake to suit you.</p>
           </header>
           <div class="settings-list">
             <label class="setting-option setting-toggle">
