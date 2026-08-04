@@ -410,8 +410,9 @@ export class Game {
   }
 
   private titleScreen(): string {
+    const returnClass = this.overlaySource === "settings" ? " is-settings-return" : "";
     return `
-      <section class="screen-overlay title-screen" role="dialog" aria-label="FSHING main menu">
+      <section class="screen-overlay title-screen${returnClass}" role="dialog" aria-label="FSHING main menu">
         <div class="title-panel">
           <img class="wordmark" src="${wordmarkUrl}" alt="FSHING" />
           <div class="title-actions">
@@ -512,8 +513,9 @@ export class Game {
   }
 
   private pauseScreen(): string {
+    const returnClass = this.overlaySource === "settings" ? " is-settings-return" : "";
     return `
-      <section class="screen-overlay pause-screen" role="dialog" aria-labelledby="pause-title">
+      <section class="screen-overlay pause-screen${returnClass}" role="dialog" aria-labelledby="pause-title">
         <div class="pause-menu">
           <img class="wordmark pause-wordmark" src="${wordmarkUrl}" alt="FSHING" />
           <h2 id="pause-title">Paused</h2>
@@ -804,17 +806,17 @@ export class Game {
 
     if (
       this.overlay === "settings"
-      && next === "title"
-      && this.overlayReturn === "title"
+      && (next === "title" || next === "pause")
+      && this.overlayReturn === next
       && !this.save.settings.reducedMotion
     ) {
       if (this.settingsTransitionTimer !== undefined) return;
       const settingsScreen = this.uiRoot.querySelector<HTMLElement>(".settings-overlay");
       if (settingsScreen) {
-        settingsScreen.classList.add("is-closing");
+        settingsScreen.classList.add("is-closing", `is-closing-to-${next}`);
         this.settingsTransitionTimer = window.setTimeout(() => {
           this.settingsTransitionTimer = undefined;
-          this.commitOverlay("title");
+          this.commitOverlay(next);
         }, SETTINGS_EXIT_DURATION);
         return;
       }
