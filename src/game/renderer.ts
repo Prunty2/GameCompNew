@@ -8,7 +8,6 @@ import {
   BALANCE,
   FISH,
   FISHING_SPOTS,
-  HAZARDS,
   HARBORS,
   regionAt,
   regionById,
@@ -173,44 +172,6 @@ export class CanvasRenderer {
         context.font = "900 10px system-ui, sans-serif";
         context.fillText(`T${spot.requiredDepthTier}`, x + 58, waterline - 103);
       }
-      context.restore();
-    }
-
-    for (const hazard of HAZARDS) {
-      const x = worldToScreenX(hazard.x, camera, width);
-      if (!isNearScreen(x, width, 110)) continue;
-      const alreadyCrossed = simulation.triggeredHazards.includes(hazard.id);
-      context.save();
-      context.globalAlpha = alreadyCrossed ? 0.38 : 0.95;
-      context.fillStyle = "#f4cb65";
-      context.strokeStyle = settings.highContrast ? "#ffffff" : "#532f2a";
-      context.lineWidth = 3;
-      context.beginPath();
-      context.moveTo(x, waterline - 49);
-      context.lineTo(x - 20, waterline - 12);
-      context.lineTo(x + 20, waterline - 12);
-      context.closePath();
-      context.fill();
-      context.stroke();
-      context.fillStyle = "#532f2a";
-      context.font = "900 18px system-ui, sans-serif";
-      context.textAlign = "center";
-      context.textBaseline = "middle";
-      context.fillText("!", x, waterline - 25);
-      context.strokeStyle = "#f4cb65";
-      context.lineWidth = 3;
-      context.beginPath();
-      context.moveTo(x, waterline - 12);
-      context.lineTo(x, waterline + 7);
-      context.stroke();
-      context.beginPath();
-      context.ellipse(x, waterline + 7, 22, 6, 0, 0, Math.PI * 2);
-      context.stroke();
-      context.fillStyle = "rgba(8, 31, 40, 0.9)";
-      context.fillRect(x - 54, waterline + 18, 108, 22);
-      context.fillStyle = "#fff4d2";
-      context.font = "800 9px system-ui, sans-serif";
-      context.fillText(hazard.name.toUpperCase(), x, waterline + 29);
       context.restore();
     }
 

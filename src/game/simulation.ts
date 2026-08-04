@@ -3,7 +3,6 @@ import {
   BALANCE,
   FISH,
   FISHING_SPOTS,
-  HAZARDS,
   HARBORS,
   SPOT_RESIDENTS,
   SURFACE_Y,
@@ -103,7 +102,6 @@ export type SimulationEvent =
   | { type: "rescued"; harbor: HarborId; cost: number }
   | { type: "upgrade"; upgrade: UpgradeId }
   | { type: "permit" }
-  | { type: "hazard-hit"; name: string; damage: number }
   | { type: "population-protected"; species: FishSpecies }
   | { type: "released"; species: FishSpecies; restored: number }
   | { type: "season-complete" };
@@ -122,7 +120,6 @@ export interface Simulation {
   events: SimulationEvent[];
   routeChoice: RouteChoice | null;
   deliveryStartedAt: number | null;
-  triggeredHazards: string[];
   lastDeliveryResult: DeliveryResult | null;
 }
 
@@ -189,7 +186,6 @@ export function createSimulation(seed = 1, progress?: Partial<ProgressState>): S
     events: [],
     routeChoice: null,
     deliveryStartedAt: null,
-    triggeredHazards: [],
     lastDeliveryResult: null,
   };
   simulation.availableContract = createAvailableContract(simulation, "brindle");
@@ -208,7 +204,6 @@ export function updateSimulation(simulation: Simulation, input: InputState, dt: 
   if (simulation.dockedAt) return;
 
   const { boat } = simulation;
-  const previousX = boat.x;
   const travel = Math.sign(clamp(input.travel, -1, 1));
 
   if (input.brake) {
@@ -235,7 +230,6 @@ export function updateSimulation(simulation: Simulation, input: InputState, dt: 
   boat.x = clamp(boat.x + boat.speed * safeDt, 0.045, 0.955);
   boat.y = SURFACE_Y;
   if (boat.x === 0.045 || boat.x === 0.955) boat.speed *= 0.2;
-  checkHazards(simulation, previousX, boat.x);
 }
 
 export function interact(simulation: Simulation): InteractionPrompt | null {
@@ -417,7 +411,6 @@ export function chooseRoute(simulation: Simulation, choice: RouteChoice): boolea
   if (!simulation.cargo.some((item) => item.species === contract.species)) return false;
   simulation.routeChoice = choice;
   simulation.deliveryStartedAt = simulation.elapsed;
-  simulation.triggeredHazards = [];
   simulation.progress.learning.routePlans += 1;
   return true;
 }
@@ -443,7 +436,6 @@ export function undock(simulation: Simulation): boolean {
   simulation.boat.y = SURFACE_Y;
   simulation.boat.speed = 0;
   simulation.dockedAt = null;
-  simulation.triggeredHazards = [];
   return true;
 }
 
@@ -599,25 +591,6 @@ function updateFishing(simulation: Simulation, input: InputState, dt: number): v
 function ageCargo(simulation: Simulation, dt: number): void {
   const freshnessLoss = (100 / BALANCE.freshnessLifetime) * dt;
   for (const item of simulation.cargo) item.freshness = Math.max(0, item.freshness - freshnessLoss);
-}
-
-function checkHazards(simulation: Simulation, previousX: number, nextX: number): void {
-  if (Math.abs(nextX - previousX) < 0.00001) return;
-  for (const hazard of HAZARDS) {
-    if (simulation.triggeredHazards.includes(hazard.id)) continue;
-    const crossed = previousX <= hazard.x && nextX >= hazard.x || previousX >= hazard.x && nextX <= hazard.x;
-    if (!crossed && Math.abs(nextX - hazard.x) > 0.008) continue;
-    simulation.triggeredHazards.push(hazard.id);
-    const routeFactor = simulation.routeChoice === "fast"
-      ? BALANCE.fastHazardDamageMultiplier
-      : simulation.routeChoice === "safe"
-        ? BALANCE.safeHazardDamageMultiplier
-        : 1;
-    const damage = Math.round(hazard.severity * routeFactor);
-    simulation.boat.damage = clamp(simulation.boat.damage + damage, 0, 100);
-    simulation.events.push({ type: "hazard-hit", name: hazard.name, damage });
-    if (simulation.boat.damage >= 100) rescue(simulation);
-  }
 }
 
 function regeneratePopulations(simulation: Simulation, amount: number): void {
