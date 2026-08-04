@@ -88,6 +88,27 @@ test("pause blurs the lake and slides the compact menu in and out", async ({ pag
   await expect(pauseScreen).toHaveCount(0);
 });
 
+test("settings reverses its title transition when closing", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByRole("button", { name: "Settings" })).toBeVisible();
+  const titleLakeFrame = await page.locator("#game-canvas").evaluate((element) => (element as HTMLCanvasElement).toDataURL());
+
+  await page.getByRole("button", { name: "Settings" }).click();
+  const settingsScreen = page.locator(".settings-overlay");
+  const settingsMenu = page.locator(".settings-menu");
+  await expect(settingsScreen).toHaveClass(/is-title-entry/);
+
+  await page.getByRole("button", { name: "Done" }).click();
+  await expect(settingsScreen).toHaveClass(/is-closing/);
+  await expect(settingsScreen).toHaveCSS("animation-name", "settings-backdrop-out");
+  await expect(settingsMenu).toHaveCSS("animation-name", "settings-menu-out");
+  await expect(settingsScreen).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Play", exact: true })).toBeVisible();
+
+  const returnedLakeFrame = await page.locator("#game-canvas").evaluate((element) => (element as HTMLCanvasElement).toDataURL());
+  expect(returnedLakeFrame).toBe(titleLakeFrame);
+});
+
 test("completes the tutorial delivery, buys an upgrade, and persists it", async ({ page }) => {
   await page.goto("/?e2e=1");
   await expect(page.getByRole("img", { name: "FSHING" })).toBeVisible();

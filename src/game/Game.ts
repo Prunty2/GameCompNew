@@ -73,6 +73,7 @@ const MAX_FRAME = 0.05;
 const UI_REFRESH_INTERVAL = 100;
 const HELP_STEP_COUNT = 6;
 const PAUSE_EXIT_DURATION = 340;
+const SETTINGS_EXIT_DURATION = 340;
 const SCENE_COVER_DURATION = 120;
 const SCENE_REVEAL_DURATION = 160;
 
@@ -119,6 +120,7 @@ export class Game {
   private toastTimer: number | undefined;
   private tutorialDismissTimer: number | undefined;
   private pauseTransitionTimer: number | undefined;
+  private settingsTransitionTimer: number | undefined;
   private sceneTransitioning = false;
   private sceneTransitionTarget: OverlayScreen | undefined;
   private queuedOverlay: { next: OverlayScreen; useSceneTransition: boolean } | null = null;
@@ -799,6 +801,29 @@ export class Game {
       return;
     }
     if (next === this.overlay) return;
+
+    if (
+      this.overlay === "settings"
+      && next === "title"
+      && this.overlayReturn === "title"
+      && !this.save.settings.reducedMotion
+    ) {
+      if (this.settingsTransitionTimer !== undefined) return;
+      const settingsScreen = this.uiRoot.querySelector<HTMLElement>(".settings-overlay");
+      if (settingsScreen) {
+        settingsScreen.classList.add("is-closing");
+        this.settingsTransitionTimer = window.setTimeout(() => {
+          this.settingsTransitionTimer = undefined;
+          this.commitOverlay("title");
+        }, SETTINGS_EXIT_DURATION);
+        return;
+      }
+    }
+
+    if (this.settingsTransitionTimer !== undefined) {
+      window.clearTimeout(this.settingsTransitionTimer);
+      this.settingsTransitionTimer = undefined;
+    }
 
     if (this.overlay === "pause" && next === null && !this.save.settings.reducedMotion) {
       if (this.pauseTransitionTimer !== undefined) return;

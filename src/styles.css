@@ -4578,6 +4578,28 @@ kbd {
   }
 }
 
+@keyframes settings-backdrop-out {
+  from {
+    background-color: rgb(4 20 27 / 48%);
+    backdrop-filter: blur(8px) saturate(0.78);
+  }
+  to {
+    background-color: rgb(4 20 27 / 0%);
+    backdrop-filter: blur(0) saturate(1);
+  }
+}
+
+@keyframes settings-menu-out {
+  from {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    opacity: 0;
+    transform: translate3d(0, -20px, 0);
+  }
+}
+
 .settings-overlay {
   align-items: center;
   justify-content: center;
@@ -4590,6 +4612,15 @@ kbd {
 
 .settings-overlay.is-title-entry {
   animation: settings-backdrop-in 180ms ease-out both;
+}
+
+.settings-overlay.is-closing {
+  pointer-events: none;
+  animation: settings-backdrop-out 340ms ease-in-out both;
+}
+
+.settings-overlay.is-closing .settings-menu {
+  animation: settings-menu-out 260ms ease-in both;
 }
 
 .settings-panel.settings-menu {
