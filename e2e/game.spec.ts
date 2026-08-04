@@ -129,6 +129,11 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await page.getByRole("button", { name: "Play", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Brindle Harbor" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Accept your first delivery to begin" })).toBeVisible();
+  await expect(page.locator(".harbor-screen")).toHaveClass(/is-first-voyage/);
+  await expect(page.locator(".harbor-wordmark")).toBeVisible();
+  await expectHorizontallyCentered(page, ".harbor-panel");
+  await expect(page.locator(".harbor-panel")).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expect(page.locator(".mission-button")).toHaveCSS("border-radius", "14px");
   await expect(page.locator(".job-ticket")).toHaveClass(/is-guided/);
   await expect(page.getByRole("heading", { name: "Your cargo" })).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Dock services" })).toHaveCount(0);
