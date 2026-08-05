@@ -1,7 +1,12 @@
 import { defineConfig } from "vitest/config";
+import packageJson from "./package.json" with { type: "json" };
 
 export default defineConfig({
   publicDir: false,
+  define: {
+    __APP_VERSION__: JSON.stringify(packageJson.version),
+    __PR_NUMBER__: JSON.stringify("XXX"),
+  },
   build: {
     outDir: "dist",
     emptyOutDir: true,
@@ -11,4 +16,3 @@ export default defineConfig({
     exclude: ["e2e/**", "node_modules/**", "dist/**"],
   },
 });
-

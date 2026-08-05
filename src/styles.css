@@ -4247,6 +4247,20 @@ kbd {
   background: rgb(7 31 40 / 80%);
 }
 
+.title-build-version {
+  position: absolute;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  left: max(14px, env(safe-area-inset-left));
+  color: rgb(247 241 227 / 68%);
+  font-size: clamp(0.64rem, 1.4vw, 0.72rem);
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  text-shadow: 0 1px 3px rgb(2 15 21 / 80%);
+  user-select: none;
+}
+
 @media (max-height: 650px) {
   .title-panel {
     transform: translateY(-2vh);

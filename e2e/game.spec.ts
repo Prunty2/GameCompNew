@@ -15,6 +15,13 @@ test.beforeEach(async ({ page }) => {
 test("main menu presents only centered play and settings actions", async ({ page }) => {
   await page.goto("/");
 
+  const version = page.locator(".title-build-version");
+  await expect(version).toHaveText("v0.1.0 (PR #XXX)");
+  const versionBounds = await version.boundingBox();
+  expect(versionBounds).not.toBeNull();
+  expect(versionBounds!.x).toBeLessThan(24);
+  expect(versionBounds!.y + versionBounds!.height).toBeGreaterThan(690);
+
   const actions = page.locator(".title-actions button");
   await expect(actions).toHaveCount(2);
   const playButton = page.getByRole("button", { name: "Play", exact: true });

@@ -428,6 +428,7 @@ export class Game {
             <button class="menu-button title-settings-button" type="button" data-action="open-settings"><strong>Settings</strong></button>
           </div>
         </div>
+        <small class="title-build-version">v${__APP_VERSION__} (PR #${__PR_NUMBER__})</small>
       </section>`;
   }
 
