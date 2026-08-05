@@ -18,6 +18,7 @@ import { createSideScrollCamera, worldToScreenX, type SideScrollCamera } from ".
 import { calculatePanoramaLayout } from "./panorama";
 import { fogIntensity, isNight, maxFishingDepth, objective, type Simulation } from "./simulation";
 import { populationLabel } from "./stem";
+import { drawContactShadow, drawWaterContact } from "./surfaceEffects";
 
 export interface RenderSettings {
   highContrast: boolean;
@@ -132,7 +133,14 @@ export class CanvasRenderer {
     for (const harbor of HARBORS) {
       const x = worldToScreenX(harbor.x, camera, width);
       if (!isNearScreen(x, width, 540)) continue;
-      this.drawHarborPier(x, waterline, harbor.id === "gloam");
+      this.drawHarborPier(
+        x,
+        waterline,
+        harbor.id === "gloam",
+        region.surfaceTint,
+        simulation.elapsed,
+        settings,
+      );
     }
 
     for (const spot of FISHING_SPOTS) {
@@ -176,12 +184,19 @@ export class CanvasRenderer {
     }
 
     this.drawObjective(simulation, camera, width, height);
-    this.drawBoat(simulation, camera, width, waterline, settings);
+    this.drawBoat(simulation, camera, width, waterline, region.surfaceTint, settings);
     this.drawWeather(simulation, camera, width, height, settings);
 
   }
 
-  private drawHarborPier(x: number, waterline: number, fromRightShore: boolean): void {
+  private drawHarborPier(
+    x: number,
+    waterline: number,
+    fromRightShore: boolean,
+    surfaceTint: string,
+    elapsed: number,
+    settings: RenderSettings,
+  ): void {
     const art = this.art;
     if (!art) return;
     const pierWidth = clamp(this.canvas.clientHeight * 0.56, 320, 520);
@@ -189,6 +204,21 @@ export class CanvasRenderer {
     const deckTop = waterline - 32;
     const drawY = deckTop - pierHeight * 0.43;
     const outboardOverlap = 24;
+    const pierCenter = fromRightShore
+      ? x - outboardOverlap + pierWidth / 2
+      : x + outboardOverlap - pierWidth / 2;
+
+    drawContactShadow(this.context, {
+      centerX: pierCenter,
+      waterline,
+      width: pierWidth * 0.92,
+      depth: clamp(pierHeight * 0.12, 8, 18),
+      tint: surfaceTint,
+      elapsed,
+      reducedMotion: settings.reducedMotion,
+      highContrast: settings.highContrast,
+      seed: fromRightShore ? 2.4 : 0.7,
+    });
 
     this.context.save();
     if (fromRightShore) {
@@ -199,6 +229,18 @@ export class CanvasRenderer {
       this.context.drawImage(art.pier, x + outboardOverlap - pierWidth, drawY, pierWidth, pierHeight);
     }
     this.context.restore();
+
+    drawWaterContact(this.context, {
+      centerX: pierCenter,
+      waterline,
+      width: pierWidth * 0.9,
+      depth: clamp(pierHeight * 0.11, 8, 17),
+      tint: surfaceTint,
+      elapsed,
+      reducedMotion: settings.reducedMotion,
+      highContrast: settings.highContrast,
+      seed: fromRightShore ? 2.4 : 0.7,
+    });
   }
 
   private renderFishing(simulation: Simulation, settings: RenderSettings, width: number, height: number): void {
@@ -319,6 +361,7 @@ export class CanvasRenderer {
     camera: SideScrollCamera,
     width: number,
     waterline: number,
+    surfaceTint: string,
     settings: RenderSettings,
   ): void {
     const art = this.art;
@@ -332,12 +375,36 @@ export class CanvasRenderer {
     const bob = settings.reducedMotion ? 0 : Math.sin(simulation.elapsed * (2 + speedRatio)) * (1.1 + speedRatio * 0.8);
     const tilt = settings.reducedMotion ? 0 : clamp(simulation.boat.speed * 0.16, -0.02, 0.02);
 
+    drawContactShadow(context, {
+      centerX: x,
+      waterline: waterline + bob,
+      width: boatWidth * 0.78,
+      depth: clamp(boatHeight * 0.08, 7, 15),
+      tint: surfaceTint,
+      elapsed: simulation.elapsed,
+      reducedMotion: settings.reducedMotion,
+      highContrast: settings.highContrast,
+      seed: 1.3,
+    });
+
     context.save();
     context.translate(x, waterline + bob);
     context.scale(simulation.boat.facing, 1);
     context.rotate(tilt);
     context.drawImage(art.boat, -boatWidth / 2, -boatHeight * 0.86, boatWidth, boatHeight);
     context.restore();
+
+    drawWaterContact(context, {
+      centerX: x,
+      waterline: waterline + bob,
+      width: boatWidth * 0.82,
+      depth: clamp(boatHeight * 0.095, 8, 18),
+      tint: surfaceTint,
+      elapsed: simulation.elapsed,
+      reducedMotion: settings.reducedMotion,
+      highContrast: settings.highContrast,
+      seed: 1.3,
+    });
 
     if (Math.abs(simulation.boat.speed) > 0.018) {
       const wakeDirection = simulation.boat.speed > 0 ? -1 : 1;
