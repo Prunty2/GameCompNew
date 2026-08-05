@@ -1,9 +1,10 @@
 import tackleAtlasUrl from "../assets/fish-atlas.png";
 import fishAtlasUrl from "../assets/fish-atlas-v2.png";
-import fishingSpotsAtlasUrl from "../assets/fishing-spots-atlas.png";
 import harborPierUrl from "../assets/harbor-pier.png";
 import lakeChartUrl from "../assets/lake-chart.png";
+import polarizedLensUrl from "../assets/polarized-lens.png";
 import playerBoatUrl from "../assets/player-boat.png";
+import surfaceFishingCuesUrl from "../assets/surface-fishing-cues.png";
 import worldAtlasUrl from "../assets/world-atlas.png";
 import {
   BALANCE,
@@ -13,13 +14,12 @@ import {
   regionAt,
   regionById,
   type FishSpecies,
-  type SpotId,
   type WorldPoint,
 } from "./balance";
 import { createSideScrollCamera, worldToScreenX, type SideScrollCamera } from "./camera";
+import { surfaceFishingCue, surfaceFishPose, type SurfaceFishingCue } from "./fishingSpotEffects";
 import { calculatePanoramaLayout } from "./panorama";
-import { isNight, maxFishingDepth, objective, type Simulation } from "./simulation";
-import { populationLabel } from "./stem";
+import { getInteractionPrompt, isNight, maxFishingDepth, objective, type Simulation } from "./simulation";
 import { captureSurfaceLayer, drawWaterContact } from "./surfaceEffects";
 
 export interface RenderSettings {
@@ -33,25 +33,27 @@ interface LoadedArt {
   pier: HTMLImageElement;
   boat: HTMLCanvasElement;
   fish: HTMLCanvasElement;
-  fishingSpots: HTMLCanvasElement;
+  fishingCues: HTMLCanvasElement;
+  polarizedLens: HTMLImageElement;
   tackle: HTMLCanvasElement;
   world: HTMLCanvasElement;
 }
 
-const SPOT_ATLAS_CELLS: Record<SpotId, readonly [number, number]> = {
-  sunwardShoal: [0, 0],
-  silverBay: [1, 0],
-  needleRun: [2, 0],
-  mosswaterPool: [0, 1],
-  outerGloam: [1, 1],
-  blackwaterTrench: [2, 1],
-};
+const SURFACE_FISH_CELLS = [
+  [0, 0],
+  [1, 0],
+  [2, 0],
+  [3, 0],
+  [0, 1],
+  [1, 1],
+] as const;
 
 export class CanvasRenderer {
   private readonly context: CanvasRenderingContext2D;
   private readonly artReady: Promise<void>;
   private readonly surfaceLayer = document.createElement("canvas");
   private art: LoadedArt | null = null;
+  private interactionAnchor: WorldPoint | null = null;
 
   constructor(private readonly canvas: HTMLCanvasElement) {
     const context = canvas.getContext("2d");
@@ -62,16 +64,19 @@ export class CanvasRenderer {
       loadImage(harborPierUrl),
       loadImage(playerBoatUrl),
       loadImage(fishAtlasUrl),
-      loadImage(fishingSpotsAtlasUrl),
+      loadImage(surfaceFishingCuesUrl),
+      loadImage(polarizedLensUrl),
       loadImage(tackleAtlasUrl),
       loadImage(worldAtlasUrl),
-    ]).then(([lake, pier, boat, fish, fishingSpots, tackle, world]) => {
+    ]).then(([lake, pier, boat, fish, fishingCues, polarizedLens, tackle, world]) => {
+      const keyedFish = keyMagenta(fish, false);
       this.art = {
         lake,
         pier,
         boat: keyMagenta(boat, true),
-        fish: keyMagenta(fish, false),
-        fishingSpots: keyMagenta(fishingSpots, false),
+        fish: keyedFish,
+        fishingCues: keyMagenta(fishingCues, false),
+        polarizedLens,
         tackle: keyMagenta(tackle, false),
         world: keyMagenta(world, false),
       };
@@ -82,7 +87,12 @@ export class CanvasRenderer {
     return this.artReady;
   }
 
+  surfaceInteractionAnchor(): WorldPoint | null {
+    return this.interactionAnchor ? { ...this.interactionAnchor } : null;
+  }
+
   render(simulation: Simulation, settings: RenderSettings): void {
+    this.interactionAnchor = null;
     this.resize();
     const width = this.canvas.clientWidth;
     const height = this.canvas.clientHeight;
@@ -133,30 +143,49 @@ export class CanvasRenderer {
       );
     }
 
-    for (const spot of FISHING_SPOTS) {
+    this.drawBoat(simulation, camera, width, height, waterline, surfaceLayer, settings);
+
+    let activeFishingCue: { cue: SurfaceFishingCue; enabled: boolean } | null = null;
+    const interactionPrompt = getInteractionPrompt(simulation);
+    for (const [spotIndex, spot] of FISHING_SPOTS.entries()) {
       const x = worldToScreenX(spot.x, camera, width);
-      if (!isNearScreen(x, width, 140)) continue;
+      if (!isNearScreen(x, width, 260)) continue;
       const permitLocked = spot.requiresPermit && !simulation.progress.outerUnlocked;
       const depthLocked = spot.requiredDepthTier > simulation.progress.upgrades.line;
-      const pulse = settings.reducedMotion ? 1 : 1 + Math.sin(simulation.elapsed * 3.2 + spot.x * 10) * 0.025;
       const population = simulation.progress.populations[spot.species];
-      this.drawFishingSpotMarker({
-        spotId: spot.id,
-        spotName: spot.name,
-        species: spot.species,
-        population,
-        permitLocked,
-        depthLocked,
-        requiredDepthTier: spot.requiredDepthTier,
+      const cue = surfaceFishingCue(simulation.boat.x, spot.x, BALANCE.fishingRadius, population);
+      this.drawSurfaceFishingGround({
+        spotIndex,
+        cue,
+        locked: permitLocked || depthLocked,
         x,
         waterline,
-        pulse,
+        width,
+        height,
+        elapsed: simulation.elapsed,
+        reducedMotion: settings.reducedMotion,
         highContrast: settings.highContrast,
       });
+      if (cue.hookVisibility > 0 && interactionPrompt?.kind === "fishing" && interactionPrompt.spot === spot.id) {
+        activeFishingCue = { cue, enabled: interactionPrompt.enabled };
+      }
+    }
+
+    if (activeFishingCue) {
+      const boatX = worldToScreenX(simulation.boat.x, camera, width);
+      const hookY = waterline + clamp(height * 0.055, 30, 46);
+      this.drawSurfaceHookCue(
+        boatX,
+        hookY,
+        activeFishingCue.cue.hookVisibility,
+        activeFishingCue.enabled,
+        simulation.elapsed,
+        settings,
+      );
+      this.interactionAnchor = { x: boatX, y: hookY };
     }
 
     this.drawObjective(simulation, camera, width, height);
-    this.drawBoat(simulation, camera, width, height, waterline, surfaceLayer, settings);
     this.drawWeather(simulation, camera, width, height, settings);
 
   }
@@ -206,68 +235,79 @@ export class CanvasRenderer {
     });
   }
 
-  private drawFishingSpotMarker(options: {
-    spotId: SpotId;
-    spotName: string;
-    species: FishSpecies;
-    population: number;
-    permitLocked: boolean;
-    depthLocked: boolean;
-    requiredDepthTier: number;
+  private drawSurfaceFishingGround(options: {
+    spotIndex: number;
+    cue: SurfaceFishingCue;
+    locked: boolean;
     x: number;
     waterline: number;
-    pulse: number;
+    width: number;
+    height: number;
+    elapsed: number;
+    reducedMotion: boolean;
     highContrast: boolean;
   }): void {
     const { context } = this;
-    const locked = options.permitLocked || options.depthLocked;
-    const markerSize = 126 * options.pulse;
-    const markerBottom = options.waterline + 7;
-    const cardWidth = 154;
-    const cardHeight = 39;
-    const cardX = options.x - cardWidth / 2;
-    const cardY = options.waterline - 185;
-    const accent = locked
-      ? "#c9cec4"
-      : options.highContrast
-        ? "#fff6d8"
-        : "#e8a44d";
-    const status = options.permitLocked
-      ? "PERMIT REQUIRED"
-      : options.depthLocked
-        ? `LINE T${options.requiredDepthTier} REQUIRED`
-        : `${FISH[options.species].name.toUpperCase()} · ${populationLabel(options.population).toUpperCase()}`;
+    const shoalWidth = clamp(options.height * 0.55, 250, 480);
+    const shoalDepth = clamp((options.height - options.waterline) * 0.82, 130, 290);
+    const lensStrength = options.cue.lensVisibility * (options.locked ? 0.62 : 1);
+
+    if (lensStrength > 0.01) {
+      const art = this.art;
+      if (!art) return;
+      const lensWidth = shoalWidth * 1.04;
+      const lensHeight = Math.min(options.height - options.waterline + 28, shoalDepth * 1.32);
+      context.save();
+      context.globalCompositeOperation = "screen";
+      context.globalAlpha = lensStrength * (options.highContrast ? 0.96 : 0.84);
+      context.drawImage(
+        art.polarizedLens,
+        options.x - lensWidth / 2,
+        options.waterline - lensHeight * 0.13,
+        lensWidth,
+        lensHeight,
+      );
+      context.restore();
+    }
+
+    const fishBaseSize = clamp(Math.min(options.width, options.height) * 0.039, 27, 43);
+    for (let index = 0; index < options.cue.fishCount; index += 1) {
+      const pose = surfaceFishPose(options.spotIndex, index, options.elapsed, options.reducedMotion);
+      const fishX = options.x + pose.offsetX * shoalWidth;
+      const fishY = options.waterline + pose.depth * shoalDepth;
+      const cellWidth = fishBaseSize * pose.scale * 1.4;
+      const cellHeight = cellWidth * 4 / 3;
+      const [column, row] = SURFACE_FISH_CELLS[index % SURFACE_FISH_CELLS.length]!;
+      context.save();
+      context.globalAlpha = options.cue.fishVisibility
+        * (options.locked ? 0.58 : 1)
+        * (options.highContrast ? 1.28 : 1);
+      context.translate(fishX, fishY);
+      context.scale(pose.direction, 1);
+      this.drawSurfaceFishingCueCell(column, row, 0, 0, cellWidth, cellHeight);
+      context.restore();
+    }
+  }
+
+  private drawSurfaceHookCue(
+    x: number,
+    y: number,
+    visibility: number,
+    enabled: boolean,
+    elapsed: number,
+    settings: RenderSettings,
+  ): void {
+    const { context } = this;
+    const pulse = settings.reducedMotion ? 0 : Math.sin(elapsed * 4) * 2;
+    const alpha = visibility * (enabled ? 1 : 0.58);
+    const radius = clamp(this.canvas.clientHeight * 0.042, 22, 34) + pulse;
+    const cueWidth = radius * 2.3;
 
     context.save();
-    context.globalAlpha = locked ? 0.58 : 0.98;
-    this.drawFishingSpotCell(options.spotId, options.x, markerBottom, markerSize, markerSize);
-    context.restore();
-
-    context.save();
-    context.globalAlpha = locked ? 0.55 : 0.78;
-    context.strokeStyle = accent;
-    context.lineWidth = options.highContrast ? 3 : 2;
-    context.beginPath();
-    context.ellipse(options.x, options.waterline + 4, 38, 7, 0, 0, Math.PI * 2);
-    context.stroke();
-    context.restore();
-
-    context.save();
-    context.fillStyle = "rgba(6, 25, 34, 0.92)";
-    context.fillRect(cardX, cardY, cardWidth, cardHeight);
-    context.fillStyle = accent;
-    context.fillRect(cardX, cardY, 5, cardHeight);
-    context.strokeStyle = locked ? "rgba(214, 218, 203, 0.7)" : "rgba(247, 241, 227, 0.52)";
-    context.lineWidth = options.highContrast ? 2 : 1;
-    context.strokeRect(cardX + 0.5, cardY + 0.5, cardWidth - 1, cardHeight - 1);
-    context.textAlign = "left";
-    context.textBaseline = "middle";
-    context.fillStyle = locked ? "#d6dacb" : "#f7f1e3";
-    context.font = "900 11px system-ui, sans-serif";
-    context.fillText(options.spotName.toUpperCase(), cardX + 13, cardY + 13);
-    context.fillStyle = options.population < 40 && !locked ? "#ffd27a" : locked ? "#c9cec4" : "#b8e3c5";
-    context.font = "800 9px system-ui, sans-serif";
-    context.fillText(status, cardX + 13, cardY + 28);
+    context.globalAlpha = alpha;
+    context.shadowColor = settings.highContrast ? "rgba(255, 255, 255, 0.72)" : "rgba(232, 164, 77, 0.58)";
+    context.shadowBlur = settings.highContrast ? 14 : 18;
+    this.drawSurfaceFishingCueCell(enabled ? 2 : 3, 1, x, y, cueWidth, cueWidth * 4 / 3);
     context.restore();
   }
 
@@ -427,6 +467,7 @@ export class CanvasRenderer {
 
   private drawObjective(simulation: Simulation, camera: SideScrollCamera, width: number, height: number): void {
     const goal = objective(simulation);
+    if (Math.abs(goal.point.x - simulation.boat.x) <= BALANCE.fishingRadius * 3.6) return;
     const x = worldToScreenX(goal.point.x, camera, width);
     const clampedX = clamp(x, 30, width - 30);
     const edge = x < 0 ? -1 : x > width ? 1 : 0;
@@ -641,6 +682,24 @@ export class CanvasRenderer {
     );
   }
 
+  private drawSurfaceFishingCueCell(column: number, row: number, x: number, y: number, width: number, height: number): void {
+    const art = this.art;
+    if (!art) return;
+    const sourceWidth = art.fishingCues.width / 4;
+    const sourceHeight = art.fishingCues.height / 2;
+    this.context.drawImage(
+      art.fishingCues,
+      column * sourceWidth,
+      row * sourceHeight,
+      sourceWidth,
+      sourceHeight,
+      x - width / 2,
+      y - height / 2,
+      width,
+      height,
+    );
+  }
+
   private drawTackleCell(column: number, row: number, x: number, y: number, width: number, height: number): void {
     const art = this.art;
     if (!art) return;
@@ -654,25 +713,6 @@ export class CanvasRenderer {
       sourceHeight,
       x - width / 2,
       y - height / 2,
-      width,
-      height,
-    );
-  }
-
-  private drawFishingSpotCell(spotId: SpotId, x: number, bottom: number, width: number, height: number): void {
-    const art = this.art;
-    if (!art) return;
-    const [column, row] = SPOT_ATLAS_CELLS[spotId];
-    const sourceWidth = art.fishingSpots.width / 3;
-    const sourceHeight = art.fishingSpots.height / 2;
-    this.context.drawImage(
-      art.fishingSpots,
-      column * sourceWidth,
-      row * sourceHeight,
-      sourceWidth,
-      sourceHeight,
-      x - width / 2,
-      bottom - height,
       width,
       height,
     );
@@ -778,6 +818,7 @@ function keyMagenta(image: HTMLImageElement, crop: boolean): HTMLCanvasElement {
   output.getContext("2d")?.drawImage(source, cropLeft, cropTop, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
   return output;
 }
+
 
 function fishShortName(species: FishSpecies): string {
   return FISH[species].name.toUpperCase();

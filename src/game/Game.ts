@@ -134,6 +134,9 @@ export class Game {
   private pendingSpot: SpotId | null = null;
   private surveyResult: SurveyResult | null = null;
   private seasonReportQueued = false;
+  private readonly visualTestSpot = import.meta.env.DEV
+    ? new URLSearchParams(window.location.search).get("e2eSpot") as SpotId | null
+    : null;
   private readonly interfaceReady = Promise.all([
     preloadImage(wordmarkUrl),
     preloadImage(uiButtonUrl),
@@ -356,9 +359,21 @@ export class Game {
     const action = this.uiRoot.querySelector<HTMLButtonElement>("#context-action");
     const prompt = getInteractionPrompt(simulation);
     if (action) {
+      const fishingCue = prompt?.kind === "fishing";
       action.hidden = !prompt || this.overlay !== null || simulation.mode === "fishing";
       action.disabled = prompt ? !prompt.enabled : true;
       action.textContent = prompt?.label ?? "Interact";
+      action.setAttribute("aria-label", prompt?.label ?? "Interact");
+      action.title = prompt?.label ?? "";
+      action.classList.toggle("is-fishing-cue", fishingCue);
+      const anchor = fishingCue ? this.renderer.surfaceInteractionAnchor() : null;
+      if (anchor) {
+        action.style.left = `${anchor.x}px`;
+        action.style.top = `${anchor.y}px`;
+      } else {
+        action.style.removeProperty("left");
+        action.style.removeProperty("top");
+      }
     }
 
     const navigation = this.uiRoot.querySelector<HTMLElement>(".navigation-controls");
@@ -582,7 +597,7 @@ export class Game {
               <input type="range" min="0" max="1" step="0.05" value="${settings.volume}" data-setting="volume">
             </label>
             <label class="setting-option setting-toggle">
-              <span class="setting-copy"><strong>High contrast</strong><small>Brighter markers and stronger outlines.</small></span>
+              <span class="setting-copy"><strong>High contrast</strong><small>Brighter shoals and stronger outlines.</small></span>
               <input class="setting-input" type="checkbox" data-setting="highContrast" ${settings.highContrast ? "checked" : ""}>
               <span class="setting-switch" aria-hidden="true"><span></span></span>
             </label>
@@ -636,8 +651,8 @@ export class Game {
         body: "At a harbor, choose the delivery job. It tells you exactly which fish to catch and where to take it.",
       },
       {
-        title: "Follow the marker",
-        body: `Use <kbd>${formatKey(this.save.settings.controls.left)}</kbd> and <kbd>${formatKey(this.save.settings.controls.right)}</kbd> to move, then press <kbd>${formatKey(this.save.settings.controls.action)}</kbd> at the fishing marker.`,
+        title: "Follow the shoal",
+        body: `Use <kbd>${formatKey(this.save.settings.controls.left)}</kbd> and <kbd>${formatKey(this.save.settings.controls.right)}</kbd> to follow faint fish activity. When the water clears and the hook appears, press <kbd>${formatKey(this.save.settings.controls.action)}</kbd>.`,
       },
       {
         title: "Read and predict",
@@ -676,7 +691,7 @@ export class Game {
 
   private surveyScreen(): string {
     const spotId = this.pendingSpot;
-    if (!spotId) return this.messageScreen("Survey unavailable", "Return to the lake and stop beside a marked research buoy.", "cancel-survey", "Back to water");
+    if (!spotId) return this.messageScreen("Survey unavailable", "Return to the lake and stop when the shoal gathers beneath your boat.", "cancel-survey", "Back to water");
     const spot = spotById(spotId);
     const reading = WATER_READINGS[spotId];
     const researchTarget = this.simulation.activeContract?.spot === spotId
@@ -1042,8 +1057,15 @@ export class Game {
         if (acceptAvailableContract(this.simulation)) {
           this.syncSave();
           undock(this.simulation);
+          if (this.visualTestSpot) {
+            try {
+              moveBoatForTesting(this.simulation, spotById(this.visualTestSpot));
+            } catch {
+              // Ignore malformed development-only visual test parameters.
+            }
+          }
           this.setOverlay(null);
-          this.showToast("Contract accepted. Survey the marked habitat first.");
+          this.showToast("Contract accepted. Follow the shoal and survey its habitat first.");
         }
         break;
       case "survey-choice": {

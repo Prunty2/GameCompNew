@@ -336,6 +336,44 @@ input:focus-visible {
   pointer-events: auto;
 }
 
+.context-action.is-fishing-cue {
+  right: auto;
+  bottom: auto;
+  width: 78px;
+  min-width: 78px;
+  height: 78px;
+  min-height: 78px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  box-shadow: none;
+  color: transparent;
+  letter-spacing: 0;
+  overflow: hidden;
+  transform: translate(-50%, -50%);
+}
+
+.context-action.is-fishing-cue:hover:not(:disabled) {
+  filter: none;
+  box-shadow: 0 0 0 2px rgb(247 241 227 / 24%);
+}
+
+.context-action.is-fishing-cue:focus-visible {
+  outline: 3px solid var(--cream);
+  outline-offset: 4px;
+}
+
+.context-action.is-fishing-cue:active:not(:disabled) {
+  transform: translate(-50%, -50%) scale(0.94);
+  box-shadow: 0 0 0 3px rgb(232 164 77 / 42%);
+}
+
+.context-action.is-fishing-cue:disabled {
+  opacity: 1;
+  filter: none;
+}
+
 .context-action:active:not(:disabled) {
   transform: translateX(-50%) translateY(3px) scale(0.99);
 }
@@ -2031,6 +2069,10 @@ kbd {
 
   .context-action {
     bottom: 88px;
+  }
+
+  .context-action.is-fishing-cue {
+    bottom: auto;
   }
 }
 

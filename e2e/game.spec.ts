@@ -139,6 +139,25 @@ test("settings reverses its title transition when closing", async ({ page }) => 
   expect(returnedLakeFrame).toBe(titleLakeFrame);
 });
 
+test("surface shoals reveal the hook only inside fishing interaction range", async ({ page }) => {
+  await page.goto("/?e2e=1");
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.getByRole("button", { name: "Accept contract" }).click();
+
+  const action = page.locator("#context-action");
+  await expect(action).toBeHidden();
+
+  await page.evaluate(() => window.__FSHING_TEST__?.sailToSpot("sunwardShoal"));
+  await expect(action).toBeVisible();
+  await expect(action).toHaveAccessibleName("Drop line · Sunward Shoal");
+  await expect(action).toHaveClass(/is-fishing-cue/);
+  await expect(action).toHaveCSS("width", "78px");
+  await expect(action).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+
+  await page.evaluate(() => window.__FSHING_TEST__?.sailToHarbor("gloam"));
+  await expect(action).not.toHaveClass(/is-fishing-cue/);
+});
+
 test("completes the tutorial delivery, buys an upgrade, and persists it", async ({ page }) => {
   await page.goto("/?e2e=1");
   await expect(page.getByRole("img", { name: "FSHING" })).toBeVisible();
@@ -337,7 +356,7 @@ test("how to play instructions advance one card at a time", async ({ page }) => 
 
   await page.getByRole("button", { name: "Next" }).click();
   await expect(page.getByText("Step 2 of 5")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Follow the marker" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Follow the shoal" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Take a job" })).toHaveCount(0);
 
   await page.getByRole("button", { name: "Previous" }).click();

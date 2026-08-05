@@ -547,7 +547,7 @@ export function tutorialPrompt(simulation: Simulation): string | null {
     return `Guide the hook toward the ${FISH[target].name}. Match its ${FISH[target].shape.toLowerCase()}.`;
   }
   if (!simulation.cargo.some((item) => item.species === simulation.activeContract?.species)) {
-    return "Hold right for Sunward Shoal. Brake beside its water marker.";
+    return "Hold right for Sunward Shoal. Follow the fish activity and slow when the hook appears.";
   }
   return "The catch is losing freshness. Head right for Gloam Ferry.";
 }
