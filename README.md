@@ -22,6 +22,16 @@ npm install
 npm run dev
 ```
 
+## Tutorial dialogue demo
+
+The character and dialogue prototype is a separate developer-facing page and is not connected to the game flow. Launch it directly with:
+
+```sh
+npm run demo:tutorial
+```
+
+This starts Vite and opens `http://localhost:5173/tutorial-demo.html`. Opening `tutorial-demo.html` as a local file does not work because its TypeScript, CSS, and image imports are resolved by Vite.
+
 ## Verify
 
 ```sh

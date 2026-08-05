@@ -174,9 +174,12 @@ button:focus-visible {
   animation: guide-arrive 540ms cubic-bezier(0.18, 0.82, 0.22, 1) both;
 }
 
+.guide-portrait.is-mirrored {
+  transform: scaleX(-1);
+}
+
 [data-side="right"] .guide-portrait {
   grid-column: 2;
-  transform: scaleX(-1);
   filter: drop-shadow(-18px 22px 28px rgb(0 9 14 / 42%));
 }
 
@@ -215,10 +218,13 @@ button:focus-visible {
   text-transform: uppercase;
 }
 
+.guide-portrait.is-mirrored figcaption {
+  transform: scaleX(-1);
+}
+
 [data-side="right"] .guide-portrait figcaption {
   right: auto;
   left: 2%;
-  transform: scaleX(-1);
 }
 
 .guide-portrait figcaption strong {

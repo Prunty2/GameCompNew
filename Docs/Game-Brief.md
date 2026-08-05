@@ -314,7 +314,7 @@ Recommended functional roles are:
 
 Dialogue should be brief and skippable. The first-start introduction may use a prominent full-screen character presentation: one large character portrait anchored to either screen edge and one highly readable dialogue panel that scales from a short greeting to longer instructional copy or two player choices. Later ambient dialogue returns to compact text panels so it does not interrupt the repeatable loop. The portrait presentation must remain responsive in landscape and portrait layouts, retain readable controls without color dependence, and respect reduced-motion settings.
 
-The standalone tutorial-dialogue prototype uses the working character **Rook**, an experienced harbor surveyor and dockhand who introduces the Survey → Catch → Deliver loop. This prototype is a visual and interaction demo only; it is not part of the first-start game flow until its character, copy, and sequence are approved. The earlier multi-part story, larger named cast, aquarium, and million-dollar escape objective remain outside the initial scope.
+The standalone tutorial-dialogue prototype uses the working character **Rook**, an experienced harbor surveyor and dockhand who introduces the Survey → Catch → Deliver loop. Its visual sequence uses consistent front-on, side-profile, three-quarter, wave, explain, directional-point, caution, and approval poses so the portrait changes meaningfully with each tutorial beat. This prototype is a visual and interaction demo only; it is not part of the first-start game flow until its character, copy, and sequence are approved. The earlier multi-part story, larger named cast, aquarium, and million-dollar escape objective remain outside the initial scope.
 
 ## Visual design
 
@@ -691,6 +691,7 @@ Every authored visual asset in this slice is generated with GPT Image 2.0. No pr
 | `ui-button.png` | Minimal full-bleed primary action surface |
 | `ui-icons.png` | Cargo, freshness, hull, time, shells, objective, engine, lamp, line-depth, permit, repair, sound, and pause pictograms |
 | `tutorial-guide.png` | Demo-only full-screen portrait of Rook for the standalone tutorial-dialogue showcase |
+| `rook-*.png` | Eight demo-only Rook angle and gesture variants for the standalone nine-beat tutorial sequence |
 
 Generated files are explicitly imported from `src/assets/`. Prompts and generation settings are recorded in `Docs/Asset-Manifest.md`; authoring intermediates remain outside the production bundle.
 

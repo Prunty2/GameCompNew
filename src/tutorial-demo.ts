@@ -1,4 +1,12 @@
 import lakeChartUrl from "./assets/lake-chart.png";
+import approvalUrl from "./assets/rook-approval.png";
+import explainUrl from "./assets/rook-explain.png";
+import frontUrl from "./assets/rook-front.png";
+import pointLeftUrl from "./assets/rook-point-left.png";
+import pointRightUrl from "./assets/rook-point-right.png";
+import profileLeftUrl from "./assets/rook-profile-left.png";
+import warningUrl from "./assets/rook-warning.png";
+import waveUrl from "./assets/rook-wave.png";
 import guideUrl from "./assets/tutorial-guide.png";
 import "./tutorial-demo.css";
 
@@ -12,6 +20,10 @@ interface DialogueScene {
   readonly body: string;
   readonly kind: SceneKind;
   readonly side: GuideSide;
+  readonly pose: string;
+  readonly portraitAlt: string;
+  readonly portraitUrl: string;
+  readonly mirror?: boolean;
   readonly note?: string;
   readonly facts?: readonly string[];
   readonly choices?: readonly string[];
@@ -21,11 +33,26 @@ const scenes: readonly DialogueScene[] = [
   {
     chapter: "First light",
     eyebrow: "Brindle Harbor · 06:12",
-    title: "You made it across.",
-    body: "Name’s Rook. I keep the survey ledgers—and most things here from drifting off overnight. Your boat looks rough, but the lake’s forgiving in daylight.",
-    note: "Short dialogue · Standard prompt",
+    title: "Morning, skipper.",
+    body: "You must be the new arrival. I’m Rook. I keep the survey ledgers—and most things here from drifting off overnight.",
+    note: "Opening dialogue · Friendly wave",
     kind: "arrival",
     side: "left",
+    pose: "wave",
+    portraitAlt: "Rook smiling and raising one hand in a friendly wave",
+    portraitUrl: waveUrl,
+  },
+  {
+    chapter: "Meet your guide",
+    eyebrow: "Harbor survey office · Introductions",
+    title: "The lake rewards attention.",
+    body: "Your boat looks rough, but the lake is forgiving in daylight. Read what the water tells you, take only what you need, and every crossing becomes easier to plan.",
+    note: "Front-on character view · Neutral stance",
+    kind: "arrival",
+    side: "right",
+    pose: "front",
+    portraitAlt: "Rook standing squarely front-on with his field notebook at his side",
+    portraitUrl: frontUrl,
   },
   {
     chapter: "Read the lake",
@@ -35,7 +62,10 @@ const scenes: readonly DialogueScene[] = [
     facts: ["Depth", "Temperature", "Oxygen", "Turbidity", "Habitat"],
     note: "Long dialogue · Evidence chips",
     kind: "evidence",
-    side: "right",
+    side: "left",
+    pose: "explain",
+    portraitAlt: "Rook holding open his field notebook and pointing to a page as he explains",
+    portraitUrl: explainUrl,
   },
   {
     chapter: "First assignment",
@@ -46,6 +76,46 @@ const scenes: readonly DialogueScene[] = [
     note: "Mission dialogue · Sequential objectives",
     kind: "route",
     side: "left",
+    pose: "point-right",
+    portraitAlt: "Rook extending one arm and pointing toward the fishing grounds on the right",
+    portraitUrl: pointRightUrl,
+  },
+  {
+    chapter: "Fish with care",
+    eyebrow: "Population note · Healthy stock",
+    title: "One fish. Not the whole shoal.",
+    body: "A healthy population can support careful fishing. If the marker says a species is protected, leave it alone. Release anything the contract does not need.",
+    facts: ["Check population", "Respect protection", "Release extras"],
+    note: "Caution dialogue · Raised palm",
+    kind: "evidence",
+    side: "right",
+    pose: "warning",
+    portraitAlt: "Rook raising an open palm in a clear caution gesture",
+    portraitUrl: warningUrl,
+  },
+  {
+    chapter: "Turn for home",
+    eyebrow: "Catch secured · Freshness started",
+    title: "Hook up. Bow west.",
+    body: "Once the Reedfin is aboard, freshness begins to fall. Turn back toward the harbor and keep your speed steady—the clock is part of the crossing now.",
+    note: "Side-profile angle · Travel transition",
+    kind: "handoff",
+    side: "right",
+    pose: "profile-left",
+    portraitAlt: "Rook shown in a strict left-facing side profile with his notebook",
+    portraitUrl: profileLeftUrl,
+  },
+  {
+    chapter: "Make the crossing",
+    eyebrow: "Route guidance · Gloam Ferry",
+    title: "Your harbor is that way.",
+    body: "Follow the amber markers west to Gloam Ferry. A faster, cleaner route preserves more of the catch’s freshness—and gives the fog less time to settle in.",
+    note: "Directional dialogue · Left-pointing pose",
+    kind: "route",
+    side: "right",
+    pose: "point-left",
+    portraitAlt: "Rook extending one arm and pointing clearly toward the harbor on the left",
+    portraitUrl: pointLeftUrl,
   },
   {
     chapter: "Check your thinking",
@@ -56,15 +126,22 @@ const scenes: readonly DialogueScene[] = [
     note: "Decision dialogue · Two scalable choices",
     kind: "choice",
     side: "right",
+    pose: "neutral-three-quarter",
+    portraitAlt: "Rook standing in a neutral three-quarter pose and watching for an answer",
+    portraitUrl: guideUrl,
+    mirror: true,
   },
   {
-    chapter: "Cast off",
-    eyebrow: "Rook’s field note · Keep this close",
-    title: "The lake keeps a record.",
-    body: "Catch carefully. Release what you don’t need. And if the fog comes down, follow the markers—not the shapes between them. I’ll meet you at the ledger when the delivery is done.",
-    note: "Closing dialogue · Emphatic handoff",
+    chapter: "Ready to cast off",
+    eyebrow: "Rook’s field note · Lesson complete",
+    title: "That’s the whole crossing.",
+    body: "Survey, catch, deliver—and compare what you predicted with what actually happened. Keep that rhythm and the lake will teach you the rest.",
+    note: "Closing dialogue · Approval pose",
     kind: "handoff",
     side: "left",
+    pose: "approval",
+    portraitAlt: "Rook smiling warmly and giving a clear thumbs-up",
+    portraitUrl: approvalUrl,
   },
 ];
 
@@ -117,9 +194,9 @@ function render(): void {
       </header>
 
       <div class="scene-stage">
-        <figure class="guide-portrait" aria-label="Rook, Brindle Harbor surveyor">
+        <figure class="guide-portrait${scene.mirror ? " is-mirrored" : ""}" data-pose="${scene.pose}" aria-label="Rook, Brindle Harbor surveyor">
           <div class="guide-halo" aria-hidden="true"></div>
-          <img src="${guideUrl}" alt="Rook, a stocky harbor surveyor in an orange beanie and weathered navy jacket, holding a field notebook" />
+          <img src="${scene.portraitUrl}" alt="${scene.portraitAlt}" />
           <figcaption><strong>Rook</strong><span>Harbor surveyor</span></figcaption>
         </figure>
 
