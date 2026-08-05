@@ -215,7 +215,7 @@ export class Game {
         <output class="toast" id="toast" aria-live="polite"></output>
         <div class="feedback-flash" id="feedback-flash" aria-hidden="true"></div>
 
-        <button class="context-action" id="context-action" type="button" data-action="interact" hidden>Interact</button>
+        <button class="context-action" id="context-action" type="button" data-action="interact" data-control="action" hidden>Interact</button>
 
         <section class="touch-controls navigation-controls" aria-label="Touch boat controls">
           <div class="travel-controls">
