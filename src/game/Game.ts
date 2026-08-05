@@ -53,7 +53,6 @@ import {
   undock,
   updateSimulation,
   upgradeCost,
-  type RouteChoice,
   type Simulation,
   type SimulationEvent,
 } from "./simulation";
@@ -61,7 +60,6 @@ import {
   FISH_SCIENCE,
   WATER_READINGS,
   averagePopulation,
-  estimateRoute,
   populationLabel,
   surveyChoices,
   type SurveyResult,
@@ -70,7 +68,7 @@ import {
 const FIXED_STEP = 1 / 120;
 const MAX_FRAME = 0.05;
 const UI_REFRESH_INTERVAL = 100;
-const HELP_STEP_COUNT = 6;
+const HELP_STEP_COUNT = 5;
 const PAUSE_EXIT_DURATION = 340;
 const SETTINGS_EXIT_DURATION = 340;
 const SCENE_COVER_DURATION = 120;
@@ -84,7 +82,6 @@ type OverlayScreen =
   | "controls"
   | "help"
   | "survey"
-  | "routePlan"
   | "deliveryResult"
   | "fieldGuide"
   | "seasonReport"
@@ -280,13 +277,13 @@ export class Game {
       case "caught":
         this.feedback.cue("catch");
         this.pulseFeedback("catch");
-        this.showToast(`${FISH[event.species].name} secured. Freshness is falling.`);
         if (
           this.simulation.activeContract?.species === event.species
           && !this.simulation.routeChoice
         ) {
-          this.setOverlay("routePlan");
+          chooseRoute(this.simulation, "fast");
         }
+        this.showToast(`${FISH[event.species].name} secured. Freshness is falling.`);
         break;
       case "delivered":
         this.feedback.cue("delivery");
@@ -404,9 +401,6 @@ export class Game {
         break;
       case "survey":
         host.innerHTML = this.surveyScreen();
-        break;
-      case "routePlan":
-        host.innerHTML = this.routePlanScreen();
         break;
       case "deliveryResult":
         host.innerHTML = this.deliveryResultScreen();
@@ -672,10 +666,6 @@ export class Game {
         body: "Steer the hook with the movement keys or touch pad. Upgrade line depth to cross the amber depth boundary and reach rarer fish.",
       },
       {
-        title: "Plan the crossing",
-        body: "Compare distance, travel time and predicted freshness. A faster crossing preserves more of the catch.",
-      },
-      {
         title: "Fish sustainably",
         body: "Check population labels in the field guide. Release unneeded catches, avoid protected species, and keep the ecosystem healthy for a bonus.",
       },
@@ -744,33 +734,6 @@ export class Game {
       </section>`;
   }
 
-  private routePlanScreen(): string {
-    const contract = this.simulation.activeContract;
-    if (!contract) return this.messageScreen("No active crossing", "Accept a research delivery at the harbor first.", "route-back", "Back to harbor");
-    const estimate = estimateRoute(contract, this.simulation.progress.upgrades.engine);
-    const origin = spotById(contract.spot);
-    return `
-      <section class="screen-overlay sheet-overlay science-overlay" role="dialog" aria-labelledby="route-title">
-        <div class="art-panel science-panel route-panel side-sheet">
-          <header class="science-heading"><div><span class="panel-eyebrow">Applied mathematics</span><h2 id="route-title">Plan your crossing</h2></div><span class="depth-badge">${estimate.distanceKm.toFixed(1)} km</span></header>
-          <p class="route-equation"><strong>time = distance ÷ speed</strong><span>${origin.name} → ${harborById(contract.destination).name}</span></p>
-          <div class="route-grid">
-            <article class="route-card is-safe">
-              <span class="route-kicker">Steady pace</span><h3>Survey route</h3>
-              <dl><div><dt>Estimated time</dt><dd>${estimate.safeMinutes.toFixed(1)} min</dd></div><div><dt>Predicted freshness</dt><dd>${estimate.safeArrivalFreshness}%</dd></div><div><dt>Travel speed</dt><dd>× ${BALANCE.safeRouteSpeedMultiplier.toFixed(2)}</dd></div></dl>
-              <button class="primary-button" type="button" data-action="choose-route" data-route="safe">Choose survey route</button>
-            </article>
-            <article class="route-card is-fast">
-              <span class="route-kicker">Faster pace</span><h3>Express route</h3>
-              <dl><div><dt>Estimated time</dt><dd>${estimate.fastMinutes.toFixed(1)} min</dd></div><div><dt>Predicted freshness</dt><dd>${estimate.fastArrivalFreshness}%</dd></div><div><dt>Travel speed</dt><dd>× ${BALANCE.fastRouteSpeedMultiplier.toFixed(2)}</dd></div></dl>
-              <button class="primary-button" type="button" data-action="choose-route" data-route="fast">Choose express route</button>
-            </article>
-          </div>
-          <p class="route-note">Your engine tier changes both estimates. Surface travel stays open and unobstructed.</p>
-        </div>
-      </section>`;
-  }
-
   private deliveryResultScreen(): string {
     const result = this.simulation.lastDeliveryResult;
     if (!result) return this.messageScreen("No delivery result", "Complete a delivery to compare your estimate with the result.", "continue-after-delivery", "Back to harbor");
@@ -833,7 +796,7 @@ export class Game {
           <p>You completed ${this.simulation.progress.completedContracts} deliveries and unlocked a reusable evidence record. You can keep exploring and improving every result.</p>
           <div class="report-grid">
             <div><small>Species predictions</small><strong>${learning.correctPredictions} / ${learning.surveysCompleted}</strong><span>${accuracy}% accuracy</span></div>
-            <div><small>Route plans</small><strong>${learning.routePlans}</strong><span>distance–time decisions</span></div>
+            <div><small>Crossings started</small><strong>${learning.routePlans}</strong><span>contract catches secured</span></div>
             <div><small>Lake health</small><strong>${average}%</strong><span>${populationLabel(average)}</span></div>
             <div><small>Conservation</small><strong>${learning.conservationScore}</strong><span>population points restored</span></div>
           </div>
@@ -1088,11 +1051,10 @@ export class Game {
         if (this.simulation.activeContract
           && this.simulation.cargo.some((item) => item.species === this.simulation.activeContract?.species)
           && !this.simulation.routeChoice) {
-          this.setOverlay("routePlan");
-        } else {
-          undock(this.simulation);
-          this.setOverlay(null);
+          chooseRoute(this.simulation, "fast");
         }
+        undock(this.simulation);
+        this.setOverlay(null);
         break;
       case "accept-contract":
         if (acceptAvailableContract(this.simulation)) {
@@ -1102,17 +1064,6 @@ export class Game {
           this.showToast("Contract accepted. Survey the marked habitat first.");
         }
         break;
-      case "choose-route": {
-        const route = target.dataset.route as RouteChoice | undefined;
-        if ((route === "safe" || route === "fast") && chooseRoute(this.simulation, route)) {
-          this.syncSave();
-          if (this.simulation.dockedAt) undock(this.simulation);
-          this.setOverlay(null);
-          this.showToast(`${route === "fast" ? "Express" : "Survey"} route selected. Open water ahead.`);
-        }
-        break;
-      }
-      case "route-back": this.harborSection = "delivery"; this.setOverlay("harbor"); break;
       case "survey-choice": {
         const species = target.dataset.species as FishSpecies | undefined;
         if (!this.pendingSpot || !species || !(species in FISH) || this.surveyResult) break;

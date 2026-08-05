@@ -164,10 +164,8 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await page.getByRole("button", { name: "Use the evidence and drop the line" }).click();
   await expect(page.getByText(/Guide the hook toward the Reedfin/)).toBeVisible();
   await page.evaluate(() => window.__FSHING_TEST__?.catchSpecies("reedfin"));
-  await expect(page.getByRole("heading", { name: "Plan your crossing" })).toBeVisible();
-  await expect(page.getByText("time = distance ÷ speed")).toBeVisible();
-  await expect(page.getByText("Sunward Shoal → Gloam Ferry")).toBeVisible();
-  await page.getByRole("button", { name: "Choose survey route" }).click();
+  await expect(page.getByRole("heading", { name: "Plan your crossing" })).toHaveCount(0);
+  await expect(page.getByText("Applied mathematics")).toHaveCount(0);
   await expect(page.locator("#tutorial-callout")).toContainText("Gloam Ferry");
 
   await page.evaluate(() => window.__FSHING_TEST__?.sailToHarbor("gloam"));
@@ -306,22 +304,22 @@ test("how to play instructions advance one card at a time", async ({ page }) => 
   await page.getByRole("button", { name: "Play", exact: true }).click();
   await page.getByRole("button", { name: "How to play" }).click();
 
-  await expect(page.getByText("Step 1 of 6")).toBeVisible();
+  await expect(page.getByText("Step 1 of 5")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Take a job" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Previous" })).toBeDisabled();
 
   await page.getByRole("button", { name: "Next" }).click();
-  await expect(page.getByText("Step 2 of 6")).toBeVisible();
+  await expect(page.getByText("Step 2 of 5")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Follow the marker" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Take a job" })).toHaveCount(0);
 
   await page.getByRole("button", { name: "Previous" }).click();
-  await expect(page.getByText("Step 1 of 6")).toBeVisible();
+  await expect(page.getByText("Step 1 of 5")).toBeVisible();
 
-  for (let step = 1; step < 6; step += 1) {
+  for (let step = 1; step < 5; step += 1) {
     await page.getByRole("button", { name: "Next" }).click();
   }
-  await expect(page.getByText("Step 6 of 6")).toBeVisible();
+  await expect(page.getByText("Step 5 of 5")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Fish sustainably" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Next" })).toBeDisabled();
 

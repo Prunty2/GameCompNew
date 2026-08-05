@@ -769,7 +769,6 @@ input:focus-visible {
 }
 
 .contract-card p,
-.route-note,
 .empty-state {
   margin: 5px 0 12px;
   color: var(--cream-dim);
@@ -3696,7 +3695,6 @@ kbd {
 }
 
 .reading-grid small,
-.route-card dt,
 .result-comparison small,
 .report-grid small {
   color: var(--menu-fog);
@@ -3712,7 +3710,6 @@ kbd {
 
 .evidence-clue,
 .science-prompt,
-.route-note,
 .result-explanation,
 .reflection-prompt {
   color: #c4d1cb;
@@ -3824,78 +3821,6 @@ kbd {
 .result-panel > .primary-button {
   width: 100%;
   margin-top: 12px;
-}
-
-.route-equation {
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
-  margin: 18px 0 12px;
-  padding: 11px 14px;
-  border: 1px solid rgb(247 241 227 / 18%);
-  color: var(--menu-paper);
-  font-size: 0.74rem;
-}
-
-.route-equation span {
-  color: var(--menu-fog);
-}
-
-.route-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-.route-card {
-  padding: 19px;
-  border: 1px solid rgb(247 241 227 / 24%);
-  background: var(--menu-ink-raised);
-}
-
-.route-card.is-safe {
-  border-top: 4px solid #72b998;
-}
-
-.route-card.is-fast {
-  border-top: 4px solid #e5b865;
-}
-
-.route-kicker {
-  color: var(--menu-fog);
-  font-size: 0.58rem;
-  font-weight: 900;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.route-card h3 {
-  margin: 5px 0 12px;
-  font-family: var(--display-face);
-  font-size: 1.25rem;
-  text-transform: uppercase;
-}
-
-.route-card dl {
-  margin: 0 0 16px;
-}
-
-.route-card dl > div {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 8px 0;
-  border-top: 1px solid rgb(247 241 227 / 12%);
-}
-
-.route-card dd {
-  margin: 0;
-  font-size: 0.78rem;
-  font-weight: 900;
-}
-
-.route-card .primary-button {
-  width: 100%;
 }
 
 .result-panel {
@@ -4191,7 +4116,6 @@ kbd {
   .title-secondary-actions,
   .reading-grid,
   .science-choices,
-  .route-grid,
   .field-grid,
   .report-grid {
     grid-template-columns: 1fr;
