@@ -390,36 +390,6 @@ export class CanvasRenderer {
       highContrast: settings.highContrast,
       seed: 1.3,
     });
-
-    if (Math.abs(simulation.boat.speed) > 0.018) {
-      const wakeDirection = simulation.boat.speed > 0 ? -1 : 1;
-      context.save();
-      context.globalAlpha = 0.34 + speedRatio * 0.28;
-      context.strokeStyle = settings.highContrast ? "#ffffff" : "#d9ede3";
-      context.lineWidth = 1.5 + speedRatio;
-      for (let index = 0; index < 3; index += 1) {
-        const length = 26 + index * 18 + Math.abs(simulation.boat.speed) * 130;
-        context.beginPath();
-        context.moveTo(x + wakeDirection * boatWidth * 0.34, waterline + 4 + index * 6);
-        context.quadraticCurveTo(
-          x + wakeDirection * (boatWidth * 0.34 + length * 0.52),
-          waterline + 2 + index * 8,
-          x + wakeDirection * (boatWidth * 0.34 + length),
-          waterline + 7 + index * 10,
-        );
-        context.stroke();
-      }
-      if (speedRatio > 0.65 && !settings.reducedMotion) {
-        context.globalAlpha = (speedRatio - 0.55) * 0.72;
-        for (let index = 0; index < 4; index += 1) {
-          const sprayX = x - wakeDirection * boatWidth * 0.28 + Math.sin(simulation.elapsed * 17 + index) * 8;
-          const sprayY = waterline - 2 - ((simulation.elapsed * 52 + index * 13) % 22);
-          context.fillStyle = settings.highContrast ? "#ffffff" : "#d9ede3";
-          context.fillRect(sprayX, sprayY, 2 + speedRatio * 2, 2 + speedRatio * 2);
-        }
-      }
-      context.restore();
-    }
   }
 
   private drawObjective(simulation: Simulation, camera: SideScrollCamera, width: number, height: number): void {
