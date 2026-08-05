@@ -304,6 +304,13 @@ test("settings, keyboard pause, and local SDK fallback remain usable", async ({ 
   await expect(page.locator(".binding-row")).toHaveCount(6);
   await expect(page.locator(".binding-row").first()).toHaveCSS("border-radius", "12px");
   await expect(page.locator(".controls-overlay")).toHaveCSS("backdrop-filter", "blur(8px) saturate(0.78)");
+  await expect(page.getByRole("button", { name: "Rebind Hook up" })).toHaveText("W");
+  await expect(page.getByRole("button", { name: "Rebind Hook down" })).toHaveText("S");
+  await page.getByRole("button", { name: "Rebind Hook up" }).click();
+  await page.keyboard.press("ArrowUp");
+  await page.getByRole("button", { name: "Rebind Hook up" }).click();
+  await page.keyboard.press("KeyW");
+  await expect(page.getByRole("button", { name: "Rebind Hook up" })).toHaveText("W");
   await page.getByRole("button", { name: "Rebind Pause" }).click();
   await page.keyboard.press("KeyO");
   await expect(page.getByRole("button", { name: "Rebind Pause" })).toHaveText("O");

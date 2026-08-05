@@ -7,8 +7,8 @@ export type ControlBindings = Record<ControlAction, string>;
 export const DEFAULT_CONTROL_BINDINGS: ControlBindings = {
   left: "KeyA",
   right: "KeyD",
-  up: "ArrowUp",
-  down: "ArrowDown",
+  up: "KeyW",
+  down: "KeyS",
   action: "KeyE",
   pause: "KeyP",
 };
@@ -23,7 +23,6 @@ export const CONTROL_LABELS: Record<ControlAction, { label: string; detail: stri
 };
 
 export function isBindableCode(code: unknown): code is string {
-  if (code === "KeyW" || code === "KeyS") return false;
   return typeof code === "string" && (
     /^Key[A-Z]$/.test(code)
     || /^Digit[0-9]$/.test(code)

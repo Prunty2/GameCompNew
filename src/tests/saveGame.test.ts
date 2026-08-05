@@ -87,7 +87,7 @@ describe("versioned save data", () => {
     expect(migrated.progress.populations).toEqual(defaultPopulations());
   });
 
-  test("migrates removed boost and brake bindings without enabling W or S", () => {
+  test("migrates removed boost and brake bindings to the W and S hook defaults", () => {
     const baseline = defaultSave();
     const storage = memoryStorage(JSON.stringify({
       version: 5,
