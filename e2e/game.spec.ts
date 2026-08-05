@@ -17,7 +17,12 @@ test("main menu presents only centered play and settings actions", async ({ page
 
   const actions = page.locator(".title-actions button");
   await expect(actions).toHaveCount(2);
-  await expect(page.getByRole("button", { name: "Play", exact: true })).toBeVisible();
+  const playButton = page.getByRole("button", { name: "Play", exact: true });
+  await expect(playButton).toBeVisible();
+  await playButton.hover();
+  await expect(playButton).toHaveCSS("animation-name", "menu-button-hover-wobble");
+  await page.mouse.move(0, 0);
+  await page.waitForTimeout(250);
   await expect(page.getByRole("button", { name: "Settings" })).toBeVisible();
   await expect(page.getByRole("button", { name: "How to play" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Field guide" })).toHaveCount(0);
@@ -76,6 +81,8 @@ test("pause blurs the lake and slides the compact menu in and out", async ({ pag
   await expect(pauseScreen).toHaveCSS("animation-name", "pause-blur-in");
   await expect(pauseMenu).toHaveCSS("animation-name", "pause-menu-in");
   await expect(page.getByRole("button", { name: "Resume" })).toBeFocused();
+  await page.getByRole("button", { name: "Resume" }).hover();
+  await expect(page.getByRole("button", { name: "Resume" })).toHaveCSS("animation-name", "menu-button-hover-wobble");
   await expect(page.locator(".pause-actions button")).toHaveCount(5);
   await expectHorizontallyCentered(page, ".pause-menu");
 
@@ -109,6 +116,8 @@ test("settings reverses its title transition when closing", async ({ page }) => 
   const settingsScreen = page.locator(".settings-overlay");
   const settingsMenu = page.locator(".settings-menu");
   await expect(settingsScreen).toHaveClass(/is-title-entry/);
+  await page.getByRole("button", { name: "Done" }).hover();
+  await expect(page.getByRole("button", { name: "Done" })).toHaveCSS("animation-name", "menu-button-hover-wobble");
 
   await page.getByRole("button", { name: "Done" }).click();
   await expect(settingsScreen).toHaveClass(/is-closing-to-title/);
@@ -190,6 +199,7 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   const lockedCargoSlot = page.getByRole("button", { name: "Cargo slot 4 locked. Open Cargo upgrades" });
   await lockedCargoSlot.hover();
   await expect(lockedCargoSlot).toHaveCSS("border-top-color", "rgba(174, 194, 199, 0.62)");
+  await expect(lockedCargoSlot).toHaveCSS("animation-name", "menu-button-hover-wobble");
   await lockedCargoSlot.click();
   await expect(page.getByRole("button", { name: "Services", exact: true })).toBeFocused();
   await expect(page.getByRole("region", { name: "Dock services" })).toBeVisible();
@@ -274,7 +284,10 @@ test("settings, keyboard pause, and local SDK fallback remain usable", async ({ 
   await expect(page.getByRole("button", { name: "Rebind Pause" })).toHaveText("O");
   await page.getByRole("button", { name: "Done" }).click();
   await page.getByRole("button", { name: "Done" }).click();
-  await page.getByRole("button", { name: "Play", exact: true }).click();
+  const reducedMotionPlayButton = page.getByRole("button", { name: "Play", exact: true });
+  await reducedMotionPlayButton.hover();
+  await expect(reducedMotionPlayButton).toHaveCSS("animation-name", "none");
+  await reducedMotionPlayButton.click();
   await expect(page.locator("#scene-transition")).not.toHaveClass(/is-(covering|revealing)/);
   await expectHorizontallyCentered(page, ".harbor-panel");
   await page.getByRole("button", { name: "Accept contract" }).click();

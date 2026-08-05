@@ -1,4 +1,5 @@
 import wordmarkUrl from "../assets/fshing-wordmark.png";
+import padlockIconUrl from "../assets/padlock-icon.png";
 import uiButtonUrl from "../assets/ui-button.png";
 import uiIconsUrl from "../assets/ui-icons.png";
 import uiPanelUrl from "../assets/ui-panel.png";
@@ -488,7 +489,7 @@ export class Game {
       if (index < availableCargoSlots) {
         return `<div class="cargo-slot is-empty" aria-label="Cargo slot ${index + 1}: empty"><span class="cargo-slot-number">${slotNumber}</span><span class="ui-icon icon-cargo" aria-hidden="true"></span><small>Empty</small></div>`;
       }
-      return `<button class="cargo-slot is-locked" type="button" data-action="open-cargo-upgrades" aria-label="Cargo slot ${index + 1} locked. Open Cargo upgrades"><span class="cargo-slot-number">${slotNumber}</span><span class="cargo-padlock" aria-hidden="true"></span><small>Upgrade</small></button>`;
+      return `<button class="cargo-slot is-locked" type="button" data-action="open-cargo-upgrades" aria-label="Cargo slot ${index + 1} locked. Open Cargo upgrades"><span class="cargo-slot-number">${slotNumber}</span><img class="cargo-padlock" src="${padlockIconUrl}" alt="" aria-hidden="true" /><small>Upgrade</small></button>`;
     }).join("");
 
     const sectionHeading = activeSection === "cargo"

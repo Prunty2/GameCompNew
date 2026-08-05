@@ -75,6 +75,14 @@ The boat, harbor pier, fish atlas, and world atlas were requested on a uniform `
 - Prompt: “Use GPT Image 2.0. Regenerate the complete menu icon set. Preserve these pictogram meanings: cargo crate; fish freshness shown by fish plus leaf; damaged boat hull; clock/time; shell currency; objective compass arrow; engine; boat lamp; line depth shown by a fishing line descending through depth marks to a hook; stamped permit paper; repair wrench; speaker/sound; pause bars. Use restrained bold screen-printed game UI pictograms, warm cream shapes with sparse safety-orange details, crisp high-contrast silhouettes, matching the existing FSHING interface. Use one icon per cell, consistent apparent scale, generous equal safe padding, and no artwork crossing a cell boundary. Place the icons on a perfectly flat solid chroma-key background for removal. No navy or colored tiles, circles, medallions, labels, letters, numbers, borders, grid lines, frames, shadows, reflections, watermark, or checkerboard.”
 - Processing: The flat keys were removed to alpha, then the generated pictogram bounds were mechanically packed into the first thirteen cells of a 4 × 4 atlas with three transparent unused cells. Every alpha-bound centre is within 0.5 px of its 362 × 362 cell centre; the artwork itself was not redrawn during packing.
 
+### `padlock-icon.png`
+
+- Runtime role: locked Cargo inventory slots
+- Generated source size: 1254 × 1254; optimized runtime size: 256 × 256 with authored alpha
+- Generation mode: OpenAI built-in GPT Image 2.0 generation followed by local chroma-key removal and Lanczos downscaling
+- Prompt: “Use case: stylized-concept. Asset type: game UI padlock icon for the FSHING browser game. Create one original closed padlock pictogram for locked cargo inventory slots: front-facing and symmetrical, with a thick rounded shackle, compact rectangular lock body, and one small keyhole. Restrained bold hand-painted screen-print treatment; warm cream main shape, sparse safety-orange keyhole, very limited ink-navy contour detail; crisp silhouette readable at 30–50 pixels. Exactly one centered icon with generous equal padding on a perfectly flat solid #00FF00 chroma-key background. No navy tile, circle, medallion, border, frame, label, text, extra object, shadow, reflection, or watermark.”
+- Processing: The flat chroma key was removed with a soft matte and despill. The full generated source is retained as `output/imagegen/padlock-icon-source.png`; the runtime alpha PNG was reduced to 256 × 256 to avoid shipping unused resolution.
+
 ## Procedural audio assets
 
 FSHING bundles no external audio files. `src/services/feedbackService.ts` creates the implemented sound and haptic feedback at runtime:
