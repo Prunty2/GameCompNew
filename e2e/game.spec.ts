@@ -163,7 +163,9 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   const reward = page.getByLabel("Reward: 90 shells");
   await expect(reward).toBeVisible();
   await expect(reward).toContainText("Reward");
-  await expect(reward).toHaveCSS("background-color", "rgb(232, 164, 77)");
+  await expect(reward).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expect(reward).toHaveCSS("box-shadow", "none");
+  await expect(reward).toHaveCSS("border-top-width", "0px");
   await expect(reward.locator(".reward-label")).toHaveCSS("font-size", "10.24px");
   await expect(page.getByRole("button", { name: "Accept contract" })).toContainText("Begin first voyage");
   await expect(page.getByRole("heading", { name: "Your cargo" })).toHaveCount(0);
