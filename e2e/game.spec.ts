@@ -206,12 +206,12 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   const referenceIntroBounds = await page.locator(".harbor-intro").boundingBox();
   const referenceTabsBounds = await page.locator(".harbor-tabs").boundingBox();
   const referenceRowBounds = await page.locator(".service-card").first().boundingBox();
-  expect(referencePanelBounds?.width).toBe(990);
-  expect(referencePanelBounds?.height).toBe(892);
-  expect(referenceIntroBounds?.width).toBe(932);
-  expect(referenceIntroBounds?.height).toBe(103);
-  expect(referenceTabsBounds?.height).toBe(73);
-  expect(referenceRowBounds?.height).toBe(78);
+  expect(referencePanelBounds?.width).toBe(900);
+  expect(referencePanelBounds?.height).toBe(760);
+  expect(referenceIntroBounds?.width).toBe(850);
+  expect(referenceIntroBounds?.height).toBe(78);
+  expect(referenceTabsBounds?.height).toBe(63);
+  expect(referenceRowBounds?.height).toBe(66);
   const cargoService = page.locator(".service-card").filter({ hasText: "+1 cargo slot" });
   await expect(cargoService.getByRole("button", { name: "Upgrade Cargo for 60 shells" })).toContainText("60");
   await expect(cargoService.locator(".upgrade-meter")).toHaveAttribute("aria-label", "Cargo level 1 of 6");

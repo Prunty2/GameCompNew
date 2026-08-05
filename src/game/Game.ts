@@ -483,7 +483,7 @@ export class Game {
     const sectionHeading = activeSection === "cargo"
       ? { eyebrow: "Cargo hold", title: "Manage your catch", body: "" }
       : activeSection === "services"
-        ? { eyebrow: "Dock services", title: "Improve your boat", body: "" }
+        ? { eyebrow: "", title: "Improve your boat", body: "" }
         : {
             eyebrow: isFirstJobOffer ? "Welcome aboard" : "Current task",
             title: isFirstJobOffer ? "Read the lake. Deliver with care." : available ? "Choose the posted delivery" : deliverable ? "Hand in your catch" : contract ? "Continue your delivery" : "Let protected stocks recover",
@@ -522,7 +522,7 @@ export class Game {
             <span class="shell-balance" aria-label="${this.simulation.progress.money} shells"><span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${this.simulation.progress.money}</strong></span>
           </header>
           <div class="harbor-intro ${isFirstJobOffer ? "is-first-step" : ""}">
-            <div><span class="panel-eyebrow">${sectionHeading.eyebrow}</span><h3>${sectionHeading.title}</h3></div>
+            <div>${sectionHeading.eyebrow ? `<span class="panel-eyebrow">${sectionHeading.eyebrow}</span>` : ""}<h3>${sectionHeading.title}</h3></div>
             ${isFirstJobOffer ? `<div class="first-voyage-primer" aria-label="Your voyage: survey, catch, deliver"><span><i class="ui-icon icon-objective" aria-hidden="true"></i><strong>Survey</strong></span><b aria-hidden="true">→</b><span><i class="ui-icon icon-freshness" aria-hidden="true"></i><strong>Catch</strong></span><b aria-hidden="true">→</b><span><i class="ui-icon icon-cargo" aria-hidden="true"></i><strong>Deliver</strong></span></div>` : ""}
             ${sectionHeading.body ? `<p>${sectionHeading.body}</p>` : ""}
           </div>

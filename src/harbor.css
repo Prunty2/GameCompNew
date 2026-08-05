@@ -1,4 +1,4 @@
-/* Harbor layout follows the approved 1672 × 941 dock-services mockup. */
+/* Compact harbor layout keeps every dock service visible without scrolling. */
 .harbor-screen.is-first-voyage,
 .harbor-screen.is-first-voyage.is-expanded-harbor {
   box-sizing: border-box;
@@ -14,12 +14,12 @@
 .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-panel,
 .harbor-screen.is-first-voyage.is-first-job-offer .harbor-panel {
   box-sizing: border-box;
-  width: min(990px, calc(100vw - 32px));
-  max-width: 990px;
-  height: min(892px, calc(100dvh - 32px));
+  width: min(900px, calc(100vw - 32px));
+  max-width: 900px;
+  height: min(760px, calc(100dvh - 32px));
   max-height: calc(100dvh - 32px);
   margin: auto;
-  padding: 26px 28px 24px;
+  padding: 21px 24px 20px;
   border: 1px solid rgb(145 169 176 / 34%);
   border-radius: 20px;
   overflow: hidden;
@@ -36,7 +36,7 @@
 
 .harbor-screen.is-first-voyage .harbor-panel .harbor-header {
   display: flex;
-  min-height: 62px;
+  min-height: 56px;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
@@ -51,21 +51,21 @@
   display: flex;
   min-width: 0;
   align-items: center;
-  gap: 27px;
+  gap: 22px;
 }
 
 .harbor-screen.is-first-voyage .harbor-wordmark,
 .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-wordmark {
   box-sizing: border-box;
-  width: 124px;
-  margin: -28px 0;
+  width: 112px;
+  margin: -25px 0;
   flex: 0 0 auto;
   filter: drop-shadow(0 3px 6px rgb(1 10 18 / 34%));
 }
 
 .harbor-title-divider {
   width: 1px;
-  height: 62px;
+  height: 54px;
   flex: 0 0 auto;
   background: rgb(247 241 227 / 38%);
 }
@@ -93,8 +93,8 @@
 .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-panel .shell-balance {
   display: inline-flex;
   box-sizing: border-box;
-  min-width: 128px;
-  min-height: 62px;
+  min-width: 116px;
+  min-height: 54px;
   align-items: center;
   justify-content: center;
   gap: 12px;
@@ -122,9 +122,9 @@
   box-sizing: border-box;
   width: 100%;
   max-width: none;
-  min-height: 103px;
-  margin: 20px 0 12px;
-  padding: 27px 26px 22px;
+  min-height: 78px;
+  margin: 14px 0 10px;
+  padding: 18px 22px;
   border: 1px solid rgb(145 169 176 / 31%);
   border-radius: 16px;
   background: rgb(247 241 227 / 4%);
@@ -148,6 +148,18 @@
   text-shadow: none;
 }
 
+.harbor-screen.is-first-voyage.is-harbor-services .harbor-intro {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-services .harbor-intro h3 {
+  margin: 0;
+  text-align: center;
+}
+
 .harbor-screen.is-first-voyage .harbor-intro.is-first-step {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -159,9 +171,9 @@
   display: grid;
   box-sizing: border-box;
   width: 100%;
-  min-height: 73px;
+  min-height: 62px;
   grid-template-columns: repeat(var(--harbor-tab-count, 3), minmax(0, 1fr));
-  gap: 12px;
+  gap: 10px;
   margin: 0 0 8px;
   padding: 0 0 8px;
   border-bottom: 1px solid rgb(145 169 176 / 29%);
@@ -173,11 +185,11 @@
 
 .harbor-screen.is-first-voyage .harbor-tab {
   display: flex;
-  min-height: 64px;
+  min-height: 54px;
   align-items: center;
   justify-content: center;
-  gap: 14px;
-  padding: 8px 18px;
+  gap: 11px;
+  padding: 6px 15px;
   border: 1px solid rgb(145 169 176 / 38%);
   border-radius: 15px;
   background: rgb(5 24 33 / 82%);
@@ -192,8 +204,8 @@
 }
 
 .harbor-screen.is-first-voyage .harbor-tab .ui-icon {
-  width: 43px;
-  height: 43px;
+  width: 38px;
+  height: 38px;
   border: 1px solid rgb(145 169 176 / 27%);
   border-radius: 10px;
   background-color: rgb(4 20 29 / 92%);
@@ -246,19 +258,19 @@
   display: grid;
   width: 100%;
   grid-template-columns: 1fr;
-  gap: 0;
+  gap: 8px;
   margin: 0;
 }
 
 .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .service-card {
   display: grid;
   box-sizing: border-box;
-  min-height: 78px;
-  grid-template-columns: 68px minmax(220px, 1fr) 200px 108px;
+  min-height: 66px;
+  grid-template-columns: 56px minmax(190px, 1fr) 170px 98px;
   grid-template-rows: 1fr;
   align-items: center;
-  gap: 24px;
-  padding: 8px 23px;
+  gap: 18px;
+  padding: 7px 16px;
   border: 1px solid rgb(145 169 176 / 24%);
   border-radius: 14px;
   background: rgb(247 241 227 / 2.5%);
@@ -266,12 +278,12 @@
 }
 
 .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .service-card + .service-card {
-  margin-top: -1px;
+  margin-top: 0;
 }
 
 .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .service-card > .ui-icon {
-  width: 68px;
-  height: 58px;
+  width: 56px;
+  height: 50px;
   border: 1px solid rgb(145 169 176 / 30%);
   border-radius: 10px;
   background-color: #071b29;
@@ -295,7 +307,7 @@
 .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .service-card p {
   display: block;
   min-height: 0;
-  margin: 6px 0 0;
+  margin: 4px 0 0;
   color: var(--menu-fog);
   font-size: 1rem;
   line-height: 1;
@@ -304,8 +316,8 @@
 .upgrade-meter {
   display: grid;
   box-sizing: border-box;
-  width: 200px;
-  height: 23px;
+  width: 170px;
+  height: 21px;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 4px;
   padding: 4px;
@@ -313,7 +325,7 @@
   border-radius: 10px;
   background: rgb(1 13 20 / 62%);
   box-shadow: inset 0 1px 3px rgb(1 9 14 / 70%);
-  transform: translateX(-40px);
+  transform: translateX(-20px);
 }
 
 .upgrade-meter i {
@@ -333,9 +345,9 @@
 .harbor-screen.is-first-voyage .service-purchase {
   display: inline-flex;
   box-sizing: border-box;
-  width: 108px;
-  min-width: 108px;
-  min-height: 54px;
+  width: 98px;
+  min-width: 98px;
+  min-height: 48px;
   align-items: center;
   justify-content: center;
   gap: 10px;
@@ -376,12 +388,12 @@
   display: grid;
   box-sizing: border-box;
   width: 100%;
-  min-height: 82px;
+  min-height: 68px;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: end;
-  gap: 18px;
+  gap: 14px;
   margin: auto 0 0;
-  padding: 16px 0 0;
+  padding: 12px 0 0;
   border: 0;
   border-top: 1px solid rgb(145 169 176 / 29%);
 }
@@ -391,8 +403,8 @@
 .harbor-screen.is-first-voyage.is-expanded-harbor .panel-actions > div {
   display: grid;
   width: fit-content;
-  grid-template-columns: repeat(2, 151px);
-  gap: 18px;
+  grid-template-columns: repeat(2, 138px);
+  gap: 14px;
 }
 
 .harbor-screen.is-first-voyage .harbor-panel .harbor-utility-button,
@@ -401,7 +413,7 @@
 .harbor-screen.is-first-voyage.is-expanded-harbor .leave-button {
   display: flex;
   box-sizing: border-box;
-  min-height: 65px;
+  min-height: 54px;
   align-items: center;
   justify-content: center;
   gap: 14px;
@@ -414,13 +426,13 @@
 }
 
 .harbor-screen.is-first-voyage .harbor-panel .harbor-utility-button {
-  width: 151px;
+  width: 138px;
 }
 
 .harbor-screen.is-first-voyage .harbor-utility-button .ui-icon,
 .harbor-screen.is-first-voyage .leave-button .ui-icon {
-  width: 42px;
-  height: 42px;
+  width: 36px;
+  height: 36px;
 }
 
 .harbor-screen.is-first-voyage .harbor-utility-button strong,
@@ -439,8 +451,8 @@
 
 .harbor-screen.is-first-voyage .leave-button,
 .harbor-screen.is-first-voyage.is-expanded-harbor .leave-button {
-  width: 315px;
-  min-width: 315px;
+  width: 286px;
+  min-width: 286px;
 }
 
 .harbor-screen.is-first-voyage .harbor-panel .harbor-utility-button:hover,
