@@ -11,6 +11,7 @@ import {
   REGIONS,
   harborById,
   spotById,
+  upgradeTierCap,
   type FishSpecies,
   type HarborId,
   type SpotId,
@@ -443,7 +444,7 @@ export class Game {
       && this.simulation.cargo.some((item) => item.species === contract.species && item.freshness >= contract.minimumFreshness);
     const isFirstJobOffer = this.simulation.progress.completedContracts === 0 && available?.id === "morning-order";
     const showCargo = !isFirstJobOffer;
-    const showServices = this.simulation.progress.completedContracts > 0;
+    const showServices = !isFirstJobOffer;
     const availableSections: HarborSection[] = ["delivery", ...(showCargo ? ["cargo" as const] : []), ...(showServices ? ["services" as const] : [])];
     const activeSection: HarborSection = availableSections.includes(this.harborSection) ? this.harborSection : "delivery";
     const contractMarkup = available
@@ -476,9 +477,18 @@ export class Game {
           </div>`
         : `<div class="contract-card empty-job"><span class="card-kicker">Ecological recovery</span><h3>No catch contract is safe yet</h3><p>Every unlocked contract stock is protected. Each return to harbor restores the lake; leave and dock again to continue recovery.</p></div>`;
 
-    const cargoMarkup = this.simulation.cargo.length === 0
-      ? `<p class="empty-state">The hold is empty.</p>`
-      : this.simulation.cargo.map((item, index) => `<div class="cargo-row"><span>${FISH[item.species].name}<small>${Math.ceil(item.freshness)}% fresh · ${populationLabel(this.simulation.progress.populations[item.species])} population</small></span><button class="small-button" type="button" data-action="release" data-index="${index}">Release</button></div>`).join("");
+    const availableCargoSlots = cargoCapacity(this.simulation);
+    const cargoMarkup = Array.from({ length: BALANCE.maxCargoSlots }, (_, index) => {
+      const item = this.simulation.cargo[index];
+      const slotNumber = String(index + 1).padStart(2, "0");
+      if (item) {
+        return `<article class="cargo-slot is-occupied" aria-label="Cargo slot ${index + 1}: ${FISH[item.species].name}, ${Math.ceil(item.freshness)}% fresh"><span class="cargo-slot-number">${slotNumber}</span><span class="ui-icon icon-freshness cargo-fish-icon" aria-hidden="true"></span><div class="cargo-slot-copy"><strong>${FISH[item.species].name}</strong><small>${Math.ceil(item.freshness)}% fresh</small></div><button class="cargo-release" type="button" data-action="release" data-index="${index}" aria-label="Release ${FISH[item.species].name}">Release</button></article>`;
+      }
+      if (index < availableCargoSlots) {
+        return `<div class="cargo-slot is-empty" aria-label="Cargo slot ${index + 1}: empty"><span class="cargo-slot-number">${slotNumber}</span><span class="ui-icon icon-cargo" aria-hidden="true"></span><small>Empty</small></div>`;
+      }
+      return `<button class="cargo-slot is-locked" type="button" data-action="open-cargo-upgrades" aria-label="Cargo slot ${index + 1} locked. Open Cargo upgrades"><span class="cargo-slot-number">${slotNumber}</span><span class="cargo-padlock" aria-hidden="true"></span><small>Upgrade</small></button>`;
+    }).join("");
 
     const sectionHeading = activeSection === "cargo"
       ? { eyebrow: "Cargo hold", title: "Manage your catch", body: "" }
@@ -498,9 +508,8 @@ export class Game {
 
     const activeContent = activeSection === "cargo"
       ? `<aside class="cargo-section" aria-labelledby="cargo-heading">
-          <div class="section-heading"><h3 id="cargo-heading" class="section-title">Your cargo</h3><span>${this.simulation.cargo.length} / ${cargoCapacity(this.simulation)} spaces</span></div>
-          <div class="cargo-list">${cargoMarkup}</div>
-          <p class="cargo-help">Fish lose freshness while you travel. Release an unneeded catch to help its population recover.</p>
+          <div class="cargo-inventory-heading"><h3 id="cargo-heading">Fish inventory</h3><span>${this.simulation.cargo.length} carried · ${availableCargoSlots} unlocked</span></div>
+          <div class="cargo-slot-grid" aria-label="Cargo inventory">${cargoMarkup}</div>
         </aside>`
       : activeSection === "services"
         ? `<section class="services" aria-label="Dock services">
@@ -535,19 +544,20 @@ export class Game {
 
   private upgradeCard(upgrade: UpgradeId, title: string, detail: string): string {
     const tier = this.simulation.progress.upgrades[upgrade];
-    const maximum = tier >= BALANCE.maxUpgradeTier;
+    const tierCap = upgradeTierCap(upgrade);
+    const maximum = tier >= tierCap;
     const cost = upgradeCost(upgrade, tier);
-    const displayLevel = Math.min(tier + 1, BALANCE.maxUpgradeTier);
-    return `<article class="service-card"><span class="ui-icon icon-${upgrade}" aria-hidden="true"></span><div class="service-copy"><h4>${title}</h4><p>${maximum ? "Maximum tier" : detail}</p></div>${this.upgradeMeter(title, displayLevel)}<button class="service-purchase" type="button" data-action="buy-upgrade" data-upgrade="${upgrade}" aria-label="${maximum ? `${title} at maximum tier` : `Upgrade ${title} for ${cost} shells`}" ${maximum || this.simulation.progress.money < cost ? "disabled" : ""}>${maximum ? "<strong>MAX</strong>" : `<span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${cost}</strong>`}</button></article>`;
+    const displayLevel = Math.min(tier + 1, tierCap);
+    return `<article class="service-card"><span class="ui-icon icon-${upgrade}" aria-hidden="true"></span><div class="service-copy"><h4>${title}</h4><p>${maximum ? "Maximum tier" : detail}</p></div>${this.upgradeMeter(title, displayLevel, tierCap)}<button class="service-purchase" type="button" data-action="buy-upgrade" data-upgrade="${upgrade}" aria-label="${maximum ? `${title} at maximum tier` : `Upgrade ${title} for ${cost} shells`}" ${maximum || this.simulation.progress.money < cost ? "disabled" : ""}>${maximum ? "<strong>MAX</strong>" : `<span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${cost}</strong>`}</button></article>`;
   }
 
   private permitCard(): string {
     const unlocked = this.simulation.progress.outerUnlocked;
-    return `<article class="service-card"><span class="ui-icon icon-permit" aria-hidden="true"></span><div class="service-copy"><h4>Outer permit</h4><p>Outer water access</p></div>${this.upgradeMeter("Outer permit", unlocked ? BALANCE.maxUpgradeTier : 0)}<button class="service-purchase" type="button" data-action="buy-permit" aria-label="${unlocked ? "Outer permit owned" : `Buy Outer permit for ${BALANCE.permitCost} shells`}" ${unlocked || this.simulation.progress.money < BALANCE.permitCost ? "disabled" : ""}>${unlocked ? "<strong>OWNED</strong>" : `<span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${BALANCE.permitCost}</strong>`}</button></article>`;
+    return `<article class="service-card"><span class="ui-icon icon-permit" aria-hidden="true"></span><div class="service-copy"><h4>Outer permit</h4><p>Outer water access</p></div>${this.upgradeMeter("Outer permit", unlocked ? BALANCE.maxUpgradeTier : 0, BALANCE.maxUpgradeTier)}<button class="service-purchase" type="button" data-action="buy-permit" aria-label="${unlocked ? "Outer permit owned" : `Buy Outer permit for ${BALANCE.permitCost} shells`}" ${unlocked || this.simulation.progress.money < BALANCE.permitCost ? "disabled" : ""}>${unlocked ? "<strong>OWNED</strong>" : `<span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${BALANCE.permitCost}</strong>`}</button></article>`;
   }
 
-  private upgradeMeter(label: string, level: number): string {
-    return `<span class="upgrade-meter" aria-label="${label} level ${level} of ${BALANCE.maxUpgradeTier}">${Array.from({ length: BALANCE.maxUpgradeTier }, (_, index) => `<i class="${index < level ? "is-filled" : ""}" aria-hidden="true"></i>`).join("")}</span>`;
+  private upgradeMeter(label: string, level: number, tierCap: number): string {
+    return `<span class="upgrade-meter" aria-label="${label} level ${level} of ${tierCap}" style="--upgrade-tier-count: ${tierCap}">${Array.from({ length: tierCap }, (_, index) => `<i class="${index < level ? "is-filled" : ""}" aria-hidden="true"></i>`).join("")}</span>`;
   }
 
   private pauseScreen(): string {
@@ -1055,6 +1065,11 @@ export class Game {
         requestAnimationFrame(() => this.uiRoot.querySelector<HTMLButtonElement>(`[data-harbor-section="${section}"]`)?.focus({ preventScroll: true }));
         break;
       }
+      case "open-cargo-upgrades":
+        this.harborSection = "services";
+        this.renderOverlay();
+        requestAnimationFrame(() => this.uiRoot.querySelector<HTMLButtonElement>('[data-harbor-section="services"]')?.focus({ preventScroll: true }));
+        break;
       case "undock":
         if (this.simulation.activeContract
           && this.simulation.cargo.some((item) => item.species === this.simulation.activeContract?.species)

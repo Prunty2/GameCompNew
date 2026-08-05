@@ -38,7 +38,7 @@ describe("versioned save data", () => {
       version: 5,
       progress: {
         money: 999_999,
-        upgrades: { cargo: 6, engine: 0, lamp: 1, line: 0 },
+        upgrades: { cargo: 7, engine: 0, lamp: 1, line: 0 },
         outerUnlocked: false,
         completedContracts: 0,
         populations: defaultPopulations(),

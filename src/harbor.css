@@ -349,6 +349,187 @@
   white-space: normal;
 }
 
+.harbor-screen.is-first-voyage.is-harbor-cargo.is-expanded-harbor .harbor-content .cargo-section {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.cargo-inventory-heading {
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 4px;
+}
+
+.cargo-inventory-heading h3 {
+  margin: 0;
+  color: var(--menu-paper);
+  font-size: 1rem;
+}
+
+.cargo-inventory-heading span {
+  color: var(--menu-fog);
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.cargo-slot-grid {
+  display: grid;
+  min-height: 0;
+  flex: 1;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(130px, 1fr));
+  gap: 10px;
+}
+
+.cargo-slot {
+  position: relative;
+  display: flex;
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 16px 12px 12px;
+  border: 1px solid rgb(145 169 176 / 34%);
+  border-radius: 13px;
+  background: rgb(247 241 227 / 3%);
+  color: var(--menu-paper);
+  font-family: inherit;
+  text-align: center;
+  box-shadow: inset 0 1px 0 rgb(247 241 227 / 3%);
+}
+
+.cargo-slot-number {
+  position: absolute;
+  top: 8px;
+  left: 10px;
+  color: rgb(174 194 199 / 56%);
+  font-size: 0.58rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.cargo-slot > .ui-icon {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 auto;
+  border: 1px solid rgb(145 169 176 / 24%);
+  border-radius: 10px;
+  background-color: rgb(4 20 29 / 72%);
+}
+
+.cargo-slot small {
+  color: var(--menu-fog);
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.cargo-slot.is-empty {
+  border-style: dashed;
+  background: rgb(247 241 227 / 1.5%);
+}
+
+.cargo-slot.is-empty > .ui-icon {
+  opacity: 0.42;
+}
+
+.cargo-slot.is-occupied {
+  border-color: rgb(240 166 72 / 54%);
+  background: linear-gradient(180deg, rgb(240 166 72 / 8%), rgb(247 241 227 / 3%));
+}
+
+.cargo-slot-copy {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.cargo-slot-copy strong {
+  overflow: hidden;
+  font-size: 0.88rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cargo-slot-copy small {
+  color: #f0a648;
+}
+
+.cargo-release {
+  min-height: 27px;
+  padding: 4px 10px;
+  border: 1px solid rgb(145 169 176 / 38%);
+  border-radius: 8px;
+  background: rgb(4 20 29 / 78%);
+  color: var(--menu-paper);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.66rem;
+  font-weight: 800;
+}
+
+.cargo-release:hover,
+.cargo-release:focus-visible {
+  border-color: var(--menu-signal);
+  outline: none;
+}
+
+.cargo-slot.is-locked {
+  border-style: dashed;
+  background: rgb(1 14 21 / 34%);
+  cursor: pointer;
+}
+
+.cargo-slot.is-locked:hover,
+.cargo-slot.is-locked:focus-visible {
+  border-color: var(--menu-signal);
+  background: rgb(240 166 72 / 8%);
+  outline: 2px solid var(--menu-signal);
+  outline-offset: 2px;
+}
+
+.cargo-padlock {
+  position: relative;
+  width: 34px;
+  height: 27px;
+  margin-top: 12px;
+  border: 2px solid rgb(174 194 199 / 58%);
+  border-radius: 6px;
+  background: rgb(5 24 33 / 82%);
+}
+
+.cargo-padlock::before {
+  position: absolute;
+  bottom: 21px;
+  left: 7px;
+  width: 16px;
+  height: 16px;
+  border: 3px solid rgb(174 194 199 / 58%);
+  border-bottom: 0;
+  border-radius: 10px 10px 0 0;
+  content: "";
+}
+
+.cargo-padlock::after {
+  position: absolute;
+  top: 8px;
+  left: 14px;
+  width: 4px;
+  height: 8px;
+  border-radius: 3px;
+  background: var(--menu-signal);
+  content: "";
+}
+
 .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .services {
   padding: 0 4px;
   border: 0;
@@ -420,7 +601,7 @@
   box-sizing: border-box;
   width: 170px;
   height: 21px;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--upgrade-tier-count, 6), minmax(0, 1fr));
   gap: 4px;
   padding: 4px;
   border: 1px solid rgb(2 12 18 / 72%);
@@ -796,6 +977,78 @@
   .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-route strong {
     margin-top: 3px;
     font-size: 0.8rem;
+  }
+
+  .cargo-inventory-heading {
+    min-height: 34px;
+    gap: 8px;
+    padding: 0 2px;
+  }
+
+  .cargo-inventory-heading h3 {
+    font-size: 0.82rem;
+  }
+
+  .cargo-inventory-heading span {
+    font-size: 0.58rem;
+  }
+
+  .cargo-slot-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(5, minmax(76px, 1fr));
+    gap: 6px;
+  }
+
+  .cargo-slot {
+    min-height: 76px;
+    flex-direction: row;
+    gap: 7px;
+    padding: 12px 7px 7px;
+  }
+
+  .cargo-slot-number {
+    top: 4px;
+    left: 6px;
+    font-size: 0.48rem;
+  }
+
+  .cargo-slot > .ui-icon {
+    width: 35px;
+    height: 35px;
+  }
+
+  .cargo-slot.is-empty,
+  .cargo-slot.is-locked {
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .cargo-slot small,
+  .cargo-release {
+    font-size: 0.55rem;
+  }
+
+  .cargo-slot-copy strong {
+    max-width: 66px;
+    font-size: 0.7rem;
+  }
+
+  .cargo-padlock {
+    width: 25px;
+    height: 20px;
+    margin-top: 8px;
+  }
+
+  .cargo-padlock::before {
+    bottom: 16px;
+    left: 5px;
+    width: 11px;
+    height: 12px;
+  }
+
+  .cargo-padlock::after {
+    top: 5px;
+    left: 10px;
   }
 
   .harbor-screen.is-first-voyage .harbor-tab {

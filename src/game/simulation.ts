@@ -8,6 +8,7 @@ import {
   SURFACE_Y,
   harborById,
   spotById,
+  upgradeTierCap,
   type FishSpecies,
   type HarborId,
   type SpotId,
@@ -149,7 +150,7 @@ export function createSimulation(seed = 1, progress?: Partial<ProgressState>): S
   const resolvedProgress: ProgressState = {
     money: clampInteger(progress?.money, 0, 999_999),
     upgrades: {
-      cargo: clampInteger(progress?.upgrades?.cargo, 0, BALANCE.maxUpgradeTier),
+      cargo: clampInteger(progress?.upgrades?.cargo, 0, upgradeTierCap("cargo")),
       engine: clampInteger(progress?.upgrades?.engine, 0, BALANCE.maxUpgradeTier),
       lamp: clampInteger(progress?.upgrades?.lamp, 0, BALANCE.maxUpgradeTier),
       line: clampInteger(progress?.upgrades?.line, 0, BALANCE.maxUpgradeTier),
@@ -442,7 +443,7 @@ export function undock(simulation: Simulation): boolean {
 export function buyUpgrade(simulation: Simulation, upgrade: UpgradeId): boolean {
   const tier = simulation.progress.upgrades[upgrade];
   const cost = upgradeCost(upgrade, tier);
-  if (tier >= BALANCE.maxUpgradeTier || simulation.progress.money < cost || !simulation.dockedAt) return false;
+  if (tier >= upgradeTierCap(upgrade) || simulation.progress.money < cost || !simulation.dockedAt) return false;
   simulation.progress.money -= cost;
   simulation.progress.upgrades[upgrade] += 1;
   simulation.events.push({ type: "upgrade", upgrade });
@@ -493,7 +494,7 @@ export function learningAccuracy(simulation: Simulation): number {
 }
 
 export function cargoCapacity(simulation: Simulation): number {
-  return 1 + simulation.progress.upgrades.cargo;
+  return Math.min(BALANCE.maxCargoSlots, BALANCE.baseCargoSlots + simulation.progress.upgrades.cargo);
 }
 
 export function maxFishingDepth(simulation: Simulation): number {

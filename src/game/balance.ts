@@ -76,6 +76,9 @@ export const BALANCE = {
   upgradeCosts: { cargo: 60, engine: 70, lamp: 70, line: 55 },
   permitCost: 85,
   maxUpgradeTier: 6,
+  maxCargoTier: 7,
+  baseCargoSlots: 3,
+  maxCargoSlots: 10,
   repairDamagePerShell: 2,
 } as const;
 
@@ -148,4 +151,8 @@ export function regionAt(x: number): RegionDefinition {
 
 export function boatClassAt(tier: number): string {
   return BOAT_CLASSES[Math.max(0, Math.min(BOAT_CLASSES.length - 1, Math.floor(tier)))] ?? BOAT_CLASSES[0];
+}
+
+export function upgradeTierCap(upgrade: UpgradeId): number {
+  return upgrade === "cargo" ? BALANCE.maxCargoTier : BALANCE.maxUpgradeTier;
 }

@@ -1,4 +1,4 @@
-import { BALANCE, FISH, type FishSpecies, type UpgradeId } from "../game/balance";
+import { BALANCE, FISH, upgradeTierCap, type FishSpecies, type UpgradeId } from "../game/balance";
 import {
   CONTROL_ACTIONS,
   DEFAULT_CONTROL_BINDINGS,
@@ -125,7 +125,7 @@ function readControlBindings(value: unknown): ControlBindings {
 
 function readUpgrades(candidate: Record<string, unknown>): Record<UpgradeId, number> {
   return {
-    cargo: finiteInteger(candidate.cargo, 0, BALANCE.maxUpgradeTier),
+    cargo: finiteInteger(candidate.cargo, 0, upgradeTierCap("cargo")),
     engine: finiteInteger(candidate.engine, 0, BALANCE.maxUpgradeTier),
     lamp: finiteInteger(candidate.lamp, 0, BALANCE.maxUpgradeTier),
     line: finiteInteger(candidate.line, 0, BALANCE.maxUpgradeTier),
