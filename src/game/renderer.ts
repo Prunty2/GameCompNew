@@ -16,7 +16,7 @@ import {
 } from "./balance";
 import { createSideScrollCamera, worldToScreenX, type SideScrollCamera } from "./camera";
 import { calculatePanoramaLayout } from "./panorama";
-import { fogIntensity, isNight, maxFishingDepth, objective, type Simulation } from "./simulation";
+import { isNight, maxFishingDepth, objective, type Simulation } from "./simulation";
 import { populationLabel } from "./stem";
 import { captureSurfaceLayer, drawWaterContact } from "./surfaceEffects";
 
@@ -428,20 +428,6 @@ export class CanvasRenderer {
     height: number,
     settings: RenderSettings,
   ): void {
-    const fog = fogIntensity(simulation);
-    if (fog > 0.05) {
-      this.context.save();
-      this.context.globalAlpha = fog * (settings.highContrast ? 0.18 : 0.34);
-      const drift = settings.reducedMotion ? 0 : Math.sin(simulation.elapsed * 0.12) * width * 0.08;
-      this.context.filter = "blur(22px)";
-      this.context.fillStyle = settings.highContrast ? "#f7f1e3" : "#cbd7cf";
-      this.context.beginPath();
-      this.context.ellipse(width * 0.22 + drift, height * 0.46, width * 0.3, height * 0.045, -0.02, 0, Math.PI * 2);
-      this.context.ellipse(width * 0.76 + drift, height * 0.61, width * 0.28, height * 0.052, 0.03, 0, Math.PI * 2);
-      this.context.fill();
-      this.context.restore();
-    }
-
     if (!isNight(simulation)) return;
     const boatX = worldToScreenX(simulation.boat.x, camera, width);
     const lampTier = simulation.progress.upgrades.lamp;
