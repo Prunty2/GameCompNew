@@ -208,7 +208,8 @@ export class CanvasRenderer {
     const pierWidth = clamp(this.canvas.clientHeight * 0.56, 320, 520);
     const pierHeight = pierWidth * (art.pier.naturalHeight / art.pier.naturalWidth);
     const deckTop = waterline - 32;
-    const drawY = deckTop - pierHeight * 0.43;
+    const pierLift = clamp(pierHeight * 0.04, 4, 9);
+    const drawY = deckTop - pierHeight * 0.43 - pierLift;
     const outboardOverlap = 24;
     const pierCenter = fromRightShore
       ? x - outboardOverlap + pierWidth / 2
@@ -369,9 +370,10 @@ export class CanvasRenderer {
     const speedRatio = Math.min(1, Math.abs(simulation.boat.speed) / BALANCE.maxSurfaceSpeed);
     const bob = settings.reducedMotion ? 0 : Math.sin(simulation.elapsed * (2 + speedRatio)) * (1.1 + speedRatio * 0.8);
     const tilt = settings.reducedMotion ? 0 : clamp(simulation.boat.speed * 0.16, -0.02, 0.02);
+    const boatLift = clamp(boatHeight * 0.04, 4, 9);
 
     context.save();
-    context.translate(x, waterline + bob);
+    context.translate(x, waterline + bob - boatLift);
     context.scale(simulation.boat.facing, 1);
     context.rotate(tilt);
     context.drawImage(art.boat, -boatWidth / 2, -boatHeight * 0.86, boatWidth, boatHeight);
