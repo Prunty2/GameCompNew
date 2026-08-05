@@ -60,6 +60,7 @@ Prefer adding a focused module over making several people edit a shared coordina
 - Get agreement before adding, removing, or upgrading a dependency. Commit `package.json` and `package-lock.json` together.
 - Coordinate asset names, dimensions, format, ownership, and compression before production. Update `Docs/Asset-Manifest.md` with runtime asset changes.
 - Treat save schema changes as migrations. Never reuse a persisted field with a different meaning; version, validate, clamp, migrate, and test old or malformed data.
+- With every game version change, update the main-menu build label and its browser-test assertion so they show the new version and the current branch's pull request number in the format `vX.Y.Z (PR #N)`.
 - Keep balance values centralized and document their units and intentional changes in `Docs/Game-Brief.md`.
 
 ### Synchronizing and resolving conflicts

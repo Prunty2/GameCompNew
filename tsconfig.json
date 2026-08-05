@@ -6,6 +6,7 @@
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "skipLibCheck": true,
     "moduleResolution": "Bundler",
+    "resolveJsonModule": true,
     "verbatimModuleSyntax": true,
     "noEmit": true,
     "strict": true,
@@ -16,4 +17,3 @@
   },
   "include": ["src", "vite.config.ts", "playwright.config.ts"]
 }
-

@@ -256,6 +256,8 @@ Keyboard actions can be rebound from the Controls submenu within Settings. Contr
 
 The How to play menu presents the core loop as six step-by-step field-note cards: accept, travel, predict, catch, plan, and conserve. Previous and Next controls move through one card at a time, with the main Back action kept separate below the card navigation.
 
+The main menu includes a quiet bottom-left build label showing the package version and the pull request number for the current technical build. It remains secondary to the Play and Settings actions and respects display safe areas.
+
 ## Open-water travel, damage, and night
 
 ### Open-water travel
