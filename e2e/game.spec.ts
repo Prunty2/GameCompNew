@@ -163,11 +163,24 @@ test("surface shoals reveal the hook only inside fishing interaction range", asy
   );
 
   const initialHookLeft = Number.parseFloat(await action.evaluate((element) => (element as HTMLElement).style.left));
+  await page.evaluate(() => {
+    const samples: string[] = [];
+    let framesRemaining = 24;
+    const sampleAnchor = (): void => {
+      samples.push(document.querySelector<HTMLElement>("#context-action")?.style.left ?? "");
+      document.body.dataset.hookAnchorSamples = JSON.stringify(samples);
+      framesRemaining -= 1;
+      if (framesRemaining > 0) requestAnimationFrame(sampleAnchor);
+    };
+    requestAnimationFrame(sampleAnchor);
+  });
   await page.keyboard.down("KeyD");
   await page.waitForTimeout(1_000);
   await page.keyboard.up("KeyD");
   await expect(action).toBeVisible();
   const shiftedHookLeft = Number.parseFloat(await action.evaluate((element) => (element as HTMLElement).style.left));
+  const anchorSamples = await page.evaluate<string[]>(() => JSON.parse(document.body.dataset.hookAnchorSamples ?? "[]"));
+  expect(new Set(anchorSamples).size).toBeGreaterThan(8);
   expect(shiftedHookLeft).toBeLessThan(initialHookLeft - 8);
 
   await page.evaluate(() => window.__FSHING_TEST__?.sailToHarbor("gloam"));

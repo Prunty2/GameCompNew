@@ -48,6 +48,12 @@ const SURFACE_FISH_CELLS = [
   [1, 1],
 ] as const;
 
+// Center of the visible hook-and-arc paint inside each 192 × 256 authored atlas cell.
+const SURFACE_HOOK_OPTICAL_CENTER = {
+  x: 89 / 192,
+  y: 92 / 256,
+} as const;
+
 export class CanvasRenderer {
   private readonly context: CanvasRenderingContext2D;
   private readonly artReady: Promise<void>;
@@ -306,7 +312,17 @@ export class CanvasRenderer {
     context.globalAlpha = alpha;
     context.shadowColor = settings.highContrast ? "rgba(255, 255, 255, 0.72)" : "rgba(232, 164, 77, 0.58)";
     context.shadowBlur = settings.highContrast ? 14 : 18;
-    this.drawSurfaceFishingCueCell(enabled ? 2 : 3, 1, x, y, cueWidth, cueWidth * 4 / 3);
+    const cueHeight = cueWidth * 4 / 3;
+    const opticalOffsetX = (0.5 - SURFACE_HOOK_OPTICAL_CENTER.x) * cueWidth;
+    const opticalOffsetY = (0.5 - SURFACE_HOOK_OPTICAL_CENTER.y) * cueHeight;
+    this.drawSurfaceFishingCueCell(
+      enabled ? 2 : 3,
+      1,
+      x + opticalOffsetX,
+      y + opticalOffsetY,
+      cueWidth,
+      cueHeight,
+    );
     context.restore();
   }
 

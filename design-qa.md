@@ -4,6 +4,7 @@
 
 - Primary references: `/Users/liam/.codex/attachments/73a385fd-120f-470c-a96a-1a0de9cc7a82/image-1.png` and `/Users/liam/.codex/attachments/73a385fd-120f-470c-a96a-1a0de9cc7a82/image-2.png`.
 - Final implementation capture: `Docs/screenshots/06-fishing-spot-hybrid.jpg`.
+- Centered interaction-cue capture: `Docs/screenshots/10-fishing-hook-centered.jpg`.
 - Discovery capture: `Docs/screenshots/07-fishing-spot-discovery.jpg`.
 - Mobile accessibility capture: `Docs/screenshots/08-fishing-spot-mobile-accessibility.jpg`.
 - Full hook-placement comparison: `/Users/liam/.codex/visualizations/2026/08/05/019fd145-e573-7c23-a56c-8ad5c07df804/fishing-spot-hook-above-comparison.jpg`.
@@ -20,6 +21,7 @@
 3. **P2 — scale and density:** an initial generated-asset pass made the fish and hook too large and dispersed. Fish scale, shoal width, hook scale, and depth distribution were tightened to match the compact school in the approved directions.
 4. **P2 — discovery readability:** the distant school was too close to invisible. Its minimum visibility was raised while the lens still ramps only on approach and the hook remains exactly hidden outside interaction range.
 5. **P1 — hook position and ownership:** the first delivered hybrid placed the hook at sea level and recomputed its horizontal position from the boat. The revised implementation anchors the hook to the fishing ground's projected world position and places it in clear air above the boat, matching Direction A. A browser test moves the boat within the interaction radius and confirms the hook shifts on screen with the ground rather than staying attached to the boat.
+6. **P1 — interaction-ring desynchronization and optical alignment:** the HTML hit target previously moved only during the 15 Hz HUD refresh while the Canvas hook moved every rendered frame, and the authored hook art sat above-left of its atlas cell center. The target now synchronizes immediately after every Canvas render. Atlas-measured optical-center offsets align the complete hook-and-arc artwork with the target center. The browser regression samples 24 rendered frames during boat movement and requires more than eight distinct target positions.
 
 ## Required fidelity surfaces
 
@@ -48,7 +50,7 @@ Permanent fishing-ground names, species labels, buoy-like landmarks, and interac
 - Desktop normal mode: cue is centered, unobscured, and readable against the harbor panorama.
 - Far discovery state: submerged fish remain faintly discoverable; the hook control is hidden.
 - Mobile landscape state: the hook remains above the boat and the school remains clear of the touch controls, with no overlap or clipping.
-- Interaction state: the transparent 78 × 78 DOM target follows the fixed-world Canvas hook and provides a visible focus treatment without duplicating the artwork.
+- Interaction state: the transparent 78 × 78 DOM target follows the fixed-world Canvas hook every rendered frame; the generated hook-and-arc artwork is optically centered within it and the target provides visible hover/focus treatment without duplicating the artwork.
 - In-app browser console audit: no errors or warnings in the verified fishing and survey states.
 - Survey interaction opened successfully from the generated hook cue.
 

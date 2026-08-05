@@ -199,6 +199,7 @@ export class Game {
       cinematic: this.overlay === "title"
         || (this.overlay === "settings" || this.overlay === "controls") && this.overlayReturn === "title",
     });
+    this.syncContextActionAnchor();
     if (time - this.lastUiRefresh >= UI_REFRESH_INTERVAL) {
       this.refreshHud();
       this.lastUiRefresh = time;
@@ -356,17 +357,38 @@ export class Game {
       }
     }
 
+    this.refreshContextAction();
+
+    const navigation = this.uiRoot.querySelector<HTMLElement>(".navigation-controls");
+    const fishing = this.uiRoot.querySelector<HTMLElement>(".fishing-controls");
+    if (navigation) navigation.hidden = this.overlay !== null || simulation.mode === "fishing";
+    if (fishing) fishing.hidden = this.overlay !== null || simulation.mode !== "fishing";
+    document.body.classList.toggle("is-night", isNight(simulation));
+    document.documentElement.style.setProperty("--day-progress", String(dayProgress(simulation)));
+  }
+
+  private refreshContextAction(): void {
     const action = this.uiRoot.querySelector<HTMLButtonElement>("#context-action");
-    const prompt = getInteractionPrompt(simulation);
+    const prompt = getInteractionPrompt(this.simulation);
     if (action) {
       const fishingCue = prompt?.kind === "fishing";
-      action.hidden = !prompt || this.overlay !== null || simulation.mode === "fishing";
+      action.hidden = !prompt || this.overlay !== null || this.simulation.mode === "fishing";
       action.disabled = prompt ? !prompt.enabled : true;
       action.textContent = prompt?.label ?? "Interact";
       action.setAttribute("aria-label", prompt?.label ?? "Interact");
       action.title = prompt?.label ?? "";
       action.classList.toggle("is-fishing-cue", fishingCue);
-      const anchor = fishingCue ? this.renderer.surfaceInteractionAnchor() : null;
+      this.syncContextActionAnchor(action);
+    }
+  }
+
+  private syncContextActionAnchor(
+    action = this.uiRoot.querySelector<HTMLButtonElement>("#context-action"),
+  ): void {
+    if (action) {
+      const anchor = action.classList.contains("is-fishing-cue")
+        ? this.renderer.surfaceInteractionAnchor()
+        : null;
       if (anchor) {
         action.style.left = `${anchor.x}px`;
         action.style.top = `${anchor.y}px`;
@@ -375,13 +397,6 @@ export class Game {
         action.style.removeProperty("top");
       }
     }
-
-    const navigation = this.uiRoot.querySelector<HTMLElement>(".navigation-controls");
-    const fishing = this.uiRoot.querySelector<HTMLElement>(".fishing-controls");
-    if (navigation) navigation.hidden = this.overlay !== null || simulation.mode === "fishing";
-    if (fishing) fishing.hidden = this.overlay !== null || simulation.mode !== "fishing";
-    document.body.classList.toggle("is-night", isNight(simulation));
-    document.documentElement.style.setProperty("--day-progress", String(dayProgress(simulation)));
   }
 
   private renderOverlay(): void {
