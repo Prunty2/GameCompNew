@@ -9,7 +9,6 @@ import {
   BALANCE,
   FISH,
   REGIONS,
-  boatClassAt,
   harborById,
   spotById,
   type FishSpecies,
@@ -46,8 +45,6 @@ import {
   moveBoatForTesting,
   recordSurvey,
   releaseCargo,
-  repairBoat,
-  repairCost,
   resolveCatch,
   startFishing,
   tutorialPrompt,
@@ -494,7 +491,7 @@ export class Game {
           };
 
     const harborTabs = !isFirstJobOffer
-      ? `<nav class="harbor-tabs" aria-label="Harbor sections" style="--harbor-tab-count: ${availableSections.length}">
+      ? `<nav class="harbor-tabs has-${availableSections.length}-tabs" aria-label="Harbor sections" style="--harbor-tab-count: ${availableSections.length}">
           ${availableSections.map((section) => `<button class="harbor-tab ${activeSection === section ? "is-active" : ""}" type="button" data-action="harbor-section" data-harbor-section="${section}" aria-label="${capitalise(section)}" aria-pressed="${activeSection === section}"><span class="ui-icon icon-${HARBOR_SECTION_ICON[section]}" aria-hidden="true"></span><span>${capitalise(section)}</span></button>`).join("")}
         </nav>`
       : "";
@@ -508,12 +505,11 @@ export class Game {
       : activeSection === "services"
         ? `<section class="services" aria-label="Dock services">
             <div class="service-grid">
-              ${this.upgradeCard("cargo", "Cargo", `+1 space · ${boatClassAt(this.simulation.progress.upgrades.cargo)}`)}
+              ${this.upgradeCard("cargo", "Cargo", "+1 cargo slot")}
               ${this.upgradeCard("engine", "Engine", "+11% speed")}
               ${this.upgradeCard("lamp", "Lamp", "Wider night view")}
               ${this.upgradeCard("line", "Line depth", "Next depth tier")}
-              <article class="service-card"><span class="ui-icon icon-repair" aria-hidden="true"></span><div><h4>Repair hull</h4><p><span>${Math.ceil(this.simulation.boat.damage)} damage</span><span class="service-cost" aria-label="${repairCost(this.simulation)} shells"><span class="ui-icon icon-shells" aria-hidden="true"></span>${repairCost(this.simulation)}</span></p></div><button class="small-button" type="button" data-action="repair" ${this.simulation.boat.damage <= 0 || this.simulation.progress.money <= 0 ? "disabled" : ""}><span aria-hidden="true">+</span><span>Repair</span></button></article>
-              ${harborId === "gloam" ? `<article class="service-card"><span class="ui-icon icon-permit" aria-hidden="true"></span><div><h4>Outer permit</h4><p>${this.simulation.progress.outerUnlocked ? "Granted" : `<span>Outer water</span><span class="service-cost" aria-label="${BALANCE.permitCost} shells"><span class="ui-icon icon-shells" aria-hidden="true"></span>${BALANCE.permitCost}</span>`}</p></div><button class="small-button" type="button" data-action="buy-permit" ${this.simulation.progress.outerUnlocked || this.simulation.progress.money < BALANCE.permitCost ? "disabled" : ""}><span aria-hidden="true">✓</span><span>${this.simulation.progress.outerUnlocked ? "Owned" : "Buy"}</span></button></article>` : ""}
+              ${harborId === "gloam" ? this.permitCard() : ""}
             </div>
           </section>`
         : `<section class="mission-section" aria-labelledby="contract-heading"><h3 id="contract-heading" class="section-title">${isFirstJobOffer ? "First delivery" : "Delivery job"}</h3>${contractMarkup}</section>`;
@@ -522,7 +518,7 @@ export class Game {
       <section class="screen-overlay harbor-screen is-first-voyage${isFirstJobOffer ? " is-first-job-offer" : " is-expanded-harbor"} is-harbor-${activeSection}" role="dialog" aria-labelledby="harbor-title">
         <div class="art-panel harbor-panel side-sheet">
           <header class="panel-heading harbor-header">
-            <div class="harbor-title-block"><img class="wordmark harbor-wordmark" src="${wordmarkUrl}" alt="FSHING" /><div><h2 id="harbor-title">${harbor.name}</h2><p>${harbor.subtitle}</p></div></div>
+            <div class="harbor-title-block"><img class="wordmark harbor-wordmark" src="${wordmarkUrl}" alt="FSHING" /><span class="harbor-title-divider" aria-hidden="true"></span><div><h2 id="harbor-title">${harbor.name}</h2><p>${harbor.subtitle}</p></div></div>
             <span class="shell-balance" aria-label="${this.simulation.progress.money} shells"><span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${this.simulation.progress.money}</strong></span>
           </header>
           <div class="harbor-intro ${isFirstJobOffer ? "is-first-step" : ""}">
@@ -532,7 +528,7 @@ export class Game {
           </div>
           ${harborTabs}
           <div class="harbor-content is-${activeSection}">${activeContent}</div>
-          <footer class="panel-actions ${isFirstJobOffer ? "is-guided" : ""}"><div><button class="text-button harbor-utility-button" type="button" data-action="open-help" aria-label="How to play"><span class="ui-icon icon-objective" aria-hidden="true"></span><strong>Help</strong></button><button class="text-button harbor-utility-button" type="button" data-action="open-field-guide" aria-label="Field guide"><span class="ui-icon icon-freshness" aria-hidden="true"></span><strong>Guide</strong></button></div>${isFirstJobOffer ? "" : `<button class="leave-button" type="button" data-action="undock" aria-label="Back to lake →"><strong>Return to Lake</strong><b aria-hidden="true">→</b></button>`}</footer>
+          <footer class="panel-actions ${isFirstJobOffer ? "is-guided" : ""}"><div><button class="text-button harbor-utility-button" type="button" data-action="open-help" aria-label="How to play"><span class="ui-icon icon-objective" aria-hidden="true"></span><strong>Help</strong></button><button class="text-button harbor-utility-button" type="button" data-action="open-field-guide" aria-label="Field guide"><span class="ui-icon icon-freshness" aria-hidden="true"></span><strong>Guide</strong></button></div>${isFirstJobOffer ? "" : `<button class="leave-button" type="button" data-action="undock" aria-label="Back to lake →"><span class="ui-icon icon-hull" aria-hidden="true"></span><strong>Return to Lake</strong></button>`}</footer>
         </div>
       </section>`;
   }
@@ -541,7 +537,17 @@ export class Game {
     const tier = this.simulation.progress.upgrades[upgrade];
     const maximum = tier >= BALANCE.maxUpgradeTier;
     const cost = upgradeCost(upgrade, tier);
-    return `<article class="service-card"><span class="ui-icon icon-${upgrade}" aria-hidden="true"></span><div><h4>${title}<span class="service-tier">T${tier}</span></h4><p>${maximum ? "Maximum tier" : `<span>${detail}</span><span class="service-cost" aria-label="${cost} shells"><span class="ui-icon icon-shells" aria-hidden="true"></span>${cost}</span>`}</p></div><button class="small-button" type="button" data-action="buy-upgrade" data-upgrade="${upgrade}" aria-label="${maximum ? `${title} at maximum tier` : `Upgrade ${title}`}" ${maximum || this.simulation.progress.money < cost ? "disabled" : ""}><span aria-hidden="true">↑</span><span>${maximum ? "Max" : "Upgrade"}</span></button></article>`;
+    const displayLevel = Math.min(tier + 1, BALANCE.maxUpgradeTier);
+    return `<article class="service-card"><span class="ui-icon icon-${upgrade}" aria-hidden="true"></span><div class="service-copy"><h4>${title}</h4><p>${maximum ? "Maximum tier" : detail}</p></div>${this.upgradeMeter(title, displayLevel)}<button class="service-purchase" type="button" data-action="buy-upgrade" data-upgrade="${upgrade}" aria-label="${maximum ? `${title} at maximum tier` : `Upgrade ${title} for ${cost} shells`}" ${maximum || this.simulation.progress.money < cost ? "disabled" : ""}>${maximum ? "<strong>MAX</strong>" : `<span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${cost}</strong>`}</button></article>`;
+  }
+
+  private permitCard(): string {
+    const unlocked = this.simulation.progress.outerUnlocked;
+    return `<article class="service-card"><span class="ui-icon icon-permit" aria-hidden="true"></span><div class="service-copy"><h4>Outer permit</h4><p>Outer water access</p></div>${this.upgradeMeter("Outer permit", unlocked ? BALANCE.maxUpgradeTier : 0)}<button class="service-purchase" type="button" data-action="buy-permit" aria-label="${unlocked ? "Outer permit owned" : `Buy Outer permit for ${BALANCE.permitCost} shells`}" ${unlocked || this.simulation.progress.money < BALANCE.permitCost ? "disabled" : ""}>${unlocked ? "<strong>OWNED</strong>" : `<span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${BALANCE.permitCost}</strong>`}</button></article>`;
+  }
+
+  private upgradeMeter(label: string, level: number): string {
+    return `<span class="upgrade-meter" aria-label="${label} level ${level} of ${BALANCE.maxUpgradeTier}">${Array.from({ length: BALANCE.maxUpgradeTier }, (_, index) => `<i class="${index < level ? "is-filled" : ""}" aria-hidden="true"></i>`).join("")}</span>`;
   }
 
   private pauseScreen(): string {
@@ -1131,13 +1137,6 @@ export class Game {
         if (buyPermit(this.simulation)) {
           this.handleSimulationEvents();
           this.renderOverlay();
-        }
-        break;
-      case "repair":
-        if (repairBoat(this.simulation) > 0) {
-          this.syncSave();
-          this.renderOverlay();
-          this.showToast("The shipwright sets the hull true.");
         }
         break;
       case "release": {
