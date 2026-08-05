@@ -679,7 +679,7 @@ Every authored visual asset in this slice is generated with GPT Image 2.0. No pr
 | `fshing-wordmark.png` | Restrained title-screen identity |
 | `lake-chart.png` | Side-on panoramic sky, distant shore, waterline, and lake atmosphere |
 | `player-boat.png` | Player vessel in strict side profile on a chroma-key matte |
-| `harbor-pier.png` | Long weathered side-view harbor pier that extends from either shoreline |
+| `harbor-pier.png` | Long weathered side-view harbor pier that extends from either shoreline; its fixed footprint uses roughly 36–44 narrow deck-plank divisions so the timber scale remains believable beside the player boat |
 | `fish-atlas.png` | Fishing-hook sprite and retained original fish reference cells |
 | `fish-atlas-v2.png` | Nine independently generated, silhouette-distinct species in a strict 3 × 3 atlas |
 | `world-atlas.png` | Side-view buoy, fishing marker, fog, night-wake, and retained legacy sprites on a chroma-key matte |
