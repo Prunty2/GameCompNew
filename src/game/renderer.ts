@@ -337,7 +337,7 @@ export class CanvasRenderer {
     const { context } = this;
     const x = worldToScreenX(simulation.boat.x, camera, width);
     const boatScale = 1 + simulation.progress.upgrades.cargo * 0.055;
-    const boatWidth = clamp(this.canvas.clientHeight * 0.44 * boatScale, 180, 430);
+    const boatWidth = clamp(this.canvas.clientHeight * 0.409 * boatScale, 167, 400);
     const boatHeight = boatWidth * (art.boat.height / art.boat.width);
     const speedRatio = Math.min(1, Math.abs(simulation.boat.speed) / BALANCE.maxSurfaceSpeed);
     const bob = settings.reducedMotion ? 0 : Math.sin(simulation.elapsed * (2 + speedRatio)) * (1.1 + speedRatio * 0.8);
