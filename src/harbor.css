@@ -1,0 +1,1189 @@
+/* Compact harbor layout keeps every dock service visible without scrolling. */
+.harbor-screen.is-first-voyage,
+.harbor-screen.is-first-voyage.is-expanded-harbor {
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  overflow: hidden;
+  background: rgb(3 12 18 / 52%);
+  backdrop-filter: blur(3px) saturate(0.88);
+}
+
+.harbor-screen.is-first-voyage .harbor-panel,
+.harbor-screen.is-first-voyage.is-expanded-harbor .harbor-panel,
+.harbor-screen.is-first-voyage.is-first-job-offer .harbor-panel {
+  box-sizing: border-box;
+  width: min(900px, calc(100vw - 32px));
+  max-width: 900px;
+  height: min(760px, calc(100dvh - 32px));
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 21px 24px 20px;
+  border: 1px solid rgb(145 169 176 / 34%);
+  border-radius: 20px;
+  overflow: hidden;
+  background: rgb(4 23 31 / 94%);
+  color: var(--menu-paper);
+  box-shadow: 0 28px 80px rgb(1 10 16 / 42%);
+  backdrop-filter: blur(4px);
+  animation: none;
+}
+
+.harbor-screen.is-first-voyage.is-first-job-offer .harbor-panel {
+  height: min(620px, calc(100dvh - 32px));
+}
+
+.harbor-screen.is-first-voyage .harbor-panel .harbor-header {
+  display: flex;
+  min-height: 56px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+}
+
+.harbor-screen.is-first-voyage .harbor-title-block {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 22px;
+}
+
+.harbor-screen.is-first-voyage .harbor-wordmark,
+.harbor-screen.is-first-voyage.is-expanded-harbor .harbor-wordmark {
+  box-sizing: border-box;
+  width: 112px;
+  margin: -25px 0;
+  flex: 0 0 auto;
+  filter: drop-shadow(0 3px 6px rgb(1 10 18 / 34%));
+}
+
+.harbor-title-divider {
+  width: 1px;
+  height: 54px;
+  flex: 0 0 auto;
+  background: rgb(247 241 227 / 38%);
+}
+
+.harbor-screen.is-first-voyage .harbor-panel .harbor-header h2,
+.harbor-screen.is-first-voyage.is-expanded-harbor .harbor-panel .harbor-header h2 {
+  margin: 0;
+  color: var(--menu-paper);
+  font-size: 1.9rem;
+  letter-spacing: 0.015em;
+  line-height: 1;
+  text-align: left;
+  text-shadow: none;
+}
+
+.harbor-screen.is-first-voyage .harbor-panel .harbor-header p {
+  margin: 8px 0 0;
+  color: var(--menu-fog);
+  font-size: 1rem;
+  line-height: 1.15;
+  text-align: left;
+}
+
+.harbor-screen.is-first-voyage .harbor-panel .shell-balance,
+.harbor-screen.is-first-voyage.is-expanded-harbor .harbor-panel .shell-balance {
+  display: inline-flex;
+  box-sizing: border-box;
+  min-width: 116px;
+  min-height: 54px;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 0;
+  padding: 8px 18px;
+  border: 1px solid rgb(247 241 227 / 36%);
+  border-radius: 16px;
+  background: rgb(5 24 33 / 74%);
+  box-shadow: none;
+}
+
+.harbor-screen.is-first-voyage .shell-balance .ui-icon {
+  width: 34px;
+  height: 34px;
+}
+
+.harbor-screen.is-first-voyage .shell-balance strong {
+  color: var(--menu-paper);
+  font-size: 1.35rem;
+}
+
+.harbor-screen.is-first-voyage .harbor-intro,
+.harbor-screen.is-first-voyage.is-expanded-harbor .harbor-intro {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
+  min-height: 78px;
+  margin: 14px 0 10px;
+  padding: 18px 22px;
+  border: 1px solid rgb(145 169 176 / 31%);
+  border-radius: 16px;
+  background: rgb(247 241 227 / 4%);
+  box-shadow: inset 0 1px 0 rgb(247 241 227 / 2%);
+  text-align: left;
+}
+
+.harbor-screen.is-first-voyage .harbor-intro .panel-eyebrow {
+  color: var(--menu-fog);
+  font-size: 0.78rem;
+  letter-spacing: 0.16em;
+}
+
+.harbor-screen.is-first-voyage .harbor-intro h3,
+.harbor-screen.is-first-voyage.is-expanded-harbor .harbor-intro h3 {
+  margin: 7px 0 0;
+  color: var(--menu-paper);
+  font-size: 1.5rem;
+  line-height: 1;
+  text-align: left;
+  text-shadow: none;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-services .harbor-intro {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-services .harbor-intro h3 {
+  margin: 0;
+  text-align: center;
+}
+
+.harbor-screen.is-first-voyage .harbor-intro.is-first-step {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 24px;
+}
+
+.harbor-screen.is-first-voyage .harbor-tabs {
+  display: grid;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 62px;
+  grid-template-columns: repeat(var(--harbor-tab-count, 3), minmax(0, 1fr));
+  gap: 10px;
+  margin: 0 0 8px;
+  padding: 0 0 8px;
+  border-bottom: 1px solid rgb(145 169 176 / 29%);
+}
+
+.harbor-screen.is-first-voyage .harbor-tabs.has-3-tabs {
+  grid-template-columns: 306fr 291fr 315fr;
+}
+
+.harbor-screen.is-first-voyage .harbor-tab {
+  display: flex;
+  min-height: 54px;
+  align-items: center;
+  justify-content: center;
+  gap: 11px;
+  padding: 6px 15px;
+  border: 1px solid rgb(145 169 176 / 38%);
+  border-radius: 15px;
+  background: rgb(5 24 33 / 82%);
+  color: var(--menu-paper);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 1.08rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  box-shadow: none;
+  transform: none;
+}
+
+.harbor-screen.is-first-voyage .harbor-tab .ui-icon {
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgb(145 169 176 / 27%);
+  border-radius: 10px;
+  background-color: rgb(4 20 29 / 92%);
+  box-shadow: none;
+}
+
+.harbor-screen.is-first-voyage .harbor-tab.is-active {
+  border-color: #ffbd61;
+  background: linear-gradient(#f3aa48, #e89532);
+  color: #071824;
+  box-shadow: inset 0 -3px 0 #b96f20, 0 3px 8px rgb(2 12 18 / 18%);
+}
+
+.harbor-screen.is-first-voyage .harbor-tab.is-active .ui-icon {
+  border-color: rgb(7 24 34 / 52%);
+  background-color: #092231;
+}
+
+.harbor-screen.is-first-voyage .harbor-tab:hover,
+.harbor-screen.is-first-voyage .harbor-tab:focus-visible {
+  border-color: var(--menu-signal);
+  transform: none;
+}
+
+.harbor-screen.is-first-voyage .harbor-content {
+  display: flex;
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  align-items: stretch;
+  animation: none;
+}
+
+.harbor-screen.is-first-voyage .harbor-content .mission-section,
+.harbor-screen.is-first-voyage .harbor-content .cargo-section,
+.harbor-screen.is-first-voyage .harbor-content .services {
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .harbor-tabs {
+  margin-top: 16px;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-cargo.is-expanded-harbor .harbor-tabs,
+.harbor-screen.is-first-voyage.is-harbor-services.is-expanded-harbor .harbor-tabs {
+  margin-top: 16px;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .harbor-content .mission-section {
+  display: flex;
+  align-items: flex-start;
+  padding-top: 12px;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .harbor-content .job-ticket {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 390px;
+  padding: 26px 22px 22px;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-ticket-heading {
+  display: block;
+  padding-inline: 118px;
+  text-align: center;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-ticket-heading > div {
+  min-width: 0;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .harbor-content .job-ticket h3 {
+  margin: 5px 0 0;
+  font-size: 1.7rem;
+  text-align: center;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .reward-stamp {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  min-width: 100px;
+  min-height: 64px;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 12px;
+  border-width: 2px;
+  background: linear-gradient(180deg, rgb(240 166 72 / 24%), rgb(240 166 72 / 10%));
+  box-shadow: inset 0 0 0 1px rgb(255 204 124 / 15%);
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .reward-stamp small {
+  display: block;
+  color: var(--menu-paper);
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .reward-value {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  line-height: 1;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-route {
+  gap: 18px;
+  margin: 30px 0 24px;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .harbor-content .job-route li {
+  min-height: 136px;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 14px;
+  padding: 18px 14px;
+  border: 1px solid rgb(145 169 176 / 22%);
+  border-radius: 12px;
+  background: rgb(247 241 227 / 3%);
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-route li:not(:last-child)::after {
+  right: -15px;
+  font-size: 1.15rem;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .harbor-content .job-route li > span {
+  width: 42px;
+  height: 42px;
+  font-size: 0.8rem;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-route small {
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-route strong {
+  margin-top: 7px;
+  font-size: 1.08rem;
+  white-space: normal;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .next-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 22px 0 0;
+  padding: 13px 15px;
+  border: 1px solid rgb(145 169 176 / 28%);
+  border-left: 3px solid var(--menu-signal);
+  border-radius: 10px;
+  background: rgb(247 241 227 / 4%);
+  color: var(--menu-fog);
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .next-step > .ui-icon {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .next-step strong {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--menu-paper);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-cargo.is-expanded-harbor .harbor-content .cargo-section {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.cargo-inventory-heading {
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 4px;
+}
+
+.cargo-inventory-heading h3 {
+  margin: 0;
+  color: var(--menu-paper);
+  font-size: 1rem;
+}
+
+.cargo-inventory-heading span {
+  color: var(--menu-fog);
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.cargo-slot-grid {
+  display: grid;
+  min-height: 0;
+  flex: 1;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(130px, 1fr));
+  gap: 10px;
+}
+
+.cargo-slot {
+  position: relative;
+  display: flex;
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 16px 12px 12px;
+  border: 1px solid rgb(145 169 176 / 34%);
+  border-radius: 13px;
+  background: rgb(247 241 227 / 3%);
+  color: var(--menu-paper);
+  font-family: inherit;
+  text-align: center;
+  box-shadow: inset 0 1px 0 rgb(247 241 227 / 3%);
+}
+
+.cargo-slot-number {
+  position: absolute;
+  top: 8px;
+  left: 10px;
+  color: rgb(174 194 199 / 56%);
+  font-size: 0.58rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.cargo-slot > .ui-icon {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 auto;
+  border: 1px solid rgb(145 169 176 / 24%);
+  border-radius: 10px;
+  background-color: rgb(4 20 29 / 72%);
+}
+
+.cargo-slot small {
+  color: var(--menu-fog);
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.cargo-slot.is-empty {
+  border-style: dashed;
+  background: rgb(247 241 227 / 1.5%);
+}
+
+.cargo-slot.is-empty > .ui-icon {
+  opacity: 0.42;
+}
+
+.cargo-slot.is-occupied {
+  border-color: rgb(240 166 72 / 54%);
+  background: linear-gradient(180deg, rgb(240 166 72 / 8%), rgb(247 241 227 / 3%));
+}
+
+.cargo-slot-copy {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.cargo-slot-copy strong {
+  overflow: hidden;
+  font-size: 0.88rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cargo-slot-copy small {
+  color: #f0a648;
+}
+
+.cargo-release {
+  min-height: 27px;
+  padding: 4px 10px;
+  border: 1px solid rgb(145 169 176 / 38%);
+  border-radius: 8px;
+  background: rgb(4 20 29 / 78%);
+  color: var(--menu-paper);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.66rem;
+  font-weight: 800;
+}
+
+.cargo-release:hover,
+.cargo-release:focus-visible {
+  border-color: var(--menu-signal);
+  outline: none;
+}
+
+.cargo-slot.is-locked {
+  border-style: dashed;
+  background: rgb(1 14 21 / 34%);
+  cursor: pointer;
+}
+
+.cargo-slot.is-locked:hover,
+.cargo-slot.is-locked:focus-visible {
+  border-color: rgb(174 194 199 / 62%);
+  background: rgb(247 241 227 / 4%);
+}
+
+.cargo-slot.is-locked:focus-visible {
+  outline: 2px solid rgb(174 194 199 / 78%);
+  outline-offset: 2px;
+}
+
+.cargo-slot.is-locked.is-wobbling:disabled {
+  opacity: 1;
+}
+
+.cargo-padlock {
+  display: block;
+  width: 52px;
+  height: 52px;
+  margin: 0;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .services {
+  padding: 0 4px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .service-grid {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin: 0;
+}
+
+.harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .service-card {
+  display: grid;
+  box-sizing: border-box;
+  min-height: 66px;
+  grid-template-columns: 56px minmax(190px, 1fr) 170px 98px;
+  grid-template-rows: 1fr;
+  align-items: center;
+  gap: 18px;
+  padding: 7px 16px;
+  border: 1px solid rgb(145 169 176 / 24%);
+  border-radius: 14px;
+  background: rgb(247 241 227 / 2.5%);
+  color: var(--menu-paper);
+}
+
+.harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .service-card + .service-card {
+  margin-top: 0;
+}
+
+.harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .service-card > .ui-icon {
+  width: 56px;
+  height: 50px;
+  border: 1px solid rgb(145 169 176 / 30%);
+  border-radius: 10px;
+  background-color: #071b29;
+  box-shadow: inset 0 1px 0 rgb(247 241 227 / 3%);
+}
+
+.harbor-screen.is-first-voyage .service-copy {
+  min-width: 0;
+}
+
+.harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .service-card h4 {
+  display: block;
+  margin: 0;
+  color: var(--menu-paper);
+  font-family: inherit;
+  font-size: 1.08rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .service-card p {
+  display: block;
+  min-height: 0;
+  margin: 4px 0 0;
+  color: var(--menu-fog);
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.upgrade-meter {
+  display: grid;
+  box-sizing: border-box;
+  width: 170px;
+  height: 21px;
+  grid-template-columns: repeat(var(--upgrade-tier-count, 6), minmax(0, 1fr));
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid rgb(2 12 18 / 72%);
+  border-radius: 10px;
+  background: rgb(1 13 20 / 62%);
+  box-shadow: inset 0 1px 3px rgb(1 9 14 / 70%);
+  transform: translateX(-20px);
+}
+
+.upgrade-meter i {
+  display: block;
+  border: 1px solid rgb(145 169 176 / 12%);
+  border-radius: 4px;
+  background: #263a43;
+  box-shadow: inset 0 1px 0 rgb(247 241 227 / 6%);
+}
+
+.upgrade-meter i.is-filled {
+  border-color: #ffc46d;
+  background: linear-gradient(#f7b252, #e59131);
+  box-shadow: inset 0 1px 0 rgb(255 244 209 / 60%), 0 0 7px rgb(240 158 61 / 22%);
+}
+
+.harbor-screen.is-first-voyage .service-purchase {
+  display: inline-flex;
+  box-sizing: border-box;
+  width: 98px;
+  min-width: 98px;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid rgb(145 169 176 / 42%);
+  border-radius: 14px;
+  background: rgb(5 24 33 / 76%);
+  color: var(--menu-paper);
+  cursor: pointer;
+  box-shadow: none;
+}
+
+.harbor-screen.is-first-voyage .service-purchase .ui-icon {
+  width: 31px;
+  height: 31px;
+}
+
+.harbor-screen.is-first-voyage .service-purchase strong {
+  color: var(--menu-paper);
+  font-size: 1.15rem;
+}
+
+.harbor-screen.is-first-voyage .service-purchase:hover:not(:disabled),
+.harbor-screen.is-first-voyage .service-purchase:focus-visible {
+  border-color: var(--menu-signal);
+  background: rgb(247 241 227 / 8%);
+  transform: none;
+}
+
+.harbor-screen.is-first-voyage .service-purchase:disabled {
+  cursor: default;
+  opacity: 0.62;
+}
+
+.harbor-screen.is-first-voyage .panel-actions,
+.harbor-screen.is-first-voyage.is-expanded-harbor .panel-actions,
+.harbor-screen.is-first-voyage .harbor-panel .panel-actions.is-guided {
+  display: grid;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 68px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 14px;
+  margin: auto 0 0;
+  padding: 12px 0 0;
+  border: 0;
+  border-top: 1px solid rgb(145 169 176 / 29%);
+}
+
+.harbor-screen.is-first-voyage .panel-actions > div,
+.harbor-screen.is-first-voyage .panel-actions.is-guided > div,
+.harbor-screen.is-first-voyage.is-expanded-harbor .panel-actions > div {
+  display: grid;
+  width: fit-content;
+  grid-template-columns: repeat(2, 138px);
+  gap: 14px;
+}
+
+.harbor-screen.is-first-voyage .harbor-panel .harbor-utility-button,
+.harbor-screen.is-first-voyage.is-expanded-harbor .harbor-utility-button,
+.harbor-screen.is-first-voyage .leave-button,
+.harbor-screen.is-first-voyage.is-expanded-harbor .leave-button {
+  display: flex;
+  box-sizing: border-box;
+  min-height: 54px;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 9px 20px;
+  border: 1px solid rgb(145 169 176 / 40%);
+  border-radius: 15px;
+  background: rgb(5 24 33 / 76%);
+  color: var(--menu-paper);
+  box-shadow: none;
+}
+
+.harbor-screen.is-first-voyage .harbor-panel .harbor-utility-button {
+  width: 138px;
+}
+
+.harbor-screen.is-first-voyage .harbor-utility-button .ui-icon,
+.harbor-screen.is-first-voyage .leave-button .ui-icon {
+  width: 36px;
+  height: 36px;
+}
+
+.harbor-screen.is-first-voyage .harbor-utility-button strong,
+.harbor-screen.is-first-voyage .leave-button strong,
+.harbor-screen.is-first-voyage.is-expanded-harbor .leave-button strong {
+  color: var(--menu-paper);
+  font-family: inherit;
+  font-size: 1.08rem;
+  font-weight: 800;
+}
+
+.harbor-screen.is-first-voyage .leave-button .ui-icon,
+.harbor-screen.is-first-voyage.is-expanded-harbor .leave-button .ui-icon {
+  display: inline-block;
+}
+
+.harbor-screen.is-first-voyage .leave-button,
+.harbor-screen.is-first-voyage.is-expanded-harbor .leave-button {
+  width: 286px;
+  min-width: 286px;
+}
+
+.harbor-screen.is-first-voyage .harbor-panel .harbor-utility-button:hover,
+.harbor-screen.is-first-voyage .harbor-panel .harbor-utility-button:focus-visible,
+.harbor-screen.is-first-voyage .leave-button:hover,
+.harbor-screen.is-first-voyage .leave-button:focus-visible {
+  border-color: var(--menu-signal);
+  background: rgb(247 241 227 / 7%);
+  transform: none;
+}
+
+@media (max-height: 720px) and (min-width: 701px) {
+  .harbor-screen.is-first-voyage .harbor-panel,
+  .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-panel,
+  .harbor-screen.is-first-voyage.is-first-job-offer .harbor-panel {
+    padding: 14px 20px;
+  }
+
+  .harbor-screen.is-first-voyage .harbor-panel .harbor-header {
+    min-height: 50px;
+  }
+
+  .harbor-screen.is-first-voyage .harbor-wordmark,
+  .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-wordmark {
+    width: 105px;
+    margin-block: -22px;
+  }
+
+  .harbor-title-divider {
+    height: 48px;
+  }
+
+  .harbor-screen.is-first-voyage .harbor-panel .shell-balance {
+    min-height: 48px;
+  }
+
+  .harbor-screen.is-first-voyage .harbor-intro,
+  .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-intro {
+    min-height: 68px;
+    margin: 10px 0 8px;
+    padding: 13px 17px;
+  }
+
+  .harbor-screen.is-first-voyage .harbor-tabs {
+    min-height: 55px;
+    gap: 9px;
+    padding-bottom: 6px;
+  }
+
+  .harbor-screen.is-first-voyage .harbor-tab {
+    min-height: 48px;
+  }
+
+  .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .service-card {
+    min-height: 58px;
+    grid-template-columns: 50px minmax(180px, 1fr) 170px 96px;
+    gap: 16px;
+    padding: 4px 14px;
+  }
+
+  .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .service-card > .ui-icon {
+    width: 48px;
+    height: 46px;
+  }
+
+  .upgrade-meter {
+    width: 170px;
+    transform: translateX(-24px);
+  }
+
+  .harbor-screen.is-first-voyage .service-purchase {
+    width: 96px;
+    min-width: 96px;
+    min-height: 44px;
+  }
+
+  .harbor-screen.is-first-voyage .panel-actions,
+  .harbor-screen.is-first-voyage.is-expanded-harbor .panel-actions,
+  .harbor-screen.is-first-voyage .harbor-panel .panel-actions.is-guided {
+    min-height: 58px;
+    padding-top: 10px;
+  }
+
+  .harbor-screen.is-first-voyage .harbor-panel .harbor-utility-button,
+  .harbor-screen.is-first-voyage .leave-button {
+    min-height: 48px;
+  }
+}
+
+@media (max-width: 700px) {
+  .harbor-screen.is-first-voyage,
+  .harbor-screen.is-first-voyage.is-expanded-harbor {
+    padding: 10px;
+  }
+
+  .harbor-screen.is-first-voyage .harbor-panel,
+  .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-panel,
+  .harbor-screen.is-first-voyage.is-first-job-offer .harbor-panel {
+    width: calc(100vw - 20px);
+    height: calc(100dvh - 20px);
+    max-height: calc(100dvh - 20px);
+    padding: 14px 16px;
+    border-radius: 16px;
+  }
+
+  .harbor-screen.is-first-voyage.is-first-job-offer .harbor-panel {
+    height: min(620px, calc(100dvh - 20px));
+  }
+
+  .harbor-screen.is-first-voyage .harbor-panel .harbor-header {
+    min-height: 52px;
+    gap: 10px;
+  }
+
+  .harbor-screen.is-first-voyage .harbor-title-block {
+    gap: 10px;
+  }
+
+  .harbor-screen.is-first-voyage .harbor-wordmark,
+  .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-wordmark {
+    width: 82px;
+    margin-block: -16px;
+  }
+
+  .harbor-title-divider {
+    height: 42px;
+  }
+
+  .harbor-screen.is-first-voyage .harbor-panel .harbor-header h2 {
+    font-size: 1.05rem;
+  }
+
+  .harbor-screen.is-first-voyage .harbor-panel .harbor-header p {
+    margin-top: 4px;
+    font-size: 0.62rem;
+  }
+
+  .harbor-screen.is-first-voyage .harbor-panel .shell-balance {
+    min-width: 62px;
+    min-height: 46px;
+    gap: 4px;
+    padding: 5px 8px;
+    border-radius: 12px;
+  }
+
+  .harbor-screen.is-first-voyage .shell-balance .ui-icon {
+    width: 25px;
+    height: 25px;
+  }
+
+  .harbor-screen.is-first-voyage .shell-balance strong {
+    font-size: 0.9rem;
+  }
+
+  .harbor-screen.is-first-voyage .harbor-intro,
+  .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-intro {
+    min-height: 66px;
+    margin: 10px 0 8px;
+    padding: 11px 12px;
+    border-radius: 12px;
+  }
+
+  .harbor-screen.is-first-voyage .harbor-intro h3 {
+    font-size: 1.05rem;
+  }
+
+  .harbor-screen.is-first-voyage .harbor-intro.is-first-step {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .harbor-screen.is-first-voyage .harbor-tabs {
+    min-height: 53px;
+    gap: 6px;
+    margin-bottom: 6px;
+    padding-bottom: 6px;
+  }
+
+  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .harbor-tabs {
+    margin-top: 10px;
+  }
+
+  .harbor-screen.is-first-voyage.is-harbor-cargo.is-expanded-harbor .harbor-tabs,
+  .harbor-screen.is-first-voyage.is-harbor-services.is-expanded-harbor .harbor-tabs {
+    margin-top: 10px;
+  }
+
+  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .harbor-content .mission-section {
+    padding-top: 6px;
+  }
+
+  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .harbor-content .job-ticket {
+    min-height: 0;
+    padding: 16px 12px 14px;
+  }
+
+  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-ticket-heading {
+    padding-inline: 66px;
+  }
+
+  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .harbor-content .job-ticket h3 {
+    font-size: 1.15rem;
+  }
+
+  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .reward-stamp {
+    top: 11px;
+    right: 10px;
+    min-width: 58px;
+    min-height: 48px;
+    gap: 2px;
+    padding: 5px 6px;
+  }
+
+  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .reward-stamp small {
+    font-size: 0.46rem;
+  }
+
+  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-route {
+    gap: 6px;
+    margin: 18px 0 14px;
+  }
+
+  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .harbor-content .job-route li {
+    min-height: 72px;
+    grid-template-columns: 30px minmax(0, 1fr);
+    gap: 8px;
+    padding: 9px 8px;
+  }
+
+  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .harbor-content .job-route li > span {
+    width: 30px;
+    height: 30px;
+    font-size: 0.65rem;
+  }
+
+  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-route li:not(:last-child)::after {
+    display: none;
+  }
+
+  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-route small {
+    font-size: 0.58rem;
+  }
+
+  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-route strong {
+    margin-top: 3px;
+    font-size: 0.8rem;
+  }
+
+  .cargo-inventory-heading {
+    min-height: 34px;
+    gap: 8px;
+    padding: 0 2px;
+  }
+
+  .cargo-inventory-heading h3 {
+    font-size: 0.82rem;
+  }
+
+  .cargo-inventory-heading span {
+    font-size: 0.58rem;
+  }
+
+  .cargo-slot-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(5, minmax(76px, 1fr));
+    gap: 6px;
+  }
+
+  .cargo-slot {
+    min-height: 76px;
+    flex-direction: row;
+    gap: 7px;
+    padding: 12px 7px 7px;
+  }
+
+  .cargo-slot-number {
+    top: 4px;
+    left: 6px;
+    font-size: 0.48rem;
+  }
+
+  .cargo-slot > .ui-icon {
+    width: 35px;
+    height: 35px;
+  }
+
+  .cargo-slot.is-empty,
+  .cargo-slot.is-locked {
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .cargo-slot small,
+  .cargo-release {
+    font-size: 0.55rem;
+  }
+
+  .cargo-slot-copy strong {
+    max-width: 66px;
+    font-size: 0.7rem;
+  }
+
+  .cargo-padlock {
+    width: 38px;
+    height: 38px;
+  }
+
+  .harbor-screen.is-first-voyage .harbor-tab {
+    min-height: 46px;
+    gap: 5px;
+    padding: 5px;
+    border-radius: 11px;
+    font-size: 0.7rem;
+  }
+
+  .harbor-screen.is-first-voyage .harbor-tab .ui-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+  }
+
+  .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .services {
+    padding-inline: 0;
+  }
+
+  .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .service-card {
+    min-height: 72px;
+    grid-template-columns: 42px minmax(0, 1fr) 78px;
+    grid-template-rows: auto auto;
+    gap: 3px 9px;
+    padding: 6px 8px;
+    border-radius: 10px;
+  }
+
+  .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .service-card > .ui-icon {
+    width: 42px;
+    height: 42px;
+    grid-column: 1;
+    grid-row: 1 / 3;
+    border-radius: 8px;
+  }
+
+  .harbor-screen.is-first-voyage .service-copy {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .service-card h4 {
+    font-size: 0.8rem;
+  }
+
+  .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .service-card p {
+    margin-top: 2px;
+    font-size: 0.62rem;
+  }
+
+  .upgrade-meter {
+    width: min(112px, 100%);
+    height: 16px;
+    grid-column: 2;
+    grid-row: 2;
+    gap: 2px;
+    padding: 3px;
+    border-radius: 7px;
+    transform: none;
+  }
+
+  .harbor-screen.is-first-voyage .service-purchase {
+    width: 78px;
+    min-width: 78px;
+    min-height: 46px;
+    grid-column: 3;
+    grid-row: 1 / 3;
+    gap: 4px;
+    padding: 5px 7px;
+    border-radius: 10px;
+  }
+
+  .harbor-screen.is-first-voyage .service-purchase .ui-icon {
+    width: 22px;
+    height: 22px;
+  }
+
+  .harbor-screen.is-first-voyage .service-purchase strong {
+    font-size: 0.76rem;
+  }
+
+  .harbor-screen.is-first-voyage .panel-actions,
+  .harbor-screen.is-first-voyage.is-expanded-harbor .panel-actions,
+  .harbor-screen.is-first-voyage .harbor-panel .panel-actions.is-guided {
+    min-height: 54px;
+    gap: 8px;
+    padding-top: 8px;
+  }
+
+  .harbor-screen.is-first-voyage .panel-actions > div,
+  .harbor-screen.is-first-voyage .panel-actions.is-guided > div,
+  .harbor-screen.is-first-voyage.is-expanded-harbor .panel-actions > div {
+    width: fit-content;
+    grid-template-columns: repeat(2, 76px);
+    gap: 6px;
+  }
+
+  .harbor-screen.is-first-voyage .harbor-panel .harbor-utility-button,
+  .harbor-screen.is-first-voyage .leave-button {
+    min-height: 44px;
+    gap: 5px;
+    padding: 5px 8px;
+    border-radius: 10px;
+  }
+
+  .harbor-screen.is-first-voyage .harbor-panel .harbor-utility-button {
+    width: 76px;
+  }
+
+  .harbor-screen.is-first-voyage .harbor-utility-button .ui-icon,
+  .harbor-screen.is-first-voyage .leave-button .ui-icon {
+    width: 25px;
+    height: 25px;
+  }
+
+  .harbor-screen.is-first-voyage .harbor-utility-button strong,
+  .harbor-screen.is-first-voyage .leave-button strong,
+  .harbor-screen.is-first-voyage.is-expanded-harbor .leave-button strong {
+    font-size: 0.65rem;
+  }
+
+  .harbor-screen.is-first-voyage .leave-button,
+  .harbor-screen.is-first-voyage.is-expanded-harbor .leave-button {
+    width: 169px;
+    min-width: 169px;
+  }
+}

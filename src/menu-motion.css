@@ -1,0 +1,45 @@
+/* One restrained mechanical response shared by the primary menu surfaces. */
+@keyframes menu-button-hover-wobble {
+  0%, 100% { rotate: 0deg; }
+  32% { rotate: 0.35deg; }
+  68% { rotate: -0.24deg; }
+}
+
+@keyframes menu-button-click-wobble {
+  0%, 100% { rotate: 0deg; }
+  34% { rotate: -0.55deg; }
+  70% { rotate: 0.38deg; }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :is(.title-screen, .settings-overlay, .controls-overlay, .pause-screen, .harbor-screen)
+    button:hover:not(:disabled):not(.tutorial-callout) {
+    animation: menu-button-hover-wobble 240ms ease-out;
+    transform-origin: 50% 70%;
+  }
+
+  :is(.title-screen, .settings-overlay, .controls-overlay, .pause-screen, .harbor-screen)
+    button:active:not(:disabled):not(.tutorial-callout) {
+    animation: menu-button-click-wobble 140ms ease-out;
+  }
+}
+
+.harbor-screen .cargo-slot.is-wobbling {
+  animation: menu-button-click-wobble 180ms ease-out;
+}
+
+.reduced-motion
+  :is(.title-screen, .settings-overlay, .controls-overlay, .pause-screen, .harbor-screen)
+  button,
+.reduced-motion .harbor-screen .cargo-slot.is-wobbling {
+  animation: none !important;
+  rotate: 0deg;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :is(.title-screen, .settings-overlay, .controls-overlay, .pause-screen, .harbor-screen) button,
+  .harbor-screen .cargo-slot.is-wobbling {
+    animation: none !important;
+    rotate: 0deg;
+  }
+}

@@ -170,11 +170,12 @@ Each harbor acts as a compact service point. A harbor may provide:
 - Available delivery contracts
 - Fish delivery and payment
 - Boat upgrades
-- Repairs
 - Region permits
 - Brief NPC dialogue
 
 The first release should reuse a consistent harbor interface rather than build fully explorable towns.
+
+The harbor interface opens on Delivery and separates Cargo and Dock services into focused submenus. One compact dark translucent dock panel creates a clear hierarchy of location and shells, category tabs, selected content, and secondary navigation. These sections share the same left and right edges. On a fresh save, a compact Survey → Catch → Deliver primer precedes the first guided assignment; this introduces the complete game loop without exposing later dock systems. After onboarding, every submenu omits the repeated objective panel and harbor subtitle so its functional content begins directly below the tabs. Delivery makes the job ticket the immediate visual focus: its job name is centred, its three sequential route steps are large enough to use the available space, the shell payment is explicitly labelled Reward, and active travel guidance uses the same dark panel language rather than a light legacy callout. Cargo uses a ten-slot game inventory: three slots are unlocked on a fresh save, caught fish occupy slots with freshness and release controls, and the other seven use a dedicated transparent cream-and-orange padlock pictogram. Selecting a locked slot gives it the shared restrained mechanical wobble, then opens Dock Services and focuses its tab; neutral borders and focus rings keep amber reserved for primary state. The same roughly half-degree hover/click response applies consistently to enabled buttons across the harbor, main, settings, controls, and pause menus, while reduced-motion settings suppress it. Dock Services presents one clearly separated full-width row per cargo, engine, lamp, line-depth, and permit option without an additional heading panel. Each row uses an icon plate, concise effect copy, a live level meter, and a shell-price purchase control calculated from the real balance model; Repair hull is not offered. Only one harbor function is visible at a time, the selected submenu keeps keyboard focus, and each submenu must fit supported desktop, portrait, and short-landscape viewports without page scrolling. Switching submenus leaves the title block, tab bar, and footer fixed while only the inner content changes. Tabs, service types, shell costs, help, and field-guide actions use the shared transparent pictogram atlas with short visible labels; each pictogram is centred within an equal sprite cell. Repeated explanatory sentences are removed when the icon and local heading already communicate the action. The background remains recognisable beneath a darker overlay and light blur.
 
 ## Delivery system
 
@@ -288,13 +289,13 @@ Money is earned primarily from completed deliveries and spent on permanent impro
 
 ### Core upgrade paths
 
-- **Boat and cargo:** Each tier increases capacity and visibly grows the vessel through named classes, from the starter skiff to a lakebreaker.
+- **Boat and cargo:** The hold starts with 3 slots. Seven cargo tiers unlock one slot each to a maximum of 10; the vessel grows through named classes, from the starter skiff to a lakebreaker.
 - **Engine speed:** Reach fishing areas and destinations before fish spoil.
 - **Lights:** See landmarks and resist nighttime visibility penalties.
 - **Line depth:** Reach progressively deeper fish and new underwater color zones.
 - **Region access:** Purchase permits or equipment needed to enter new waters.
 
-Core boat upgrades have six tiers. Repair costs support the opening scenario and any authored damage events. Prices rise by upgrade tier without requiring excessive repetition. The player should regularly face a useful decision between building a larger boat, improving travel time, strengthening night visibility, or reaching a deeper and more profitable fishing world.
+Cargo has seven tiers to match its seven locked inventory slots; engine, lights, and line depth have six tiers. Repair costs support the opening scenario and any authored damage events. Prices rise by upgrade tier without requiring excessive repetition. The player should regularly face a useful decision between building a larger boat, improving travel time, strengthening night visibility, or reaching a deeper and more profitable fishing world.
 
 The game is considered content-complete when the player has unlocked every region and purchased the maximum tier of every upgrade. Play can continue afterward through repeatable or generated deliveries.
 
@@ -686,7 +687,7 @@ Every authored visual asset in this slice is generated with GPT Image 2.0. No pr
 | `world-atlas.png` | Side-view buoy, fishing marker, fog, night-wake, and retained legacy sprites on a chroma-key matte |
 | `ui-panel.png` | Minimal full-bleed dark menu and harbor surface |
 | `ui-button.png` | Minimal full-bleed primary action surface |
-| `ui-icons.png` | Cargo, freshness, hull, time, shells, objective, engine, lamp, permit, repair, sound, and pause pictograms |
+| `ui-icons.png` | Cargo, freshness, hull, time, shells, objective, engine, lamp, line-depth, permit, repair, sound, and pause pictograms |
 
 Generated files are explicitly imported from `src/assets/`. Prompts and generation settings are recorded in `Docs/Asset-Manifest.md`; authoring intermediates remain outside the production bundle.
 

@@ -142,7 +142,7 @@ describe("FSHING side-on simulation", () => {
     expect(simulation.progress.completedContracts).toBe(1);
     expect(simulation.progress.money).toBe(102);
     expect(buyUpgrade(simulation, "cargo")).toBe(true);
-    expect(cargoCapacity(simulation)).toBe(2);
+    expect(cargoCapacity(simulation)).toBe(4);
     expect(simulation.progress.money).toBe(42);
     expect(simulation.lastDeliveryResult?.populationBonus).toBe(12);
   });
@@ -175,7 +175,9 @@ describe("FSHING side-on simulation", () => {
   test("enforces cargo capacity and gates deep permit water", () => {
     const simulation = createSimulation();
     expect(resolveCatch(simulation, "needlePike")).toBe(true);
-    expect(resolveCatch(simulation, "reedfin")).toBe(false);
+    expect(resolveCatch(simulation, "reedfin")).toBe(true);
+    expect(resolveCatch(simulation, "sunPerch")).toBe(true);
+    expect(resolveCatch(simulation, "silverDart")).toBe(false);
     expect(startFishing(simulation, "outerGloam")).toBe(false);
 
     simulation.progress.money = BALANCE.permitCost;
@@ -210,13 +212,14 @@ describe("FSHING side-on simulation", () => {
     expect(maxFishingDepth(simulation)).toBeGreaterThanOrEqual(deepTarget?.y ?? 1);
   });
 
-  test("supports six upgrade tiers and seven visible boat classes", () => {
+  test("supports ten cargo slots across seven cargo upgrades", () => {
     const simulation = createSimulation(1, { money: 10_000 });
-    for (let tier = 0; tier < BALANCE.maxUpgradeTier; tier += 1) {
+    expect(cargoCapacity(simulation)).toBe(3);
+    for (let tier = 0; tier < BALANCE.maxCargoTier; tier += 1) {
       expect(buyUpgrade(simulation, "cargo")).toBe(true);
     }
-    expect(simulation.progress.upgrades.cargo).toBe(6);
-    expect(cargoCapacity(simulation)).toBe(7);
+    expect(simulation.progress.upgrades.cargo).toBe(7);
+    expect(cargoCapacity(simulation)).toBe(10);
     expect(boatClassAt(simulation.progress.upgrades.cargo)).toBe("Lakebreaker");
     expect(buyUpgrade(simulation, "cargo")).toBe(false);
     expect(FISHING_SPOTS).toHaveLength(6);
