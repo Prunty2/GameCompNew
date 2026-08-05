@@ -14,7 +14,7 @@ After eight completed research deliveries, the player receives a season report s
 2. **Travel time affects the voyage.** Engine upgrades shorten crossings and help preserve catch freshness without interrupting play with a separate route-choice screen.
 3. **Ecology reacts to the player.** Catching, releasing, protection thresholds, natural recovery, and ecosystem bonuses make population management meaningful.
 4. **Simple to start, satisfying to master.** Boat momentum and direct hook steering are immediate, while better predictions, deeper lines, and efficient travel provide mastery.
-5. **A broad lake with purposeful stops.** Six research buoys, two harbors, three ecosystems, and six depth bands make the enlarged route readable.
+5. **A broad lake with purposeful stops.** Six living fishing grounds, two harbors, three ecosystems, and six depth bands make the enlarged route readable without filling the waterline with signposts.
 6. **Accessible evidence.** Shapes, numbers, labels, icons, and text repeat every important colour signal.
 
 ## Inspiration and originality
@@ -48,7 +48,7 @@ FSHING is not intended to reproduce Dredge in 2D. Its distinct focus is a repeat
 ## Core gameplay loop
 
 1. Visit a harbor and accept a requested fish delivery.
-2. Pilot to one of six clearly anchored waterline research buoys.
+2. Pilot toward one of six fishing grounds, first discovered through faint shoal movement beneath the surface.
 3. Read the water measurements and predict the requested resident species.
 4. Review immediate explanatory feedback, then steer the hook toward the fish.
 5. Store the catch; freshness falls and the species population decreases.
@@ -79,7 +79,7 @@ The game deliberately places the question before the answer. A survey asks the p
 
 ```mermaid
 flowchart LR
-  A["Accept research delivery"] --> B["Travel to research buoy"]
+  A["Accept research delivery"] --> B["Follow shoal activity"]
   B --> C["Read water-quality evidence"]
   C --> D["Predict requested resident"]
   D --> E["Receive explanation"]
@@ -198,12 +198,16 @@ To keep the repeating game playable after all authored contract tiers are comple
 
 Fishing is an active supporting mechanic rather than the entire game.
 
-1. The player reaches a marked fishing area and slows or stops the boat.
-2. Available fish silhouettes or movement cues appear beneath the water.
-3. The player drops the line from the boat into the water directly below.
-4. The camera cuts below the surface while the hook descends through a bounded side-view fishing space.
-5. The player steers the hook toward a fish while avoiding weeds, debris, or unwanted species.
-6. Contact with a valid fish catches it and uses available cargo capacity.
+1. The player notices faint fish movement beneath the lake and steers toward the fishing ground.
+2. A population-aware school is always faintly discoverable; there is no permanent buoy, nameplate, or surface ring.
+3. As the boat approaches, a restrained polarized-water lens clarifies the shoal without turning the lake into a transparent aquarium.
+4. Only after the boat enters interaction range does a compact hook-and-arc cue fade in above the fishing ground. It stays anchored to the ground's world position instead of following the boat, and its accessible interaction label supplies the site name and any permit, line-depth, speed, or cargo restriction without putting persistent text over the lake.
+5. The player drops the line from the boat into the water directly below.
+6. The camera cuts below the surface while the hook descends through a bounded side-view fishing space.
+7. The player steers the hook toward a fish while avoiding weeds, debris, or unwanted species.
+8. Contact with a valid fish catches it and uses available cargo capacity.
+
+The surface cue combines two information layers. The always-present shoal is low-contrast and moves slowly enough to remain readable with reduced motion enabled. Its visible fish count follows the primary species population in broad steps, so a depleted ground remains discoverable but visibly quieter. Proximity strengthens the silhouettes, adds a soft vertical lens of clearer water, and reveals subtle caustic and orbit trails. The hook cue is never shown outside the real interaction radius. High-contrast mode strengthens silhouette edges and the hook arc; all restriction details remain available as accessible text and focus feedback rather than colour alone.
 
 Fish should have recognizable silhouettes and movement patterns so catches do not depend on color alone. During fishing, a specimen card shows the requested fish sprite beside its name and plain-language shape cue, while a labeled bracket follows the matching fish in the water. Rarer fish can move faster, hide deeper, or require improved fishing equipment. For the minimum viable release, the hook interaction should remain short and use steering rather than a separate tension or reeling system.
 
@@ -230,7 +234,7 @@ The boat uses direct horizontal side-scrolling movement:
 - The boat faces its current travel direction and uses restrained bob and tilt so motion remains calm and readable
 - Boat movement stays on the open horizontal surface without fixed collision obstacles
 
-The lake panorama and every surface sprite share one normalized world-space camera projection. The camera owns a single visible span, clamped left edge, and speed-based look-ahead; background crop bounds, harbors, buoys, hazards, objectives, weather lighting, and the boat all derive their screen positions from that same projection. This prevents scenery and gameplay objects from drifting at different apparent speeds while preserving a wider, static title-screen view.
+The lake panorama and every surface effect share one normalized world-space camera projection. The camera owns a single visible span, clamped left edge, and speed-based look-ahead; background crop bounds, harbors, fishing-ground shoals, objectives, weather lighting, and the boat all derive their screen positions from that same projection. This prevents scenery and gameplay objects from drifting at different apparent speeds while preserving a wider, static title-screen view.
 
 The handling should feel smooth, measured, and forgiving rather than physically realistic. Acceleration builds gradually, direction changes retain readable momentum, and the lower cruising speed gives the player time to plan without a complicated turning arc.
 
@@ -613,7 +617,7 @@ This slice proves the complete accept–fish–deliver–upgrade loop through a 
 ### Player journey
 
 1. Start at **Brindle Harbor** and accept **The Morning Order**, requesting one Reedfin for **Gloam Ferry**.
-2. Brake beside the water-connected Sunward Shoal research buoy.
+2. Follow the faint Sunward Shoal fish activity and slow when the polarized-water lens reveals the school.
 3. Read 4 m depth, 21°C temperature, 8.4 mg/L dissolved oxygen, low turbidity, and reed habitat; predict the Reedfin from three silhouettes.
 4. Read the adaptation explanation, enter the underwater cutaway, and catch the Reedfin.
 5. As freshness begins, start the crossing from Sunward Shoal to Gloam Ferry automatically without a blocking route-choice screen.
@@ -681,7 +685,8 @@ Every authored visual asset in this slice is generated with GPT Image 2.0. No pr
 | `harbor-pier.png` | Long weathered side-view harbor pier that extends from either shoreline; its fixed footprint uses roughly 36–44 narrow deck-plank divisions so the timber scale remains believable beside the player boat |
 | `fish-atlas.png` | Fishing-hook sprite and retained original fish reference cells |
 | `fish-atlas-v2.png` | Nine independently generated, silhouette-distinct species in a strict 3 × 3 atlas |
-| `fishing-spots-atlas.png` | Six site-specific research landmarks in a strict 3 × 2 atlas, with unique silhouettes for every fishing ground |
+| `surface-fishing-cues.png` | Six faint school-fish poses plus enabled and disabled proximity hook cues in a strict 4 × 2 atlas |
+| `polarized-lens.png` | Soft additive clear-water lens and painted caustic trails shown as the boat approaches a fishing ground |
 | `world-atlas.png` | Side-view buoy, fog, night-wake, and retained legacy sprites on a chroma-key matte |
 | `ui-panel.png` | Minimal full-bleed dark menu and harbor surface |
 | `ui-button.png` | Minimal full-bleed primary action surface |
@@ -689,7 +694,7 @@ Every authored visual asset in this slice is generated with GPT Image 2.0. No pr
 
 Generated files are explicitly imported from `src/assets/`. Prompts and generation settings are recorded in `Docs/Asset-Manifest.md`; authoring intermediates remain outside the production bundle.
 
-Each surface fishing ground uses its own generated research landmark rather than a shared generic sign. The landmark silhouette and material treatment communicate site identity, while adjacent Canvas text repeats the site name, access requirement, target species, and population condition so recognition never depends on colour or sprite detail alone.
+Surface fishing grounds use two dedicated GPT Image runtime assets: `surface-fishing-cues.png` supplies six coordinated submerged fish poses plus complete enabled and disabled hook-and-arc pictograms, while `polarized-lens.png` supplies the feathered clear-water and caustic treatment through additive blending. Canvas only places, scales, fades, and animates these authored sprites from deterministic state. Population-aware school size, localized clarity, and a proximity-only hook cue distinguish the grounds without a separate landmark atlas. Site names, access requirements, target species, and population condition remain in survey, objective, field-guide, and accessible interaction text instead of becoming permanent Canvas labels.
 
 ### Slice acceptance tests
 

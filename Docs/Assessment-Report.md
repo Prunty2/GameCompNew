@@ -47,7 +47,7 @@ By the end of a research season, a player should be able to:
 
 | STEM outcome | Gameplay action | Immediate feedback | Measurable evidence |
 | --- | --- | --- | --- |
-| Interpret water-quality evidence | Read depth, temperature, oxygen, turbidity, and habitat at a buoy | Written field note links the readings | Survey completed; selected prediction stored |
+| Interpret water-quality evidence | Follow a living shoal, then read depth, temperature, oxygen, turbidity, and habitat at its fishing ground | Written field note links the readings | Survey completed; selected prediction stored |
 | Connect adaptation to habitat | Choose one contract species from three silhouettes and descriptions | Supported/rethink result explains the fish feature | Correct predictions and field-guide discovery |
 | Apply distance–speed–time | Compare catch-to-harbor route distance and two calculated times | Both estimates show the same equation and units | Route-plan count; chosen route stored |
 | Evaluate a risk trade-off | Choose safer/slower or faster/higher-damage travel | Route card and hazard hit report show multipliers | Predicted versus actual freshness result |
@@ -66,7 +66,7 @@ The primary audience is Year 7–10 students. The secondary audience is casual b
 | Understand why an answer is right | Immediate written explanation connecting measurements, habitat, and adaptation |
 | Learn without a punishing quiz | Incorrect predictions still reveal evidence and allow play to continue |
 | Recognise fish without colour | Distinct silhouettes, shape descriptions, names, and depth tiers |
-| See the consequence of fishing | Written population label and percentage at markers, harbor, and field guide |
+| See the consequence of fishing | Population-aware shoal size plus written percentage and status in the survey, harbor, and field guide |
 | Recover from mistakes | Rescue keeps the save, release restores stocks, and contracts remain repeatable |
 | Use different devices or needs | Keyboard, pointer, touch, remapping, high contrast, reduced motion, mute |
 
@@ -84,7 +84,7 @@ The Australian Copyright Council distinguishes an abstract idea from its protect
 
 ```mermaid
 flowchart LR
-  A["Accept delivery"] --> B["Travel to research buoy"]
+  A["Accept delivery"] --> B["Follow shoal activity"]
   B --> C["Read water evidence"]
   C --> D["Predict a contract species"]
   D --> E["Review explanation"]
@@ -102,7 +102,7 @@ flowchart LR
 
 1. Press **Play** and arrive at Brindle Harbor.
 2. Accept **The Morning Order**, which requests a Reedfin for Gloam Ferry.
-3. Travel to the water-connected Sunward Shoal marker.
+3. Follow the faint Sunward Shoal fish activity until the polarized-water lens strengthens and the hook appears above the fishing ground.
 4. Read: 4 m, 21°C, 8.4 mg/L dissolved oxygen, low turbidity, sunlit reeds.
 5. Predict the Reedfin from three species descriptions.
 6. Read why broad fins help it manoeuvre in reeds, then lower the hook.
@@ -140,7 +140,7 @@ Each fishing view contains two individuals from each of its three documented res
 
 - Survey feedback names whether evidence supported the prediction and explains the relationship.
 - Underwater depth boundaries remain visible with an upgrade instruction.
-- Fishing markers physically meet the water and show site, species, and population text.
+- Fishing grounds remain faintly discoverable through GPT Image school sprites; proximity reveals a GPT Image polarized-water lens and interaction-range hook cue, while survey and field-guide screens provide the written site, species, and population information.
 - Hazards use a shape, `!` symbol, written name, and colour.
 - Delivery results compare prediction and actual outcome instead of showing only currency.
 - A healthy-ecosystem bonus rewards sustainability without blocking ordinary progress.
@@ -310,7 +310,7 @@ The development brief was refined through direct stakeholder requests:
 | “Make it a much larger map” | The voyage felt too small | Camera view reduced to 0.30 world width, making the harbor span about three views |
 | “Menu screen … a lot more normal” | Initial menu hierarchy was unusual | Centred bounded panel, dominant Play button, familiar secondary actions |
 | “Fix the colour scheme” | Colours lacked cohesion | Unified deep teal, sea-glass, ivory, amber, and restrained warning colours |
-| “Fishing spots more obvious” | Markers were hard to read and appeared airborne | Large labelled markers with vertical stems and ellipses touching the water |
+| “Fishing spots should feel alive” | Large labelled landmarks felt artificial and cluttered the waterline | Faint population-aware fish schools, a proximity-strengthened polarized-water lens, and a hook shown only inside the true interaction radius |
 | “Lots of different types of fish” | Repeated fish did not support discovery | Nine named, illustrated, silhouette-distinct species and profiles |
 | “Water deeper … only with upgrades” | Depth progression was unclear | Six visible depth tiers and labelled upgrade boundary |
 | “Larger boats … upgrade way more” | Progression ended too quickly | Six tiers in four upgrade paths and seven named boat classes |
