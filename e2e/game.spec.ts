@@ -341,6 +341,22 @@ test("touch controls are available at a mobile landscape viewport", async ({ pag
   await expect(page.getByRole("button", { name: "Interact or cast" })).toBeVisible();
 });
 
+test("dock interaction starts on pointer press", async ({ page }) => {
+  await page.goto("/?e2e=1");
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.getByRole("button", { name: "Accept contract" }).click();
+  await page.evaluate(() => window.__FSHING_TEST__?.sailToHarbor("brindle"));
+
+  const dockButton = page.getByRole("button", { name: "Dock · Brindle Harbor" });
+  const bounds = await dockButton.boundingBox();
+  if (!bounds) throw new Error("Expected the dock button to have visible bounds.");
+
+  await page.mouse.move(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
+  await page.mouse.down();
+  await expect(page.getByRole("heading", { name: "Brindle Harbor" })).toBeVisible();
+  await page.mouse.up();
+});
+
 test("keyboard input moves the boat horizontally and flips its side profile", async ({ page }) => {
   await page.goto("/?e2e=1");
   await page.getByRole("button", { name: "Play", exact: true }).click();
