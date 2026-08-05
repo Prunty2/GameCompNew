@@ -18,7 +18,7 @@ import { createSideScrollCamera, worldToScreenX, type SideScrollCamera } from ".
 import { calculatePanoramaLayout } from "./panorama";
 import { fogIntensity, isNight, maxFishingDepth, objective, type Simulation } from "./simulation";
 import { populationLabel } from "./stem";
-import { drawContactShadow, drawWaterContact } from "./surfaceEffects";
+import { captureSurfaceLayer, drawWaterContact } from "./surfaceEffects";
 
 export interface RenderSettings {
   highContrast: boolean;
@@ -38,6 +38,7 @@ interface LoadedArt {
 export class CanvasRenderer {
   private readonly context: CanvasRenderingContext2D;
   private readonly artReady: Promise<void>;
+  private readonly surfaceLayer = document.createElement("canvas");
   private art: LoadedArt | null = null;
 
   constructor(private readonly canvas: HTMLCanvasElement) {
@@ -117,6 +118,7 @@ export class CanvasRenderer {
     context.restore();
 
     if (settings.cinematic) return;
+    const surfaceLayer = captureSurfaceLayer(this.canvas, this.surfaceLayer);
 
     context.save();
     context.fillStyle = "rgba(8, 31, 40, 0.78)";
@@ -137,7 +139,9 @@ export class CanvasRenderer {
         x,
         waterline,
         harbor.id === "gloam",
-        region.surfaceTint,
+        surfaceLayer,
+        width,
+        height,
         simulation.elapsed,
         settings,
       );
@@ -184,7 +188,7 @@ export class CanvasRenderer {
     }
 
     this.drawObjective(simulation, camera, width, height);
-    this.drawBoat(simulation, camera, width, waterline, region.surfaceTint, settings);
+    this.drawBoat(simulation, camera, width, height, waterline, surfaceLayer, settings);
     this.drawWeather(simulation, camera, width, height, settings);
 
   }
@@ -193,7 +197,9 @@ export class CanvasRenderer {
     x: number,
     waterline: number,
     fromRightShore: boolean,
-    surfaceTint: string,
+    surfaceLayer: HTMLCanvasElement,
+    viewportWidth: number,
+    viewportHeight: number,
     elapsed: number,
     settings: RenderSettings,
   ): void {
@@ -208,18 +214,6 @@ export class CanvasRenderer {
       ? x - outboardOverlap + pierWidth / 2
       : x + outboardOverlap - pierWidth / 2;
 
-    drawContactShadow(this.context, {
-      centerX: pierCenter,
-      waterline,
-      width: pierWidth * 0.92,
-      depth: clamp(pierHeight * 0.12, 8, 18),
-      tint: surfaceTint,
-      elapsed,
-      reducedMotion: settings.reducedMotion,
-      highContrast: settings.highContrast,
-      seed: fromRightShore ? 2.4 : 0.7,
-    });
-
     this.context.save();
     if (fromRightShore) {
       this.context.translate(x - outboardOverlap, 0);
@@ -230,12 +224,12 @@ export class CanvasRenderer {
     }
     this.context.restore();
 
-    drawWaterContact(this.context, {
+    drawWaterContact(this.context, surfaceLayer, {
       centerX: pierCenter,
       waterline,
-      width: pierWidth * 0.9,
-      depth: clamp(pierHeight * 0.11, 8, 17),
-      tint: surfaceTint,
+      width: pierWidth + 16,
+      viewportWidth,
+      viewportHeight,
       elapsed,
       reducedMotion: settings.reducedMotion,
       highContrast: settings.highContrast,
@@ -360,8 +354,9 @@ export class CanvasRenderer {
     simulation: Simulation,
     camera: SideScrollCamera,
     width: number,
+    height: number,
     waterline: number,
-    surfaceTint: string,
+    surfaceLayer: HTMLCanvasElement,
     settings: RenderSettings,
   ): void {
     const art = this.art;
@@ -375,18 +370,6 @@ export class CanvasRenderer {
     const bob = settings.reducedMotion ? 0 : Math.sin(simulation.elapsed * (2 + speedRatio)) * (1.1 + speedRatio * 0.8);
     const tilt = settings.reducedMotion ? 0 : clamp(simulation.boat.speed * 0.16, -0.02, 0.02);
 
-    drawContactShadow(context, {
-      centerX: x,
-      waterline: waterline + bob,
-      width: boatWidth * 0.78,
-      depth: clamp(boatHeight * 0.08, 7, 15),
-      tint: surfaceTint,
-      elapsed: simulation.elapsed,
-      reducedMotion: settings.reducedMotion,
-      highContrast: settings.highContrast,
-      seed: 1.3,
-    });
-
     context.save();
     context.translate(x, waterline + bob);
     context.scale(simulation.boat.facing, 1);
@@ -394,12 +377,12 @@ export class CanvasRenderer {
     context.drawImage(art.boat, -boatWidth / 2, -boatHeight * 0.86, boatWidth, boatHeight);
     context.restore();
 
-    drawWaterContact(context, {
+    drawWaterContact(context, surfaceLayer, {
       centerX: x,
       waterline: waterline + bob,
-      width: boatWidth * 0.82,
-      depth: clamp(boatHeight * 0.095, 8, 18),
-      tint: surfaceTint,
+      width: boatWidth + 18,
+      viewportWidth: width,
+      viewportHeight: height,
       elapsed: simulation.elapsed,
       reducedMotion: settings.reducedMotion,
       highContrast: settings.highContrast,
