@@ -18,6 +18,7 @@ import { createSideScrollCamera, worldToScreenX, type SideScrollCamera } from ".
 import { calculatePanoramaLayout } from "./panorama";
 import { fogIntensity, isNight, maxFishingDepth, objective, type Simulation } from "./simulation";
 import { populationLabel } from "./stem";
+import { captureSurfaceLayer, drawWaterContact } from "./surfaceEffects";
 
 export interface RenderSettings {
   highContrast: boolean;
@@ -37,6 +38,7 @@ interface LoadedArt {
 export class CanvasRenderer {
   private readonly context: CanvasRenderingContext2D;
   private readonly artReady: Promise<void>;
+  private readonly surfaceLayer = document.createElement("canvas");
   private art: LoadedArt | null = null;
 
   constructor(private readonly canvas: HTMLCanvasElement) {
@@ -116,6 +118,7 @@ export class CanvasRenderer {
     context.restore();
 
     if (settings.cinematic) return;
+    const surfaceLayer = captureSurfaceLayer(this.canvas, this.surfaceLayer);
 
     context.save();
     context.fillStyle = "rgba(8, 31, 40, 0.78)";
@@ -132,7 +135,16 @@ export class CanvasRenderer {
     for (const harbor of HARBORS) {
       const x = worldToScreenX(harbor.x, camera, width);
       if (!isNearScreen(x, width, 540)) continue;
-      this.drawHarborPier(x, waterline, harbor.id === "gloam");
+      this.drawHarborPier(
+        x,
+        waterline,
+        harbor.id === "gloam",
+        surfaceLayer,
+        width,
+        height,
+        simulation.elapsed,
+        settings,
+      );
     }
 
     for (const spot of FISHING_SPOTS) {
@@ -176,19 +188,32 @@ export class CanvasRenderer {
     }
 
     this.drawObjective(simulation, camera, width, height);
-    this.drawBoat(simulation, camera, width, waterline, settings);
+    this.drawBoat(simulation, camera, width, height, waterline, surfaceLayer, settings);
     this.drawWeather(simulation, camera, width, height, settings);
 
   }
 
-  private drawHarborPier(x: number, waterline: number, fromRightShore: boolean): void {
+  private drawHarborPier(
+    x: number,
+    waterline: number,
+    fromRightShore: boolean,
+    surfaceLayer: HTMLCanvasElement,
+    viewportWidth: number,
+    viewportHeight: number,
+    elapsed: number,
+    settings: RenderSettings,
+  ): void {
     const art = this.art;
     if (!art) return;
     const pierWidth = clamp(this.canvas.clientHeight * 0.56, 320, 520);
     const pierHeight = pierWidth * (art.pier.naturalHeight / art.pier.naturalWidth);
     const deckTop = waterline - 32;
-    const drawY = deckTop - pierHeight * 0.43;
+    const pierLift = clamp(pierHeight * 0.04, 4, 9);
+    const drawY = deckTop - pierHeight * 0.43 - pierLift;
     const outboardOverlap = 24;
+    const pierCenter = fromRightShore
+      ? x - outboardOverlap + pierWidth / 2
+      : x + outboardOverlap - pierWidth / 2;
 
     this.context.save();
     if (fromRightShore) {
@@ -199,6 +224,18 @@ export class CanvasRenderer {
       this.context.drawImage(art.pier, x + outboardOverlap - pierWidth, drawY, pierWidth, pierHeight);
     }
     this.context.restore();
+
+    drawWaterContact(this.context, surfaceLayer, {
+      centerX: pierCenter,
+      waterline,
+      width: pierWidth + 16,
+      viewportWidth,
+      viewportHeight,
+      elapsed,
+      reducedMotion: settings.reducedMotion,
+      highContrast: settings.highContrast,
+      seed: fromRightShore ? 2.4 : 0.7,
+    });
   }
 
   private renderFishing(simulation: Simulation, settings: RenderSettings, width: number, height: number): void {
@@ -318,7 +355,9 @@ export class CanvasRenderer {
     simulation: Simulation,
     camera: SideScrollCamera,
     width: number,
+    height: number,
     waterline: number,
+    surfaceLayer: HTMLCanvasElement,
     settings: RenderSettings,
   ): void {
     const art = this.art;
@@ -331,43 +370,26 @@ export class CanvasRenderer {
     const speedRatio = Math.min(1, Math.abs(simulation.boat.speed) / BALANCE.maxSurfaceSpeed);
     const bob = settings.reducedMotion ? 0 : Math.sin(simulation.elapsed * (2 + speedRatio)) * (1.1 + speedRatio * 0.8);
     const tilt = settings.reducedMotion ? 0 : clamp(simulation.boat.speed * 0.16, -0.02, 0.02);
+    const boatLift = clamp(boatHeight * 0.04, 4, 9);
 
     context.save();
-    context.translate(x, waterline + bob);
+    context.translate(x, waterline + bob - boatLift);
     context.scale(simulation.boat.facing, 1);
     context.rotate(tilt);
     context.drawImage(art.boat, -boatWidth / 2, -boatHeight * 0.86, boatWidth, boatHeight);
     context.restore();
 
-    if (Math.abs(simulation.boat.speed) > 0.018) {
-      const wakeDirection = simulation.boat.speed > 0 ? -1 : 1;
-      context.save();
-      context.globalAlpha = 0.34 + speedRatio * 0.28;
-      context.strokeStyle = settings.highContrast ? "#ffffff" : "#d9ede3";
-      context.lineWidth = 1.5 + speedRatio;
-      for (let index = 0; index < 3; index += 1) {
-        const length = 26 + index * 18 + Math.abs(simulation.boat.speed) * 130;
-        context.beginPath();
-        context.moveTo(x + wakeDirection * boatWidth * 0.34, waterline + 4 + index * 6);
-        context.quadraticCurveTo(
-          x + wakeDirection * (boatWidth * 0.34 + length * 0.52),
-          waterline + 2 + index * 8,
-          x + wakeDirection * (boatWidth * 0.34 + length),
-          waterline + 7 + index * 10,
-        );
-        context.stroke();
-      }
-      if (speedRatio > 0.65 && !settings.reducedMotion) {
-        context.globalAlpha = (speedRatio - 0.55) * 0.72;
-        for (let index = 0; index < 4; index += 1) {
-          const sprayX = x - wakeDirection * boatWidth * 0.28 + Math.sin(simulation.elapsed * 17 + index) * 8;
-          const sprayY = waterline - 2 - ((simulation.elapsed * 52 + index * 13) % 22);
-          context.fillStyle = settings.highContrast ? "#ffffff" : "#d9ede3";
-          context.fillRect(sprayX, sprayY, 2 + speedRatio * 2, 2 + speedRatio * 2);
-        }
-      }
-      context.restore();
-    }
+    drawWaterContact(context, surfaceLayer, {
+      centerX: x,
+      waterline: waterline + bob,
+      width: boatWidth + 18,
+      viewportWidth: width,
+      viewportHeight: height,
+      elapsed: simulation.elapsed,
+      reducedMotion: settings.reducedMotion,
+      highContrast: settings.highContrast,
+      seed: 1.3,
+    });
   }
 
   private drawObjective(simulation: Simulation, camera: SideScrollCamera, width: number, height: number): void {
