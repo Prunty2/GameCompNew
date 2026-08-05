@@ -162,51 +162,22 @@ input:focus-visible {
   height: 28px;
   background-image: var(--icon-art);
   background-repeat: no-repeat;
-  background-size: 400% 300%;
+  background-size: 400% 400%;
 }
 
 .icon-cargo { background-position: 0 0; }
 .icon-freshness { background-position: 33.333% 0; }
 .icon-hull { background-position: 66.667% 0; }
 .icon-time { background-position: 100% 0; }
-.icon-shells { background-position: 0 50%; }
-.icon-objective { background-position: 33.333% 50%; }
-.icon-engine { background-position: 66.667% 50%; }
-.icon-lamp { background-position: 100% 50%; }
-.icon-line {
-  position: relative;
-  overflow: hidden;
-  background-color: #04152b;
-  background-image: none;
-}
-
-.icon-line::before {
-  position: absolute;
-  top: 14%;
-  left: 47%;
-  width: 7%;
-  height: 52%;
-  border-radius: 999px;
-  background: linear-gradient(to bottom, #fff0cf 0 38%, #f46f21 38% 62%, #fff0cf 62% 100%);
-  content: "";
-}
-
-.icon-line::after {
-  position: absolute;
-  top: 53%;
-  left: 44%;
-  width: 27%;
-  height: 25%;
-  border-right: max(2px, 0.08em) solid #f46f21;
-  border-bottom: max(2px, 0.08em) solid #f46f21;
-  border-radius: 0 0 85% 0;
-  content: "";
-  transform: rotate(12deg);
-  transform-origin: top left;
-}
-.icon-permit { background-position: 0 100%; }
-.icon-repair { background-position: 33.333% 100%; }
-.icon-sound { background-position: 66.667% 100%; }
+.icon-shells { background-position: 0 33.333%; }
+.icon-objective { background-position: 33.333% 33.333%; }
+.icon-engine { background-position: 66.667% 33.333%; }
+.icon-lamp { background-position: 100% 33.333%; }
+.icon-line { background-position: 0 66.667%; }
+.icon-permit { background-position: 33.333% 66.667%; }
+.icon-repair { background-position: 66.667% 66.667%; }
+.icon-sound { background-position: 100% 66.667%; }
+.icon-pause { background-position: 0 100%; }
 .tutorial-callout {
   position: absolute;
   z-index: 4;
@@ -5802,6 +5773,42 @@ kbd {
   text-align: left;
 }
 
+.harbor-screen.is-first-voyage .harbor-intro.is-first-step {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 20px;
+}
+
+.first-voyage-primer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.first-voyage-primer > span {
+  display: grid;
+  min-width: 48px;
+  justify-items: center;
+  gap: 3px;
+  color: var(--menu-paper);
+}
+
+.first-voyage-primer .ui-icon {
+  width: 30px;
+  height: 30px;
+}
+
+.first-voyage-primer strong {
+  font-size: 0.58rem;
+  letter-spacing: 0.04em;
+}
+
+.first-voyage-primer > b {
+  color: rgb(247 241 227 / 38%);
+  font-size: 0.72rem;
+}
+
 .harbor-screen.is-first-voyage .harbor-tabs {
   display: grid;
   width: 100%;
@@ -5834,13 +5841,13 @@ kbd {
 .harbor-screen.is-first-voyage .harbor-tab .ui-icon {
   width: 27px;
   height: 27px;
-  border: 1px solid rgb(247 241 227 / 18%);
-  border-radius: 8px;
-  box-shadow: 0 3px 8px rgb(2 15 21 / 24%);
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .harbor-screen.is-first-voyage .harbor-tab.is-active .ui-icon {
-  border-color: rgb(7 31 40 / 28%);
+  border-color: transparent;
   box-shadow: none;
 }
 
@@ -6033,9 +6040,9 @@ kbd {
 .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .service-card > .ui-icon {
   width: 38px;
   height: 38px;
-  border: 1px solid rgb(247 241 227 / 20%);
-  border-radius: 11px;
-  box-shadow: 0 5px 12px rgb(2 15 21 / 26%);
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .service-card h4 {
@@ -6205,6 +6212,19 @@ kbd {
     font-size: 0.66rem;
   }
 
+  .harbor-screen.is-first-voyage .harbor-intro.is-first-step {
+    gap: 12px;
+  }
+
+  .first-voyage-primer .ui-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .first-voyage-primer strong {
+    font-size: 0.52rem;
+  }
+
   .harbor-screen.is-first-voyage .harbor-tabs {
     margin-bottom: 8px;
   }
@@ -6313,6 +6333,29 @@ kbd {
     min-height: 68px;
     margin: 12px 0;
     padding: 10px 11px;
+  }
+
+  .harbor-screen.is-first-voyage .harbor-intro.is-first-step {
+    grid-template-columns: 1fr;
+    gap: 9px;
+  }
+
+  .first-voyage-primer {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .first-voyage-primer > span {
+    min-width: 54px;
+    grid-template-columns: 24px auto;
+    align-items: center;
+    justify-items: start;
+    gap: 5px;
+  }
+
+  .first-voyage-primer .ui-icon {
+    width: 24px;
+    height: 24px;
   }
 
   .harbor-screen.is-first-voyage .harbor-tabs {

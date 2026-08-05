@@ -128,13 +128,16 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await expect(page.getByRole("img", { name: "FSHING" })).toBeVisible();
   await page.getByRole("button", { name: "Play", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Brindle Harbor" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Accept your first delivery to begin" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Read the lake. Deliver with care." })).toBeVisible();
+  await expect(page.locator(".first-voyage-primer .ui-icon")).toHaveCount(3);
+  await expect(page.getByLabel("Your voyage: survey, catch, deliver")).toHaveText("Survey→Catch→Deliver");
   await expect(page.locator(".harbor-screen")).toHaveClass(/is-first-voyage/);
   await expect(page.locator(".harbor-wordmark")).toBeVisible();
   await expectHorizontallyCentered(page, ".harbor-panel");
   await expect(page.locator(".harbor-panel")).toHaveCSS("background-color", "rgba(4, 24, 32, 0.9)");
   await expect(page.locator(".mission-button")).toHaveCSS("border-radius", "14px");
   await expect(page.locator(".job-ticket")).toHaveClass(/is-guided/);
+  await expect(page.getByRole("button", { name: "Accept contract" })).toContainText("Begin first voyage");
   await expect(page.getByRole("heading", { name: "Your cargo" })).toHaveCount(0);
   await expect(page.getByRole("region", { name: "Dock services" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Back to lake →" })).toHaveCount(0);
@@ -191,6 +194,8 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await expect(page.locator(".harbor-tab .ui-icon")).toHaveCount(3);
   await expect(page.getByRole("region", { name: "Dock services" })).toBeVisible();
   await expect(page.locator(".service-card > .ui-icon")).toHaveCount(6);
+  await expect(page.locator(".service-card > .icon-line")).toHaveCSS("background-image", /ui-icons/);
+  await expect(page.locator(".service-card > .icon-line")).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
   await expect(page.locator(".harbor-utility-button")).toHaveCount(2);
   const servicesPanelBounds = await page.locator(".harbor-panel").boundingBox();
   expect(Math.abs((servicesPanelBounds?.y ?? 0) - (deliveryHubBounds?.y ?? 0))).toBeLessThanOrEqual(1);

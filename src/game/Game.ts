@@ -452,7 +452,7 @@ export class Game {
     const contractMarkup = available
       ? `<div class="contract-card job-ticket ${isFirstJobOffer ? "is-guided" : ""}">
           <div class="job-ticket-heading">
-            <div><span class="card-kicker">Your next job</span><h3>${available.title}</h3></div>
+            <div><span class="card-kicker">${isFirstJobOffer ? "First assignment" : "Your next job"}</span><h3>${available.title}</h3></div>
             <span class="reward-stamp" aria-label="${available.reward} shell reward"><span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${available.reward}</strong></span>
           </div>
           <ol class="job-route" aria-label="Job steps">
@@ -461,7 +461,7 @@ export class Game {
             <li><span>3</span><div><small>Deliver to</small><strong>${harborById(available.destination).name}</strong></div></li>
           </ol>
           <button class="primary-button mission-button" type="button" data-action="accept-contract" aria-label="Accept contract">
-            <span><strong>Take this job</strong></span><b aria-hidden="true">→</b>
+            <span><strong>${isFirstJobOffer ? "Begin first voyage" : "Take this job"}</strong></span><b aria-hidden="true">→</b>
           </button>
         </div>`
       : contract
@@ -488,8 +488,8 @@ export class Game {
       : activeSection === "services"
         ? { eyebrow: "Dock services", title: "Improve your boat", body: "" }
         : {
-            eyebrow: isFirstJobOffer ? "First voyage" : "Current task",
-            title: isFirstJobOffer ? "Accept your first delivery to begin" : available ? "Choose the posted delivery" : deliverable ? "Hand in your catch" : contract ? "Continue your delivery" : "Let protected stocks recover",
+            eyebrow: isFirstJobOffer ? "Welcome aboard" : "Current task",
+            title: isFirstJobOffer ? "Read the lake. Deliver with care." : available ? "Choose the posted delivery" : deliverable ? "Hand in your catch" : contract ? "Continue your delivery" : "Let protected stocks recover",
             body: isFirstJobOffer ? "" : available ? "Choose a job, then follow its marker." : deliverable ? "Turn in the requested fish for payment." : contract ? "Your current job remains active." : "Return visits restore protected fish stocks.",
           };
 
@@ -527,6 +527,7 @@ export class Game {
           </header>
           <div class="harbor-intro ${isFirstJobOffer ? "is-first-step" : ""}">
             <div><span class="panel-eyebrow">${sectionHeading.eyebrow}</span><h3>${sectionHeading.title}</h3></div>
+            ${isFirstJobOffer ? `<div class="first-voyage-primer" aria-label="Your voyage: survey, catch, deliver"><span><i class="ui-icon icon-objective" aria-hidden="true"></i><strong>Survey</strong></span><b aria-hidden="true">→</b><span><i class="ui-icon icon-freshness" aria-hidden="true"></i><strong>Catch</strong></span><b aria-hidden="true">→</b><span><i class="ui-icon icon-cargo" aria-hidden="true"></i><strong>Deliver</strong></span></div>` : ""}
             ${sectionHeading.body ? `<p>${sectionHeading.body}</p>` : ""}
           </div>
           ${harborTabs}

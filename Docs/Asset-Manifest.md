@@ -70,9 +70,10 @@ The boat, harbor pier, fish atlas, and world atlas were requested on a uniform `
 
 ### `ui-icons.png`
 
-- Runtime role: twelve status, objective, upgrade, setting, and pause pictograms
-- Generated size: 1448 × 1086
-- Prompt: “Use GPT Image 2.0. Create a strict 4 by 3 icon atlas for a restrained side-on 2D lake game's HTML interface. Twelve equal rectangular cells in exact row-major order: cargo crate, fish freshness with leaf and fish, damaged boat hull, clock/time, shell currency, objective compass arrow, engine, boat lamp, stamped permit paper, repair wrench, speaker/sound, pause bars. One centered icon per cell. Minimal bold cream line-and-solid pictograms with sparse safety-orange accents on a uniform edge-to-edge deep ink-navy painted background. Icons must remain highly legible at 20 pixels and differ by silhouette, not color alone. No circles or medallions around icons, no labels, no letters, no numbers, no decorative frames, no cell borders, no grid lines, no gradients, no transparency, no checkerboard. Keep exact equal-cell alignment and generous inner padding.”
+- Runtime role: thirteen status, objective, upgrade, setting, and pause pictograms
+- Generated size: 1448 × 1448
+- Prompt: “Use GPT Image 2.0. Regenerate the complete menu icon set. Preserve these pictogram meanings: cargo crate; fish freshness shown by fish plus leaf; damaged boat hull; clock/time; shell currency; objective compass arrow; engine; boat lamp; line depth shown by a fishing line descending through depth marks to a hook; stamped permit paper; repair wrench; speaker/sound; pause bars. Use restrained bold screen-printed game UI pictograms, warm cream shapes with sparse safety-orange details, crisp high-contrast silhouettes, matching the existing FSHING interface. Use one icon per cell, consistent apparent scale, generous equal safe padding, and no artwork crossing a cell boundary. Place the icons on a perfectly flat solid chroma-key background for removal. No navy or colored tiles, circles, medallions, labels, letters, numbers, borders, grid lines, frames, shadows, reflections, watermark, or checkerboard.”
+- Processing: The flat keys were removed to alpha, then the generated pictogram bounds were mechanically packed into the first thirteen cells of a 4 × 4 atlas with three transparent unused cells. Every alpha-bound centre is within 0.5 px of its 362 × 362 cell centre; the artwork itself was not redrawn during packing.
 
 ## Procedural audio assets
 
