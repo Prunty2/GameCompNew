@@ -31,7 +31,7 @@
 }
 
 .harbor-screen.is-first-voyage.is-first-job-offer .harbor-panel {
-  height: min(620px, calc(100dvh - 32px));
+  height: auto;
 }
 
 .harbor-screen.is-first-voyage .harbor-panel .harbor-header {
@@ -114,6 +114,50 @@
 .harbor-screen.is-first-voyage .shell-balance strong {
   color: var(--menu-paper);
   font-size: 1.35rem;
+}
+
+.harbor-screen.is-first-voyage .reward-stamp {
+  display: grid;
+  min-width: 112px;
+  min-height: 48px;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 10px 8px 12px;
+  border: 2px solid var(--menu-signal);
+  border-radius: 10px;
+  background: var(--menu-signal);
+  color: var(--menu-ink);
+  box-shadow: inset 0 -3px 0 var(--menu-signal-dark);
+  line-height: 1;
+  text-align: left;
+  transform: none;
+}
+
+.harbor-screen.is-first-voyage .reward-stamp .reward-label {
+  color: var(--menu-ink);
+  font-size: 0.64rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.harbor-screen.is-first-voyage .reward-stamp .reward-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--menu-ink);
+}
+
+.harbor-screen.is-first-voyage .reward-stamp .ui-icon {
+  width: 27px;
+  height: 27px;
+  border-radius: 8px;
+}
+
+.harbor-screen.is-first-voyage .reward-stamp strong {
+  color: var(--menu-ink);
+  font-size: 1rem;
 }
 
 .harbor-screen.is-first-voyage .harbor-intro,
@@ -295,13 +339,13 @@
   gap: 4px;
   padding: 8px 12px;
   border-width: 2px;
-  background: linear-gradient(180deg, rgb(240 166 72 / 24%), rgb(240 166 72 / 10%));
-  box-shadow: inset 0 0 0 1px rgb(255 204 124 / 15%);
+  background: var(--menu-signal);
+  box-shadow: inset 0 -3px 0 var(--menu-signal-dark);
 }
 
-.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .reward-stamp small {
+.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .reward-stamp .reward-label {
   display: block;
-  color: var(--menu-paper);
+  color: var(--menu-ink);
   font-size: 0.62rem;
   font-weight: 900;
   letter-spacing: 0.14em;
@@ -860,7 +904,7 @@
   }
 
   .harbor-screen.is-first-voyage.is-first-job-offer .harbor-panel {
-    height: min(620px, calc(100dvh - 20px));
+    height: auto;
   }
 
   .harbor-screen.is-first-voyage .harbor-panel .harbor-header {
@@ -967,7 +1011,7 @@
     padding: 5px 6px;
   }
 
-  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .reward-stamp small {
+  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .reward-stamp .reward-label {
     font-size: 0.46rem;
   }
 
