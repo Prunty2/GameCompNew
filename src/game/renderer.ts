@@ -101,22 +101,6 @@ export class CanvasRenderer {
     context.fillRect(0, 0, width, height);
     context.restore();
 
-    context.save();
-    context.globalAlpha = 0.2;
-    context.strokeStyle = settings.highContrast ? "#fffaf0" : "#c8e4df";
-    context.lineWidth = settings.highContrast ? 2 : 1;
-    const waveOffset = settings.reducedMotion ? 0 : (simulation.elapsed * 22) % 42;
-    for (let y = waterline + 18; y < height; y += 34) {
-      context.beginPath();
-      for (let x = -50; x <= width + 50; x += 42) {
-        const waveY = y + Math.sin((x + waveOffset) * 0.045 + y * 0.02) * 3;
-        if (x === -50) context.moveTo(x, waveY);
-        else context.lineTo(x, waveY);
-      }
-      context.stroke();
-    }
-    context.restore();
-
     if (settings.cinematic) return;
     const surfaceLayer = captureSurfaceLayer(this.canvas, this.surfaceLayer);
 
