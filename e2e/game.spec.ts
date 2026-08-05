@@ -154,6 +154,22 @@ test("surface shoals reveal the hook only inside fishing interaction range", asy
   await expect(action).toHaveCSS("width", "78px");
   await expect(action).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
 
+  const canvasBounds = await page.locator("#game-canvas").boundingBox();
+  const initialHookBounds = await action.boundingBox();
+  expect(canvasBounds).not.toBeNull();
+  expect(initialHookBounds).not.toBeNull();
+  expect(initialHookBounds!.y + initialHookBounds!.height).toBeLessThan(
+    canvasBounds!.y + canvasBounds!.height * 0.68,
+  );
+
+  const initialHookLeft = Number.parseFloat(await action.evaluate((element) => (element as HTMLElement).style.left));
+  await page.keyboard.down("KeyD");
+  await page.waitForTimeout(1_000);
+  await page.keyboard.up("KeyD");
+  await expect(action).toBeVisible();
+  const shiftedHookLeft = Number.parseFloat(await action.evaluate((element) => (element as HTMLElement).style.left));
+  expect(shiftedHookLeft).toBeLessThan(initialHookLeft - 8);
+
   await page.evaluate(() => window.__FSHING_TEST__?.sailToHarbor("gloam"));
   await expect(action).not.toHaveClass(/is-fishing-cue/);
 });

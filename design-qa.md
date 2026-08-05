@@ -6,12 +6,12 @@
 - Final implementation capture: `Docs/screenshots/06-fishing-spot-hybrid.jpg`.
 - Discovery capture: `Docs/screenshots/07-fishing-spot-discovery.jpg`.
 - Mobile accessibility capture: `Docs/screenshots/08-fishing-spot-mobile-accessibility.jpg`.
-- Full comparison: `/Users/liam/.codex/visualizations/2026/08/05/019fd145-e573-7c23-a56c-8ad5c07df804/fishing-spot-final-comparison.jpg`.
-- Focused comparison: `/Users/liam/.codex/visualizations/2026/08/05/019fd145-e573-7c23-a56c-8ad5c07df804/fishing-spot-final-focus.jpg`.
+- Full hook-placement comparison: `/Users/liam/.codex/visualizations/2026/08/05/019fd145-e573-7c23-a56c-8ad5c07df804/fishing-spot-hook-above-comparison.jpg`.
+- Focused hook, boat, and shoal comparison: `/Users/liam/.codex/visualizations/2026/08/05/019fd145-e573-7c23-a56c-8ad5c07df804/fishing-spot-hook-above-focus.jpg`.
 - Desktop viewport: 1380 × 1140 CSS pixels at DPR 1, matching the reference dimensions.
 - Mobile viewport: 844 × 390 CSS pixels at DPR 1.
 - Desktop state: first contract accepted, boat centered at Sunward Shoal, inside interaction range, normal contrast and motion, tutorial and toast visually dismissed.
-- Mobile state: Sunward Shoal in range, high contrast and reduced motion enabled, touch controls visible.
+- Mobile state: Sunward Shoal in range, normal contrast and motion, touch controls visible.
 
 ## Comparison history
 
@@ -19,6 +19,7 @@
 2. **P1 — asset fidelity:** the early lens and cue were procedural and visually too geometric. All visible surface fish, hook, arc, and polarized-lens art were replaced with dedicated GPT Image outputs; Canvas now only positions, fades, scales, and animates those sprites.
 3. **P2 — scale and density:** an initial generated-asset pass made the fish and hook too large and dispersed. Fish scale, shoal width, hook scale, and depth distribution were tightened to match the compact school in the approved directions.
 4. **P2 — discovery readability:** the distant school was too close to invisible. Its minimum visibility was raised while the lens still ramps only on approach and the hook remains exactly hidden outside interaction range.
+5. **P1 — hook position and ownership:** the first delivered hybrid placed the hook at sea level and recomputed its horizontal position from the boat. The revised implementation anchors the hook to the fishing ground's projected world position and places it in clear air above the boat, matching Direction A. A browser test moves the boat within the interaction radius and confirms the hook shifts on screen with the ground rather than staying attached to the boat.
 
 ## Required fidelity surfaces
 
@@ -28,7 +29,7 @@ The approved fishing cue contains no persistent type. The implementation removes
 
 ### Spacing and layout
 
-The hook sits directly below the hull and above the highest fish, while the school occupies the generated clarity lens beneath the boat. Direction A's wider living school and Direction B's localized vertical lens/hook relationship are combined. The production panorama has a lower waterline and larger boat than the concept renders; preserving the game's existing camera, panorama, and boat scale is an intentional scope constraint rather than a cue mismatch.
+The hook is centered above the fishing ground in clear air, with the ground, lens, and school sharing one world-space horizontal anchor. It stays fixed to that ground while the boat moves inside interaction range. Direction A's above-water hook and wider living school are combined with Direction B's localized lens. The production panorama has a lower waterline and larger boat than the concept renders; preserving the game's existing camera, panorama, and boat scale is an intentional scope constraint rather than a cue mismatch.
 
 ### Color and tokens
 
@@ -46,8 +47,8 @@ Permanent fishing-ground names, species labels, buoy-like landmarks, and interac
 
 - Desktop normal mode: cue is centered, unobscured, and readable against the harbor panorama.
 - Far discovery state: submerged fish remain faintly discoverable; the hook control is hidden.
-- Mobile high-contrast/reduced-motion state: the cue fits between the boat and touch controls with no overlap; motion freezes to deterministic poses.
-- Interaction state: the transparent 78 × 78 DOM target follows the Canvas hook and provides a visible focus treatment without duplicating the artwork.
+- Mobile landscape state: the hook remains above the boat and the school remains clear of the touch controls, with no overlap or clipping.
+- Interaction state: the transparent 78 × 78 DOM target follows the fixed-world Canvas hook and provides a visible focus treatment without duplicating the artwork.
 - In-app browser console audit: no errors or warnings in the verified fishing and survey states.
 - Survey interaction opened successfully from the generated hook cue.
 
@@ -58,6 +59,6 @@ Permanent fishing-ground names, species labels, buoy-like landmarks, and interac
 - P2 polish issues: none.
 - P3 note: the production panorama's daytime crop is brighter than the concept images; changing the world panorama was deliberately excluded from this fishing-spot-only rework.
 
-## Result
+## Final result
 
 passed

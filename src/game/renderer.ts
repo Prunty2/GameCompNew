@@ -145,7 +145,7 @@ export class CanvasRenderer {
 
     this.drawBoat(simulation, camera, width, height, waterline, surfaceLayer, settings);
 
-    let activeFishingCue: { cue: SurfaceFishingCue; enabled: boolean } | null = null;
+    let activeFishingCue: { cue: SurfaceFishingCue; x: number; enabled: boolean } | null = null;
     const interactionPrompt = getInteractionPrompt(simulation);
     for (const [spotIndex, spot] of FISHING_SPOTS.entries()) {
       const x = worldToScreenX(spot.x, camera, width);
@@ -167,22 +167,21 @@ export class CanvasRenderer {
         highContrast: settings.highContrast,
       });
       if (cue.hookVisibility > 0 && interactionPrompt?.kind === "fishing" && interactionPrompt.spot === spot.id) {
-        activeFishingCue = { cue, enabled: interactionPrompt.enabled };
+        activeFishingCue = { cue, x, enabled: interactionPrompt.enabled };
       }
     }
 
     if (activeFishingCue) {
-      const boatX = worldToScreenX(simulation.boat.x, camera, width);
-      const hookY = waterline + clamp(height * 0.055, 30, 46);
+      const hookY = waterline - clamp(height * 0.22, 118, 220);
       this.drawSurfaceHookCue(
-        boatX,
+        activeFishingCue.x,
         hookY,
         activeFishingCue.cue.hookVisibility,
         activeFishingCue.enabled,
         simulation.elapsed,
         settings,
       );
-      this.interactionAnchor = { x: boatX, y: hookY };
+      this.interactionAnchor = { x: activeFishingCue.x, y: hookY };
     }
 
     this.drawObjective(simulation, camera, width, height);

@@ -102,7 +102,7 @@ flowchart LR
 
 1. Press **Play** and arrive at Brindle Harbor.
 2. Accept **The Morning Order**, which requests a Reedfin for Gloam Ferry.
-3. Follow the faint Sunward Shoal fish activity until the polarized-water lens and hook appear beneath the boat.
+3. Follow the faint Sunward Shoal fish activity until the polarized-water lens strengthens and the hook appears above the fishing ground.
 4. Read: 4 m, 21°C, 8.4 mg/L dissolved oxygen, low turbidity, sunlit reeds.
 5. Predict the Reedfin from three species descriptions.
 6. Read why broad fins help it manoeuvre in reeds, then lower the hook.

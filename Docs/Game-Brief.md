@@ -201,7 +201,7 @@ Fishing is an active supporting mechanic rather than the entire game.
 1. The player notices faint fish movement beneath the lake and steers toward the fishing ground.
 2. A population-aware school is always faintly discoverable; there is no permanent buoy, nameplate, or surface ring.
 3. As the boat approaches, a restrained polarized-water lens clarifies the shoal without turning the lake into a transparent aquarium.
-4. Only after the boat enters interaction range does a compact hook-and-arc cue fade in beneath the hull. Its accessible interaction label supplies the site name and any permit, line-depth, speed, or cargo restriction without putting persistent text over the lake.
+4. Only after the boat enters interaction range does a compact hook-and-arc cue fade in above the fishing ground. It stays anchored to the ground's world position instead of following the boat, and its accessible interaction label supplies the site name and any permit, line-depth, speed, or cargo restriction without putting persistent text over the lake.
 5. The player drops the line from the boat into the water directly below.
 6. The camera cuts below the surface while the hook descends through a bounded side-view fishing space.
 7. The player steers the hook toward a fish while avoiding weeds, debris, or unwanted species.
