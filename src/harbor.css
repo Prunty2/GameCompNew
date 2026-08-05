@@ -31,7 +31,7 @@
 }
 
 .harbor-screen.is-first-voyage.is-first-job-offer .harbor-panel {
-  height: min(620px, calc(100dvh - 32px));
+  height: auto;
 }
 
 .harbor-screen.is-first-voyage .harbor-panel .harbor-header {
@@ -79,6 +79,7 @@
   line-height: 1;
   text-align: left;
   text-shadow: none;
+  transform: translateY(2px);
 }
 
 .harbor-screen.is-first-voyage .harbor-panel .harbor-header p {
@@ -114,6 +115,54 @@
 .harbor-screen.is-first-voyage .shell-balance strong {
   color: var(--menu-paper);
   font-size: 1.35rem;
+}
+
+.harbor-screen.is-first-voyage .reward-stamp {
+  display: grid;
+  min-width: 132px;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 0 8px 16px;
+  border: 0;
+  border-left: 2px solid var(--menu-signal);
+  border-radius: 0;
+  background: transparent;
+  color: var(--menu-paper);
+  box-shadow: none;
+  line-height: 1;
+  text-align: left;
+  transform: none;
+}
+
+.harbor-screen.is-first-voyage .reward-stamp .reward-label {
+  color: var(--menu-paper);
+  font-size: 0.72rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.harbor-screen.is-first-voyage .reward-stamp .reward-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--menu-signal);
+}
+
+.harbor-screen.is-first-voyage .reward-stamp .ui-icon {
+  width: 31px;
+  height: 31px;
+  border-radius: 8px;
+}
+
+.harbor-screen.is-first-voyage .reward-stamp strong {
+  color: var(--menu-signal);
+  font-size: 1.25rem;
+}
+
+.harbor-screen.is-first-voyage.is-first-job-offer .mission-button strong {
+  font-size: 1.24rem;
 }
 
 .harbor-screen.is-first-voyage .harbor-intro,
@@ -247,6 +296,10 @@
   margin: 0;
 }
 
+.harbor-screen.is-first-voyage.is-first-job-offer .harbor-content {
+  padding-top: 14px;
+}
+
 .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .harbor-tabs {
   margin-top: 16px;
 }
@@ -290,18 +343,19 @@
   top: 20px;
   right: 20px;
   min-width: 100px;
-  min-height: 64px;
+  min-height: 54px;
   flex-direction: column;
   gap: 4px;
-  padding: 8px 12px;
-  border-width: 2px;
-  background: linear-gradient(180deg, rgb(240 166 72 / 24%), rgb(240 166 72 / 10%));
-  box-shadow: inset 0 0 0 1px rgb(255 204 124 / 15%);
+  padding: 6px 0 6px 14px;
+  border: 0;
+  border-left: 1px solid rgb(145 169 176 / 48%);
+  background: transparent;
+  box-shadow: none;
 }
 
-.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .reward-stamp small {
+.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .reward-stamp .reward-label {
   display: block;
-  color: var(--menu-paper);
+  color: var(--menu-fog);
   font-size: 0.62rem;
   font-weight: 900;
   letter-spacing: 0.14em;
@@ -708,6 +762,10 @@
   gap: 14px;
 }
 
+.harbor-screen.is-first-voyage.is-first-job-offer .panel-actions.is-guided {
+  margin: 12px 0 0;
+}
+
 .harbor-screen.is-first-voyage .harbor-panel .harbor-utility-button,
 .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-utility-button,
 .harbor-screen.is-first-voyage .leave-button,
@@ -754,6 +812,23 @@
 .harbor-screen.is-first-voyage.is-expanded-harbor .leave-button {
   width: 286px;
   min-width: 286px;
+}
+
+.harbor-screen.is-first-voyage .harbor-main-menu-button {
+  width: 184px;
+  min-width: 184px;
+}
+
+.harbor-screen.is-first-voyage .harbor-main-menu-button .harbor-back-arrow {
+  display: inline-grid;
+  width: 32px;
+  height: 28px;
+  place-items: center;
+  color: var(--menu-signal);
+  font-family: system-ui, sans-serif;
+  font-size: 1.75rem;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .harbor-screen.is-first-voyage .harbor-panel .harbor-utility-button:hover,
@@ -860,7 +935,11 @@
   }
 
   .harbor-screen.is-first-voyage.is-first-job-offer .harbor-panel {
-    height: min(620px, calc(100dvh - 20px));
+    height: auto;
+  }
+
+  .harbor-screen.is-first-voyage.is-first-job-offer .harbor-content {
+    padding-top: 10px;
   }
 
   .harbor-screen.is-first-voyage .harbor-panel .harbor-header {
@@ -884,6 +963,7 @@
 
   .harbor-screen.is-first-voyage .harbor-panel .harbor-header h2 {
     font-size: 1.05rem;
+    transform: translateY(1px);
   }
 
   .harbor-screen.is-first-voyage .harbor-panel .harbor-header p {
@@ -961,14 +1041,14 @@
   .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .reward-stamp {
     top: 11px;
     right: 10px;
-    min-width: 58px;
+    min-width: 92px;
     min-height: 48px;
     gap: 2px;
-    padding: 5px 6px;
+    padding: 5px 0 5px 12px;
   }
 
-  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .reward-stamp small {
-    font-size: 0.46rem;
+  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .reward-stamp .reward-label {
+    font-size: 0.58rem;
   }
 
   .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-route {
@@ -1185,5 +1265,19 @@
   .harbor-screen.is-first-voyage.is-expanded-harbor .leave-button {
     width: 169px;
     min-width: 169px;
+  }
+
+  .harbor-screen.is-first-voyage .harbor-main-menu-button {
+    width: 122px;
+    min-width: 122px;
+  }
+
+  .harbor-screen.is-first-voyage .harbor-main-menu-button .harbor-back-arrow {
+    width: 26px;
+    font-size: 1.5rem;
+  }
+
+  .harbor-screen.is-first-voyage.is-first-job-offer .mission-button strong {
+    font-size: 1.14rem;
   }
 }

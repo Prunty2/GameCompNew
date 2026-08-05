@@ -447,8 +447,8 @@ export class Game {
     const contractMarkup = available
       ? `<div class="contract-card job-ticket ${isFirstJobOffer ? "is-guided" : ""}">
           <div class="job-ticket-heading">
-            <div><span class="card-kicker">${isFirstJobOffer ? "First assignment" : "Your next job"}</span><h3>${available.title}</h3></div>
-            <span class="reward-stamp" aria-label="Reward: ${available.reward} shells"><small>Reward</small><span class="reward-value"><span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${available.reward}</strong></span></span>
+            <div>${isFirstJobOffer ? "" : `<span class="card-kicker">Your next job</span>`}<h3>${isFirstJobOffer ? "First Assignment" : available.title}</h3></div>
+            <span class="reward-stamp" aria-label="Reward: ${available.reward} shells"><span class="reward-label">Reward</span><span class="reward-value"><span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${available.reward}</strong></span></span>
           </div>
           <ol class="job-route" aria-label="Job steps">
             <li><span>1</span><div><small>Catch</small><strong>${FISH[available.species].name}</strong></div></li>
@@ -456,7 +456,7 @@ export class Game {
             <li><span>3</span><div><small>Deliver to</small><strong>${harborById(available.destination).name}</strong></div></li>
           </ol>
           <button class="primary-button mission-button" type="button" data-action="accept-contract" aria-label="Accept contract">
-            <span><strong>${isFirstJobOffer ? "Begin first voyage" : "Take this job"}</strong></span><b aria-hidden="true">→</b>
+            <span><strong>${isFirstJobOffer ? "Begin the First Voyage" : "Take this job"}</strong></span><b aria-hidden="true">→</b>
           </button>
         </div>`
       : contract
@@ -486,16 +486,6 @@ export class Game {
       }
       return `<button class="cargo-slot is-locked" type="button" data-action="open-cargo-upgrades" aria-label="Cargo slot ${index + 1} locked. Open Cargo upgrades"><span class="cargo-slot-number">${slotNumber}</span><img class="cargo-padlock" src="${padlockIconUrl}" alt="" aria-hidden="true" /><small>Upgrade</small></button>`;
     }).join("");
-
-    const sectionHeading = activeSection === "cargo"
-      ? { eyebrow: "Cargo hold", title: "Manage your catch", body: "" }
-      : activeSection === "services"
-        ? { eyebrow: "", title: "Improve your boat", body: "" }
-        : {
-            eyebrow: isFirstJobOffer ? "Welcome aboard" : "Current task",
-            title: isFirstJobOffer ? "Read the lake. Deliver with care." : available ? "Choose the posted delivery" : deliverable ? "Hand in your catch" : contract ? "Continue your delivery" : "Let protected stocks recover",
-            body: isFirstJobOffer ? "" : available ? "Choose a job, then follow its marker." : deliverable ? "Turn in the requested fish for payment." : contract ? "Your current job remains active." : "Return visits restore protected fish stocks.",
-          };
 
     const harborTabs = !isFirstJobOffer
       ? `<nav class="harbor-tabs has-${availableSections.length}-tabs" aria-label="Harbor sections" style="--harbor-tab-count: ${availableSections.length}">
@@ -527,14 +517,9 @@ export class Game {
             <div class="harbor-title-block"><img class="wordmark harbor-wordmark" src="${wordmarkUrl}" alt="FSHING" /><span class="harbor-title-divider" aria-hidden="true"></span><div><h2 id="harbor-title">${harbor.name}</h2></div></div>
             <span class="shell-balance" aria-label="${this.simulation.progress.money} shells"><span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${this.simulation.progress.money}</strong></span>
           </header>
-          ${!isFirstJobOffer ? "" : `<div class="harbor-intro is-first-step">
-            <div>${sectionHeading.eyebrow ? `<span class="panel-eyebrow">${sectionHeading.eyebrow}</span>` : ""}<h3>${sectionHeading.title}</h3></div>
-            ${isFirstJobOffer ? `<div class="first-voyage-primer" aria-label="Your voyage: survey, catch, deliver"><span><i class="ui-icon icon-objective" aria-hidden="true"></i><strong>Survey</strong></span><b aria-hidden="true">→</b><span><i class="ui-icon icon-freshness" aria-hidden="true"></i><strong>Catch</strong></span><b aria-hidden="true">→</b><span><i class="ui-icon icon-cargo" aria-hidden="true"></i><strong>Deliver</strong></span></div>` : ""}
-            ${sectionHeading.body ? `<p>${sectionHeading.body}</p>` : ""}
-          </div>`}
           ${harborTabs}
           <div class="harbor-content is-${activeSection}">${activeContent}</div>
-          <footer class="panel-actions ${isFirstJobOffer ? "is-guided" : ""}"><div><button class="text-button harbor-utility-button" type="button" data-action="open-help" aria-label="How to play"><span class="ui-icon icon-objective" aria-hidden="true"></span><strong>Help</strong></button><button class="text-button harbor-utility-button" type="button" data-action="open-field-guide" aria-label="Field guide"><span class="ui-icon icon-freshness" aria-hidden="true"></span><strong>Guide</strong></button></div>${isFirstJobOffer ? "" : `<button class="leave-button" type="button" data-action="undock" aria-label="Back to lake →"><span class="ui-icon icon-hull" aria-hidden="true"></span><strong>Return to Lake</strong></button>`}</footer>
+          <footer class="panel-actions ${isFirstJobOffer ? "is-guided" : ""}"><div><button class="text-button harbor-utility-button" type="button" data-action="open-help" aria-label="How to play"><span class="ui-icon icon-objective" aria-hidden="true"></span><strong>Help</strong></button><button class="text-button harbor-utility-button" type="button" data-action="open-field-guide" aria-label="Field guide"><span class="ui-icon icon-freshness" aria-hidden="true"></span><strong>Guide</strong></button></div>${isFirstJobOffer ? `<button class="leave-button harbor-main-menu-button" type="button" data-action="title" aria-label="Back to main menu"><span class="harbor-back-arrow" aria-hidden="true">←</span><strong>Main Menu</strong></button>` : `<button class="leave-button" type="button" data-action="undock" aria-label="Back to lake →"><span class="ui-icon icon-hull" aria-hidden="true"></span><strong>Return to Lake</strong></button>`}</footer>
         </div>
       </section>`;
   }
