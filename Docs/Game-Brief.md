@@ -239,7 +239,7 @@ The handling should feel smooth, measured, and forgiving rather than physically 
 **Keyboard**
 
 - A/D or Left/Right Arrow: thrust left or right
-- Up/Down Arrow: steer the hook vertically while fishing
+- W/S: steer the hook vertically while fishing
 - Space or E: interact, dock, or cast
 - Escape or P: pause
 
