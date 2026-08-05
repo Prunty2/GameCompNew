@@ -16,7 +16,7 @@ import {
 } from "./balance";
 import { createSideScrollCamera, worldToScreenX, type SideScrollCamera } from "./camera";
 import { calculatePanoramaLayout } from "./panorama";
-import { fogIntensity, isNight, maxFishingDepth, objective, type Simulation } from "./simulation";
+import { isNight, maxFishingDepth, objective, type Simulation } from "./simulation";
 import { populationLabel } from "./stem";
 import { captureSurfaceLayer, drawWaterContact } from "./surfaceEffects";
 
@@ -101,36 +101,8 @@ export class CanvasRenderer {
     context.fillRect(0, 0, width, height);
     context.restore();
 
-    context.save();
-    context.globalAlpha = 0.2;
-    context.strokeStyle = settings.highContrast ? "#fffaf0" : "#c8e4df";
-    context.lineWidth = settings.highContrast ? 2 : 1;
-    const waveOffset = settings.reducedMotion ? 0 : (simulation.elapsed * 22) % 42;
-    for (let y = waterline + 18; y < height; y += 34) {
-      context.beginPath();
-      for (let x = -50; x <= width + 50; x += 42) {
-        const waveY = y + Math.sin((x + waveOffset) * 0.045 + y * 0.02) * 3;
-        if (x === -50) context.moveTo(x, waveY);
-        else context.lineTo(x, waveY);
-      }
-      context.stroke();
-    }
-    context.restore();
-
     if (settings.cinematic) return;
     const surfaceLayer = captureSurfaceLayer(this.canvas, this.surfaceLayer);
-
-    context.save();
-    context.fillStyle = "rgba(8, 31, 40, 0.78)";
-    context.fillRect(20, height * 0.16, 176, 34);
-    context.fillStyle = "#f7f1e3";
-    context.font = "800 11px system-ui, sans-serif";
-    context.textAlign = "left";
-    context.textBaseline = "middle";
-    context.fillText(region.name.toUpperCase(), 34, height * 0.16 + 17);
-    context.fillStyle = region.surfaceTint;
-    context.fillRect(20, height * 0.16, 5, 34);
-    context.restore();
 
     for (const harbor of HARBORS) {
       const x = worldToScreenX(harbor.x, camera, width);
@@ -205,7 +177,7 @@ export class CanvasRenderer {
   ): void {
     const art = this.art;
     if (!art) return;
-    const pierWidth = clamp(this.canvas.clientHeight * 0.56, 320, 520);
+    const pierWidth = clamp(this.canvas.clientHeight * 0.53, 300, 495);
     const pierHeight = pierWidth * (art.pier.naturalHeight / art.pier.naturalWidth);
     const deckTop = waterline - 32;
     const pierLift = clamp(pierHeight * 0.04, 4, 9);
@@ -365,7 +337,7 @@ export class CanvasRenderer {
     const { context } = this;
     const x = worldToScreenX(simulation.boat.x, camera, width);
     const boatScale = 1 + simulation.progress.upgrades.cargo * 0.055;
-    const boatWidth = clamp(this.canvas.clientHeight * 0.37 * boatScale, 150, 360);
+    const boatWidth = clamp(this.canvas.clientHeight * 0.421 * boatScale, 172, 412);
     const boatHeight = boatWidth * (art.boat.height / art.boat.width);
     const speedRatio = Math.min(1, Math.abs(simulation.boat.speed) / BALANCE.maxSurfaceSpeed);
     const bob = settings.reducedMotion ? 0 : Math.sin(simulation.elapsed * (2 + speedRatio)) * (1.1 + speedRatio * 0.8);
@@ -428,20 +400,6 @@ export class CanvasRenderer {
     height: number,
     settings: RenderSettings,
   ): void {
-    const fog = fogIntensity(simulation);
-    if (fog > 0.05) {
-      this.context.save();
-      this.context.globalAlpha = fog * (settings.highContrast ? 0.18 : 0.34);
-      const drift = settings.reducedMotion ? 0 : Math.sin(simulation.elapsed * 0.12) * width * 0.08;
-      this.context.filter = "blur(22px)";
-      this.context.fillStyle = settings.highContrast ? "#f7f1e3" : "#cbd7cf";
-      this.context.beginPath();
-      this.context.ellipse(width * 0.22 + drift, height * 0.46, width * 0.3, height * 0.045, -0.02, 0, Math.PI * 2);
-      this.context.ellipse(width * 0.76 + drift, height * 0.61, width * 0.28, height * 0.052, 0.03, 0, Math.PI * 2);
-      this.context.fill();
-      this.context.restore();
-    }
-
     if (!isNight(simulation)) return;
     const boatX = worldToScreenX(simulation.boat.x, camera, width);
     const lampTier = simulation.progress.upgrades.lamp;
