@@ -104,18 +104,6 @@ export class CanvasRenderer {
     if (settings.cinematic) return;
     const surfaceLayer = captureSurfaceLayer(this.canvas, this.surfaceLayer);
 
-    context.save();
-    context.fillStyle = "rgba(8, 31, 40, 0.78)";
-    context.fillRect(20, height * 0.16, 176, 34);
-    context.fillStyle = "#f7f1e3";
-    context.font = "800 11px system-ui, sans-serif";
-    context.textAlign = "left";
-    context.textBaseline = "middle";
-    context.fillText(region.name.toUpperCase(), 34, height * 0.16 + 17);
-    context.fillStyle = region.surfaceTint;
-    context.fillRect(20, height * 0.16, 5, 34);
-    context.restore();
-
     for (const harbor of HARBORS) {
       const x = worldToScreenX(harbor.x, camera, width);
       if (!isNearScreen(x, width, 540)) continue;
