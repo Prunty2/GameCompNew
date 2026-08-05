@@ -128,6 +128,7 @@ export class Game {
   private tutorialDismissTimer: number | undefined;
   private pauseTransitionTimer: number | undefined;
   private settingsTransitionTimer: number | undefined;
+  private cargoUpgradeTransitionTimer: number | undefined;
   private sceneTransitioning = false;
   private sceneTransitionTarget: OverlayScreen | undefined;
   private queuedOverlay: { next: OverlayScreen; useSceneTransition: boolean } | null = null;
@@ -473,7 +474,7 @@ export class Game {
             </ol>
             ${contract.destination === harborId
               ? `<button class="primary-button mission-button" type="button" data-action="deliver" ${deliverable ? "" : "disabled"}>${deliverable ? "<span><strong>Complete delivery</strong></span><b aria-hidden=\"true\">→</b>" : "Catch is missing or no longer fresh enough"}</button>`
-              : `<p class="next-step"><strong>Next:</strong> Leave the harbor and follow the orange destination marker across the lake.</p>`}
+              : `<p class="next-step"><span class="ui-icon icon-objective" aria-hidden="true"></span><span><strong>Next</strong> Leave the harbor and follow the marker to ${harborById(contract.destination).name}.</span></p>`}
           </div>`
         : `<div class="contract-card empty-job"><span class="card-kicker">Ecological recovery</span><h3>No catch contract is safe yet</h3><p>Every unlocked contract stock is protected. Each return to harbor restores the lake; leave and dock again to continue recovery.</p></div>`;
 
@@ -530,7 +531,7 @@ export class Game {
             <div class="harbor-title-block"><img class="wordmark harbor-wordmark" src="${wordmarkUrl}" alt="FSHING" /><span class="harbor-title-divider" aria-hidden="true"></span><div><h2 id="harbor-title">${harbor.name}</h2></div></div>
             <span class="shell-balance" aria-label="${this.simulation.progress.money} shells"><span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${this.simulation.progress.money}</strong></span>
           </header>
-          ${activeSection === "delivery" && !isFirstJobOffer ? "" : `<div class="harbor-intro ${isFirstJobOffer ? "is-first-step" : ""}">
+          ${!isFirstJobOffer ? "" : `<div class="harbor-intro is-first-step">
             <div>${sectionHeading.eyebrow ? `<span class="panel-eyebrow">${sectionHeading.eyebrow}</span>` : ""}<h3>${sectionHeading.title}</h3></div>
             ${isFirstJobOffer ? `<div class="first-voyage-primer" aria-label="Your voyage: survey, catch, deliver"><span><i class="ui-icon icon-objective" aria-hidden="true"></i><strong>Survey</strong></span><b aria-hidden="true">→</b><span><i class="ui-icon icon-freshness" aria-hidden="true"></i><strong>Catch</strong></span><b aria-hidden="true">→</b><span><i class="ui-icon icon-cargo" aria-hidden="true"></i><strong>Deliver</strong></span></div>` : ""}
             ${sectionHeading.body ? `<p>${sectionHeading.body}</p>` : ""}
@@ -1065,11 +1066,23 @@ export class Game {
         requestAnimationFrame(() => this.uiRoot.querySelector<HTMLButtonElement>(`[data-harbor-section="${section}"]`)?.focus({ preventScroll: true }));
         break;
       }
-      case "open-cargo-upgrades":
-        this.harborSection = "services";
-        this.renderOverlay();
-        requestAnimationFrame(() => this.uiRoot.querySelector<HTMLButtonElement>('[data-harbor-section="services"]')?.focus({ preventScroll: true }));
+      case "open-cargo-upgrades": {
+        const openCargoUpgrade = (): void => {
+          if (this.overlay !== "harbor" || !this.simulation.dockedAt) return;
+          this.harborSection = "services";
+          this.renderOverlay();
+          requestAnimationFrame(() => this.uiRoot.querySelector<HTMLButtonElement>('[data-harbor-section="services"]')?.focus({ preventScroll: true }));
+        };
+        window.clearTimeout(this.cargoUpgradeTransitionTimer);
+        if (this.save.settings.reducedMotion) {
+          openCargoUpgrade();
+        } else {
+          target.classList.add("is-wobbling");
+          if (target instanceof HTMLButtonElement) target.disabled = true;
+          this.cargoUpgradeTransitionTimer = window.setTimeout(openCargoUpgrade, 240);
+        }
         break;
+      }
       case "undock":
         if (this.simulation.activeContract
           && this.simulation.cargo.some((item) => item.species === this.simulation.activeContract?.species)

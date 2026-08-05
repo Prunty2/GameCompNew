@@ -251,6 +251,11 @@
   margin-top: 16px;
 }
 
+.harbor-screen.is-first-voyage.is-harbor-cargo.is-expanded-harbor .harbor-tabs,
+.harbor-screen.is-first-voyage.is-harbor-services.is-expanded-harbor .harbor-tabs {
+  margin-top: 16px;
+}
+
 .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .harbor-content .mission-section {
   display: flex;
   align-items: flex-start;
@@ -347,6 +352,36 @@
   margin-top: 7px;
   font-size: 1.08rem;
   white-space: normal;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .next-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 22px 0 0;
+  padding: 13px 15px;
+  border: 1px solid rgb(145 169 176 / 28%);
+  border-left: 3px solid var(--menu-signal);
+  border-radius: 10px;
+  background: rgb(247 241 227 / 4%);
+  color: var(--menu-fog);
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .next-step > .ui-icon {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .next-step strong {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--menu-paper);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 .harbor-screen.is-first-voyage.is-harbor-cargo.is-expanded-harbor .harbor-content .cargo-section {
@@ -491,10 +526,26 @@
 
 .cargo-slot.is-locked:hover,
 .cargo-slot.is-locked:focus-visible {
-  border-color: var(--menu-signal);
-  background: rgb(240 166 72 / 8%);
-  outline: 2px solid var(--menu-signal);
+  border-color: rgb(174 194 199 / 62%);
+  background: rgb(247 241 227 / 4%);
+}
+
+.harbor-screen.is-first-voyage .cargo-slot.is-locked:hover {
+  animation: cargo-lock-hover 420ms ease-in-out;
+}
+
+.cargo-slot.is-locked:focus-visible {
+  outline: 2px solid rgb(174 194 199 / 78%);
   outline-offset: 2px;
+}
+
+.harbor-screen.is-first-voyage .cargo-slot.is-locked:active,
+.harbor-screen.is-first-voyage .cargo-slot.is-locked.is-wobbling {
+  animation: cargo-lock-click 240ms ease-in-out;
+}
+
+.cargo-slot.is-locked.is-wobbling:disabled {
+  opacity: 1;
 }
 
 .cargo-padlock {
@@ -528,6 +579,27 @@
   border-radius: 3px;
   background: var(--menu-signal);
   content: "";
+}
+
+@keyframes cargo-lock-hover {
+  0%, 100% { transform: rotate(0); }
+  30% { transform: rotate(-1deg); }
+  65% { transform: rotate(1deg); }
+}
+
+@keyframes cargo-lock-click {
+  0%, 100% { transform: rotate(0) scale(1); }
+  25% { transform: rotate(-1.8deg) scale(0.985); }
+  55% { transform: rotate(1.5deg) scale(0.985); }
+  80% { transform: rotate(-0.6deg) scale(1); }
+}
+
+.reduced-motion .cargo-slot.is-locked,
+.reduced-motion .cargo-slot.is-locked:hover,
+.reduced-motion .cargo-slot.is-locked:active,
+.reduced-motion .cargo-slot.is-locked.is-wobbling {
+  animation: none;
+  transform: none;
 }
 
 .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .services {
@@ -915,6 +987,11 @@
   }
 
   .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .harbor-tabs {
+    margin-top: 10px;
+  }
+
+  .harbor-screen.is-first-voyage.is-harbor-cargo.is-expanded-harbor .harbor-tabs,
+  .harbor-screen.is-first-voyage.is-harbor-services.is-expanded-harbor .harbor-tabs {
     margin-top: 10px;
   }
 
