@@ -11,6 +11,12 @@ export default defineConfig({
     outDir: "dist",
     emptyOutDir: true,
     target: "es2022",
+    rollupOptions: {
+      input: {
+        game: "index.html",
+        tutorialDemo: "tutorial-demo.html",
+      },
+    },
   },
   test: {
     exclude: ["e2e/**", "node_modules/**", "dist/**"],
