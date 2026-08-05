@@ -398,11 +398,6 @@ input:focus-visible {
   letter-spacing: 0.11em;
 }
 
-.boost-control {
-  margin-left: auto;
-  margin-right: 8px;
-}
-
 .touch-action {
   width: 78px !important;
 }

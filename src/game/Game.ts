@@ -187,10 +187,8 @@ export class Game {
     }
 
     const engineMaximum = BALANCE.maxSurfaceSpeed * (1 + this.simulation.progress.upgrades.engine * 0.11);
-    const currentInput = this.input.read();
     this.feedback.updateEngine(
       Math.abs(this.simulation.boat.speed) / engineMaximum,
-      currentInput.boost,
       this.started && this.overlay === null && !this.sceneTransitioning && this.simulation.mode === "cruising",
     );
     this.renderer.render(this.simulation, {
@@ -220,10 +218,8 @@ export class Game {
         <section class="touch-controls navigation-controls" aria-label="Touch boat controls">
           <div class="travel-controls">
             <button type="button" data-control="left" aria-label="Move left"><span>←</span><small>LEFT</small></button>
-            <button type="button" data-control="brake" aria-label="Brake"><span>■</span><small>BRAKE</small></button>
             <button type="button" data-control="right" aria-label="Move right"><span>→</span><small>RIGHT</small></button>
           </div>
-          <button class="boost-control" type="button" data-control="boost" aria-label="Engine boost"><span>↑</span><small>BOOST</small></button>
           <button class="touch-action" type="button" data-control="action" aria-label="Interact or cast"><span>E</span><small>ACT</small></button>
         </section>
 
@@ -641,7 +637,7 @@ export class Game {
       },
       {
         title: "Follow the marker",
-        body: `Use <kbd>${formatKey(this.save.settings.controls.left)}</kbd> and <kbd>${formatKey(this.save.settings.controls.right)}</kbd> to move. Brake with <kbd>${formatKey(this.save.settings.controls.brake)}</kbd>, then press <kbd>${formatKey(this.save.settings.controls.action)}</kbd> at the fishing marker.`,
+        body: `Use <kbd>${formatKey(this.save.settings.controls.left)}</kbd> and <kbd>${formatKey(this.save.settings.controls.right)}</kbd> to move, then press <kbd>${formatKey(this.save.settings.controls.action)}</kbd> at the fishing marker.`,
       },
       {
         title: "Read and predict",

@@ -12,7 +12,7 @@ The MVP vertical slice includes:
 - Population depletion, protection, release/recovery, ecosystem bonuses, a persistent field guide, and an eight-delivery season report
 - Keyboard, pointer, and touch controls plus pause-on-focus-loss
 - Mute, volume, high-contrast, and reduced-motion settings
-- Version 5 validated persistence with safe migration and a local-safe CrazyGames SDK v3 adapter
+- Version 6 validated persistence with safe migration and a local-safe CrazyGames SDK v3 adapter
 - GPT Image 2.0-generated runtime art documented in [`Docs/Asset-Manifest.md`](Docs/Asset-Manifest.md)
 
 ## Run locally

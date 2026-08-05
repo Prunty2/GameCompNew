@@ -272,7 +272,7 @@ No external audio file is copied or bundled. `FeedbackService` creates short Web
 
 | Cue | Procedural implementation and purpose | Non-audio equivalent | Status |
 | --- | --- | --- | --- |
-| Engine/boost | Filtered triangle oscillator changes pitch and gain with speed | Boat movement, wake, boost control state | Implemented |
+| Engine | Filtered triangle oscillator changes pitch and gain with speed | Boat movement and wake state | Implemented |
 | UI/cast | Short sine sweep; filtered noise plus descending tone | Focus/pressed state; hook visibly enters the water | Implemented |
 | Catch/delivery/upgrade | Rising triangle/sine patterns distinguish success types | Named toast, flash, result panel, changed values | Implemented |
 | Collision/deny | Low sawtooth/noise impact or descending square tone | Hazard symbol/name, damage toast, denial text | Implemented |

@@ -33,8 +33,6 @@ import { defaultPopulations, estimateRoute } from "../game/stem";
 
 const idle: InputState = {
   travel: 0,
-  boost: false,
-  brake: false,
   hookX: 0,
   hookY: 0,
 };
@@ -52,11 +50,7 @@ describe("FSHING side-on simulation", () => {
     undock(first);
     undock(second);
     for (let index = 0; index < 240; index += 1) {
-      const input: InputState = {
-        ...idle,
-        travel: index < 170 ? 1 : -1,
-        boost: index > 80 && index < 130,
-      };
+      const input: InputState = { ...idle, travel: index < 170 ? 1 : -1 };
       updateSimulation(first, input, 1 / 120);
       updateSimulation(second, input, 1 / 120);
     }
@@ -69,7 +63,7 @@ describe("FSHING side-on simulation", () => {
     expect(first.fishing).toEqual(second.fishing);
   });
 
-  test("travels only on the horizontal surface, changes facing, brakes, and respects bounds", () => {
+  test("travels only on the horizontal surface, changes facing, coasts, and respects bounds", () => {
     const simulation = createSimulation();
     undock(simulation);
     const startX = simulation.boat.x;
@@ -81,12 +75,12 @@ describe("FSHING side-on simulation", () => {
     expect(simulation.boat.y).toBeCloseTo(0.61);
     expect(simulation.boat.speed).toBeGreaterThan(0);
 
-    for (let index = 0; index < 60; index += 1) {
-      updateSimulation(simulation, { ...idle, brake: true }, 1 / 120);
-    }
-    expect(Math.abs(simulation.boat.speed)).toBeLessThan(0.001);
+    const speedBeforeCoasting = simulation.boat.speed;
+    for (let index = 0; index < 60; index += 1) updateSimulation(simulation, idle, 1 / 120);
+    expect(simulation.boat.speed).toBeLessThan(speedBeforeCoasting);
+    expect(simulation.boat.speed).toBeGreaterThan(0);
 
-    for (let index = 0; index < 100; index += 1) {
+    for (let index = 0; index < 240; index += 1) {
       updateSimulation(simulation, { ...idle, travel: -1 }, 1 / 120);
     }
     expect(simulation.boat.facing).toBe(-1);
@@ -95,15 +89,6 @@ describe("FSHING side-on simulation", () => {
     simulation.boat.speed = BALANCE.maxSurfaceSpeed;
     updateSimulation(simulation, idle, 0.1);
     expect(simulation.boat.x).toBeLessThanOrEqual(0.955);
-  });
-
-  test("boost accelerates in the facing direction", () => {
-    const simulation = createSimulation();
-    undock(simulation);
-    simulation.boat.facing = -1;
-    updateSimulation(simulation, { ...idle, boost: true }, 0.1);
-    expect(simulation.boat.speed).toBeLessThan(0);
-    expect(simulation.boat.x).toBeLessThan(0.11);
   });
 
   test("accelerates gradually and respects the reduced maximum speed", () => {

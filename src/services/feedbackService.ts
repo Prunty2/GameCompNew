@@ -31,17 +31,17 @@ export class FeedbackService {
     this.master.gain.setTargetAtTime(this.outputVolume(), this.context.currentTime, 0.025);
   }
 
-  updateEngine(speedRatio: number, boosting: boolean, active: boolean): void {
+  updateEngine(speedRatio: number, active: boolean): void {
     const context = this.context;
     const gain = this.engineGain;
     const engine = this.engine;
     const filter = this.engineFilter;
     if (!context || !gain || !engine || !filter) return;
     const speed = clamp(speedRatio, 0, 1);
-    const targetGain = active ? 0.011 + speed * 0.007 + (boosting ? 0.003 : 0) : 0.0001;
+    const targetGain = active ? 0.011 + speed * 0.007 : 0.0001;
     gain.gain.setTargetAtTime(targetGain, context.currentTime, active ? 0.14 : 0.05);
-    engine.frequency.setTargetAtTime(40 + speed * 20 + (boosting ? 5 : 0), context.currentTime, 0.16);
-    filter.frequency.setTargetAtTime(150 + speed * 70 + (boosting ? 20 : 0), context.currentTime, 0.18);
+    engine.frequency.setTargetAtTime(40 + speed * 20, context.currentTime, 0.16);
+    filter.frequency.setTargetAtTime(150 + speed * 70, context.currentTime, 0.18);
   }
 
   cue(cue: FeedbackCue): void {

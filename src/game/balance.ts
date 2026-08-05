@@ -57,9 +57,7 @@ export interface RegionDefinition {
 
 export const BALANCE = {
   horizontalThrust: 0.034,
-  engineBoostThrust: 0.057,
   maxSurfaceSpeed: 0.05,
-  brakeStrength: 0.72,
   waterDrag: 0.62,
   freshnessLifetime: 150,
   routeDistanceScaleKm: 18,

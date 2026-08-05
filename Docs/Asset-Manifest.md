@@ -99,7 +99,7 @@ FSHING bundles no external audio files. `src/services/feedbackService.ts` create
 
 | Cue | Source/implementation | Runtime role | Accessible equivalent |
 | --- | --- | --- | --- |
-| Engine/boost | Filtered triangle oscillator with speed-controlled pitch and gain | Communicate movement intensity | Boat movement, wake, and boost state |
+| Engine | Filtered triangle oscillator with speed-controlled pitch and gain | Communicate movement intensity | Boat movement and wake state |
 | UI | Short sine sweep | Confirm a menu/control action | Pressed/focus state |
 | Cast | Filtered noise plus descending sine | Confirm that the line entered the water | Visible hook descent |
 | Catch | Noise transient plus two rising tones | Confirm a secured fish | Catch toast, flash, cargo update |

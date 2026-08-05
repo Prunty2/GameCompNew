@@ -31,7 +31,7 @@ FSHING is not intended to reproduce Dredge in 2D. Its distinct focus is a repeat
 - Fish freshness makes boat speed and efficient travel central to success.
 - The fishing interaction involves directly steering a hook toward visible fish.
 - Its compact lake and short delivery contracts are designed for drop-in browser play.
-- Progress comes from opening efficient delivery routes and mastering acceleration, braking, and travel timing along a side-on lake.
+- Progress comes from opening efficient delivery routes and mastering acceleration, momentum, and travel timing along a side-on lake.
 - Horror is delivered through 2D visibility, sound, and environmental changes rather than a large story campaign.
 - Water surveys, scientific explanations, population simulation, travel-time feedback, and a season evaluation distinguish the learning purpose from either inspiration.
 
@@ -239,14 +239,13 @@ The handling should feel smooth, measured, and forgiving rather than physically 
 **Keyboard**
 
 - A/D or Left/Right Arrow: thrust left or right
-- S or Down Arrow: brake
-- W or Up Arrow: short engine boost in the current facing direction
+- Up/Down Arrow: steer the hook vertically while fishing
 - Space or E: interact, dock, or cast
 - Escape or P: pause
 
 **Pointer and touch**
 
-- On-screen left, right, and brake controls during navigation
+- On-screen left and right controls during navigation
 - Tap prominent interaction buttons to dock, accept contracts, and cast
 - Drag or virtual-stick input to steer the hook while fishing
 
@@ -345,7 +344,7 @@ The implemented vertical slice uses original procedural Web Audio rather than ex
 
 | Cue | Implementation | Purpose | Equivalent non-audio feedback |
 | --- | --- | --- | --- |
-| Engine and boost | Filtered triangle oscillator; pitch and gain follow speed | Communicate acceleration without a loud loop | Boat motion, wake, and boost-control state |
+| Engine | Filtered triangle oscillator; pitch and gain follow speed | Communicate acceleration without a loud loop | Boat motion and wake state |
 | UI and cast | Short sine sweep; filtered noise plus descending tone | Confirm an input and line drop | Focus/pressed state and visible hook |
 | Catch, delivery, upgrade | Distinct rising triangle/sine patterns | Separate three positive outcomes | Named toast, flash, result panel, and changed values |
 | Impact and denial | Low sawtooth/noise impact or descending square tone | Signal scripted damage, rescue, or unavailable action | Damage toast, rescue message, denial reason |
@@ -359,7 +358,7 @@ Future soundscape work may add water, weather, harbor ambience, sparse music, an
 
 The first playable minutes should teach systems through one short delivery:
 
-1. Apply horizontal thrust, brake, and dock at the starting harbor.
+1. Apply horizontal thrust and dock at the starting harbor.
 2. Accept a nearby request for one common fish.
 3. Follow a marked route to a fishing area.
 4. Read the water evidence, predict the requested resident, and review the explanation.
@@ -631,7 +630,7 @@ The tutorial is action-based and a new player should complete the first delivery
 - Six water-connected fishing grounds and nine silhouette-and-color-distinct fish across the Brindle Coast, Mosswater Reach, and Violet Gloam.
 - Authored tutorial contract followed by seeded repeatable contracts selected from unlocked fish.
 - Cargo freshness, payment scaling, limited capacity, upgrades, repair, critical-damage rescue, fog, and day/night pressure.
-- Direct left/right/brake keyboard and touch travel controls plus direct two-axis hook steering.
+- Direct left/right keyboard and touch travel controls plus direct two-axis hook steering.
 - Quiet title, harbor, contract, pause, settings, help, contextual prompt, and result overlays using a completely new image-generated visual system.
 
 ### Initial balance
@@ -641,9 +640,7 @@ All durations use simulation seconds; horizontal positions use normalized world 
 | Value | Initial setting |
 | --- | --- |
 | Horizontal thrust | 0.034 units/s² |
-| Engine boost thrust | 0.057 units/s² |
 | Base maximum surface speed | 0.05 units/s |
-| Brake strength | 0.72 units/s² |
 | Passive water drag | 0.62 per second |
 | Camera view width | 0.30 world units |
 | Critical rescue threshold | 100 damage |

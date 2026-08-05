@@ -24,8 +24,6 @@ import {
 
 export interface InputState {
   travel: number;
-  boost: boolean;
-  brake: boolean;
   hookX: number;
   hookY: number;
 }
@@ -207,12 +205,7 @@ export function updateSimulation(simulation: Simulation, input: InputState, dt: 
   const { boat } = simulation;
   const travel = Math.sign(clamp(input.travel, -1, 1));
 
-  if (input.brake) {
-    boat.speed = moveToward(boat.speed, 0, BALANCE.brakeStrength * safeDt);
-  } else if (input.boost) {
-    const boostDirection = travel === 0 ? boat.facing : travel;
-    boat.speed += boostDirection * BALANCE.engineBoostThrust * safeDt;
-  } else if (travel !== 0) {
+  if (travel !== 0) {
     boat.speed += travel * BALANCE.horizontalThrust * safeDt;
   } else {
     boat.speed *= Math.max(0, 1 - BALANCE.waterDrag * safeDt);
@@ -684,12 +677,6 @@ function nearestHorizontal<T extends WorldPoint>(x: number, choices: readonly T[
 
 function distance(first: WorldPoint, second: WorldPoint): number {
   return Math.hypot(first.x - second.x, first.y - second.y);
-}
-
-function moveToward(value: number, target: number, amount: number): number {
-  if (value < target) return Math.min(target, value + amount);
-  if (value > target) return Math.max(target, value - amount);
-  return target;
 }
 
 function clampInteger(value: unknown, minimum: number, maximum: number): number {

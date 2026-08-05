@@ -1,7 +1,7 @@
 import type { InputState } from "./simulation";
 import type { ControlAction, ControlBindings } from "./controls";
 
-type VirtualControl = "left" | "right" | "boost" | "brake" | "action";
+type VirtualControl = "left" | "right" | "action";
 
 export class InputController {
   private readonly pressed = new Set<string>();
@@ -21,12 +21,9 @@ export class InputController {
   read(): InputState {
     const travel = Number(this.hasAction("right") || this.virtualPressed.has("right"))
       - Number(this.hasAction("left") || this.virtualPressed.has("left"));
-    const vertical = Number(this.hasAction("brake") || this.virtualPressed.has("brake"))
-      - Number(this.hasAction("boost") || this.virtualPressed.has("boost"));
+    const vertical = Number(this.hasAction("down")) - Number(this.hasAction("up"));
     return {
       travel,
-      boost: this.hasAction("boost") || this.virtualPressed.has("boost"),
-      brake: this.hasAction("brake") || this.virtualPressed.has("brake"),
       hookX: this.hookPointer.x || travel,
       hookY: this.hookPointer.y || vertical,
     };

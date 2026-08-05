@@ -1,4 +1,4 @@
-export const CONTROL_ACTIONS = ["left", "right", "brake", "boost", "action", "pause"] as const;
+export const CONTROL_ACTIONS = ["left", "right", "up", "down", "action", "pause"] as const;
 
 export type ControlAction = typeof CONTROL_ACTIONS[number];
 
@@ -7,8 +7,8 @@ export type ControlBindings = Record<ControlAction, string>;
 export const DEFAULT_CONTROL_BINDINGS: ControlBindings = {
   left: "KeyA",
   right: "KeyD",
-  brake: "KeyS",
-  boost: "KeyW",
+  up: "ArrowUp",
+  down: "ArrowDown",
   action: "KeyE",
   pause: "KeyP",
 };
@@ -16,13 +16,14 @@ export const DEFAULT_CONTROL_BINDINGS: ControlBindings = {
 export const CONTROL_LABELS: Record<ControlAction, { label: string; detail: string }> = {
   left: { label: "Travel left", detail: "Thrust or steer the hook left." },
   right: { label: "Travel right", detail: "Thrust or steer the hook right." },
-  brake: { label: "Brake / down", detail: "Brake the boat or steer the hook down." },
-  boost: { label: "Boost / up", detail: "Boost the engine or steer the hook up." },
+  up: { label: "Hook up", detail: "Steer the hook up while fishing." },
+  down: { label: "Hook down", detail: "Steer the hook down while fishing." },
   action: { label: "Interact", detail: "Dock, cast, and use nearby actions." },
   pause: { label: "Pause", detail: "Pause or resume while on the lake." },
 };
 
 export function isBindableCode(code: unknown): code is string {
+  if (code === "KeyW" || code === "KeyS") return false;
   return typeof code === "string" && (
     /^Key[A-Z]$/.test(code)
     || /^Digit[0-9]$/.test(code)

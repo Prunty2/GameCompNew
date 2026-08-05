@@ -35,7 +35,7 @@ describe("versioned save data", () => {
       },
     }));
     expect(loadSave(storage)).toEqual({
-      version: 5,
+      version: 6,
       progress: {
         money: 999_999,
         upgrades: { cargo: 7, engine: 0, lamp: 1, line: 0 },
@@ -66,7 +66,7 @@ describe("versioned save data", () => {
     const migrated = loadSave(storage);
     expect(migrated.progress.money).toBe(0);
     expect(migrated.settings.muted).toBe(true);
-    expect(migrated.version).toBe(5);
+    expect(migrated.version).toBe(6);
   });
 
   test("adds a safe line-depth default to older saves", () => {
@@ -81,10 +81,33 @@ describe("versioned save data", () => {
       settings: defaultSave().settings,
     }));
     const migrated = loadSave(storage);
-    expect(migrated.version).toBe(5);
+    expect(migrated.version).toBe(6);
     expect(migrated.progress.upgrades).toEqual({ cargo: 2, engine: 1, lamp: 2, line: 0 });
     expect(migrated.progress.money).toBe(140);
     expect(migrated.progress.populations).toEqual(defaultPopulations());
+  });
+
+  test("migrates removed boost and brake bindings without enabling W or S", () => {
+    const baseline = defaultSave();
+    const storage = memoryStorage(JSON.stringify({
+      version: 5,
+      progress: baseline.progress,
+      settings: {
+        ...baseline.settings,
+        controls: {
+          left: "KeyA",
+          right: "KeyD",
+          brake: "KeyS",
+          boost: "KeyW",
+          action: "KeyE",
+          pause: "KeyP",
+        },
+      },
+    }));
+
+    const migrated = loadSave(storage);
+    expect(migrated.version).toBe(6);
+    expect(migrated.settings.controls).toEqual(DEFAULT_CONTROL_BINDINGS);
   });
 
   test("validates learning records, species discovery, and populations", () => {

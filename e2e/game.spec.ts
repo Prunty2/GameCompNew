@@ -361,8 +361,8 @@ test("touch controls are available at a mobile landscape viewport", async ({ pag
   await page.getByRole("button", { name: "Accept contract" }).click();
   await expect(page.getByRole("button", { name: "Move right" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Move left" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Brake", exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Engine boost" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Brake", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Engine boost" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Interact or cast" })).toBeVisible();
 });
 
@@ -388,6 +388,10 @@ test("keyboard input moves the boat horizontally and flips its side profile", as
   await page.getByRole("button", { name: "Accept contract" }).click();
   const startX = await page.evaluate(() => window.__FSHING_TEST__?.boatX() ?? 0);
 
+  await page.keyboard.press("KeyW");
+  await page.keyboard.press("KeyS");
+  expect(await page.evaluate(() => window.__FSHING_TEST__?.boatX() ?? 0)).toBe(startX);
+
   await page.keyboard.down("KeyD");
   await page.waitForTimeout(600);
   await page.keyboard.up("KeyD");
@@ -395,11 +399,8 @@ test("keyboard input moves the boat horizontally and flips its side profile", as
   expect(rightX).toBeGreaterThan(startX);
   expect(await page.evaluate(() => window.__FSHING_TEST__?.facing())).toBe(1);
 
-  await page.keyboard.down("KeyS");
-  await page.waitForTimeout(350);
-  await page.keyboard.up("KeyS");
   await page.keyboard.down("KeyA");
-  await page.waitForTimeout(600);
+  await page.waitForTimeout(1400);
   await page.keyboard.up("KeyA");
   expect(await page.evaluate(() => window.__FSHING_TEST__?.facing())).toBe(-1);
 });
