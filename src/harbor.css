@@ -819,10 +819,16 @@
   min-width: 184px;
 }
 
-.harbor-back-arrow {
+.harbor-screen.is-first-voyage .harbor-main-menu-button .harbor-back-arrow {
+  display: inline-grid;
+  width: 32px;
+  height: 28px;
+  place-items: center;
   color: var(--menu-signal);
-  font-size: 1.2rem;
-  font-weight: 900;
+  font-family: system-ui, sans-serif;
+  font-size: 1.75rem;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .harbor-screen.is-first-voyage .harbor-panel .harbor-utility-button:hover,
@@ -1264,6 +1270,11 @@
   .harbor-screen.is-first-voyage .harbor-main-menu-button {
     width: 122px;
     min-width: 122px;
+  }
+
+  .harbor-screen.is-first-voyage .harbor-main-menu-button .harbor-back-arrow {
+    width: 26px;
+    font-size: 1.5rem;
   }
 
   .harbor-screen.is-first-voyage.is-first-job-offer .mission-button strong {

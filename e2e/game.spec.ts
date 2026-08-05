@@ -172,6 +172,7 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await expect(page.getByRole("heading", { name: "Your cargo" })).toHaveCount(0);
   await expect(page.getByRole("region", { name: "Dock services" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Back to lake →" })).toHaveCount(0);
+  await expect(page.locator(".harbor-back-arrow")).toHaveCSS("font-size", "28px");
   await page.getByRole("button", { name: "Back to main menu" }).click();
   await expect(page.getByRole("button", { name: "Play", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Play", exact: true }).click();
