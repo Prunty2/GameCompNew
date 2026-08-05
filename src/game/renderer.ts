@@ -1,5 +1,6 @@
 import tackleAtlasUrl from "../assets/fish-atlas.png";
 import fishAtlasUrl from "../assets/fish-atlas-v2.png";
+import fishingSpotsAtlasUrl from "../assets/fishing-spots-atlas.png";
 import harborPierUrl from "../assets/harbor-pier.png";
 import lakeChartUrl from "../assets/lake-chart.png";
 import playerBoatUrl from "../assets/player-boat.png";
@@ -12,6 +13,7 @@ import {
   regionAt,
   regionById,
   type FishSpecies,
+  type SpotId,
   type WorldPoint,
 } from "./balance";
 import { createSideScrollCamera, worldToScreenX, type SideScrollCamera } from "./camera";
@@ -31,9 +33,19 @@ interface LoadedArt {
   pier: HTMLImageElement;
   boat: HTMLCanvasElement;
   fish: HTMLCanvasElement;
+  fishingSpots: HTMLCanvasElement;
   tackle: HTMLCanvasElement;
   world: HTMLCanvasElement;
 }
+
+const SPOT_ATLAS_CELLS: Record<SpotId, readonly [number, number]> = {
+  sunwardShoal: [0, 0],
+  silverBay: [1, 0],
+  needleRun: [2, 0],
+  mosswaterPool: [0, 1],
+  outerGloam: [1, 1],
+  blackwaterTrench: [2, 1],
+};
 
 export class CanvasRenderer {
   private readonly context: CanvasRenderingContext2D;
@@ -50,14 +62,16 @@ export class CanvasRenderer {
       loadImage(harborPierUrl),
       loadImage(playerBoatUrl),
       loadImage(fishAtlasUrl),
+      loadImage(fishingSpotsAtlasUrl),
       loadImage(tackleAtlasUrl),
       loadImage(worldAtlasUrl),
-    ]).then(([lake, pier, boat, fish, tackle, world]) => {
+    ]).then(([lake, pier, boat, fish, fishingSpots, tackle, world]) => {
       this.art = {
         lake,
         pier,
         boat: keyMagenta(boat, true),
         fish: keyMagenta(fish, false),
+        fishingSpots: keyMagenta(fishingSpots, false),
         tackle: keyMagenta(tackle, false),
         world: keyMagenta(world, false),
       };
@@ -124,39 +138,21 @@ export class CanvasRenderer {
       if (!isNearScreen(x, width, 140)) continue;
       const permitLocked = spot.requiresPermit && !simulation.progress.outerUnlocked;
       const depthLocked = spot.requiredDepthTier > simulation.progress.upgrades.line;
-      const locked = permitLocked || depthLocked;
       const pulse = settings.reducedMotion ? 1 : 1 + Math.sin(simulation.elapsed * 3.2 + spot.x * 10) * 0.025;
-      context.save();
-      context.globalAlpha = locked ? 0.48 : 0.96;
-      this.drawWorldCell(0, 1, x, waterline - 38, 96 * pulse, 96 * pulse);
-      context.strokeStyle = locked ? "#d6dacb" : "#e8a44d";
-      context.lineWidth = locked ? 2 : 4;
-      context.beginPath();
-      context.moveTo(x, waterline - 66);
-      context.lineTo(x, waterline + 2);
-      context.stroke();
-      context.beginPath();
-      context.ellipse(x, waterline + 2, 34, 8, 0, 0, Math.PI * 2);
-      context.stroke();
-      context.fillStyle = "rgba(8, 31, 40, 0.9)";
-      context.fillRect(x - 65, waterline - 104, 130, 26);
-      context.fillStyle = locked ? "#d6dacb" : "#f7f1e3";
-      context.font = "800 11px system-ui, sans-serif";
-      context.textAlign = "center";
-      context.textBaseline = "middle";
-      context.fillText(spot.name.toUpperCase(), x, waterline - 91);
       const population = simulation.progress.populations[spot.species];
-      context.fillStyle = locked ? "#c9cec4" : population >= 40 ? "#b8e3c5" : "#ffd27a";
-      context.font = "800 9px system-ui, sans-serif";
-      context.fillText(`${FISH[spot.species].name.toUpperCase()} · ${populationLabel(population).toUpperCase()}`, x, waterline - 75);
-      if (depthLocked) {
-        context.fillStyle = "#e8a44d";
-        context.fillRect(x + 46, waterline - 112, 25, 18);
-        context.fillStyle = "#0b2630";
-        context.font = "900 10px system-ui, sans-serif";
-        context.fillText(`T${spot.requiredDepthTier}`, x + 58, waterline - 103);
-      }
-      context.restore();
+      this.drawFishingSpotMarker({
+        spotId: spot.id,
+        spotName: spot.name,
+        species: spot.species,
+        population,
+        permitLocked,
+        depthLocked,
+        requiredDepthTier: spot.requiredDepthTier,
+        x,
+        waterline,
+        pulse,
+        highContrast: settings.highContrast,
+      });
     }
 
     this.drawObjective(simulation, camera, width, height);
@@ -208,6 +204,71 @@ export class CanvasRenderer {
       highContrast: settings.highContrast,
       seed: fromRightShore ? 2.4 : 0.7,
     });
+  }
+
+  private drawFishingSpotMarker(options: {
+    spotId: SpotId;
+    spotName: string;
+    species: FishSpecies;
+    population: number;
+    permitLocked: boolean;
+    depthLocked: boolean;
+    requiredDepthTier: number;
+    x: number;
+    waterline: number;
+    pulse: number;
+    highContrast: boolean;
+  }): void {
+    const { context } = this;
+    const locked = options.permitLocked || options.depthLocked;
+    const markerSize = 126 * options.pulse;
+    const markerBottom = options.waterline + 7;
+    const cardWidth = 154;
+    const cardHeight = 39;
+    const cardX = options.x - cardWidth / 2;
+    const cardY = options.waterline - 185;
+    const accent = locked
+      ? "#c9cec4"
+      : options.highContrast
+        ? "#fff6d8"
+        : "#e8a44d";
+    const status = options.permitLocked
+      ? "PERMIT REQUIRED"
+      : options.depthLocked
+        ? `LINE T${options.requiredDepthTier} REQUIRED`
+        : `${FISH[options.species].name.toUpperCase()} · ${populationLabel(options.population).toUpperCase()}`;
+
+    context.save();
+    context.globalAlpha = locked ? 0.58 : 0.98;
+    this.drawFishingSpotCell(options.spotId, options.x, markerBottom, markerSize, markerSize);
+    context.restore();
+
+    context.save();
+    context.globalAlpha = locked ? 0.55 : 0.78;
+    context.strokeStyle = accent;
+    context.lineWidth = options.highContrast ? 3 : 2;
+    context.beginPath();
+    context.ellipse(options.x, options.waterline + 4, 38, 7, 0, 0, Math.PI * 2);
+    context.stroke();
+    context.restore();
+
+    context.save();
+    context.fillStyle = "rgba(6, 25, 34, 0.92)";
+    context.fillRect(cardX, cardY, cardWidth, cardHeight);
+    context.fillStyle = accent;
+    context.fillRect(cardX, cardY, 5, cardHeight);
+    context.strokeStyle = locked ? "rgba(214, 218, 203, 0.7)" : "rgba(247, 241, 227, 0.52)";
+    context.lineWidth = options.highContrast ? 2 : 1;
+    context.strokeRect(cardX + 0.5, cardY + 0.5, cardWidth - 1, cardHeight - 1);
+    context.textAlign = "left";
+    context.textBaseline = "middle";
+    context.fillStyle = locked ? "#d6dacb" : "#f7f1e3";
+    context.font = "900 11px system-ui, sans-serif";
+    context.fillText(options.spotName.toUpperCase(), cardX + 13, cardY + 13);
+    context.fillStyle = options.population < 40 && !locked ? "#ffd27a" : locked ? "#c9cec4" : "#b8e3c5";
+    context.font = "800 9px system-ui, sans-serif";
+    context.fillText(status, cardX + 13, cardY + 28);
+    context.restore();
   }
 
   private renderFishing(simulation: Simulation, settings: RenderSettings, width: number, height: number): void {
@@ -593,6 +654,25 @@ export class CanvasRenderer {
       sourceHeight,
       x - width / 2,
       y - height / 2,
+      width,
+      height,
+    );
+  }
+
+  private drawFishingSpotCell(spotId: SpotId, x: number, bottom: number, width: number, height: number): void {
+    const art = this.art;
+    if (!art) return;
+    const [column, row] = SPOT_ATLAS_CELLS[spotId];
+    const sourceWidth = art.fishingSpots.width / 3;
+    const sourceHeight = art.fishingSpots.height / 2;
+    this.context.drawImage(
+      art.fishingSpots,
+      column * sourceWidth,
+      row * sourceHeight,
+      sourceWidth,
+      sourceHeight,
+      x - width / 2,
+      bottom - height,
       width,
       height,
     );
