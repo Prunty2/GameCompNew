@@ -79,6 +79,7 @@
   line-height: 1;
   text-align: left;
   text-shadow: none;
+  transform: translateY(2px);
 }
 
 .harbor-screen.is-first-voyage .harbor-panel .harbor-header p {
@@ -118,13 +119,13 @@
 
 .harbor-screen.is-first-voyage .reward-stamp {
   display: grid;
-  min-width: 112px;
+  min-width: 132px;
   grid-template-columns: 1fr auto;
   align-items: center;
   gap: 9px;
-  padding: 6px 0 6px 14px;
+  padding: 8px 0 8px 16px;
   border: 0;
-  border-left: 1px solid rgb(145 169 176 / 48%);
+  border-left: 2px solid var(--menu-signal);
   border-radius: 0;
   background: transparent;
   color: var(--menu-paper);
@@ -135,8 +136,8 @@
 }
 
 .harbor-screen.is-first-voyage .reward-stamp .reward-label {
-  color: var(--menu-fog);
-  font-size: 0.64rem;
+  color: var(--menu-paper);
+  font-size: 0.72rem;
   font-weight: 950;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -150,14 +151,18 @@
 }
 
 .harbor-screen.is-first-voyage .reward-stamp .ui-icon {
-  width: 27px;
-  height: 27px;
+  width: 31px;
+  height: 31px;
   border-radius: 8px;
 }
 
 .harbor-screen.is-first-voyage .reward-stamp strong {
   color: var(--menu-signal);
-  font-size: 1rem;
+  font-size: 1.25rem;
+}
+
+.harbor-screen.is-first-voyage.is-first-job-offer .mission-button strong {
+  font-size: 1.24rem;
 }
 
 .harbor-screen.is-first-voyage .harbor-intro,
@@ -809,6 +814,17 @@
   min-width: 286px;
 }
 
+.harbor-screen.is-first-voyage .harbor-main-menu-button {
+  width: 184px;
+  min-width: 184px;
+}
+
+.harbor-back-arrow {
+  color: var(--menu-signal);
+  font-size: 1.2rem;
+  font-weight: 900;
+}
+
 .harbor-screen.is-first-voyage .harbor-panel .harbor-utility-button:hover,
 .harbor-screen.is-first-voyage .harbor-panel .harbor-utility-button:focus-visible,
 .harbor-screen.is-first-voyage .leave-button:hover,
@@ -941,6 +957,7 @@
 
   .harbor-screen.is-first-voyage .harbor-panel .harbor-header h2 {
     font-size: 1.05rem;
+    transform: translateY(1px);
   }
 
   .harbor-screen.is-first-voyage .harbor-panel .harbor-header p {
@@ -1018,14 +1035,14 @@
   .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .reward-stamp {
     top: 11px;
     right: 10px;
-    min-width: 58px;
+    min-width: 92px;
     min-height: 48px;
     gap: 2px;
-    padding: 5px 6px;
+    padding: 5px 0 5px 12px;
   }
 
   .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .reward-stamp .reward-label {
-    font-size: 0.46rem;
+    font-size: 0.58rem;
   }
 
   .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-route {
@@ -1242,5 +1259,14 @@
   .harbor-screen.is-first-voyage.is-expanded-harbor .leave-button {
     width: 169px;
     min-width: 169px;
+  }
+
+  .harbor-screen.is-first-voyage .harbor-main-menu-button {
+    width: 122px;
+    min-width: 122px;
+  }
+
+  .harbor-screen.is-first-voyage.is-first-job-offer .mission-button strong {
+    font-size: 1.14rem;
   }
 }

@@ -166,11 +166,16 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await expect(reward).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
   await expect(reward).toHaveCSS("box-shadow", "none");
   await expect(reward).toHaveCSS("border-top-width", "0px");
-  await expect(reward.locator(".reward-label")).toHaveCSS("font-size", "10.24px");
-  await expect(page.getByRole("button", { name: "Accept contract" })).toContainText("Begin first voyage");
+  await expect(reward.locator(".reward-label")).toHaveCSS("font-size", "11.52px");
+  await expect(reward.locator("strong")).toHaveCSS("font-size", "20px");
+  await expect(page.getByRole("button", { name: "Accept contract" })).toContainText("Begin the First Voyage");
   await expect(page.getByRole("heading", { name: "Your cargo" })).toHaveCount(0);
   await expect(page.getByRole("region", { name: "Dock services" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Back to lake →" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Back to main menu" }).click();
+  await expect(page.getByRole("button", { name: "Play", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "First Assignment" })).toBeVisible();
   await page.getByRole("button", { name: "Accept contract" }).click();
   await expect(page.locator("#tutorial-callout")).toContainText("Sunward Shoal");
   await page.locator("#tutorial-callout").click();
