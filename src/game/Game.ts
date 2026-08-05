@@ -447,7 +447,7 @@ export class Game {
     const contractMarkup = available
       ? `<div class="contract-card job-ticket ${isFirstJobOffer ? "is-guided" : ""}">
           <div class="job-ticket-heading">
-            <div><span class="card-kicker">${isFirstJobOffer ? "First assignment" : "Your next job"}</span><h3>${available.title}</h3></div>
+            <div>${isFirstJobOffer ? "" : `<span class="card-kicker">Your next job</span>`}<h3>${isFirstJobOffer ? "First Assignment" : available.title}</h3></div>
             <span class="reward-stamp" aria-label="Reward: ${available.reward} shells"><span class="reward-label">Reward</span><span class="reward-value"><span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${available.reward}</strong></span></span>
           </div>
           <ol class="job-route" aria-label="Job steps">

@@ -291,6 +291,10 @@
   margin: 0;
 }
 
+.harbor-screen.is-first-voyage.is-first-job-offer .harbor-content {
+  padding-top: 14px;
+}
+
 .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .harbor-tabs {
   margin-top: 16px;
 }
@@ -752,6 +756,10 @@
   gap: 14px;
 }
 
+.harbor-screen.is-first-voyage.is-first-job-offer .panel-actions.is-guided {
+  margin: 12px 0 0;
+}
+
 .harbor-screen.is-first-voyage .harbor-panel .harbor-utility-button,
 .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-utility-button,
 .harbor-screen.is-first-voyage .leave-button,
@@ -905,6 +913,10 @@
 
   .harbor-screen.is-first-voyage.is-first-job-offer .harbor-panel {
     height: auto;
+  }
+
+  .harbor-screen.is-first-voyage.is-first-job-offer .harbor-content {
+    padding-top: 10px;
   }
 
   .harbor-screen.is-first-voyage .harbor-panel .harbor-header {

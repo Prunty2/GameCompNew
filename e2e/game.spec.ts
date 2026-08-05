@@ -146,10 +146,17 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await expect(page.getByRole("heading", { name: "Brindle Harbor" })).toBeVisible();
   await expect(page.locator(".harbor-intro")).toHaveCount(0);
   await expect(page.getByText("Welcome aboard")).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "First Assignment" })).toBeVisible();
+  await expect(page.locator(".job-ticket").getByText("The Morning Order")).toHaveCount(0);
   await expect(page.locator(".harbor-screen")).toHaveClass(/is-first-voyage/);
   await expect(page.locator(".harbor-wordmark")).toBeVisible();
   await expectHorizontallyCentered(page, ".harbor-panel");
   expect((await page.locator(".harbor-panel").boundingBox())?.height).toBeLessThan(500);
+  const firstHeaderBounds = await page.locator(".harbor-header").boundingBox();
+  const firstTicketBounds = await page.locator(".job-ticket").boundingBox();
+  const firstFooterBounds = await page.locator(".panel-actions").boundingBox();
+  expect((firstTicketBounds?.y ?? 0) - ((firstHeaderBounds?.y ?? 0) + (firstHeaderBounds?.height ?? 0))).toBeGreaterThanOrEqual(12);
+  expect((firstFooterBounds?.y ?? 0) - ((firstTicketBounds?.y ?? 0) + (firstTicketBounds?.height ?? 0))).toBeGreaterThanOrEqual(10);
   await expect(page.locator(".harbor-panel")).toHaveCSS("background-color", "rgba(4, 23, 31, 0.94)");
   await expect(page.locator(".mission-button")).toHaveCSS("border-radius", "14px");
   await expect(page.locator(".job-ticket")).toHaveClass(/is-guided/);
