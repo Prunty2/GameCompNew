@@ -164,6 +164,9 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await page.evaluate(() => window.__FSHING_TEST__?.sailToHarbor("gloam"));
   await page.getByRole("button", { name: "Dock · Gloam Ferry" }).click();
   await expect(page.getByRole("heading", { name: "Gloam Ferry" })).toBeVisible();
+  await expect(page.getByText("Last light before the outer water.")).toHaveCount(0);
+  await expect(page.locator(".harbor-intro")).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Delivery job" })).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Your cargo" })).toHaveCount(0);
   const deliveryPanelBounds = await page.locator(".harbor-panel").boundingBox();
   const deliveryTabsBounds = await page.locator(".harbor-tabs").boundingBox();
@@ -173,7 +176,6 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   expect(Math.abs((deliveryTabsBounds?.width ?? 0) - (deliveryCardBounds?.width ?? 0))).toBeLessThanOrEqual(1);
   expect(Math.abs((deliveryTabsBounds?.x ?? 0) - (deliveryFooterBounds?.x ?? 0))).toBeLessThanOrEqual(1);
   expect(Math.abs((deliveryTabsBounds?.width ?? 0) - (deliveryFooterBounds?.width ?? 0))).toBeLessThanOrEqual(1);
-  await expect(page.locator(".harbor-intro")).toHaveCSS("text-align", "left");
   await page.getByRole("button", { name: "Cargo", exact: true }).click();
   await expect(page.getByRole("button", { name: "Cargo", exact: true })).toBeFocused();
   await expect(page.locator(".harbor-tab .ui-icon")).toHaveCount(2);
@@ -230,6 +232,7 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await page.getByRole("button", { name: "Play", exact: true }).click();
   await expect(page.locator(".harbor-screen")).toHaveClass(/is-expanded-harbor/);
   await expect(page.locator(".harbor-wordmark")).toBeVisible();
+  await expect(page.getByLabel(/Reward: .* shells/)).toContainText("Reward");
   await expect(page.locator(".harbor-panel")).toHaveCSS("background-color", "rgba(4, 23, 31, 0.94)");
   await expect(page.getByRole("region", { name: "Dock services" })).toHaveCount(0);
   await page.getByRole("button", { name: "Services", exact: true }).click();

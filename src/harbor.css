@@ -247,6 +247,108 @@
   margin: 0;
 }
 
+.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .harbor-tabs {
+  margin-top: 16px;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .harbor-content .mission-section {
+  display: flex;
+  align-items: flex-start;
+  padding-top: 12px;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .harbor-content .job-ticket {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 390px;
+  padding: 26px 22px 22px;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-ticket-heading {
+  display: block;
+  padding-inline: 118px;
+  text-align: center;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-ticket-heading > div {
+  min-width: 0;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .harbor-content .job-ticket h3 {
+  margin: 5px 0 0;
+  font-size: 1.7rem;
+  text-align: center;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .reward-stamp {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  min-width: 100px;
+  min-height: 64px;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 12px;
+  border-width: 2px;
+  background: linear-gradient(180deg, rgb(240 166 72 / 24%), rgb(240 166 72 / 10%));
+  box-shadow: inset 0 0 0 1px rgb(255 204 124 / 15%);
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .reward-stamp small {
+  display: block;
+  color: var(--menu-paper);
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .reward-value {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  line-height: 1;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-route {
+  gap: 18px;
+  margin: 30px 0 24px;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .harbor-content .job-route li {
+  min-height: 136px;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 14px;
+  padding: 18px 14px;
+  border: 1px solid rgb(145 169 176 / 22%);
+  border-radius: 12px;
+  background: rgb(247 241 227 / 3%);
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-route li:not(:last-child)::after {
+  right: -15px;
+  font-size: 1.15rem;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .harbor-content .job-route li > span {
+  width: 42px;
+  height: 42px;
+  font-size: 0.8rem;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-route small {
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-route strong {
+  margin-top: 7px;
+  font-size: 1.08rem;
+  white-space: normal;
+}
+
 .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .services {
   padding: 0 4px;
   border: 0;
@@ -629,6 +731,71 @@
     gap: 6px;
     margin-bottom: 6px;
     padding-bottom: 6px;
+  }
+
+  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .harbor-tabs {
+    margin-top: 10px;
+  }
+
+  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .harbor-content .mission-section {
+    padding-top: 6px;
+  }
+
+  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .harbor-content .job-ticket {
+    min-height: 0;
+    padding: 16px 12px 14px;
+  }
+
+  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-ticket-heading {
+    padding-inline: 66px;
+  }
+
+  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .harbor-content .job-ticket h3 {
+    font-size: 1.15rem;
+  }
+
+  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .reward-stamp {
+    top: 11px;
+    right: 10px;
+    min-width: 58px;
+    min-height: 48px;
+    gap: 2px;
+    padding: 5px 6px;
+  }
+
+  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .reward-stamp small {
+    font-size: 0.46rem;
+  }
+
+  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-route {
+    gap: 6px;
+    margin: 18px 0 14px;
+  }
+
+  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .harbor-content .job-route li {
+    min-height: 72px;
+    grid-template-columns: 30px minmax(0, 1fr);
+    gap: 8px;
+    padding: 9px 8px;
+  }
+
+  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .harbor-content .job-route li > span {
+    width: 30px;
+    height: 30px;
+    font-size: 0.65rem;
+  }
+
+  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-route li:not(:last-child)::after {
+    display: none;
+  }
+
+  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-route small {
+    font-size: 0.58rem;
+  }
+
+  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-route strong {
+    margin-top: 3px;
+    font-size: 0.8rem;
   }
 
   .harbor-screen.is-first-voyage .harbor-tab {

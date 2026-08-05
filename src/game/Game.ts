@@ -450,7 +450,7 @@ export class Game {
       ? `<div class="contract-card job-ticket ${isFirstJobOffer ? "is-guided" : ""}">
           <div class="job-ticket-heading">
             <div><span class="card-kicker">${isFirstJobOffer ? "First assignment" : "Your next job"}</span><h3>${available.title}</h3></div>
-            <span class="reward-stamp" aria-label="${available.reward} shell reward"><span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${available.reward}</strong></span>
+            <span class="reward-stamp" aria-label="Reward: ${available.reward} shells"><small>Reward</small><span class="reward-value"><span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${available.reward}</strong></span></span>
           </div>
           <ol class="job-route" aria-label="Job steps">
             <li><span>1</span><div><small>Catch</small><strong>${FISH[available.species].name}</strong></div></li>
@@ -512,20 +512,20 @@ export class Game {
               ${harborId === "gloam" ? this.permitCard() : ""}
             </div>
           </section>`
-        : `<section class="mission-section" aria-labelledby="contract-heading"><h3 id="contract-heading" class="section-title">${isFirstJobOffer ? "First delivery" : "Delivery job"}</h3>${contractMarkup}</section>`;
+        : `<section class="mission-section" aria-label="Delivery job">${contractMarkup}</section>`;
 
     return `
       <section class="screen-overlay harbor-screen is-first-voyage${isFirstJobOffer ? " is-first-job-offer" : " is-expanded-harbor"} is-harbor-${activeSection}" role="dialog" aria-labelledby="harbor-title">
         <div class="art-panel harbor-panel side-sheet">
           <header class="panel-heading harbor-header">
-            <div class="harbor-title-block"><img class="wordmark harbor-wordmark" src="${wordmarkUrl}" alt="FSHING" /><span class="harbor-title-divider" aria-hidden="true"></span><div><h2 id="harbor-title">${harbor.name}</h2><p>${harbor.subtitle}</p></div></div>
+            <div class="harbor-title-block"><img class="wordmark harbor-wordmark" src="${wordmarkUrl}" alt="FSHING" /><span class="harbor-title-divider" aria-hidden="true"></span><div><h2 id="harbor-title">${harbor.name}</h2></div></div>
             <span class="shell-balance" aria-label="${this.simulation.progress.money} shells"><span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${this.simulation.progress.money}</strong></span>
           </header>
-          <div class="harbor-intro ${isFirstJobOffer ? "is-first-step" : ""}">
+          ${activeSection === "delivery" && !isFirstJobOffer ? "" : `<div class="harbor-intro ${isFirstJobOffer ? "is-first-step" : ""}">
             <div>${sectionHeading.eyebrow ? `<span class="panel-eyebrow">${sectionHeading.eyebrow}</span>` : ""}<h3>${sectionHeading.title}</h3></div>
             ${isFirstJobOffer ? `<div class="first-voyage-primer" aria-label="Your voyage: survey, catch, deliver"><span><i class="ui-icon icon-objective" aria-hidden="true"></i><strong>Survey</strong></span><b aria-hidden="true">→</b><span><i class="ui-icon icon-freshness" aria-hidden="true"></i><strong>Catch</strong></span><b aria-hidden="true">→</b><span><i class="ui-icon icon-cargo" aria-hidden="true"></i><strong>Deliver</strong></span></div>` : ""}
             ${sectionHeading.body ? `<p>${sectionHeading.body}</p>` : ""}
-          </div>
+          </div>`}
           ${harborTabs}
           <div class="harbor-content is-${activeSection}">${activeContent}</div>
           <footer class="panel-actions ${isFirstJobOffer ? "is-guided" : ""}"><div><button class="text-button harbor-utility-button" type="button" data-action="open-help" aria-label="How to play"><span class="ui-icon icon-objective" aria-hidden="true"></span><strong>Help</strong></button><button class="text-button harbor-utility-button" type="button" data-action="open-field-guide" aria-label="Field guide"><span class="ui-icon icon-freshness" aria-hidden="true"></span><strong>Guide</strong></button></div>${isFirstJobOffer ? "" : `<button class="leave-button" type="button" data-action="undock" aria-label="Back to lake →"><span class="ui-icon icon-hull" aria-hidden="true"></span><strong>Return to Lake</strong></button>`}</footer>
