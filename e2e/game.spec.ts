@@ -75,6 +75,62 @@ test("the waterline transition is reserved for entering and leaving the title", 
   await expect(page.getByRole("button", { name: "Play", exact: true })).toBeVisible();
 });
 
+test("nightfall changes the panorama and keeps a moon indicator visible until morning", async ({ page }) => {
+  await page.goto("/?e2e=1");
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.getByRole("button", { name: "Accept contract" }).click();
+
+  const indicator = page.locator(".night-indicator");
+  await expect(indicator).toBeHidden();
+  const daytimeFrame = await page.locator("#game-canvas").evaluate(
+    (element) => (element as HTMLCanvasElement).toDataURL(),
+  );
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("heading", { name: "Paused" })).toBeVisible();
+
+  await page.evaluate(() => window.__FSHING_TEST__?.setElapsed(152.49));
+  await expect(indicator).toBeHidden();
+  await page.evaluate(() => window.__FSHING_TEST__?.setElapsed(152.5));
+  await expect(page.locator("body")).toHaveClass(/show-night-indicator/);
+  await expect(page.getByRole("img", { name: "Nighttime" })).toBeVisible();
+  await expect(indicator).toHaveCSS("animation-name", "night-indicator-in");
+  await expect(indicator).toHaveAttribute("aria-hidden", "false");
+  await expect(indicator).toHaveCSS("width", "48px");
+  await expect(indicator).toHaveCSS("height", "48px");
+  await expect(indicator).toHaveCSS("border-radius", "50%");
+  await expect(indicator).toHaveText("");
+  await expect.poll(() => page.locator("#game-canvas").evaluate(
+    (element) => (element as HTMLCanvasElement).toDataURL(),
+  )).not.toBe(daytimeFrame);
+
+  await page.evaluate(() => window.__FSHING_TEST__?.setElapsed(210));
+  await expect(page.locator("body")).not.toHaveClass(/show-night-indicator/);
+  await expect(indicator).toBeHidden();
+  await expect(indicator).toHaveAttribute("aria-hidden", "true");
+});
+
+test("development shortcuts jump to dusk and full night", async ({ page }) => {
+  await page.goto("/?e2e=1");
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.getByRole("button", { name: "Accept contract" }).click();
+
+  await page.keyboard.press("KeyG");
+  await expect.poll(() => page.evaluate(() => window.__FSHING_TEST__?.elapsed() ?? 0)).toBeGreaterThanOrEqual(140);
+  expect(await page.evaluate(() => window.__FSHING_TEST__?.elapsed() ?? 0)).toBeLessThan(140.2);
+  await expect(page.locator(".night-indicator")).toBeHidden();
+
+  const transitionFrame = await page.locator("#game-canvas").evaluate(
+    (element) => (element as HTMLCanvasElement).toDataURL(),
+  );
+  await page.keyboard.press("KeyH");
+  await expect.poll(() => page.evaluate(() => window.__FSHING_TEST__?.elapsed() ?? 0)).toBeGreaterThanOrEqual(165);
+  expect(await page.evaluate(() => window.__FSHING_TEST__?.elapsed() ?? 0)).toBeLessThan(165.2);
+  await expect(page.getByRole("img", { name: "Nighttime" })).toBeVisible();
+  await expect.poll(() => page.locator("#game-canvas").evaluate(
+    (element) => (element as HTMLCanvasElement).toDataURL(),
+  )).not.toBe(transitionFrame);
+});
+
 test("pause blurs the lake and slides the compact menu in and out", async ({ page }) => {
   await page.goto("/");
   const titleLogoWidth = await page.locator(".title-panel .wordmark").evaluate((element) => element.getBoundingClientRect().width);

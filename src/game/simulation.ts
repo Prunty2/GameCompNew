@@ -509,6 +509,20 @@ export function isNight(simulation: Simulation): boolean {
   return simulation.elapsed % BALANCE.dayLength >= BALANCE.nightStart;
 }
 
+export function shouldShowNightIndicator(simulation: Simulation): boolean {
+  const phase = simulation.elapsed % BALANCE.dayLength;
+  return phase >= BALANCE.nightStart + BALANCE.nightFadeLength / 2;
+}
+
+export function nightVisualIntensity(simulation: Simulation): number {
+  const phase = simulation.elapsed % BALANCE.dayLength;
+  if (phase < BALANCE.nightStart) return 0;
+  const fadeIn = clamp((phase - BALANCE.nightStart) / BALANCE.nightFadeLength, 0, 1);
+  const fadeOut = clamp((BALANCE.dayLength - phase) / BALANCE.nightFadeLength, 0, 1);
+  const linearIntensity = Math.min(fadeIn, fadeOut);
+  return linearIntensity * linearIntensity * (3 - 2 * linearIntensity);
+}
+
 export function dayProgress(simulation: Simulation): number {
   return (simulation.elapsed % BALANCE.dayLength) / BALANCE.dayLength;
 }

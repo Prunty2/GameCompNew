@@ -14,6 +14,14 @@ The boat, harbor pier, fish atlas, and world atlas were requested on a uniform `
 - Generated size: 1672 × 941
 - Prompt: “Use GPT Image 2.0. Create a wide 16:9 illustrated background plate for a side-scrolling 2D browser game named FSHING. STRICT side-on landscape view, not top-down and not isometric. A long calm freshwater lake crosses the full image horizontally; crisp waterline at about 58 percent of image height; layered low wooded hills and reeds; small warm working harbor silhouette at far left; a colder lonely ferry landing light at far right; quiet overcast late-afternoon sky. Restrained editorial gouache and screen-print style, simplified shapes, subtle paper grain, muted slate blue, lake teal, warm cream and sparse safety-orange light accents. No boat, no fish, no characters, no text, no logo, no interface, no icons, no borders, no map, no labels. Full-bleed scenery, readable behind gameplay silhouettes, coherent horizontal parallax layers.”
 
+### `lake-chart-night.png`
+
+- Runtime role: composition-matched nighttime panorama shown throughout the night phase
+- Generated source size: 1667 × 943; runtime size: 1672 × 941 to match the daytime panorama exactly
+- Generation mode: OpenAI built-in GPT Image lighting/weather edit using `lake-chart.png` as the edit target
+- Prompt: “Use case: lighting-weather. Asset type: runtime side-scrolling game panorama, nighttime counterpart to the supplied daytime lake background. Transform only the time of day from overcast daylight to a clear, atmospheric deep night. Preserve exactly the existing painterly illustrated texture, horizon, waterline, mountain ridges, shorelines, buildings, docks, reeds, trees, navigable empty lake space, and every object's placement and scale. Use cool blue-black moonlight, subtle silvery ambient glow, darker readable silhouettes, and restrained warm harbor lamps and reflections. Do not add a moon, boat, characters, creatures, text, UI, labels, borders, watermark, fog, vignette, spotlight, camera change, or new landmarks.”
+- Runtime processing: resized to the daytime panorama's exact dimensions so both plates share the same camera crop and waterline calculations
+
 ### `player-boat.png`
 
 - Runtime role: player vessel, strict side profile

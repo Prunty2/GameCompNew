@@ -4,8 +4,15 @@ import {
   isBindableCode,
   rebindControl,
 } from "../game/controls";
+import { debugTimeJumpForCode } from "../game/input";
 
 describe("control bindings", () => {
+  test("maps temporary dusk and night debug shortcuts", () => {
+    expect(debugTimeJumpForCode("KeyG")).toBe("transition-start");
+    expect(debugTimeJumpForCode("KeyH")).toBe("night-start");
+    expect(debugTimeJumpForCode("KeyJ")).toBeNull();
+  });
+
   test("uses W and S for vertical hook steering by default", () => {
     expect(DEFAULT_CONTROL_BINDINGS.up).toBe("KeyW");
     expect(DEFAULT_CONTROL_BINDINGS.down).toBe("KeyS");

@@ -22,9 +22,11 @@ import {
   learningAccuracy,
   maxFishingDepth,
   moveBoatForTesting,
+  nightVisualIntensity,
   recordSurvey,
   releaseCargo,
   resolveCatch,
+  shouldShowNightIndicator,
   startFishing,
   undock,
   updateSimulation,
@@ -39,6 +41,32 @@ const idle: InputState = {
 };
 
 describe("FSHING side-on simulation", () => {
+  test("eases night visuals in and out over twenty-five seconds", () => {
+    const simulation = createSimulation();
+    simulation.elapsed = BALANCE.nightStart;
+    expect(nightVisualIntensity(simulation)).toBe(0);
+    simulation.elapsed += BALANCE.nightFadeLength / 2;
+    expect(nightVisualIntensity(simulation)).toBeCloseTo(0.5);
+    simulation.elapsed = BALANCE.nightStart + BALANCE.nightFadeLength;
+    expect(nightVisualIntensity(simulation)).toBe(1);
+    simulation.elapsed = BALANCE.dayLength - BALANCE.nightFadeLength / 2;
+    expect(nightVisualIntensity(simulation)).toBeCloseTo(0.5);
+    simulation.elapsed = BALANCE.dayLength;
+    expect(nightVisualIntensity(simulation)).toBe(0);
+  });
+
+  test("shows the night indicator halfway through dusk until morning", () => {
+    const simulation = createSimulation();
+    simulation.elapsed = BALANCE.nightStart + BALANCE.nightFadeLength / 2 - 0.01;
+    expect(shouldShowNightIndicator(simulation)).toBe(false);
+    simulation.elapsed += 0.01;
+    expect(shouldShowNightIndicator(simulation)).toBe(true);
+    simulation.elapsed = BALANCE.dayLength - 0.01;
+    expect(shouldShowNightIndicator(simulation)).toBe(true);
+    simulation.elapsed = BALANCE.dayLength;
+    expect(shouldShowNightIndicator(simulation)).toBe(false);
+  });
+
   test("spans at least three landscape view widths", () => {
     const harborSpan = harborById("gloam").x - harborById("brindle").x;
     expect(harborSpan / BALANCE.cameraViewWidth).toBeGreaterThanOrEqual(2.9);

@@ -41,12 +41,12 @@ import {
   deliverContract,
   getInteractionPrompt,
   interact,
-  isNight,
   learningAccuracy,
   moveBoatForTesting,
   recordSurvey,
   releaseCargo,
   resolveCatch,
+  shouldShowNightIndicator,
   startFishing,
   tutorialPrompt,
   undock,
@@ -99,6 +99,8 @@ declare global {
       sailToHarbor(id: HarborId): void;
       catchSpecies(species: FishSpecies): void;
       damage(amount: number): void;
+      setElapsed(seconds: number): void;
+      elapsed(): number;
       boatX(): number;
       facing(): -1 | 1;
     };
@@ -174,6 +176,17 @@ export class Game {
       else if (this.overlay === "pause") this.setOverlay(null);
     }
 
+    if (import.meta.env.DEV) {
+      const debugTimeJump = this.input.consumeDebugTimeJump();
+      if (debugTimeJump && this.started && this.overlay === null) {
+        this.simulation.elapsed = debugTimeJump === "transition-start"
+          ? BALANCE.nightStart
+          : BALANCE.nightStart + BALANCE.nightFadeLength;
+        this.accumulator = 0;
+        this.refreshHud();
+      }
+    }
+
     if (this.started && this.overlay === null && !this.sceneTransitioning) {
       while (this.accumulator >= FIXED_STEP) {
         updateSimulation(this.simulation, this.input.read(), FIXED_STEP);
@@ -207,6 +220,9 @@ export class Game {
   private buildUi(): void {
     this.uiRoot.innerHTML = `
       <div class="game-ui">
+        <div class="night-indicator" role="img" aria-label="Nighttime" aria-hidden="true">
+          <span class="night-indicator-icon" aria-hidden="true"></span>
+        </div>
         <button class="tutorial-callout" id="tutorial-callout" type="button" data-action="dismiss-tutorial" title="Dismiss instruction" hidden>
           <span class="tutorial-label" aria-hidden="true">Next</span>
           <span class="tutorial-message" aria-live="polite"></span>
@@ -360,7 +376,10 @@ export class Game {
     const fishing = this.uiRoot.querySelector<HTMLElement>(".fishing-controls");
     if (navigation) navigation.hidden = this.overlay !== null || simulation.mode === "fishing";
     if (fishing) fishing.hidden = this.overlay !== null || simulation.mode !== "fishing";
-    document.body.classList.toggle("is-night", isNight(simulation));
+    const showNightIndicator = shouldShowNightIndicator(simulation);
+    document.body.classList.toggle("show-night-indicator", showNightIndicator);
+    this.uiRoot.querySelector<HTMLElement>(".night-indicator")
+      ?.setAttribute("aria-hidden", String(!showNightIndicator));
     document.documentElement.style.setProperty("--day-progress", String(dayProgress(simulation)));
   }
 
@@ -1158,6 +1177,11 @@ export class Game {
         damageBoat(this.simulation, amount);
         this.handleSimulationEvents();
       },
+      setElapsed: (seconds) => {
+        this.simulation.elapsed = Math.max(0, seconds);
+        this.refreshHud();
+      },
+      elapsed: () => this.simulation.elapsed,
       boatX: () => this.simulation.boat.x,
       facing: () => this.simulation.boat.facing,
     };
