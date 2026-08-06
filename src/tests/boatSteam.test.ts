@@ -21,6 +21,14 @@ describe("boat steam", () => {
     expect(forward.every((puff) => puff.y < 0)).toBe(true);
   });
 
+  it("keeps individual clouds compact instead of stretching them across the plume", () => {
+    const puffs = boatSteamPuffs(9.7, 1, 1, false);
+
+    expect(puffs.every((puff) => puff.stretchX <= 0.94)).toBe(true);
+    expect(puffs.every((puff) => puff.stretchY >= 0.9)).toBe(true);
+    expect(puffs.every((puff) => puff.stretchX / puff.stretchY <= 1.05)).toBe(true);
+  });
+
   it("reduces travel and rise when reduced motion is enabled", () => {
     const moving = boatSteamPuffs(7.4, 1, 1, false);
     const reduced = boatSteamPuffs(7.4, 1, 1, true);
