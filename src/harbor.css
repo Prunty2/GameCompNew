@@ -1292,7 +1292,6 @@
   width: min(760px, calc(100vw - 32px));
   max-width: 760px;
   height: auto;
-  min-height: min(540px, calc(100dvh - 32px));
   max-height: calc(100dvh - 32px);
   flex-direction: column;
   padding: 21px 24px 20px;
@@ -1309,10 +1308,8 @@
 
 .help-screen.is-first-voyage .help-content {
   display: grid;
-  flex: 1;
-  align-content: center;
   gap: 12px;
-  padding: clamp(22px, 5vh, 48px) 0;
+  padding: 18px 0;
 }
 
 .help-screen.is-first-voyage .help-progress {
@@ -1406,7 +1403,6 @@
 
 @media (max-width: 600px) {
   .help-screen.is-first-voyage .help-panel {
-    min-height: calc(100dvh - 28px);
     padding: 16px;
   }
 
