@@ -19,7 +19,13 @@ import {
   type WorldPoint,
 } from "./balance";
 import { boatSteamPuffs } from "./boatSteam";
-import { createSideScrollCamera, dampSideScrollCamera, worldToScreenX, type SideScrollCamera } from "./camera";
+import {
+  createSideScrollCamera,
+  dampMotionValue,
+  dampSideScrollCamera,
+  worldToScreenX,
+  type SideScrollCamera,
+} from "./camera";
 import { surfaceFishingCue, surfaceFishPose, type SurfaceFishingCue } from "./fishingSpotEffects";
 import { calculatePanoramaLayout } from "./panorama";
 import {
@@ -73,7 +79,10 @@ export class CanvasRenderer {
   private art: LoadedArt | null = null;
   private interactionAnchor: WorldPoint | null = null;
   private surfaceCameraCenter: number | null = null;
-  private surfaceCameraElapsed: number | null = null;
+  private surfaceMotionElapsed: number | null = null;
+  private surfaceCameraVelocity = 0;
+  private surfaceSteamVelocity = 0;
+  private surfaceSteamStackOffsetX: number | null = null;
 
   constructor(private readonly canvas: HTMLCanvasElement) {
     const context = canvas.getContext("2d");
@@ -139,7 +148,8 @@ export class CanvasRenderer {
     const art = this.art;
     if (!art) return;
     const { context } = this;
-    const camera = this.camera(simulation, settings.cinematic, settings.reducedMotion);
+    const motionDelta = this.updateSurfaceMotion(simulation, settings.cinematic, settings.reducedMotion);
+    const camera = this.camera(simulation, settings.cinematic, settings.reducedMotion, motionDelta);
     const nightIntensity = nightVisualIntensity(simulation);
     const waterline = this.drawPanorama(nightIntensity >= 1 ? art.lakeNight : art.lake, camera, width, height);
     if (nightIntensity > 0 && nightIntensity < 1) {
@@ -172,7 +182,7 @@ export class CanvasRenderer {
       );
     }
 
-    this.drawBoat(simulation, camera, width, height, waterline, surfaceLayer, settings);
+    this.drawBoat(simulation, camera, width, height, waterline, surfaceLayer, settings, motionDelta);
 
     let activeFishingCue: { cue: SurfaceFishingCue; x: number } | null = null;
     for (const [spotIndex, spot] of FISHING_SPOTS.entries()) {
@@ -466,6 +476,7 @@ export class CanvasRenderer {
     waterline: number,
     surfaceLayer: HTMLCanvasElement,
     settings: RenderSettings,
+    motionDelta: number,
   ): void {
     const art = this.art;
     if (!art) return;
@@ -475,25 +486,42 @@ export class CanvasRenderer {
     const boatWidth = clamp(this.canvas.clientHeight * 0.421 * boatScale, 172, 412);
     const boatHeight = boatWidth * (art.boat.height / art.boat.width);
     const speedRatio = Math.min(1, Math.abs(simulation.boat.speed) / BALANCE.maxSurfaceSpeed);
+    const steamSpeedRatio = Math.min(1, Math.abs(this.surfaceSteamVelocity) / BALANCE.maxSurfaceSpeed);
     const bob = settings.reducedMotion ? 0 : Math.sin(simulation.elapsed * (2 + speedRatio)) * (1.1 + speedRatio * 0.8);
     const tilt = settings.reducedMotion ? 0 : clamp(simulation.boat.speed * 0.16, -0.02, 0.02);
     const boatLift = clamp(boatHeight * 0.04, 4, 9);
+    const boatY = waterline + bob - boatLift;
+    const stackLocalX = -boatWidth * 0.078;
+    const stackLocalY = -boatHeight * 0.566;
+    const targetStackOffsetX = simulation.boat.facing
+      * (Math.cos(tilt) * stackLocalX - Math.sin(tilt) * stackLocalY);
+    this.surfaceSteamStackOffsetX = settings.reducedMotion || this.surfaceSteamStackOffsetX === null
+      ? targetStackOffsetX
+      : dampMotionValue(this.surfaceSteamStackOffsetX, targetStackOffsetX, motionDelta, 5);
+    const stackX = x + this.surfaceSteamStackOffsetX;
+    const stackY = boatY + Math.sin(tilt) * stackLocalX + Math.cos(tilt) * stackLocalY;
+    const nightIntensity = nightVisualIntensity(simulation);
+    const boatFilter = `brightness(${1 - nightIntensity * 0.18}) saturate(${1 - nightIntensity * 0.08})`;
 
     context.save();
-    context.translate(x, waterline + bob - boatLift);
-    context.scale(simulation.boat.facing, 1);
-    context.rotate(tilt);
-    const nightIntensity = nightVisualIntensity(simulation);
-    context.filter = `brightness(${1 - nightIntensity * 0.18}) saturate(${1 - nightIntensity * 0.08})`;
+    context.filter = boatFilter;
     this.drawBoatSteam(
       art.boatSteam,
       boatWidth,
-      boatHeight,
-      speedRatio,
-      Math.sign(simulation.boat.speed) * simulation.boat.facing,
+      stackX,
+      stackY,
+      steamSpeedRatio,
+      Math.sign(this.surfaceSteamVelocity),
       simulation.elapsed,
       settings,
     );
+    context.restore();
+
+    context.save();
+    context.translate(x, boatY);
+    context.scale(simulation.boat.facing, 1);
+    context.rotate(tilt);
+    context.filter = boatFilter;
     context.drawImage(art.boat, -boatWidth / 2, -boatHeight * 0.86, boatWidth, boatHeight);
     context.restore();
 
@@ -513,9 +541,10 @@ export class CanvasRenderer {
   private drawBoatSteam(
     atlas: HTMLImageElement,
     boatWidth: number,
-    boatHeight: number,
+    stackX: number,
+    stackY: number,
     speedRatio: number,
-    localMovementDirection: number,
+    movementDirection: number,
     elapsed: number,
     settings: RenderSettings,
   ): void {
@@ -523,9 +552,7 @@ export class CanvasRenderer {
     const rows = 2;
     const cellWidth = atlas.naturalWidth / columns;
     const cellHeight = atlas.naturalHeight / rows;
-    const stackX = -boatWidth * 0.078;
-    const stackY = -boatHeight * 0.566;
-    const puffs = boatSteamPuffs(elapsed, speedRatio, localMovementDirection, settings.reducedMotion);
+    const puffs = boatSteamPuffs(elapsed, speedRatio, movementDirection, settings.reducedMotion);
 
     this.context.save();
     this.context.globalCompositeOperation = "screen";
@@ -831,22 +858,38 @@ export class CanvasRenderer {
     );
   }
 
-  private camera(simulation: Simulation, cinematic: boolean, reducedMotion: boolean): SideScrollCamera {
+  private updateSurfaceMotion(simulation: Simulation, cinematic: boolean, reducedMotion: boolean): number {
+    const reset = this.surfaceMotionElapsed === null || simulation.elapsed < this.surfaceMotionElapsed;
+    const deltaSeconds = reset ? 0 : Math.max(0, simulation.elapsed - this.surfaceMotionElapsed!);
+    const direct = reset || cinematic || reducedMotion;
+
+    this.surfaceCameraVelocity = direct
+      ? simulation.boat.speed
+      : dampMotionValue(this.surfaceCameraVelocity, simulation.boat.speed, deltaSeconds, 2.8);
+    this.surfaceSteamVelocity = direct
+      ? simulation.boat.speed
+      : dampMotionValue(this.surfaceSteamVelocity, simulation.boat.speed, deltaSeconds, 2.2);
+    this.surfaceMotionElapsed = simulation.elapsed;
+    return deltaSeconds;
+  }
+
+  private camera(
+    simulation: Simulation,
+    cinematic: boolean,
+    reducedMotion: boolean,
+    deltaSeconds: number,
+  ): SideScrollCamera {
     const target = createSideScrollCamera({
       focusX: simulation.boat.x,
-      velocityX: cinematic ? 0 : simulation.boat.speed,
+      velocityX: cinematic ? 0 : this.surfaceCameraVelocity,
       viewWidth: cinematic ? 0.54 : BALANCE.cameraViewWidth,
       lookAheadTime: 0.24,
     });
-    const deltaSeconds = this.surfaceCameraElapsed === null
-      ? 0
-      : Math.max(0, simulation.elapsed - this.surfaceCameraElapsed);
     const camera = cinematic || reducedMotion || this.surfaceCameraCenter === null
       ? target
       : dampSideScrollCamera(this.surfaceCameraCenter, target, deltaSeconds, 3.2);
 
     this.surfaceCameraCenter = camera.center;
-    this.surfaceCameraElapsed = simulation.elapsed;
     return camera;
   }
 
