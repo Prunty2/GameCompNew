@@ -19,7 +19,7 @@ import {
   type WorldPoint,
 } from "./balance";
 import { boatSteamPuffs } from "./boatSteam";
-import { createSideScrollCamera, worldToScreenX, type SideScrollCamera } from "./camera";
+import { createSideScrollCamera, dampSideScrollCamera, worldToScreenX, type SideScrollCamera } from "./camera";
 import { surfaceFishingCue, surfaceFishPose, type SurfaceFishingCue } from "./fishingSpotEffects";
 import { calculatePanoramaLayout } from "./panorama";
 import {
@@ -72,6 +72,8 @@ export class CanvasRenderer {
   private readonly surfaceLayer = document.createElement("canvas");
   private art: LoadedArt | null = null;
   private interactionAnchor: WorldPoint | null = null;
+  private surfaceCameraCenter: number | null = null;
+  private surfaceCameraElapsed: number | null = null;
 
   constructor(private readonly canvas: HTMLCanvasElement) {
     const context = canvas.getContext("2d");
@@ -137,7 +139,7 @@ export class CanvasRenderer {
     const art = this.art;
     if (!art) return;
     const { context } = this;
-    const camera = this.camera(simulation, settings.cinematic);
+    const camera = this.camera(simulation, settings.cinematic, settings.reducedMotion);
     const nightIntensity = nightVisualIntensity(simulation);
     const waterline = this.drawPanorama(nightIntensity >= 1 ? art.lakeNight : art.lake, camera, width, height);
     if (nightIntensity > 0 && nightIntensity < 1) {
@@ -829,13 +831,23 @@ export class CanvasRenderer {
     );
   }
 
-  private camera(simulation: Simulation, cinematic: boolean): SideScrollCamera {
-    return createSideScrollCamera({
+  private camera(simulation: Simulation, cinematic: boolean, reducedMotion: boolean): SideScrollCamera {
+    const target = createSideScrollCamera({
       focusX: simulation.boat.x,
       velocityX: cinematic ? 0 : simulation.boat.speed,
       viewWidth: cinematic ? 0.54 : BALANCE.cameraViewWidth,
       lookAheadTime: 0.24,
     });
+    const deltaSeconds = this.surfaceCameraElapsed === null
+      ? 0
+      : Math.max(0, simulation.elapsed - this.surfaceCameraElapsed);
+    const camera = cinematic || reducedMotion || this.surfaceCameraCenter === null
+      ? target
+      : dampSideScrollCamera(this.surfaceCameraCenter, target, deltaSeconds, 3.2);
+
+    this.surfaceCameraCenter = camera.center;
+    this.surfaceCameraElapsed = simulation.elapsed;
+    return camera;
   }
 
   private fishingToScreen(point: WorldPoint, width: number, height: number): WorldPoint {

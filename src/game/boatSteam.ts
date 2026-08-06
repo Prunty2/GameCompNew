@@ -35,16 +35,21 @@ export function boatSteamPuffs(
     const riseScale = 0.78 + seededUnit(seed + 4.1) * 0.42;
     const flattening = seededUnit(seed + 7.7);
     const sizeScale = 0.88 + seededUnit(seed + 12.4) * 0.24;
+    const turbulence = clampedSpeed ** 2;
     const trail = clampedSpeed * easedAge * 0.46 * trailScale * motionScale;
     const idleDrift = Math.sin(elapsed * 0.7 + index * 2.1) * 0.012 * easedAge * motionScale;
     const wander = Math.sin(age * Math.PI * (1.2 + flattening * 0.7) + seed)
-      * easedAge * 0.032 * motionScale;
+      * easedAge * (0.032 + turbulence * 0.024) * motionScale;
     const riseWander = Math.sin(age * Math.PI * 2 + seededUnit(seed + 23.2) * Math.PI * 2)
-      * easedAge * 0.018 * motionScale;
+      * easedAge * (0.018 + turbulence * 0.036) * motionScale;
+    const downwash = turbulence * easedAge * (0.15 + seededUnit(seed + 28.6) * 0.08) * motionScale;
+    const unboundedY = -0.025 - easedAge * (0.38 - clampedSpeed * 0.08) * riseScale * motionScale
+      + downwash;
+    const downwashCeiling = -0.42 + turbulence * 0.28;
 
     puffs.push({
       x: (direction === 0 ? idleDrift : -direction * trail + idleDrift) + wander,
-      y: -0.025 - easedAge * (0.38 - clampedSpeed * 0.06) * riseScale * motionScale + riseWander,
+      y: Math.max(unboundedY, downwashCeiling) + riseWander,
       radius: (0.032 + easedAge * 0.118) * sizeScale,
       stretchX: 0.76 + easedAge * (0.1 + flattening * 0.08),
       stretchY: 0.9 + easedAge * (0.04 + (1 - flattening) * 0.08),

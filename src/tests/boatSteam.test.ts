@@ -29,6 +29,21 @@ describe("boat steam", () => {
     expect(puffs.every((puff) => puff.stretchX / puff.stretchY <= 1.05)).toBe(true);
   });
 
+  it("pushes the full-speed plume lower with livelier vertical variation", () => {
+    const idle = boatSteamPuffs(6.4, 0, 1, false);
+    const fullSpeed = boatSteamPuffs(6.4, 1, 1, false);
+    const idleLater = boatSteamPuffs(6.45, 0, 1, false);
+    const fullSpeedLater = boatSteamPuffs(6.45, 1, 1, false);
+
+    expect(average(fullSpeed.map((puff) => puff.y))).toBeGreaterThan(
+      average(idle.map((puff) => puff.y)) + 0.06,
+    );
+    expect(fullSpeed.every((puff) => puff.y >= -0.2)).toBe(true);
+    expect(averageMovement(fullSpeed, fullSpeedLater)).toBeGreaterThan(
+      averageMovement(idle, idleLater),
+    );
+  });
+
   it("reduces travel and rise when reduced motion is enabled", () => {
     const moving = boatSteamPuffs(7.4, 1, 1, false);
     const reduced = boatSteamPuffs(7.4, 1, 1, true);
@@ -44,4 +59,11 @@ describe("boat steam", () => {
 
 function average(values: number[]): number {
   return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function averageMovement(start: ReturnType<typeof boatSteamPuffs>, end: ReturnType<typeof boatSteamPuffs>): number {
+  return average(start.map((puff, index) => {
+    const later = end[index]!;
+    return Math.hypot(later.x - puff.x, later.y - puff.y);
+  }));
 }
