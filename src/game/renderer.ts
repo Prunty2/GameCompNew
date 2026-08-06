@@ -506,22 +506,38 @@ export class CanvasRenderer {
       const radius = puff.radius * boatWidth;
       const x = stackX + puff.x * boatWidth;
       const y = stackY + puff.y * boatWidth;
+      const warmth = (puff.tone + 1) / 2;
+      const core = [
+        Math.round(246 + warmth * 9),
+        Math.round(250 + warmth * 3),
+        Math.round(252 - warmth * 12),
+      ];
+      const edge = [
+        Math.round(232 + warmth * 10),
+        Math.round(241 + warmth * 4),
+        Math.round(244 - warmth * 11),
+      ];
+
+      this.context.save();
+      this.context.translate(x, y);
+      this.context.scale(puff.stretchX, puff.stretchY);
       const gradient = this.context.createRadialGradient(
-        x - radius * 0.16,
-        y - radius * 0.2,
+        -radius * 0.16,
+        -radius * 0.2,
         radius * 0.08,
-        x,
-        y,
+        0,
+        0,
         radius,
       );
       const opacity = puff.opacity * (settings.highContrast ? 1.14 : 1);
-      gradient.addColorStop(0, `rgba(255, 255, 250, ${opacity})`);
-      gradient.addColorStop(0.55, `rgba(242, 247, 241, ${opacity * 0.72})`);
-      gradient.addColorStop(1, "rgba(235, 242, 238, 0)");
+      gradient.addColorStop(0, `rgba(${core[0]}, ${core[1]}, ${core[2]}, ${opacity})`);
+      gradient.addColorStop(0.55, `rgba(${edge[0]}, ${edge[1]}, ${edge[2]}, ${opacity * 0.72})`);
+      gradient.addColorStop(1, `rgba(${edge[0]}, ${edge[1]}, ${edge[2]}, 0)`);
       this.context.fillStyle = gradient;
       this.context.beginPath();
-      this.context.arc(x, y, radius, 0, Math.PI * 2);
+      this.context.arc(0, 0, radius, 0, Math.PI * 2);
       this.context.fill();
+      this.context.restore();
     }
     this.context.restore();
   }

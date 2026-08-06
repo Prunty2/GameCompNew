@@ -330,7 +330,7 @@ The game uses a cozy illustrated 2D style with unsettling nighttime transformati
 - Clear daytime navigation landmarks
 - Night palettes that preserve gameplay readability while hiding distant threats
 - Subtle wake, rain, fog, current, and light-cone effects
-- Large, soft white steam clouds rise from the boat's exhaust stack at a steady creation cadence and spread into a long trail behind it as speed increases, evoking a working tugboat without using dark pollution smoke
+- Large, soft white steam clouds rise from the boat's exhaust stack at a steady creation cadence and spread into a long trail behind it as speed increases; seeded variations in drift, rise, flattened shape, scale, and subtle warm-to-cool white tone keep the plume organic without using dark pollution smoke
 - Disturbing imagery used sparingly so it remains effective
 
 The visual design must communicate fish type, freshness, damage, navigation landmarks, and interactable locations through shape, animation, icons, and text—not color alone.
