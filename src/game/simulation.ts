@@ -640,13 +640,13 @@ function createAvailableContract(simulation: Simulation, origin: HarborId): Cont
   const spotForSpecies: Record<FishSpecies, SpotId> = {
     reedfin: "sunwardShoal",
     sunPerch: "sunwardShoal",
-    silverDart: "silverBay",
-    needlePike: "needleRun",
+    silverDart: "sunwardShoal",
+    needlePike: "mosswaterPool",
     mossback: "mosswaterPool",
     lanternEel: "mosswaterPool",
     gloamGill: "outerGloam",
     violetRay: "outerGloam",
-    abyssCrown: "blackwaterTrench",
+    abyssCrown: "outerGloam",
   };
   const availableSpecies = (Object.keys(FISH) as FishSpecies[]).filter((candidate) => {
     const fish = FISH[candidate];

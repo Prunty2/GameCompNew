@@ -50,22 +50,6 @@ export const WATER_READINGS: Record<SpotId, WaterReading> = {
     habitat: "sunlit reeds",
     clue: "Warm, oxygen-rich shallows favour compact fish that shelter among reeds.",
   },
-  silverBay: {
-    depthM: 7,
-    temperatureC: 18,
-    oxygenMgL: 8,
-    turbidity: "low",
-    habitat: "open gravel shelf",
-    clue: "Clear open water favours fast, streamlined schooling fish.",
-  },
-  needleRun: {
-    depthM: 13,
-    temperatureC: 15,
-    oxygenMgL: 7.2,
-    turbidity: "moderate",
-    habitat: "current channel",
-    clue: "Cool moving water suits long ambush predators that hold against the current.",
-  },
   mosswaterPool: {
     depthM: 20,
     temperatureC: 12,
@@ -81,14 +65,6 @@ export const WATER_READINGS: Record<SpotId, WaterReading> = {
     turbidity: "moderate",
     habitat: "cold rocky drop-off",
     clue: "Cold, darker water favours species with large eyes and efficient movement.",
-  },
-  blackwaterTrench: {
-    depthM: 46,
-    temperatureC: 5,
-    oxygenMgL: 4.6,
-    turbidity: "high",
-    habitat: "lightless trench",
-    clue: "Low light and oxygen reward slow metabolism, sensory lures and protective armour.",
   },
 };
 

@@ -11,8 +11,8 @@ import {
   FISH,
   FISHING_SPOTS,
   HARBORS,
-  regionAt,
   regionById,
+  regionSurfaceTintAt,
   type FishSpecies,
   type WorldPoint,
 } from "./balance";
@@ -123,11 +123,9 @@ export class CanvasRenderer {
     const { context } = this;
     const camera = this.camera(simulation, settings.cinematic);
     const waterline = this.drawPanorama(art.lake, camera, width, height);
-    const region = regionAt(simulation.boat.x);
-
     context.save();
-    context.globalAlpha = settings.highContrast ? 0.08 : 0.16;
-    context.fillStyle = region.surfaceTint;
+    context.globalAlpha = settings.highContrast ? 0.08 : 0.07;
+    context.fillStyle = regionSurfaceTintAt(simulation.boat.x);
     context.fillRect(0, 0, width, height);
     context.restore();
 

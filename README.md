@@ -5,7 +5,7 @@ FSHING is a single-player, side-on environmental-science fishing and delivery ga
 The MVP vertical slice includes:
 
 - Deterministic fixed-step boat, fishing, contract, freshness, population, weather, and day/night simulation
-- An unobstructed lake spanning several camera widths with two harbors, three regions, six water-connected fishing grounds, and nine distinct fish arranged into habitat-specific resident sets
+- An unobstructed lake spanning several camera widths with two harbors, three regions, three widely separated fishing grounds, and nine distinct fish arranged into habitat-specific resident sets
 - Water surveys using depth, temperature, dissolved oxygen, turbidity, and habitat evidence
 - Catch-to-harbor distance–speed–time route planning with predicted-versus-actual freshness feedback
 - Six tiers each of boat/cargo, engine, lamp, and line upgrades; seven visible boat classes
