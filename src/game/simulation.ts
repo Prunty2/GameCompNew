@@ -355,6 +355,9 @@ export function acceptAvailableContract(simulation: Simulation): boolean {
   simulation.routeChoice = null;
   simulation.deliveryStartedAt = null;
   simulation.lastDeliveryResult = null;
+  if (simulation.cargo.some((item) => item.species === simulation.activeContract?.species)) {
+    chooseRoute(simulation, "fast");
+  }
   return true;
 }
 

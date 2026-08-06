@@ -132,6 +132,20 @@ describe("FSHING side-on simulation", () => {
     expect(simulation.lastDeliveryResult?.populationBonus).toBe(12);
   });
 
+  test("starts a delivery when accepting a contract for an existing catch", () => {
+    const simulation = createSimulation();
+    expect(resolveCatch(simulation, "reedfin")).toBe(true);
+    expect(acceptAvailableContract(simulation)).toBe(true);
+    expect(simulation.routeChoice).toBe("fast");
+
+    undock(simulation);
+    moveBoatForTesting(simulation, harborById("gloam"));
+    interact(simulation);
+
+    expect(deliverContract(simulation)).not.toBeNull();
+    expect(simulation.progress.completedContracts).toBe(1);
+  });
+
   test("catches a fish when the steered hook reaches its side-view silhouette", () => {
     const simulation = createSimulation(9);
     acceptAvailableContract(simulation);

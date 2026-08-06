@@ -329,6 +329,24 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await expect(page.locator(".service-card").filter({ hasText: "+1 cargo slot" }).locator(".upgrade-meter")).toHaveAttribute("aria-label", "Cargo level 2 of 7");
 });
 
+test("delivers a matching catch that was aboard before accepting the contract", async ({ page }) => {
+  await page.goto("/?e2e=1");
+  await page.evaluate(() => window.__FSHING_TEST__?.catchSpecies("reedfin"));
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.getByRole("button", { name: "Accept contract" }).click();
+
+  await page.evaluate(() => window.__FSHING_TEST__?.sailToHarbor("gloam"));
+  await page.getByRole("button", { name: "Dock · Gloam Ferry" }).click();
+  const completeDelivery = page.getByRole("button", { name: "Complete delivery" });
+  await expect(completeDelivery).toBeEnabled();
+  await completeDelivery.click();
+
+  await expect(page.getByRole("heading", { name: "Delivery analysed" })).toBeVisible();
+  await page.getByRole("button", { name: "Continue at harbor" }).click();
+  await expect(page.locator(".shell-balance strong")).toHaveText(/^[1-9]\d*$/);
+  await expect(page.getByRole("heading", { name: "Harbor Trade" })).toBeVisible();
+});
+
 test("settings, keyboard pause, and local SDK fallback remain usable", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("button", { name: "Settings" })).toBeVisible();
