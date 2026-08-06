@@ -14,7 +14,7 @@ After eight completed research deliveries, the player receives a season report s
 2. **Travel time affects the voyage.** Engine upgrades shorten crossings and help preserve catch freshness without interrupting play with a separate route-choice screen.
 3. **Ecology reacts to the player.** Catching, releasing, protection thresholds, natural recovery, and ecosystem bonuses make population management meaningful.
 4. **Simple to start, satisfying to master.** Boat momentum and direct hook steering are immediate, while better predictions, deeper lines, and efficient travel provide mastery.
-5. **A broad lake with purposeful stops.** Six living fishing grounds, two harbors, three ecosystems, and six depth bands make the enlarged route readable without filling the waterline with signposts.
+5. **A broad lake with purposeful stops.** Three widely separated living fishing grounds, two harbors, three ecosystems, and six depth bands make the enlarged route readable without filling the waterline with signposts.
 6. **Accessible evidence.** Shapes, numbers, labels, icons, and text repeat every important colour signal.
 
 ## Inspiration and originality
@@ -48,7 +48,7 @@ FSHING is not intended to reproduce Dredge in 2D. Its distinct focus is a repeat
 ## Core gameplay loop
 
 1. Visit a harbor and accept a requested fish delivery.
-2. Pilot toward one of six fishing grounds, first discovered through faint shoal movement beneath the surface.
+2. Pilot toward one of three fishing grounds, first discovered through faint shoal movement beneath the surface.
 3. Read the water measurements and predict the requested resident species.
 4. Review immediate explanatory feedback, then steer the hook toward the fish.
 5. Store the catch; freshness falls and the species population decreases.
@@ -159,7 +159,7 @@ The game takes place along one connected side-on lake route divided into regions
 - **Mosswater Reach:** Green water, heavier vegetation, deeper fish, changing weather, and stronger currents.
 - **Violet Gloam:** Cold violet water, poor visibility, disturbing events, and the rarest deep fish.
 
-The connected surface route remains navigable, but each region has a distinct color treatment, named fishing grounds, and fish population. Deeper fishing layers are unlocked through line-depth upgrades, while the outermost grounds also require a harbor permit. Locked depth is shown directly in the fishing view rather than enforced by an unexplained invisible boundary.
+The connected surface route remains navigable, but each region has a distinct color treatment, named fishing ground, and fish population. Region tints use a low-opacity overlay and a wide feathered blend around each boundary, so travelling changes the atmosphere gradually without an obvious full-screen color switch. Deeper fishing layers are unlocked through line-depth upgrades, while the outermost ground also requires a harbor permit. Locked depth is shown directly in the fishing view rather than enforced by an unexplained invisible boundary.
 
 ### Harbors
 
@@ -213,16 +213,13 @@ Fish should have recognizable silhouettes and movement patterns so catches do no
 
 The lake contains nine readable species across six depth tiers. Surface species are available immediately. Each line-depth upgrade extends the hook into another visible band of water, revealing more valuable fish and eventually the Violet Gloam abyss. Fish below the current line limit remain visible behind a clearly labelled depth boundary so the next upgrade has an understandable benefit.
 
-Each site owns a fixed three-species resident set, and the underwater view spawns two individuals of each resident. This keeps the scene busy without placing cold, deep species in warm shallows. A contract may request any resident at its assigned site; the prediction screen uses that contract species as its supported answer.
+Each ecosystem has one fishing site, positioned roughly one full landscape view from the next. Each site owns a fixed three-species resident set, and the underwater view spawns two individuals of each resident. This keeps the scene busy without placing cold, deep species in warm shallows. A contract may request any resident at its assigned site; the prediction screen uses that contract species as its supported answer.
 
 | Site | Resident species |
 | --- | --- |
 | Sunward Shoal | Reedfin, Sun Perch, Silver Dart |
-| Silver Bay | Silver Dart, Sun Perch, Needle Pike |
-| Needle Run | Needle Pike, Silver Dart, Mossback |
-| Mosswater Pool | Mossback, Lantern Eel, Needle Pike |
-| Outer Gloam | Gloam Gill, Violet Ray, Lantern Eel |
-| Blackwater Trench | Abyss Crown, Violet Ray, Gloam Gill |
+| Mosswater Pool | Needle Pike, Mossback, Lantern Eel |
+| Outer Gloam | Gloam Gill, Violet Ray, Abyss Crown |
 
 ## Boat handling
 
@@ -631,7 +628,7 @@ The tutorial is action-based and a new player should complete the first delivery
 
 - One continuous horizontal lake route with Brindle Harbor at the left edge and Gloam Ferry at the right edge.
 - A side-follow camera with generated panoramic scenery, layered parallax, a readable waterline, and underwater cutaway fishing.
-- Six water-connected fishing grounds and nine silhouette-and-color-distinct fish across the Brindle Coast, Mosswater Reach, and Violet Gloam.
+- Three widely separated, water-connected fishing grounds and nine silhouette-and-color-distinct fish across the Brindle Coast, Mosswater Reach, and Violet Gloam.
 - Authored tutorial contract followed by seeded repeatable contracts selected from unlocked fish.
 - Cargo freshness, payment scaling, limited capacity, upgrades, repair, critical-damage rescue, fog, and day/night pressure.
 - Direct left/right keyboard and touch travel controls plus direct two-axis hook steering.

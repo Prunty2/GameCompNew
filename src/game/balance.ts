@@ -9,7 +9,7 @@ export type FishSpecies =
   | "violetRay"
   | "abyssCrown";
 export type HarborId = "brindle" | "gloam";
-export type SpotId = "sunwardShoal" | "silverBay" | "needleRun" | "mosswaterPool" | "outerGloam" | "blackwaterTrench";
+export type SpotId = "sunwardShoal" | "mosswaterPool" | "outerGloam";
 export type UpgradeId = "cargo" | "engine" | "lamp" | "line";
 export type RegionId = "brindleCoast" | "mosswaterReach" | "violetGloam";
 
@@ -100,21 +100,15 @@ export const FISH: Record<FishSpecies, FishDefinition> = {
 };
 
 export const FISHING_SPOTS: readonly FishingSpotDefinition[] = [
-  { id: "sunwardShoal", name: "Sunward Shoal", species: "reedfin", requiresPermit: false, requiredDepthTier: 0, region: "brindleCoast", x: 0.2, y: SURFACE_Y },
-  { id: "silverBay", name: "Silver Bay", species: "silverDart", requiresPermit: false, requiredDepthTier: 0, region: "brindleCoast", x: 0.34, y: SURFACE_Y },
-  { id: "needleRun", name: "Needle Run", species: "needlePike", requiresPermit: false, requiredDepthTier: 1, region: "mosswaterReach", x: 0.49, y: SURFACE_Y },
-  { id: "mosswaterPool", name: "Mosswater Pool", species: "mossback", requiresPermit: false, requiredDepthTier: 2, region: "mosswaterReach", x: 0.62, y: SURFACE_Y },
-  { id: "outerGloam", name: "Outer Gloam", species: "gloamGill", requiresPermit: true, requiredDepthTier: 3, region: "violetGloam", x: 0.76, y: SURFACE_Y },
-  { id: "blackwaterTrench", name: "Blackwater Trench", species: "abyssCrown", requiresPermit: true, requiredDepthTier: 5, region: "violetGloam", x: 0.87, y: SURFACE_Y },
+  { id: "sunwardShoal", name: "Sunward Shoal", species: "reedfin", requiresPermit: false, requiredDepthTier: 0, region: "brindleCoast", x: 0.18, y: SURFACE_Y },
+  { id: "mosswaterPool", name: "Mosswater Pool", species: "mossback", requiresPermit: false, requiredDepthTier: 1, region: "mosswaterReach", x: 0.5, y: SURFACE_Y },
+  { id: "outerGloam", name: "Outer Gloam", species: "gloamGill", requiresPermit: true, requiredDepthTier: 3, region: "violetGloam", x: 0.82, y: SURFACE_Y },
 ];
 
 export const SPOT_RESIDENTS: Record<SpotId, readonly FishSpecies[]> = {
   sunwardShoal: ["reedfin", "sunPerch", "silverDart"],
-  silverBay: ["silverDart", "sunPerch", "needlePike"],
-  needleRun: ["needlePike", "silverDart", "mossback"],
-  mosswaterPool: ["mossback", "lanternEel", "needlePike"],
-  outerGloam: ["gloamGill", "violetRay", "lanternEel"],
-  blackwaterTrench: ["abyssCrown", "violetRay", "gloamGill"],
+  mosswaterPool: ["needlePike", "mossback", "lanternEel"],
+  outerGloam: ["gloamGill", "violetRay", "abyssCrown"],
 };
 
 export const REGIONS: readonly RegionDefinition[] = [
@@ -122,6 +116,8 @@ export const REGIONS: readonly RegionDefinition[] = [
   { id: "mosswaterReach", name: "Mosswater Reach", startX: 0.4, endX: 0.69, surfaceTint: "#4f876e", shallow: "#4c9078", middle: "#285f57", deep: "#102f37" },
   { id: "violetGloam", name: "Violet Gloam", startX: 0.69, endX: 1, surfaceTint: "#62527f", shallow: "#596f88", middle: "#383d69", deep: "#181b3d" },
 ];
+
+export const REGION_TINT_BLEND_WIDTH = 0.14;
 
 export const BOAT_CLASSES = ["Skiff", "Wide skiff", "Lake cutter", "Cabin cutter", "Trawler", "Deepwater trawler", "Lakebreaker"] as const;
 
@@ -145,6 +141,30 @@ export function regionById(id: RegionId): RegionDefinition {
 
 export function regionAt(x: number): RegionDefinition {
   return REGIONS.find((region) => x >= region.startX && x < region.endX) ?? REGIONS[REGIONS.length - 1]!;
+}
+
+export function regionSurfaceTintAt(x: number): string {
+  const clampedX = Math.max(0, Math.min(1, x));
+  for (let index = 0; index < REGIONS.length - 1; index += 1) {
+    const current = REGIONS[index];
+    const next = REGIONS[index + 1];
+    if (!current || !next) continue;
+    const blendStart = current.endX - REGION_TINT_BLEND_WIDTH / 2;
+    const blendEnd = current.endX + REGION_TINT_BLEND_WIDTH / 2;
+    if (clampedX < blendStart || clampedX > blendEnd) continue;
+    const amount = (clampedX - blendStart) / REGION_TINT_BLEND_WIDTH;
+    return blendHexColours(current.surfaceTint, next.surfaceTint, amount);
+  }
+  return regionAt(clampedX).surfaceTint;
+}
+
+function blendHexColours(from: string, to: string, amount: number): string {
+  const fromValue = Number.parseInt(from.slice(1), 16);
+  const toValue = Number.parseInt(to.slice(1), 16);
+  const channel = (shift: number): number => Math.round(
+    ((fromValue >> shift) & 0xff) * (1 - amount) + ((toValue >> shift) & 0xff) * amount,
+  );
+  return `rgb(${channel(16)} ${channel(8)} ${channel(0)})`;
 }
 
 export function boatClassAt(tier: number): string {
