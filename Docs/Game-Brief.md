@@ -327,6 +327,7 @@ The game uses a cozy illustrated 2D style with unsettling nighttime transformati
 - Layered side-view sky, distant shoreline, near reeds, waterline, docks, and underwater space
 - Harbor piers extend inward from their shoreline edge and visually connect to land instead of floating as isolated platforms
 - Warm harbor lights contrasted against cool lake colors
+- Large, soft white steam clouds rise from the tugboat stack and stretch into a longer trail with speed; eight painted sprite variations rotate deterministically so the plume stays organic without reading as dark pollution smoke
 - Clear daytime navigation landmarks
 - Night palettes that preserve gameplay readability while hiding distant threats
 - Subtle wake, rain, fog, current, and light-cone effects

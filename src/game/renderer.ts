@@ -1,3 +1,4 @@
+import boatSteamAtlasUrl from "../assets/boat-steam-atlas.png";
 import tackleAtlasUrl from "../assets/fish-atlas.png";
 import fishAtlasUrl from "../assets/fish-atlas-v2.png";
 import harborPierUrl from "../assets/harbor-pier.png";
@@ -17,6 +18,7 @@ import {
   type FishSpecies,
   type WorldPoint,
 } from "./balance";
+import { boatSteamPuffs } from "./boatSteam";
 import { createSideScrollCamera, worldToScreenX, type SideScrollCamera } from "./camera";
 import { surfaceFishingCue, surfaceFishPose, type SurfaceFishingCue } from "./fishingSpotEffects";
 import { calculatePanoramaLayout } from "./panorama";
@@ -35,6 +37,7 @@ export interface RenderSettings {
 }
 
 interface LoadedArt {
+  boatSteam: HTMLImageElement;
   lake: HTMLImageElement;
   lakeNight: HTMLImageElement;
   pier: HTMLImageElement;
@@ -75,6 +78,7 @@ export class CanvasRenderer {
     if (!context) throw new Error("Canvas 2D is unavailable.");
     this.context = context;
     this.artReady = Promise.all([
+      loadImage(boatSteamAtlasUrl),
       loadImage(lakeChartUrl),
       loadImage(lakeChartNightUrl),
       loadImage(harborPierUrl),
@@ -84,9 +88,10 @@ export class CanvasRenderer {
       loadImage(polarizedLensUrl),
       loadImage(tackleAtlasUrl),
       loadImage(worldAtlasUrl),
-    ]).then(([lake, lakeNight, pier, boat, fish, fishingCues, polarizedLens, tackle, world]) => {
+    ]).then(([boatSteam, lake, lakeNight, pier, boat, fish, fishingCues, polarizedLens, tackle, world]) => {
       const keyedFish = keyMagenta(fish, false);
       this.art = {
+        boatSteam,
         lake,
         lakeNight,
         pier,
@@ -478,6 +483,15 @@ export class CanvasRenderer {
     context.rotate(tilt);
     const nightIntensity = nightVisualIntensity(simulation);
     context.filter = `brightness(${1 - nightIntensity * 0.18}) saturate(${1 - nightIntensity * 0.08})`;
+    this.drawBoatSteam(
+      art.boatSteam,
+      boatWidth,
+      boatHeight,
+      speedRatio,
+      Math.sign(simulation.boat.speed) * simulation.boat.facing,
+      simulation.elapsed,
+      settings,
+    );
     context.drawImage(art.boat, -boatWidth / 2, -boatHeight * 0.86, boatWidth, boatHeight);
     context.restore();
 
@@ -492,6 +506,52 @@ export class CanvasRenderer {
       highContrast: settings.highContrast,
       seed: 1.3,
     });
+  }
+
+  private drawBoatSteam(
+    atlas: HTMLImageElement,
+    boatWidth: number,
+    boatHeight: number,
+    speedRatio: number,
+    localMovementDirection: number,
+    elapsed: number,
+    settings: RenderSettings,
+  ): void {
+    const columns = 4;
+    const rows = 2;
+    const cellWidth = atlas.naturalWidth / columns;
+    const cellHeight = atlas.naturalHeight / rows;
+    const stackX = -boatWidth * 0.078;
+    const stackY = -boatHeight * 0.566;
+    const puffs = boatSteamPuffs(elapsed, speedRatio, localMovementDirection, settings.reducedMotion);
+
+    this.context.save();
+    this.context.globalCompositeOperation = "screen";
+    for (const puff of puffs) {
+      const column = puff.spriteIndex % columns;
+      const row = Math.floor(puff.spriteIndex / columns);
+      const size = puff.radius * boatWidth * 2.7;
+      const drawWidth = size * puff.stretchX;
+      const drawHeight = size * puff.stretchY;
+
+      this.context.save();
+      this.context.translate(stackX + puff.x * boatWidth, stackY + puff.y * boatWidth);
+      this.context.rotate(puff.rotation);
+      this.context.globalAlpha = puff.opacity * (settings.highContrast ? 1.12 : 1);
+      this.context.drawImage(
+        atlas,
+        column * cellWidth,
+        row * cellHeight,
+        cellWidth,
+        cellHeight,
+        -drawWidth / 2,
+        -drawHeight / 2,
+        drawWidth,
+        drawHeight,
+      );
+      this.context.restore();
+    }
+    this.context.restore();
   }
 
   private drawObjective(simulation: Simulation, camera: SideScrollCamera, width: number, height: number): void {
