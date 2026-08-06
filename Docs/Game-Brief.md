@@ -201,13 +201,13 @@ Fishing is an active supporting mechanic rather than the entire game.
 1. The player notices faint fish movement beneath the lake and steers toward the fishing ground.
 2. A population-aware school is always faintly discoverable; there is no permanent buoy, nameplate, or surface ring.
 3. As the boat approaches, a restrained polarized-water lens clarifies the shoal without turning the lake into a transparent aquarium.
-4. Only after the boat enters interaction range does a compact hook-and-arc cue fade in above the fishing ground. It stays anchored to the ground's world position instead of following the boat, and its accessible interaction label supplies the site name and any permit, line-depth, speed, or cargo restriction without putting persistent text over the lake.
+4. From three times the interaction distance, a compact hook-and-arc cue fades in above the fishing ground. It stays anchored to the ground's world position instead of following the boat; once the boat enters interaction range, its accessible interaction label supplies the site name and any permit, line-depth, speed, or cargo restriction without putting persistent text over the lake.
 5. The player drops the line from the boat into the water directly below.
 6. The camera cuts below the surface while the hook descends through a bounded side-view fishing space.
 7. The player steers the hook toward a fish while avoiding weeds, debris, or unwanted species.
 8. Contact with a valid fish catches it and uses available cargo capacity.
 
-The surface cue combines two information layers. The always-present shoal is low-contrast and moves slowly enough to remain readable with reduced motion enabled. Its visible fish count follows the primary species population in broad steps, so a depleted ground remains discoverable but visibly quieter. Proximity strengthens the silhouettes, adds a soft vertical lens of clearer water, and reveals subtle caustic and orbit trails. The hook cue is never shown outside the real interaction radius. High-contrast mode strengthens silhouette edges and the hook arc; all restriction details remain available as accessible text and focus feedback rather than colour alone.
+The surface cue combines two information layers. The always-present shoal is low-contrast and moves slowly enough to remain readable with reduced motion enabled. Its visible fish count follows the primary species population in broad steps, so a depleted ground remains discoverable but visibly quieter. Proximity strengthens the silhouettes, adds a soft vertical lens of clearer water, and reveals subtle caustic and orbit trails. The hook cue begins appearing at three times the real interaction radius, while the interaction itself remains limited to that radius. High-contrast mode strengthens silhouette edges and the hook arc; all restriction details remain available as accessible text and focus feedback rather than colour alone.
 
 Fish should have recognizable silhouettes and movement patterns so catches do not depend on color alone. During fishing, a specimen card shows the requested fish sprite beside its name and plain-language shape cue, while a labeled bracket follows the matching fish in the water. Rarer fish can move faster, hide deeper, or require improved fishing equipment. For the minimum viable release, the hook interaction should remain short and use steering rather than a separate tension or reeling system.
 
@@ -682,7 +682,7 @@ Every authored visual asset in this slice is generated with GPT Image 2.0. No pr
 | `harbor-pier.png` | Long weathered side-view harbor pier that extends from either shoreline; its fixed footprint uses roughly 36–44 narrow deck-plank divisions so the timber scale remains believable beside the player boat |
 | `fish-atlas.png` | Fishing-hook sprite and retained original fish reference cells |
 | `fish-atlas-v2.png` | Nine independently generated, silhouette-distinct species in a strict 3 × 3 atlas |
-| `surface-fishing-cues.png` | Six faint school-fish poses plus enabled and disabled proximity hook cues in a strict 4 × 2 atlas |
+| `surface-fishing-cues.png` | Six faint school-fish poses plus the primary proximity hook cue in a strict 4 × 2 atlas; the secondary disabled cell is unused |
 | `polarized-lens.png` | Soft additive clear-water lens and painted caustic trails shown as the boat approaches a fishing ground |
 | `world-atlas.png` | Side-view buoy, fog, night-wake, and retained legacy sprites on a chroma-key matte |
 | `ui-panel.png` | Minimal full-bleed dark menu and harbor surface |
@@ -691,7 +691,7 @@ Every authored visual asset in this slice is generated with GPT Image 2.0. No pr
 
 Generated files are explicitly imported from `src/assets/`. Prompts and generation settings are recorded in `Docs/Asset-Manifest.md`; authoring intermediates remain outside the production bundle.
 
-Surface fishing grounds use two dedicated GPT Image runtime assets: `surface-fishing-cues.png` supplies six coordinated submerged fish poses plus complete enabled and disabled hook-and-arc pictograms, while `polarized-lens.png` supplies the feathered clear-water and caustic treatment through additive blending. Canvas only places, scales, fades, and animates these authored sprites from deterministic state. Population-aware school size, localized clarity, and a proximity-only hook cue distinguish the grounds without a separate landmark atlas. Site names, access requirements, target species, and population condition remain in survey, objective, field-guide, and accessible interaction text instead of becoming permanent Canvas labels.
+Surface fishing grounds use two dedicated GPT Image runtime assets: `surface-fishing-cues.png` supplies six coordinated submerged fish poses plus the single primary hook-and-arc pictogram, while `polarized-lens.png` supplies the feathered clear-water and caustic treatment through additive blending. The atlas's secondary disabled hook cell is intentionally unused. Canvas only places, scales, fades, and animates these authored sprites from deterministic state. Population-aware school size, localized clarity, and a proximity-only hook cue distinguish the grounds without a separate landmark atlas. Site names, access requirements, target species, and population condition remain in survey, objective, field-guide, and accessible interaction text instead of becoming permanent Canvas labels.
 
 ### Slice acceptance tests
 

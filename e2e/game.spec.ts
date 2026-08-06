@@ -139,7 +139,7 @@ test("settings reverses its title transition when closing", async ({ page }) => 
   expect(returnedLakeFrame).toBe(titleLakeFrame);
 });
 
-test("surface shoals reveal the hook only inside fishing interaction range", async ({ page }) => {
+test("surface shoals anchor the interaction to the fishing hook", async ({ page }) => {
   await page.goto("/?e2e=1");
   await page.getByRole("button", { name: "Play", exact: true }).click();
   await page.getByRole("button", { name: "Accept contract" }).click();
