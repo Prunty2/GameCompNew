@@ -102,6 +102,7 @@ declare global {
       sailToHarbor(id: HarborId): void;
       catchSpecies(species: FishSpecies): void;
       damage(amount: number): void;
+      setElapsed(seconds: number): void;
       boatX(): number;
       facing(): -1 | 1;
     };
@@ -210,6 +211,10 @@ export class Game {
   private buildUi(): void {
     this.uiRoot.innerHTML = `
       <div class="game-ui">
+        <div class="night-indicator" role="img" aria-label="Nighttime" aria-hidden="true">
+          <span class="night-indicator-icon" aria-hidden="true"></span>
+          <span class="night-indicator-label" aria-hidden="true">Night</span>
+        </div>
         <button class="tutorial-callout" id="tutorial-callout" type="button" data-action="dismiss-tutorial" title="Dismiss instruction" hidden>
           <span class="tutorial-label" aria-hidden="true">Next</span>
           <span class="tutorial-message" aria-live="polite"></span>
@@ -363,7 +368,9 @@ export class Game {
     const fishing = this.uiRoot.querySelector<HTMLElement>(".fishing-controls");
     if (navigation) navigation.hidden = this.overlay !== null || simulation.mode === "fishing";
     if (fishing) fishing.hidden = this.overlay !== null || simulation.mode !== "fishing";
-    document.body.classList.toggle("is-night", isNight(simulation));
+    const night = isNight(simulation);
+    document.body.classList.toggle("is-night", night);
+    this.uiRoot.querySelector<HTMLElement>(".night-indicator")?.setAttribute("aria-hidden", String(!night));
     document.documentElement.style.setProperty("--day-progress", String(dayProgress(simulation)));
   }
 
@@ -1190,6 +1197,10 @@ export class Game {
       damage: (amount) => {
         damageBoat(this.simulation, amount);
         this.handleSimulationEvents();
+      },
+      setElapsed: (seconds) => {
+        this.simulation.elapsed = Math.max(0, seconds);
+        this.refreshHud();
       },
       boatX: () => this.simulation.boat.x,
       facing: () => this.simulation.boat.facing,

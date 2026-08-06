@@ -2,6 +2,7 @@ import tackleAtlasUrl from "../assets/fish-atlas.png";
 import fishAtlasUrl from "../assets/fish-atlas-v2.png";
 import harborPierUrl from "../assets/harbor-pier.png";
 import lakeChartUrl from "../assets/lake-chart.png";
+import lakeChartNightUrl from "../assets/lake-chart-night.png";
 import polarizedLensUrl from "../assets/polarized-lens.png";
 import playerBoatUrl from "../assets/player-boat.png";
 import surfaceFishingCuesUrl from "../assets/surface-fishing-cues.png";
@@ -30,6 +31,7 @@ export interface RenderSettings {
 
 interface LoadedArt {
   lake: HTMLImageElement;
+  lakeNight: HTMLImageElement;
   pier: HTMLImageElement;
   boat: HTMLCanvasElement;
   fish: HTMLCanvasElement;
@@ -67,6 +69,7 @@ export class CanvasRenderer {
     this.context = context;
     this.artReady = Promise.all([
       loadImage(lakeChartUrl),
+      loadImage(lakeChartNightUrl),
       loadImage(harborPierUrl),
       loadImage(playerBoatUrl),
       loadImage(fishAtlasUrl),
@@ -74,10 +77,11 @@ export class CanvasRenderer {
       loadImage(polarizedLensUrl),
       loadImage(tackleAtlasUrl),
       loadImage(worldAtlasUrl),
-    ]).then(([lake, pier, boat, fish, fishingCues, polarizedLens, tackle, world]) => {
+    ]).then(([lake, lakeNight, pier, boat, fish, fishingCues, polarizedLens, tackle, world]) => {
       const keyedFish = keyMagenta(fish, false);
       this.art = {
         lake,
+        lakeNight,
         pier,
         boat: keyMagenta(boat, true),
         fish: keyedFish,
@@ -122,7 +126,7 @@ export class CanvasRenderer {
     if (!art) return;
     const { context } = this;
     const camera = this.camera(simulation, settings.cinematic);
-    const waterline = this.drawPanorama(art.lake, camera, width, height);
+    const waterline = this.drawPanorama(isNight(simulation) ? art.lakeNight : art.lake, camera, width, height);
     const region = regionAt(simulation.boat.x);
 
     context.save();
