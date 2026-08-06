@@ -16,6 +16,7 @@ import {
   type FishSpecies,
   type WorldPoint,
 } from "./balance";
+import { boatSteamPuffs } from "./boatSteam";
 import { createSideScrollCamera, worldToScreenX, type SideScrollCamera } from "./camera";
 import { surfaceFishingCue, surfaceFishPose, type SurfaceFishingCue } from "./fishingSpotEffects";
 import { calculatePanoramaLayout } from "./panorama";
@@ -464,6 +465,14 @@ export class CanvasRenderer {
     context.translate(x, waterline + bob - boatLift);
     context.scale(simulation.boat.facing, 1);
     context.rotate(tilt);
+    this.drawBoatSteam(
+      boatWidth,
+      boatHeight,
+      speedRatio,
+      Math.sign(simulation.boat.speed) * simulation.boat.facing,
+      simulation.elapsed,
+      settings,
+    );
     context.drawImage(art.boat, -boatWidth / 2, -boatHeight * 0.86, boatWidth, boatHeight);
     context.restore();
 
@@ -478,6 +487,43 @@ export class CanvasRenderer {
       highContrast: settings.highContrast,
       seed: 1.3,
     });
+  }
+
+  private drawBoatSteam(
+    boatWidth: number,
+    boatHeight: number,
+    speedRatio: number,
+    localMovementDirection: number,
+    elapsed: number,
+    settings: RenderSettings,
+  ): void {
+    const stackX = -boatWidth * 0.078;
+    const stackY = -boatHeight * 0.566;
+    const puffs = boatSteamPuffs(elapsed, speedRatio, localMovementDirection, settings.reducedMotion);
+
+    this.context.save();
+    for (const puff of puffs) {
+      const radius = puff.radius * boatWidth;
+      const x = stackX + puff.x * boatWidth;
+      const y = stackY + puff.y * boatWidth;
+      const gradient = this.context.createRadialGradient(
+        x - radius * 0.16,
+        y - radius * 0.2,
+        radius * 0.08,
+        x,
+        y,
+        radius,
+      );
+      const opacity = puff.opacity * (settings.highContrast ? 1.14 : 1);
+      gradient.addColorStop(0, `rgba(255, 255, 250, ${opacity})`);
+      gradient.addColorStop(0.55, `rgba(242, 247, 241, ${opacity * 0.72})`);
+      gradient.addColorStop(1, "rgba(235, 242, 238, 0)");
+      this.context.fillStyle = gradient;
+      this.context.beginPath();
+      this.context.arc(x, y, radius, 0, Math.PI * 2);
+      this.context.fill();
+    }
+    this.context.restore();
   }
 
   private drawObjective(simulation: Simulation, camera: SideScrollCamera, width: number, height: number): void {
