@@ -19,7 +19,7 @@ import {
 import { createSideScrollCamera, worldToScreenX, type SideScrollCamera } from "./camera";
 import { surfaceFishingCue, surfaceFishPose, type SurfaceFishingCue } from "./fishingSpotEffects";
 import { calculatePanoramaLayout } from "./panorama";
-import { getInteractionPrompt, isNight, maxFishingDepth, objective, type Simulation } from "./simulation";
+import { isNight, maxFishingDepth, objective, type Simulation } from "./simulation";
 import { captureSurfaceLayer, drawWaterContact } from "./surfaceEffects";
 
 export interface RenderSettings {
@@ -151,8 +151,7 @@ export class CanvasRenderer {
 
     this.drawBoat(simulation, camera, width, height, waterline, surfaceLayer, settings);
 
-    let activeFishingCue: { cue: SurfaceFishingCue; x: number; enabled: boolean } | null = null;
-    const interactionPrompt = getInteractionPrompt(simulation);
+    let activeFishingCue: { cue: SurfaceFishingCue; x: number } | null = null;
     for (const [spotIndex, spot] of FISHING_SPOTS.entries()) {
       const x = worldToScreenX(spot.x, camera, width);
       if (!isNearScreen(x, width, 260)) continue;
@@ -173,12 +172,7 @@ export class CanvasRenderer {
         highContrast: settings.highContrast,
       });
       if (cue.hookVisibility > 0) {
-        const promptMatchesSpot = interactionPrompt?.kind === "fishing" && interactionPrompt.spot === spot.id;
-        activeFishingCue = {
-          cue,
-          x,
-          enabled: promptMatchesSpot ? interactionPrompt.enabled : !permitLocked && !depthLocked,
-        };
+        activeFishingCue = { cue, x };
       }
     }
 
@@ -188,7 +182,6 @@ export class CanvasRenderer {
         activeFishingCue.x,
         hookY,
         activeFishingCue.cue.hookVisibility,
-        activeFishingCue.enabled,
         simulation.elapsed,
         settings,
       );
@@ -303,25 +296,23 @@ export class CanvasRenderer {
     x: number,
     y: number,
     visibility: number,
-    enabled: boolean,
     elapsed: number,
     settings: RenderSettings,
   ): void {
     const { context } = this;
     const pulse = settings.reducedMotion ? 0 : Math.sin(elapsed * 4) * 2;
-    const alpha = visibility * (enabled ? 1 : 0.58);
     const radius = (clamp(this.canvas.clientHeight * 0.042, 22, 34) + pulse) * SURFACE_HOOK_SCALE;
     const cueWidth = radius * 2.3;
 
     context.save();
-    context.globalAlpha = alpha;
+    context.globalAlpha = visibility;
     context.shadowColor = settings.highContrast ? "rgba(255, 255, 255, 0.72)" : "rgba(232, 164, 77, 0.58)";
     context.shadowBlur = settings.highContrast ? 14 : 18;
     const cueHeight = cueWidth * 4 / 3;
     const opticalOffsetX = (0.5 - SURFACE_HOOK_OPTICAL_CENTER.x) * cueWidth;
     const opticalOffsetY = (0.5 - SURFACE_HOOK_OPTICAL_CENTER.y) * cueHeight;
     this.drawSurfaceFishingCueCell(
-      enabled ? 2 : 3,
+      2,
       1,
       x + opticalOffsetX,
       y + opticalOffsetY,
