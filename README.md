@@ -9,7 +9,7 @@ The MVP vertical slice includes:
 - Water surveys using depth, temperature, dissolved oxygen, turbidity, and habitat evidence
 - Catch-to-harbor distance–speed–time route planning with predicted-versus-actual freshness feedback
 - Six tiers each of boat/cargo, engine, lamp, and line upgrades; seven visible boat classes
-- Population depletion, protection, release/recovery, ecosystem bonuses, a persistent field guide, and an eight-delivery season report
+- Population depletion, protection, release/recovery, ecosystem bonuses, guided help, and an eight-delivery season report
 - Keyboard, pointer, and touch controls plus pause-on-focus-loss
 - Mute, volume, high-contrast, and reduced-motion settings
 - Version 6 validated persistence with safe migration and a local-safe CrazyGames SDK v3 adapter

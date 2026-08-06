@@ -762,6 +762,10 @@
   gap: 14px;
 }
 
+.harbor-screen.is-first-voyage .panel-actions > div:has(> :only-child) {
+  grid-template-columns: 138px;
+}
+
 .harbor-screen.is-first-voyage.is-first-job-offer .panel-actions.is-guided {
   margin: 12px 0 0;
 }
@@ -1279,5 +1283,150 @@
 
   .harbor-screen.is-first-voyage.is-first-job-offer .mission-button strong {
     font-size: 1.14rem;
+  }
+}
+
+/* Help uses the same dockside instrument language as the harbor menu. */
+.help-screen.is-first-voyage .help-panel {
+  display: flex;
+  width: min(760px, calc(100vw - 32px));
+  max-width: 760px;
+  height: auto;
+  min-height: min(540px, calc(100dvh - 32px));
+  max-height: calc(100dvh - 32px);
+  flex-direction: column;
+  padding: 21px 24px 20px;
+  border: 1px solid rgb(145 169 176 / 34%);
+  border-radius: 20px;
+  background: rgb(4 23 31 / 94%);
+  box-shadow: 0 28px 80px rgb(1 10 16 / 42%);
+}
+
+.help-screen.is-first-voyage .help-header {
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgb(145 169 176 / 29%);
+}
+
+.help-screen.is-first-voyage .help-content {
+  display: grid;
+  flex: 1;
+  align-content: center;
+  gap: 12px;
+  padding: clamp(22px, 5vh, 48px) 0;
+}
+
+.help-screen.is-first-voyage .help-progress {
+  margin: 0;
+  color: var(--menu-fog);
+}
+
+.help-screen.is-first-voyage .help-progress strong,
+.help-screen.is-first-voyage .help-card-number,
+.help-screen.is-first-voyage .help-card h3 {
+  color: var(--menu-signal);
+}
+
+.help-screen.is-first-voyage .help-progress-track span {
+  border-radius: 999px;
+  background: rgb(145 169 176 / 28%);
+}
+
+.help-screen.is-first-voyage .help-progress-track span.is-current {
+  background: var(--menu-signal);
+}
+
+.help-screen.is-first-voyage .help-card {
+  min-height: 180px;
+  margin: 0;
+  align-items: center;
+  padding: clamp(24px, 4vw, 34px);
+  border: 1px solid rgb(145 169 176 / 34%);
+  border-left: 4px solid var(--menu-signal);
+  border-radius: 16px;
+  background: rgb(5 24 33 / 76%);
+  box-shadow: none;
+}
+
+.help-screen.is-first-voyage .help-card h3 {
+  margin-top: 0;
+  font-family: var(--display-face);
+  font-size: clamp(1.45rem, 3vw, 2rem);
+  text-transform: uppercase;
+}
+
+.help-screen.is-first-voyage .help-card p {
+  color: var(--menu-fog);
+  font-size: 0.92rem;
+}
+
+.help-screen.is-first-voyage .help-footer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgb(145 169 176 / 29%);
+}
+
+.help-screen.is-first-voyage .help-navigation {
+  display: grid;
+  width: min(330px, 100%);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin: 0;
+}
+
+.help-screen.is-first-voyage .help-nav-button,
+.help-screen.is-first-voyage .help-back-button {
+  min-height: 54px;
+  border: 1px solid rgb(145 169 176 / 40%);
+  border-radius: 15px;
+  background: rgb(5 24 33 / 76%);
+  color: var(--menu-paper);
+  box-shadow: none;
+}
+
+.help-screen.is-first-voyage .help-nav-button.is-forward:not(:disabled) {
+  border-color: var(--menu-signal);
+  background: var(--menu-signal);
+  color: var(--menu-ink);
+}
+
+.help-screen.is-first-voyage .help-nav-button:hover:not(:disabled),
+.help-screen.is-first-voyage .help-nav-button:focus-visible:not(:disabled),
+.help-screen.is-first-voyage .help-back-button:hover,
+.help-screen.is-first-voyage .help-back-button:focus-visible {
+  border-color: var(--menu-signal);
+  filter: brightness(1.08);
+}
+
+.help-screen.is-first-voyage .help-back-button {
+  min-width: 150px;
+}
+
+@media (max-width: 600px) {
+  .help-screen.is-first-voyage .help-panel {
+    min-height: calc(100dvh - 28px);
+    padding: 16px;
+  }
+
+  .help-screen.is-first-voyage .help-content {
+    padding-block: 18px;
+  }
+
+  .help-screen.is-first-voyage .help-card {
+    min-height: 0;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 20px;
+  }
+
+  .help-screen.is-first-voyage .help-footer {
+    grid-template-columns: 1fr;
+  }
+
+  .help-screen.is-first-voyage .help-navigation,
+  .help-screen.is-first-voyage .help-back-button {
+    width: 100%;
   }
 }
