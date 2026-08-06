@@ -18,7 +18,7 @@ The game teaches through cause and effect. Catching a fish lowers its population
 The completed vertical slice contains:
 
 - one continuous lake across approximately three landscape camera widths;
-- two harbors, three ecosystem regions, six fishing sites, and three visible hazards;
+- two harbors, three ecosystem regions, three widely separated fishing sites, and three visible hazards;
 - nine original fish with different silhouettes, habitat profiles, values, and depth tiers;
 - four upgrade paths with six tiers each and seven visible boat classes;
 - water surveys, route mathematics, freshness, contracts, hazards, populations, protection, release, recovery, and a mastery report;
@@ -281,7 +281,7 @@ No external audio file is copied or bundled. `FeedbackService` creates short Web
 
 Important design decisions:
 
-- six fishing signs are anchored to the waterline with a stem and water ellipse;
+- three fishing grounds are distributed across the lake and revealed through subtle shoal activity;
 - each region has a different surface, shallow, middle, and deep palette;
 - fish silhouettes differ in height, length, tail, fins, crest, lure, ray wings, or armour;
 - deeper fish remain visible but dimmed below the labelled line limit;

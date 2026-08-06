@@ -355,6 +355,9 @@ export function acceptAvailableContract(simulation: Simulation): boolean {
   simulation.routeChoice = null;
   simulation.deliveryStartedAt = null;
   simulation.lastDeliveryResult = null;
+  if (simulation.cargo.some((item) => item.species === simulation.activeContract?.species)) {
+    chooseRoute(simulation, "fast");
+  }
   return true;
 }
 
@@ -654,13 +657,13 @@ function createAvailableContract(simulation: Simulation, origin: HarborId): Cont
   const spotForSpecies: Record<FishSpecies, SpotId> = {
     reedfin: "sunwardShoal",
     sunPerch: "sunwardShoal",
-    silverDart: "silverBay",
-    needlePike: "needleRun",
+    silverDart: "sunwardShoal",
+    needlePike: "mosswaterPool",
     mossback: "mosswaterPool",
     lanternEel: "mosswaterPool",
     gloamGill: "outerGloam",
     violetRay: "outerGloam",
-    abyssCrown: "blackwaterTrench",
+    abyssCrown: "outerGloam",
   };
   const availableSpecies = (Object.keys(FISH) as FishSpecies[]).filter((candidate) => {
     const fish = FISH[candidate];

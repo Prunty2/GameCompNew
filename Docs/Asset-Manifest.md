@@ -46,7 +46,7 @@ The boat, harbor pier, fish atlas, and world atlas were requested on a uniform `
 
 ### `surface-fishing-cues.png`
 
-- Runtime role: strict 4 × 2 atlas containing six coordinated surface-school fish poses, an enabled proximity hook-and-arc cue, and a disabled broken-arc cue
+- Runtime role: strict 4 × 2 atlas containing six coordinated surface-school fish poses and the primary hook-and-arc cue; the disabled broken-arc cell is retained in the source atlas but is not rendered
 - Generated size: 1536 × 1024
 - Runtime size: 768 × 512, downscaled uniformly for 2× gameplay rendering
 - Generation mode: OpenAI built-in GPT Image generation, using the two approved fishing-spot mockups as visual targets, `fish-atlas-v2.png` for sprite treatment, and `lake-chart.png` for palette and atmosphere

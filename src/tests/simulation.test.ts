@@ -5,6 +5,7 @@ import {
   SPOT_RESIDENTS,
   boatClassAt,
   harborById,
+  regionSurfaceTintAt,
   spotById,
 } from "../game/balance";
 import {
@@ -70,6 +71,30 @@ describe("FSHING side-on simulation", () => {
     const harborSpan = harborById("gloam").x - harborById("brindle").x;
     expect(harborSpan / BALANCE.cameraViewWidth).toBeGreaterThanOrEqual(2.9);
     expect(BALANCE.dockRadius).toBeLessThan(BALANCE.cameraViewWidth / 10);
+  });
+
+  test("uses three evenly spread fishing spots that cover every species", () => {
+    expect(FISHING_SPOTS).toHaveLength(3);
+    const gaps = FISHING_SPOTS.slice(1).map((spot, index) => spot.x - FISHING_SPOTS[index]!.x);
+    expect(Math.min(...gaps)).toBeGreaterThanOrEqual(BALANCE.cameraViewWidth);
+    expect(new Set(Object.values(SPOT_RESIDENTS).flat())).toEqual(new Set([
+      "reedfin",
+      "sunPerch",
+      "silverDart",
+      "needlePike",
+      "mossback",
+      "lanternEel",
+      "gloamGill",
+      "violetRay",
+      "abyssCrown",
+    ]));
+  });
+
+  test("blends region surface tints across ecosystem boundaries", () => {
+    expect(regionSurfaceTintAt(0.2)).toBe("#2d91a0");
+    expect(regionSurfaceTintAt(0.4)).toBe("rgb(62 140 135)");
+    expect(regionSurfaceTintAt(0.69)).toBe("rgb(89 108 119)");
+    expect(regionSurfaceTintAt(0.9)).toBe("#62527f");
   });
 
   test("is deterministic for the same seed, progress, and horizontal input", () => {
@@ -160,6 +185,20 @@ describe("FSHING side-on simulation", () => {
     expect(simulation.lastDeliveryResult?.populationBonus).toBe(12);
   });
 
+  test("starts a delivery when accepting a contract for an existing catch", () => {
+    const simulation = createSimulation();
+    expect(resolveCatch(simulation, "reedfin")).toBe(true);
+    expect(acceptAvailableContract(simulation)).toBe(true);
+    expect(simulation.routeChoice).toBe("fast");
+
+    undock(simulation);
+    moveBoatForTesting(simulation, harborById("gloam"));
+    interact(simulation);
+
+    expect(deliverContract(simulation)).not.toBeNull();
+    expect(simulation.progress.completedContracts).toBe(1);
+  });
+
   test("catches a fish when the steered hook reaches its side-view silhouette", () => {
     const simulation = createSimulation(9);
     acceptAvailableContract(simulation);
@@ -212,14 +251,15 @@ describe("FSHING side-on simulation", () => {
   test("fills each fishing site with habitat residents and unlocks depth by line tier", () => {
     const simulation = createSimulation(12);
     undock(simulation);
-    expect(startFishing(simulation, "silverBay")).toBe(true);
-    expect(simulation.fishing?.targets).toHaveLength(SPOT_RESIDENTS.silverBay.length * 2);
+    simulation.progress.upgrades.line = 1;
+    expect(startFishing(simulation, "mosswaterPool")).toBe(true);
+    expect(simulation.fishing?.targets).toHaveLength(SPOT_RESIDENTS.mosswaterPool.length * 2);
     expect(new Set(simulation.fishing?.targets.map((target) => target.species))).toEqual(
-      new Set(SPOT_RESIDENTS.silverBay),
+      new Set(SPOT_RESIDENTS.mosswaterPool),
     );
-    expect(maxFishingDepth(simulation)).toBeCloseTo(0.3);
+    expect(maxFishingDepth(simulation)).toBeCloseTo(0.425);
 
-    const deepTarget = simulation.fishing?.targets.find((target) => target.species === "needlePike");
+    const deepTarget = simulation.fishing?.targets.find((target) => target.species === "mossback");
     expect(deepTarget?.y).toBeGreaterThan(maxFishingDepth(simulation));
     simulation.progress.upgrades.line = 5;
     expect(maxFishingDepth(simulation)).toBeGreaterThanOrEqual(deepTarget?.y ?? 1);
@@ -235,7 +275,7 @@ describe("FSHING side-on simulation", () => {
     expect(cargoCapacity(simulation)).toBe(10);
     expect(boatClassAt(simulation.progress.upgrades.cargo)).toBe("Lakebreaker");
     expect(buyUpgrade(simulation, "cargo")).toBe(false);
-    expect(FISHING_SPOTS).toHaveLength(6);
+    expect(FISHING_SPOTS).toHaveLength(3);
   });
 
   test("rescues at critical damage without making progress unrecoverable", () => {
@@ -252,11 +292,11 @@ describe("FSHING side-on simulation", () => {
 
   test("records evidence-based survey predictions and discoveries", () => {
     const simulation = createSimulation();
-    const incorrect = recordSurvey(simulation, "silverBay", "mossback");
+    const incorrect = recordSurvey(simulation, "mosswaterPool", "reedfin");
     expect(incorrect.correct).toBe(false);
-    expect(incorrect.expected).toBe("silverDart");
-    expect(incorrect.explanation).toContain("18°C");
-    expect(simulation.progress.discovered).toContain("silverDart");
+    expect(incorrect.expected).toBe("mossback");
+    expect(incorrect.explanation).toContain("12°C");
+    expect(simulation.progress.discovered).toContain("mossback");
 
     const correct = recordSurvey(simulation, "sunwardShoal", "reedfin");
     expect(correct.correct).toBe(true);

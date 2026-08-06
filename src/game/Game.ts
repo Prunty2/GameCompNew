@@ -9,7 +9,6 @@ import { saveGame, type SaveData } from "../services/saveGame";
 import {
   BALANCE,
   FISH,
-  REGIONS,
   harborById,
   spotById,
   upgradeTierCap,
@@ -57,7 +56,6 @@ import {
   type SimulationEvent,
 } from "./simulation";
 import {
-  FISH_SCIENCE,
   WATER_READINGS,
   averagePopulation,
   populationLabel,
@@ -83,7 +81,6 @@ type OverlayScreen =
   | "help"
   | "survey"
   | "deliveryResult"
-  | "fieldGuide"
   | "seasonReport"
   | null;
 
@@ -450,9 +447,6 @@ export class Game {
       case "deliveryResult":
         host.innerHTML = this.deliveryResultScreen();
         break;
-      case "fieldGuide":
-        host.innerHTML = this.fieldGuideScreen();
-        break;
       case "seasonReport":
         host.innerHTML = this.seasonReportScreen();
         break;
@@ -564,7 +558,7 @@ export class Game {
           </header>
           ${harborTabs}
           <div class="harbor-content is-${activeSection}">${activeContent}</div>
-          <footer class="panel-actions ${isFirstJobOffer ? "is-guided" : ""}"><div><button class="text-button harbor-utility-button" type="button" data-action="open-help" aria-label="How to play"><span class="ui-icon icon-objective" aria-hidden="true"></span><strong>Help</strong></button><button class="text-button harbor-utility-button" type="button" data-action="open-field-guide" aria-label="Field guide"><span class="ui-icon icon-freshness" aria-hidden="true"></span><strong>Guide</strong></button></div>${isFirstJobOffer ? `<button class="leave-button harbor-main-menu-button" type="button" data-action="title" aria-label="Back to main menu"><span class="harbor-back-arrow" aria-hidden="true">←</span><strong>Main Menu</strong></button>` : `<button class="leave-button" type="button" data-action="undock" aria-label="Back to lake →"><span class="ui-icon icon-hull" aria-hidden="true"></span><strong>Return to Lake</strong></button>`}</footer>
+          <footer class="panel-actions ${isFirstJobOffer ? "is-guided" : ""}"><div><button class="text-button harbor-utility-button" type="button" data-action="open-help" aria-label="How to play"><span class="ui-icon icon-objective" aria-hidden="true"></span><strong>Help</strong></button></div>${isFirstJobOffer ? `<button class="leave-button harbor-main-menu-button" type="button" data-action="title" aria-label="Back to main menu"><span class="harbor-back-arrow" aria-hidden="true">←</span><strong>Main Menu</strong></button>` : `<button class="leave-button" type="button" data-action="undock" aria-label="Back to lake →"><span class="ui-icon icon-hull" aria-hidden="true"></span><strong>Return to Lake</strong></button>`}</footer>
         </div>
       </section>`;
   }
@@ -600,7 +594,6 @@ export class Game {
               <strong>Resume</strong>
             </button>
             <div class="pause-secondary-actions">
-              <button class="menu-button" type="button" data-action="open-field-guide"><strong>Field guide</strong></button>
               <button class="menu-button" type="button" data-action="open-settings"><strong>Settings</strong></button>
               <button class="menu-button" type="button" data-action="open-help"><strong>How to play</strong></button>
               <button class="menu-button" type="button" data-action="title"><strong>Title screen</strong></button>
@@ -698,27 +691,34 @@ export class Game {
       },
       {
         title: "Fish sustainably",
-        body: "Check population labels in the field guide. Release unneeded catches, avoid protected species, and keep the ecosystem healthy for a bonus.",
+        body: "Release unneeded catches, avoid protected species, and give depleted populations time to recover. A healthy ecosystem earns a delivery bonus.",
       },
     ];
     const step = steps[this.helpStep] ?? steps[0];
     const progress = steps.map((_, index) => `<span class="${index === this.helpStep ? "is-current" : ""}" aria-hidden="true"></span>`).join("");
     return `
-      <section class="screen-overlay sheet-overlay" role="dialog" aria-labelledby="help-title">
-        <div class="art-panel help-panel side-sheet"><h2 id="help-title">How to play</h2>
-          <div class="help-progress">
-            <span>Step <strong>${this.helpStep + 1}</strong> of ${steps.length}</span>
-            <div class="help-progress-track" role="img" aria-label="Step ${this.helpStep + 1} of ${steps.length}">${progress}</div>
+      <section class="screen-overlay harbor-screen help-screen is-first-voyage" role="dialog" aria-labelledby="help-title">
+        <div class="art-panel harbor-panel help-panel side-sheet">
+          <header class="panel-heading harbor-header help-header">
+            <div class="harbor-title-block"><img class="wordmark harbor-wordmark" src="${wordmarkUrl}" alt="FSHING" /><span class="harbor-title-divider" aria-hidden="true"></span><div><h2 id="help-title">How to play</h2></div></div>
+          </header>
+          <div class="help-content">
+            <div class="help-progress">
+              <span>Step <strong>${this.helpStep + 1}</strong> of ${steps.length}</span>
+              <div class="help-progress-track" role="img" aria-label="Step ${this.helpStep + 1} of ${steps.length}">${progress}</div>
+            </div>
+            <article class="help-card" aria-live="polite">
+              <span class="help-card-number" aria-hidden="true">${String(this.helpStep + 1).padStart(2, "0")}</span>
+              <div><h3>${step.title}</h3><p>${step.body}</p></div>
+            </article>
           </div>
-          <article class="help-card" aria-live="polite">
-            <span class="help-card-number" aria-hidden="true">${String(this.helpStep + 1).padStart(2, "0")}</span>
-            <div><h3>${step.title}</h3><p>${step.body}</p></div>
-          </article>
-          <div class="help-navigation" aria-label="Instruction navigation">
-            <button class="help-nav-button" type="button" data-action="help-previous" ${this.helpStep === 0 ? "disabled" : ""}><span aria-hidden="true">←</span> Previous</button>
-            <button class="help-nav-button is-forward" type="button" data-action="help-next" ${this.helpStep === steps.length - 1 ? "disabled" : ""}>Next <span aria-hidden="true">→</span></button>
-          </div>
-          <button class="primary-button" type="button" data-action="back">Back</button>
+          <footer class="help-footer">
+            <nav class="help-navigation" aria-label="Instruction navigation">
+              <button class="help-nav-button" type="button" data-action="help-previous" ${this.helpStep === 0 ? "disabled" : ""}><span aria-hidden="true">←</span> Previous</button>
+              <button class="help-nav-button is-forward" type="button" data-action="help-next" ${this.helpStep === steps.length - 1 ? "disabled" : ""}>Next <span aria-hidden="true">→</span></button>
+            </nav>
+            <button class="leave-button help-back-button" type="button" data-action="back"><span class="harbor-back-arrow" aria-hidden="true">←</span><strong>Back</strong></button>
+          </footer>
         </div>
       </section>`;
   }
@@ -783,35 +783,6 @@ export class Game {
           <p class="result-explanation">The ${result.route === "fast" ? "express" : "survey"} route took ${result.travelSeconds} in-game seconds. The result was ${Math.abs(difference)} percentage points ${difference >= 0 ? "above" : "below"} the estimate.</p>
           <div class="payment-summary"><span>Delivery payment</span><strong>${result.payment} shells</strong>${result.populationBonus > 0 ? `<small>Includes ${result.populationBonus}-shell healthy-ecosystem bonus</small>` : `<small>Keep at least five populations healthy to earn an ecosystem bonus.</small>`}</div>
           <button class="primary-button" type="button" data-action="continue-after-delivery">Continue at harbor</button>
-        </div>
-      </section>`;
-  }
-
-  private fieldGuideScreen(): string {
-    const species = Object.keys(FISH) as FishSpecies[];
-    const discovered = new Set(this.simulation.progress.discovered);
-    const fishMarkup = species.map((id) => {
-      const fish = FISH[id];
-      const profile = FISH_SCIENCE[id];
-      const population = this.simulation.progress.populations[id];
-      const known = discovered.has(id);
-      return `<article class="field-card ${known ? "is-known" : "is-unknown"}">
-        <header><div><span class="field-tier">Depth tier ${fish.depthTier}</span><h3>${known ? fish.name : "Unconfirmed species"}</h3></div><span class="population-chip is-${populationLabel(population).toLowerCase()}">${populationLabel(population)} · ${population}%</span></header>
-        <p><strong>Silhouette:</strong> ${fish.shape}</p>
-        <p><strong>${known ? "Habitat" : "Research clue"}:</strong> ${known ? profile.habitat : profile.evidence}</p>
-        ${known ? `<p><strong>Food-web role:</strong> ${profile.ecologicalRole}</p><small>${profile.temperatureRangeC[0]}–${profile.temperatureRangeC[1]}°C · needs at least ${profile.minimumOxygenMgL.toFixed(1)} mg/L oxygen</small>` : `<small>Survey or catch this species to confirm its full record.</small>`}
-      </article>`;
-    }).join("");
-    const regionMarkup = REGIONS.map((region) => `<div class="region-key"><span style="--region-colour:${region.surfaceTint}"></span><strong>${region.name}</strong><small>${Math.round(region.startX * 100)}–${Math.round(region.endX * 100)}% across lake</small></div>`).join("");
-    return `
-      <section class="screen-overlay guide-overlay" role="dialog" aria-labelledby="guide-title">
-        <div class="art-panel guide-panel">
-          <header class="guide-heading"><div><span class="panel-eyebrow">Scientific field journal</span><h2 id="guide-title">Lake field guide</h2><p>Use evidence and population data to decide where—and whether—to fish.</p></div>
-            <div class="mastery-summary"><span><strong>${discovered.size}</strong><small>of ${species.length} species</small></span><span><strong>${learningAccuracy(this.simulation)}%</strong><small>prediction accuracy</small></span><span><strong>${averagePopulation(this.simulation.progress.populations)}%</strong><small>lake health</small></span></div>
-          </header>
-          <section class="ecosystem-map" aria-labelledby="ecosystem-map-title"><h3 id="ecosystem-map-title">Ecosystems and depth access</h3><div class="region-keys">${regionMarkup}</div><div class="depth-scale"><span>T0 · 0–8 m</span><span>T1 · 8–14 m</span><span>T2 · 14–23 m</span><span>T3 · 23–34 m</span><span>T4 · 34–41 m</span><span>T5 · 41–50 m</span></div><p>Your line is tier ${this.simulation.progress.upgrades.line}; amber boundaries underwater show your current maximum depth.</p></section>
-          <div class="field-grid">${fishMarkup}</div>
-          <footer class="guide-actions"><p>Population labels are also written in text, so colour is never the only signal.</p><button class="primary-button" type="button" data-action="back">Back</button></footer>
         </div>
       </section>`;
   }
@@ -1030,10 +1001,6 @@ export class Game {
         this.helpStep = 0;
         this.overlayReturn = this.overlay;
         this.setOverlay("help");
-        break;
-      case "open-field-guide":
-        this.overlayReturn = this.overlay;
-        this.setOverlay("fieldGuide");
         break;
       case "help-previous":
         this.helpStep = Math.max(0, this.helpStep - 1);
