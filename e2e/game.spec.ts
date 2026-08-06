@@ -90,7 +90,7 @@ test("pause blurs the lake and slides the compact menu in and out", async ({ pag
   await expect(page.getByRole("button", { name: "Resume" })).toBeFocused();
   await page.getByRole("button", { name: "Resume" }).hover();
   await expect(page.getByRole("button", { name: "Resume" })).toHaveCSS("animation-name", "menu-button-hover-wobble");
-  await expect(page.locator(".pause-actions button")).toHaveCount(5);
+  await expect(page.locator(".pause-actions button")).toHaveCount(4);
   await expectHorizontallyCentered(page, ".pause-menu");
 
   const pauseLogoWidth = await page.locator(".pause-wordmark").evaluate((element) => element.getBoundingClientRect().width);
@@ -292,7 +292,7 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await expect(page.getByRole("heading", { name: "Repair hull" })).toHaveCount(0);
   await expect(page.locator(".service-card > .icon-line")).toHaveCSS("background-image", /ui-icons/);
   await expect(page.locator(".service-card > .icon-line")).toHaveCSS("background-color", "rgb(7, 27, 41)");
-  await expect(page.locator(".harbor-utility-button")).toHaveCount(2);
+  await expect(page.locator(".harbor-utility-button")).toHaveCount(1);
   const servicesPanelBounds = await page.locator(".harbor-panel").boundingBox();
   expect(Math.abs((servicesPanelBounds?.y ?? 0) - (deliveryHubBounds?.y ?? 0))).toBeLessThanOrEqual(1);
   expect(Math.abs((servicesPanelBounds?.height ?? 0) - (deliveryHubBounds?.height ?? 0))).toBeLessThanOrEqual(1);
@@ -312,9 +312,9 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   const harborFitsViewport = await page.locator(".harbor-screen").evaluate((element) => element.scrollHeight <= element.clientHeight);
   expect(harborFitsViewport).toBe(true);
   await page.setViewportSize({ width: 390, height: 844 });
-  const guideBounds = await page.locator(".harbor-utility-button").nth(1).boundingBox();
+  const helpBounds = await page.locator(".harbor-utility-button").boundingBox();
   const lakeBounds = await page.locator(".leave-button").boundingBox();
-  expect((guideBounds?.x ?? 0) + (guideBounds?.width ?? 0)).toBeLessThanOrEqual(lakeBounds?.x ?? 0);
+  expect((helpBounds?.x ?? 0) + (helpBounds?.width ?? 0)).toBeLessThanOrEqual(lakeBounds?.x ?? 0);
   await expect(page.getByRole("button", { name: "Back to lake →" })).toContainText("Return to Lake");
   await page.setViewportSize({ width: 1280, height: 720 });
 
@@ -404,6 +404,9 @@ test("how to play instructions advance one card at a time", async ({ page }) => 
   await page.getByRole("button", { name: "Play", exact: true }).click();
   await page.getByRole("button", { name: "How to play" }).click();
 
+  await expect(page.locator(".help-panel")).toHaveCSS("background-color", "rgba(4, 23, 31, 0.94)");
+  await expect(page.locator(".help-panel")).toHaveCSS("border-radius", "20px");
+  await expect(page.locator(".help-header .harbor-wordmark")).toBeVisible();
   await expect(page.getByText("Step 1 of 5")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Take a job" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Previous" })).toBeDisabled();
@@ -478,16 +481,15 @@ test("keyboard input moves the boat horizontally and flips its side profile", as
   expect(await page.evaluate(() => window.__FSHING_TEST__?.facing())).toBe(-1);
 });
 
-test("field guide exposes regions, depth access, and non-colour population labels", async ({ page }) => {
+test("field guide menu and buttons are removed", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Play", exact: true }).click();
-  await page.getByRole("button", { name: "Field guide" }).click();
-  await expect(page.getByRole("heading", { name: "Lake field guide" })).toBeVisible();
-  await expect(page.getByText("Brindle Coast")).toBeVisible();
-  await expect(page.getByText("Mosswater Reach")).toBeVisible();
-  await expect(page.getByText("Violet Gloam")).toBeVisible();
-  await expect(page.getByText("Healthy · 100%", { exact: true }).first()).toBeVisible();
-  await expect(page.getByText("T5 · 41–50 m")).toBeVisible();
-  await page.getByRole("button", { name: "Back", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Brindle Harbor" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Field guide" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Guide", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Lake field guide" })).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Accept contract" }).click();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("heading", { name: "Paused" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Field guide" })).toHaveCount(0);
 });
