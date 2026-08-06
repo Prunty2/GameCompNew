@@ -20,7 +20,13 @@ import {
 import { createSideScrollCamera, worldToScreenX, type SideScrollCamera } from "./camera";
 import { surfaceFishingCue, surfaceFishPose, type SurfaceFishingCue } from "./fishingSpotEffects";
 import { calculatePanoramaLayout } from "./panorama";
-import { getInteractionPrompt, isNight, maxFishingDepth, objective, type Simulation } from "./simulation";
+import {
+  getInteractionPrompt,
+  maxFishingDepth,
+  nightVisualIntensity,
+  objective,
+  type Simulation,
+} from "./simulation";
 import { captureSurfaceLayer, drawWaterContact } from "./surfaceEffects";
 
 export interface RenderSettings {
@@ -126,7 +132,14 @@ export class CanvasRenderer {
     if (!art) return;
     const { context } = this;
     const camera = this.camera(simulation, settings.cinematic);
-    const waterline = this.drawPanorama(isNight(simulation) ? art.lakeNight : art.lake, camera, width, height);
+    const nightIntensity = nightVisualIntensity(simulation);
+    const waterline = this.drawPanorama(nightIntensity >= 1 ? art.lakeNight : art.lake, camera, width, height);
+    if (nightIntensity > 0 && nightIntensity < 1) {
+      context.save();
+      context.globalAlpha = nightIntensity;
+      this.drawPanorama(art.lakeNight, camera, width, height);
+      context.restore();
+    }
     const region = regionAt(simulation.boat.x);
 
     context.save();
@@ -468,6 +481,8 @@ export class CanvasRenderer {
     context.translate(x, waterline + bob - boatLift);
     context.scale(simulation.boat.facing, 1);
     context.rotate(tilt);
+    const nightIntensity = nightVisualIntensity(simulation);
+    context.filter = `brightness(${1 - nightIntensity * 0.18}) saturate(${1 - nightIntensity * 0.08})`;
     context.drawImage(art.boat, -boatWidth / 2, -boatHeight * 0.86, boatWidth, boatHeight);
     context.restore();
 
@@ -521,7 +536,8 @@ export class CanvasRenderer {
     height: number,
     settings: RenderSettings,
   ): void {
-    if (!isNight(simulation)) return;
+    const nightIntensity = nightVisualIntensity(simulation);
+    if (nightIntensity <= 0) return;
     const boatX = worldToScreenX(simulation.boat.x, camera, width);
     const lampTier = simulation.progress.upgrades.lamp;
     const radius = Math.min(width, height) * (0.25 + lampTier * 0.055);
@@ -537,12 +553,15 @@ export class CanvasRenderer {
     vignette.addColorStop(0, "rgba(2, 8, 16, 0.02)");
     vignette.addColorStop(0.45, "rgba(2, 8, 16, 0.2)");
     vignette.addColorStop(1, `rgba(2, 8, 16, ${darkness})`);
+    this.context.save();
+    this.context.globalAlpha = nightIntensity;
     this.context.fillStyle = vignette;
     this.context.fillRect(0, 0, width, height);
+    this.context.restore();
 
     const threatPhase = settings.reducedMotion ? 0.5 : (Math.sin(simulation.elapsed * 0.43) + 1) / 2;
     this.context.save();
-    this.context.globalAlpha = 0.06 + threatPhase * 0.08;
+    this.context.globalAlpha = (0.06 + threatPhase * 0.08) * nightIntensity;
     this.drawWorldCell(2, 1, width * (0.74 + threatPhase * 0.09), height * 0.67, 190, 120);
     this.context.restore();
   }

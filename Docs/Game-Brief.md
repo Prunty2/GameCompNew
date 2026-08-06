@@ -273,7 +273,7 @@ Boat damage, repair, and rescue remain available for authored events and the ope
 
 Night reduces the visible area around the boat and makes distant landmarks harder to read. It should feel unsettling because information becomes unreliable, not simply because the screen becomes uniformly black.
 
-At nightfall, the daytime lake panorama switches to a composition-matched moonlit version and a labelled crescent-moon indicator slides into the top-left of the gameplay view. The indicator remains visible for the full night phase and clears at morning, making the cause and duration of reduced visibility explicit. Reduced-motion mode shows the same persistent indicator without a perceptible slide.
+At nightfall, a compact icon-only crescent-moon marker slides into the top-left of the gameplay view. It remains visible for the full night phase and clears at morning, making the cause and duration of reduced visibility explicit without resembling another instruction pill. Over 25 seconds, the daytime panorama, boat treatment, and visibility vignette ease into their night appearance; they ease back toward daylight during the final 25 seconds before morning. Reduced-motion mode shows the same persistent marker without a perceptible slide.
 
 The player can purchase progressively stronger lights. Light upgrades may improve range, width, clarity in fog, or resistance to disturbing effects. Lights are permanent upgrades in the initial scope; a fuel system should only be added if testing shows that night needs another meaningful decision.
 
@@ -662,6 +662,7 @@ All durations use simulation seconds; horizontal positions use normalized world 
 | Outer Gloam permit | 85 shells |
 | Repair price | 1 shell per 2 damage, rounded up |
 | Full day/night cycle | 210 seconds; final 70 seconds are night |
+| Night visual fade | 25 seconds into night and 25 seconds before morning |
 | Fog cycle | 48 seconds; readable warning precedes dense fog |
 | Catch population cost | 7 + (fish depth tier × 2) points |
 | Protected threshold | 15 population points |

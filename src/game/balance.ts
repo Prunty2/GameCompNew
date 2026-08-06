@@ -66,6 +66,7 @@ export const BALANCE = {
   fastRouteSpeedMultiplier: 1.12,
   dayLength: 210,
   nightStart: 140,
+  nightFadeLength: 25,
   fogLength: 48,
   cameraViewWidth: 0.3,
   dockRadius: 0.027,

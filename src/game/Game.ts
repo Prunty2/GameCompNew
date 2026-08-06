@@ -213,7 +213,6 @@ export class Game {
       <div class="game-ui">
         <div class="night-indicator" role="img" aria-label="Nighttime" aria-hidden="true">
           <span class="night-indicator-icon" aria-hidden="true"></span>
-          <span class="night-indicator-label" aria-hidden="true">Night</span>
         </div>
         <button class="tutorial-callout" id="tutorial-callout" type="button" data-action="dismiss-tutorial" title="Dismiss instruction" hidden>
           <span class="tutorial-label" aria-hidden="true">Next</span>

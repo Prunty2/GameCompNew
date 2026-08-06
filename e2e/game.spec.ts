@@ -86,11 +86,15 @@ test("nightfall changes the panorama and keeps a moon indicator visible until mo
     (element) => (element as HTMLCanvasElement).toDataURL(),
   );
 
-  await page.evaluate(() => window.__FSHING_TEST__?.setElapsed(140));
+  await page.evaluate(() => window.__FSHING_TEST__?.setElapsed(152.5));
   await expect(page.locator("body")).toHaveClass(/is-night/);
   await expect(page.getByRole("img", { name: "Nighttime" })).toBeVisible();
   await expect(indicator).toHaveCSS("animation-name", "night-indicator-in");
   await expect(indicator).toHaveAttribute("aria-hidden", "false");
+  await expect(indicator).toHaveCSS("width", "48px");
+  await expect(indicator).toHaveCSS("height", "48px");
+  await expect(indicator).toHaveCSS("border-radius", "50%");
+  await expect(indicator).toHaveText("");
   await expect.poll(() => page.locator("#game-canvas").evaluate(
     (element) => (element as HTMLCanvasElement).toDataURL(),
   )).not.toBe(daytimeFrame);
