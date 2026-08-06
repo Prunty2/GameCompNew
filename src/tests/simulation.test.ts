@@ -25,6 +25,7 @@ import {
   recordSurvey,
   releaseCargo,
   resolveCatch,
+  shouldShowNightIndicator,
   startFishing,
   undock,
   updateSimulation,
@@ -51,6 +52,18 @@ describe("FSHING side-on simulation", () => {
     expect(nightVisualIntensity(simulation)).toBeCloseTo(0.5);
     simulation.elapsed = BALANCE.dayLength;
     expect(nightVisualIntensity(simulation)).toBe(0);
+  });
+
+  test("shows the night indicator halfway through dusk until morning", () => {
+    const simulation = createSimulation();
+    simulation.elapsed = BALANCE.nightStart + BALANCE.nightFadeLength / 2 - 0.01;
+    expect(shouldShowNightIndicator(simulation)).toBe(false);
+    simulation.elapsed += 0.01;
+    expect(shouldShowNightIndicator(simulation)).toBe(true);
+    simulation.elapsed = BALANCE.dayLength - 0.01;
+    expect(shouldShowNightIndicator(simulation)).toBe(true);
+    simulation.elapsed = BALANCE.dayLength;
+    expect(shouldShowNightIndicator(simulation)).toBe(false);
   });
 
   test("spans at least three landscape view widths", () => {

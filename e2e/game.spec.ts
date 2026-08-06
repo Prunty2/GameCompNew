@@ -85,9 +85,13 @@ test("nightfall changes the panorama and keeps a moon indicator visible until mo
   const daytimeFrame = await page.locator("#game-canvas").evaluate(
     (element) => (element as HTMLCanvasElement).toDataURL(),
   );
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("heading", { name: "Paused" })).toBeVisible();
 
+  await page.evaluate(() => window.__FSHING_TEST__?.setElapsed(152.49));
+  await expect(indicator).toBeHidden();
   await page.evaluate(() => window.__FSHING_TEST__?.setElapsed(152.5));
-  await expect(page.locator("body")).toHaveClass(/is-night/);
+  await expect(page.locator("body")).toHaveClass(/show-night-indicator/);
   await expect(page.getByRole("img", { name: "Nighttime" })).toBeVisible();
   await expect(indicator).toHaveCSS("animation-name", "night-indicator-in");
   await expect(indicator).toHaveAttribute("aria-hidden", "false");
@@ -100,7 +104,7 @@ test("nightfall changes the panorama and keeps a moon indicator visible until mo
   )).not.toBe(daytimeFrame);
 
   await page.evaluate(() => window.__FSHING_TEST__?.setElapsed(210));
-  await expect(page.locator("body")).not.toHaveClass(/is-night/);
+  await expect(page.locator("body")).not.toHaveClass(/show-night-indicator/);
   await expect(indicator).toBeHidden();
   await expect(indicator).toHaveAttribute("aria-hidden", "true");
 });
@@ -113,7 +117,7 @@ test("development shortcuts jump to dusk and full night", async ({ page }) => {
   await page.keyboard.press("KeyG");
   await expect.poll(() => page.evaluate(() => window.__FSHING_TEST__?.elapsed() ?? 0)).toBeGreaterThanOrEqual(140);
   expect(await page.evaluate(() => window.__FSHING_TEST__?.elapsed() ?? 0)).toBeLessThan(140.2);
-  await expect(page.getByRole("img", { name: "Nighttime" })).toBeVisible();
+  await expect(page.locator(".night-indicator")).toBeHidden();
 
   const transitionFrame = await page.locator("#game-canvas").evaluate(
     (element) => (element as HTMLCanvasElement).toDataURL(),
@@ -121,6 +125,7 @@ test("development shortcuts jump to dusk and full night", async ({ page }) => {
   await page.keyboard.press("KeyH");
   await expect.poll(() => page.evaluate(() => window.__FSHING_TEST__?.elapsed() ?? 0)).toBeGreaterThanOrEqual(165);
   expect(await page.evaluate(() => window.__FSHING_TEST__?.elapsed() ?? 0)).toBeLessThan(165.2);
+  await expect(page.getByRole("img", { name: "Nighttime" })).toBeVisible();
   await expect.poll(() => page.locator("#game-canvas").evaluate(
     (element) => (element as HTMLCanvasElement).toDataURL(),
   )).not.toBe(transitionFrame);

@@ -42,12 +42,12 @@ import {
   deliverContract,
   getInteractionPrompt,
   interact,
-  isNight,
   learningAccuracy,
   moveBoatForTesting,
   recordSurvey,
   releaseCargo,
   resolveCatch,
+  shouldShowNightIndicator,
   startFishing,
   tutorialPrompt,
   undock,
@@ -379,9 +379,10 @@ export class Game {
     const fishing = this.uiRoot.querySelector<HTMLElement>(".fishing-controls");
     if (navigation) navigation.hidden = this.overlay !== null || simulation.mode === "fishing";
     if (fishing) fishing.hidden = this.overlay !== null || simulation.mode !== "fishing";
-    const night = isNight(simulation);
-    document.body.classList.toggle("is-night", night);
-    this.uiRoot.querySelector<HTMLElement>(".night-indicator")?.setAttribute("aria-hidden", String(!night));
+    const showNightIndicator = shouldShowNightIndicator(simulation);
+    document.body.classList.toggle("show-night-indicator", showNightIndicator);
+    this.uiRoot.querySelector<HTMLElement>(".night-indicator")
+      ?.setAttribute("aria-hidden", String(!showNightIndicator));
     document.documentElement.style.setProperty("--day-progress", String(dayProgress(simulation)));
   }
 

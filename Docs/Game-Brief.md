@@ -274,7 +274,7 @@ Boat damage, repair, and rescue remain available for authored events and the ope
 
 Night reduces the visible area around the boat and makes distant landmarks harder to read. It should feel unsettling because information becomes unreliable, not simply because the screen becomes uniformly black.
 
-At nightfall, a compact icon-only crescent-moon marker slides into the top-left of the gameplay view. It remains visible for the full night phase and clears at morning, making the cause and duration of reduced visibility explicit without resembling another instruction pill. Over 25 seconds, the daytime panorama, boat treatment, and visibility vignette ease into their night appearance; they ease back toward daylight during the final 25 seconds before morning. Reduced-motion mode shows the same persistent marker without a perceptible slide.
+Halfway through the 25-second dusk transition, a compact icon-only crescent-moon marker slides into the top-left of the gameplay view. It remains visible through the rest of dusk and full night, then clears at morning, making the cause and duration of reduced visibility explicit without resembling another instruction pill. The daytime panorama, boat treatment, and visibility vignette ease into their night appearance across the full transition; they ease back toward daylight during the final 25 seconds before morning. Reduced-motion mode shows the same persistent marker without a perceptible slide.
 
 The player can purchase progressively stronger lights. Light upgrades may improve range, width, clarity in fog, or resistance to disturbing effects. Lights are permanent upgrades in the initial scope; a fuel system should only be added if testing shows that night needs another meaningful decision.
 
