@@ -105,6 +105,27 @@ test("nightfall changes the panorama and keeps a moon indicator visible until mo
   await expect(indicator).toHaveAttribute("aria-hidden", "true");
 });
 
+test("development shortcuts jump to dusk and full night", async ({ page }) => {
+  await page.goto("/?e2e=1");
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.getByRole("button", { name: "Accept contract" }).click();
+
+  await page.keyboard.press("KeyG");
+  await expect.poll(() => page.evaluate(() => window.__FSHING_TEST__?.elapsed() ?? 0)).toBeGreaterThanOrEqual(140);
+  expect(await page.evaluate(() => window.__FSHING_TEST__?.elapsed() ?? 0)).toBeLessThan(140.2);
+  await expect(page.getByRole("img", { name: "Nighttime" })).toBeVisible();
+
+  const transitionFrame = await page.locator("#game-canvas").evaluate(
+    (element) => (element as HTMLCanvasElement).toDataURL(),
+  );
+  await page.keyboard.press("KeyH");
+  await expect.poll(() => page.evaluate(() => window.__FSHING_TEST__?.elapsed() ?? 0)).toBeGreaterThanOrEqual(165);
+  expect(await page.evaluate(() => window.__FSHING_TEST__?.elapsed() ?? 0)).toBeLessThan(165.2);
+  await expect.poll(() => page.locator("#game-canvas").evaluate(
+    (element) => (element as HTMLCanvasElement).toDataURL(),
+  )).not.toBe(transitionFrame);
+});
+
 test("pause blurs the lake and slides the compact menu in and out", async ({ page }) => {
   await page.goto("/");
   const titleLogoWidth = await page.locator(".title-panel .wordmark").evaluate((element) => element.getBoundingClientRect().width);

@@ -246,6 +246,7 @@ The handling should feel smooth, measured, and forgiving rather than physically 
 - W/S: steer the hook vertically while fishing
 - Space or E: interact, dock, or cast
 - Escape or P: pause
+- Development builds only — G: jump to the start of the dusk transition; H: jump to full night
 
 **Pointer and touch**
 

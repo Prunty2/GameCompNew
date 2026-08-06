@@ -103,6 +103,7 @@ declare global {
       catchSpecies(species: FishSpecies): void;
       damage(amount: number): void;
       setElapsed(seconds: number): void;
+      elapsed(): number;
       boatX(): number;
       facing(): -1 | 1;
     };
@@ -176,6 +177,17 @@ export class Game {
     if (this.input.consumePause() && this.started) {
       if (this.overlay === null || this.sceneTransitioning && this.sceneTransitionTarget === null) this.setOverlay("pause");
       else if (this.overlay === "pause") this.setOverlay(null);
+    }
+
+    if (import.meta.env.DEV) {
+      const debugTimeJump = this.input.consumeDebugTimeJump();
+      if (debugTimeJump && this.started && this.overlay === null) {
+        this.simulation.elapsed = debugTimeJump === "transition-start"
+          ? BALANCE.nightStart
+          : BALANCE.nightStart + BALANCE.nightFadeLength;
+        this.accumulator = 0;
+        this.refreshHud();
+      }
     }
 
     if (this.started && this.overlay === null && !this.sceneTransitioning) {
@@ -1201,6 +1213,7 @@ export class Game {
         this.simulation.elapsed = Math.max(0, seconds);
         this.refreshHud();
       },
+      elapsed: () => this.simulation.elapsed,
       boatX: () => this.simulation.boat.x,
       facing: () => this.simulation.boat.facing,
     };

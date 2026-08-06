@@ -2,12 +2,14 @@ import type { InputState } from "./simulation";
 import type { ControlAction, ControlBindings } from "./controls";
 
 type VirtualControl = "left" | "right" | "action";
+export type DebugTimeJump = "transition-start" | "night-start";
 
 export class InputController {
   private readonly pressed = new Set<string>();
   private readonly virtualPressed = new Set<VirtualControl>();
   private actionQueued = false;
   private pauseQueued = false;
+  private debugTimeJumpQueued: DebugTimeJump | null = null;
   private hookPointer = { x: 0, y: 0 };
   private bindings = new AbortController();
   private pendingRebind: { action: ControlAction; callback: (code: string | null) => void } | null = null;
@@ -67,6 +69,12 @@ export class InputController {
   consumePause(): boolean {
     const queued = this.pauseQueued;
     this.pauseQueued = false;
+    return queued;
+  }
+
+  consumeDebugTimeJump(): DebugTimeJump | null {
+    const queued = this.debugTimeJumpQueued;
+    this.debugTimeJumpQueued = null;
     return queued;
   }
 
@@ -132,6 +140,14 @@ export class InputController {
       pending.callback(event.code === "Escape" ? null : event.code);
       return;
     }
+    if (import.meta.env.DEV && !event.repeat) {
+      const debugTimeJump = debugTimeJumpForCode(event.code);
+      if (debugTimeJump) {
+        event.preventDefault();
+        this.debugTimeJumpQueued = debugTimeJump;
+        return;
+      }
+    }
     if (event.code.startsWith("Arrow") || event.code === "Space") event.preventDefault();
     if (!event.repeat && event.code === this.controlBindings.action) this.actionQueued = true;
     if (!event.repeat && (event.code === "Escape" || event.code === this.controlBindings.pause)) this.pauseQueued = true;
@@ -147,6 +163,12 @@ export class InputController {
     this.virtualPressed.clear();
     this.hookPointer = { x: 0, y: 0 };
   };
+}
+
+export function debugTimeJumpForCode(code: string): DebugTimeJump | null {
+  if (code === "KeyG") return "transition-start";
+  if (code === "KeyH") return "night-start";
+  return null;
 }
 
 function clampUnit(value: number): number {
