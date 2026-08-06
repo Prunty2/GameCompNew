@@ -15,6 +15,7 @@ export interface SurfaceFishPose {
 
 const MINIMUM_VISIBLE_FISH = 4;
 const MAXIMUM_VISIBLE_FISH = 12;
+const HOOK_REVEAL_RADIUS_MULTIPLIER = 3;
 const SCHOOL_POSITIONS = [
   [-0.12, 0.32],
   [0.18, 0.45],
@@ -39,10 +40,11 @@ export function surfaceFishingCue(
   const safeRadius = Math.max(0.000_001, interactionRadius);
   const distance = Math.abs(boatX - spotX);
   const lensRadius = safeRadius * 3.6;
+  const hookRadius = safeRadius * HOOK_REVEAL_RADIUS_MULTIPLIER;
   const lensVisibility = smootherStep(1 - distance / lensRadius);
-  const hookVisibility = distance > safeRadius
+  const hookVisibility = distance > hookRadius
     ? 0
-    : smootherStep(1 - distance / safeRadius);
+    : smootherStep(1 - distance / hookRadius);
   const boundedPopulation = clamp(population, 0, 100);
   const fishCount = clampInteger(
     Math.round(MINIMUM_VISIBLE_FISH + boundedPopulation / 10),

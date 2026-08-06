@@ -53,6 +53,8 @@ const SURFACE_HOOK_OPTICAL_CENTER = {
   x: 89 / 192,
   y: 92 / 256,
 } as const;
+const SURFACE_HOOK_SCALE = 1.05;
+const SURFACE_HOOK_RAISE_PX = 12;
 
 export class CanvasRenderer {
   private readonly context: CanvasRenderingContext2D;
@@ -170,13 +172,18 @@ export class CanvasRenderer {
         reducedMotion: settings.reducedMotion,
         highContrast: settings.highContrast,
       });
-      if (cue.hookVisibility > 0 && interactionPrompt?.kind === "fishing" && interactionPrompt.spot === spot.id) {
-        activeFishingCue = { cue, x, enabled: interactionPrompt.enabled };
+      if (cue.hookVisibility > 0) {
+        const promptMatchesSpot = interactionPrompt?.kind === "fishing" && interactionPrompt.spot === spot.id;
+        activeFishingCue = {
+          cue,
+          x,
+          enabled: promptMatchesSpot ? interactionPrompt.enabled : !permitLocked && !depthLocked,
+        };
       }
     }
 
     if (activeFishingCue) {
-      const hookY = waterline - clamp(height * 0.22, 118, 220);
+      const hookY = waterline - clamp(height * 0.22, 118, 220) - SURFACE_HOOK_RAISE_PX;
       this.drawSurfaceHookCue(
         activeFishingCue.x,
         hookY,
@@ -303,7 +310,7 @@ export class CanvasRenderer {
     const { context } = this;
     const pulse = settings.reducedMotion ? 0 : Math.sin(elapsed * 4) * 2;
     const alpha = visibility * (enabled ? 1 : 0.58);
-    const radius = clamp(this.canvas.clientHeight * 0.042, 22, 34) + pulse;
+    const radius = (clamp(this.canvas.clientHeight * 0.042, 22, 34) + pulse) * SURFACE_HOOK_SCALE;
     const cueWidth = radius * 2.3;
 
     context.save();

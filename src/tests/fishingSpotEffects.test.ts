@@ -10,14 +10,16 @@ describe("surface fishing-spot effects", () => {
     expect(cue.hookVisibility).toBe(0);
   });
 
-  it("reveals the polarized lens before the interaction hook", () => {
+  it("reveals the hook from three times the interaction radius", () => {
     const radius = 0.027;
-    const approach = surfaceFishingCue(0.2 - radius * 2, 0.2, radius, 65);
-    const interactionEdge = surfaceFishingCue(0.2 - radius * 0.8, 0.2, radius, 65);
+    const outsideReveal = surfaceFishingCue(0.2 - radius * 3.01, 0.2, radius, 65);
+    const revealEdge = surfaceFishingCue(0.2 - radius * 2.99, 0.2, radius, 65);
+    const interactionEdge = surfaceFishingCue(0.2 - radius, 0.2, radius, 65);
 
-    expect(approach.lensVisibility).toBeGreaterThan(0);
-    expect(approach.hookVisibility).toBe(0);
-    expect(interactionEdge.lensVisibility).toBeGreaterThan(approach.lensVisibility);
+    expect(outsideReveal.lensVisibility).toBeGreaterThan(0);
+    expect(outsideReveal.hookVisibility).toBe(0);
+    expect(revealEdge.hookVisibility).toBeGreaterThan(0);
+    expect(interactionEdge.hookVisibility).toBeGreaterThan(revealEdge.hookVisibility);
     expect(interactionEdge.hookVisibility).toBeGreaterThan(0);
   });
 
