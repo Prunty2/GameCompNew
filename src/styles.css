@@ -4625,6 +4625,10 @@ kbd {
   text-transform: none;
 }
 
+.screen-overlay .pause-secondary-actions .menu-button[data-action="title"] {
+  grid-column: 1 / -1;
+}
+
 .screen-overlay .pause-secondary-actions .menu-button:hover,
 .screen-overlay .pause-secondary-actions .menu-button:focus-visible {
   border-color: var(--menu-signal);

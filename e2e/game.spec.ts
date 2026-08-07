@@ -169,6 +169,10 @@ test("pause blurs the lake and slides the compact menu in and out", async ({ pag
   await expect(page.locator(".pause-actions button")).toHaveCount(4);
   await expectHorizontallyCentered(page, ".pause-menu");
 
+  const pauseSecondaryWidth = await page.locator(".pause-secondary-actions").evaluate((element) => element.getBoundingClientRect().width);
+  const titleScreenButtonWidth = await page.getByRole("button", { name: "Title screen" }).evaluate((element) => element.getBoundingClientRect().width);
+  expect(titleScreenButtonWidth).toBeCloseTo(pauseSecondaryWidth, 0);
+
   const pauseLogoWidth = await page.locator(".pause-wordmark").evaluate((element) => element.getBoundingClientRect().width);
   expect(pauseLogoWidth).toBeLessThan(titleLogoWidth);
 
