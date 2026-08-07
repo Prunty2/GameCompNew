@@ -36,6 +36,7 @@ import {
   fishingDiveProgress,
   fishingFishPose,
   fishingPointToScreen,
+  fishingReelCameraProgress,
   fishingViewLayout,
   type FishingViewLayout,
 } from "./fishingPresentation";
@@ -423,7 +424,13 @@ export class CanvasRenderer {
       ? simulation.activeContract.species
       : spot.species;
     const maximumDepth = maxFishingDepth(simulation);
-    const diveProgress = fishingDiveProgress(simulation.elapsed, fishing.startedAt, settings.reducedMotion);
+    const entryDiveProgress = fishingDiveProgress(simulation.elapsed, fishing.startedAt, settings.reducedMotion);
+    const reelProgress = fishing.reeling
+      ? fishingReelProgress(simulation.elapsed, fishing.reeling.hookedAt)
+      : 0;
+    const diveProgress = fishing.reeling
+      ? fishingReelCameraProgress(entryDiveProgress, reelProgress, settings.reducedMotion)
+      : entryDiveProgress;
     const layout = fishingViewLayout(height, simulation.progress.upgrades.line, diveProgress);
     this.canvas.dataset.fishingDiveProgress = diveProgress.toFixed(3);
     this.canvas.dataset.fishingSpot = spot.id;
@@ -473,9 +480,6 @@ export class CanvasRenderer {
     }
 
     const restingHook = fishingPointToScreen(fishing.hook, width, layout, maximumDepth);
-    const reelProgress = fishing.reeling
-      ? fishingReelProgress(simulation.elapsed, fishing.reeling.hookedAt)
-      : 0;
     const hook = fishing.reeling
       ? {
           x: restingHook.x + (width * 0.5 - restingHook.x) * reelProgress,

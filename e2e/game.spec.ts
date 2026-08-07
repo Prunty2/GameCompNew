@@ -272,8 +272,15 @@ test("reels a hooked fish to the boat before securing the catch", async ({ page 
   await page.getByRole("button", { name: "Use the evidence and drop the line" }).click();
 
   const canvas = page.locator("#game-canvas");
+  await expect.poll(async () => Number(await canvas.getAttribute("data-fishing-dive-progress"))).toBeGreaterThan(0.99);
   await page.evaluate(() => window.__FSHING_TEST__?.hookSpecies("reedfin"));
   await expect(canvas).toHaveAttribute("data-fishing-state", "reeling");
+  const reelStartProgress = Number(await canvas.getAttribute("data-fishing-dive-progress"));
+  await page.waitForTimeout(400);
+  const reelMidpointProgress = Number(await canvas.getAttribute("data-fishing-dive-progress"));
+  expect(reelStartProgress).toBeGreaterThan(0.95);
+  expect(reelMidpointProgress).toBeLessThan(reelStartProgress);
+  expect(reelMidpointProgress).toBeGreaterThan(0.25);
   await expect(page.locator(".fishing-controls")).toBeHidden();
   await expect.poll(async () => page.evaluate(() => window.__FSHING_TEST__?.mode())).toBe("cruising");
   await expect(canvas).not.toHaveAttribute("data-fishing-state");

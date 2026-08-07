@@ -36,6 +36,15 @@ export function fishingDiveProgress(elapsed: number, startedAt: number, reducedM
   return 1 - (1 - linear) ** 3;
 }
 
+export function fishingReelCameraProgress(
+  diveProgress: number,
+  reelProgress: number,
+  reducedMotion: boolean,
+): number {
+  if (reducedMotion) return 0;
+  return clamp(diveProgress, 0, 1) * (1 - clamp(reelProgress, 0, 1));
+}
+
 export function fishingViewLayout(height: number, lineTier: number, diveProgress: number): FishingViewLayout {
   const settledSurfaceY = height * 0.31;
   const sailingSurfaceY = height * 0.78;

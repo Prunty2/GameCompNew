@@ -7,6 +7,7 @@ import {
   fishingDiveProgress,
   fishingFishPose,
   fishingPointToScreen,
+  fishingReelCameraProgress,
   fishingViewLayout,
 } from "../game/fishingPresentation";
 
@@ -20,6 +21,13 @@ describe("fishing presentation", () => {
     expect(middle.surfaceY).toBeLessThan(start.surfaceY);
     expect(settled.surfaceY).toBeCloseTo(279);
     expect(fishingDiveProgress(20, 20, true)).toBe(1);
+  });
+
+  test("returns the camera to sailing height during the reel", () => {
+    expect(fishingReelCameraProgress(1, 0, false)).toBe(1);
+    expect(fishingReelCameraProgress(1, 0.5, false)).toBe(0.5);
+    expect(fishingReelCameraProgress(1, 1, false)).toBe(0);
+    expect(fishingReelCameraProgress(1, 0, true)).toBe(0);
   });
 
   test("gives each fish a deterministic swim cycle and respects reduced motion", () => {
