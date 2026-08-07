@@ -100,6 +100,7 @@ export class CanvasRenderer {
   private surfaceCameraCenter: number | null = null;
   private surfaceMotionElapsed: number | null = null;
   private surfaceCameraVelocity = 0;
+  private surfaceCameraViewWidth: number = BALANCE.cameraViewWidth;
   private surfaceSteamVelocity = 0;
   private surfaceSteamStackOffsetX: number | null = null;
 
@@ -204,6 +205,7 @@ export class CanvasRenderer {
     const { context } = this;
     const motionDelta = this.updateSurfaceMotion(simulation, settings.cinematic, settings.reducedMotion);
     const camera = this.camera(simulation, settings.cinematic, settings.reducedMotion, motionDelta);
+    this.canvas.dataset.surfaceCameraViewWidth = camera.viewWidth.toFixed(3);
     const nightIntensity = nightVisualIntensity(simulation);
     const waterline = this.drawPanorama(nightIntensity >= 1 ? art.lakeNight : art.lake, camera, width, height);
     if (nightIntensity > 0 && nightIntensity < 1) {
@@ -1125,10 +1127,23 @@ export class CanvasRenderer {
     reducedMotion: boolean,
     deltaSeconds: number,
   ): SideScrollCamera {
+    const gameplayViewWidth = simulation.boost.active && !reducedMotion
+      ? BALANCE.cameraViewWidth * BALANCE.boostCameraViewMultiplier
+      : BALANCE.cameraViewWidth;
+    if (!cinematic) {
+      this.surfaceCameraViewWidth = reducedMotion || deltaSeconds === 0
+        ? gameplayViewWidth
+        : dampMotionValue(
+          this.surfaceCameraViewWidth,
+          gameplayViewWidth,
+          deltaSeconds,
+          BALANCE.boostCameraPullRate,
+        );
+    }
     const target = createSideScrollCamera({
       focusX: simulation.boat.x,
       velocityX: cinematic ? 0 : this.surfaceCameraVelocity,
-      viewWidth: cinematic ? 0.54 : BALANCE.cameraViewWidth,
+      viewWidth: cinematic ? 0.54 : this.surfaceCameraViewWidth,
       lookAheadTime: 0.24,
     });
     const camera = cinematic || reducedMotion || this.surfaceCameraCenter === null

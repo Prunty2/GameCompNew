@@ -71,6 +71,8 @@ export const BALANCE = {
   nightFadeLength: 25,
   fogLength: 48,
   cameraViewWidth: 0.3,
+  boostCameraViewMultiplier: 1.18,
+  boostCameraPullRate: 4.2,
   dockRadius: 0.027,
   fishingRadius: 0.027,
   interactionMaxSpeed: 0.026,

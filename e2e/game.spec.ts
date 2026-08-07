@@ -141,13 +141,17 @@ test("B temporarily unlocks the rechargeable engine boost", async ({ page }) => 
   const gauge = page.getByRole("meter", { name: "Boost charge" });
   await expect(gauge).toBeVisible();
   await expect(gauge).toHaveAttribute("aria-valuenow", "100");
+  const canvas = page.locator("#game-canvas");
+  const normalViewWidth = Number(await canvas.getAttribute("data-surface-camera-view-width"));
 
   await page.keyboard.down("KeyD");
   await page.keyboard.down("ShiftLeft");
   await expect.poll(async () => Number(await gauge.getAttribute("aria-valuenow"))).toBeLessThan(100);
   await expect(gauge).toHaveClass(/is-active/);
+  await expect.poll(async () => Number(await canvas.getAttribute("data-surface-camera-view-width"))).toBeGreaterThan(normalViewWidth + 0.025);
   await page.keyboard.up("ShiftLeft");
   await page.keyboard.up("KeyD");
+  await expect.poll(async () => Number(await canvas.getAttribute("data-surface-camera-view-width"))).toBeLessThan(normalViewWidth + 0.005);
 });
 
 test("pause blurs the lake and slides the compact menu in and out", async ({ page }) => {
@@ -494,6 +498,13 @@ test("settings, keyboard pause, and local SDK fallback remain usable", async ({ 
   await expect(page.getByRole("button", { name: "Pause and options" })).toHaveCount(0);
   await expect(page.locator("body")).toHaveClass(/high-contrast/);
   await expect(page.locator("body")).toHaveClass(/reduced-motion/);
+  await page.keyboard.press("b");
+  await page.keyboard.down("KeyD");
+  await page.keyboard.down("ShiftLeft");
+  await expect(page.getByRole("meter", { name: "Boost charge" })).toHaveClass(/is-active/);
+  await expect(page.locator("#game-canvas")).toHaveAttribute("data-surface-camera-view-width", "0.300");
+  await page.keyboard.up("ShiftLeft");
+  await page.keyboard.up("KeyD");
 });
 
 test("how to play instructions advance one card at a time", async ({ page }) => {
