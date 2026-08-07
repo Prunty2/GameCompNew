@@ -10,6 +10,7 @@ import {
 } from "../game/balance";
 import {
   acceptAvailableContract,
+  buyBoost,
   buyPermit,
   buyUpgrade,
   cargoCapacity,
@@ -29,6 +30,7 @@ import {
   shouldShowNightIndicator,
   startFishing,
   undock,
+  unlockBoostForTesting,
   updateSimulation,
   type InputState,
 } from "../game/simulation";
@@ -36,6 +38,7 @@ import { defaultPopulations, estimateRoute } from "../game/stem";
 
 const idle: InputState = {
   travel: 0,
+  boost: false,
   hookX: 0,
   hookY: 0,
 };
@@ -160,6 +163,41 @@ describe("FSHING side-on simulation", () => {
       updateSimulation(simulation, { ...idle, travel: 1 }, 1 / 60);
     }
     expect(simulation.boat.speed).toBe(BALANCE.maxSurfaceSpeed);
+  });
+
+  test("unlocks boost for 300 shells and applies a temporary 33% speed increase", () => {
+    const simulation = createSimulation(1, { money: 300 });
+    expect(buyBoost(simulation)).toBe(true);
+    expect(simulation.progress.money).toBe(0);
+    expect(simulation.progress.boostUnlocked).toBe(true);
+    expect(buyBoost(simulation)).toBe(false);
+    undock(simulation);
+
+    for (let index = 0; index < 400; index += 1) {
+      updateSimulation(simulation, { ...idle, travel: 1, boost: true }, 1 / 120);
+    }
+    expect(simulation.boost.active).toBe(true);
+    expect(simulation.boat.speed).toBeCloseTo(BALANCE.maxSurfaceSpeed * BALANCE.boostSpeedMultiplier);
+  });
+
+  test("locks boost at full heat, cools slowly, and supports a non-persistent test unlock", () => {
+    const simulation = createSimulation();
+    expect(unlockBoostForTesting(simulation)).toBe(true);
+    expect(simulation.progress.boostUnlocked).toBe(false);
+    undock(simulation);
+
+    for (let index = 0; index < 80; index += 1) {
+      updateSimulation(simulation, { ...idle, travel: 1, boost: true }, 0.1);
+    }
+    expect(simulation.boost.heat).toBe(1);
+    expect(simulation.boost.active).toBe(false);
+    expect(simulation.boost.overheated).toBe(true);
+
+    for (let index = 0; index < 74; index += 1) updateSimulation(simulation, idle, 0.1);
+    expect(simulation.boost.overheated).toBe(true);
+    updateSimulation(simulation, idle, 0.1);
+    expect(simulation.boost.heat).toBeCloseTo(BALANCE.boostRecoveryThreshold);
+    expect(simulation.boost.overheated).toBe(false);
   });
 
   test("completes the tutorial contract and buys the first upgrade", () => {
