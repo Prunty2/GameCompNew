@@ -78,6 +78,7 @@ export interface FishingTarget extends WorldPoint {
 
 export interface FishingState {
   spot: SpotId;
+  startedAt: number;
   hook: WorldPoint;
   targets: FishingTarget[];
 }
@@ -305,6 +306,7 @@ export function startFishing(simulation: Simulation, spotId: SpotId): boolean {
   simulation.mode = "fishing";
   simulation.fishing = {
     spot: spotId,
+    startedAt: simulation.elapsed,
     hook: { x: 0.5, y: 0.08 },
     targets: residents.flatMap((fishSpecies, residentIndex) => (
       [0, 1].map((schoolIndex) => {

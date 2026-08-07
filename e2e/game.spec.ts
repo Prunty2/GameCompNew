@@ -243,6 +243,26 @@ test("surface shoals anchor the interaction to the fishing hook", async ({ page 
   await expect(action).not.toHaveClass(/is-fishing-cue/);
 });
 
+test("fishing descends through the sailing waterline into a site-specific scene", async ({ page }) => {
+  await page.goto("/?e2e=1&e2eSpot=sunwardShoal");
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.getByRole("button", { name: "Accept contract" }).click();
+  await page.getByRole("button", { name: "Drop line · Sunward Shoal" }).click();
+  await page.getByRole("button", { name: /Reedfin/ }).click();
+  await page.getByRole("button", { name: "Use the evidence and drop the line" }).click();
+
+  const canvas = page.locator("#game-canvas");
+  await expect(canvas).toHaveAttribute("data-fishing-spot", "sunwardShoal");
+  await expect(canvas).toHaveAttribute("data-target-rarity", "common");
+  await expect(canvas).toHaveAttribute(
+    "aria-label",
+    "Fishing at Sunward Shoal. Target Reedfin, common rarity.",
+  );
+  const initialDiveProgress = Number(await canvas.getAttribute("data-fishing-dive-progress"));
+  expect(initialDiveProgress).toBeLessThan(1);
+  await expect.poll(async () => Number(await canvas.getAttribute("data-fishing-dive-progress"))).toBeGreaterThan(0.99);
+});
+
 test("completes the tutorial delivery, buys an upgrade, and persists it", async ({ page }) => {
   await page.goto("/?e2e=1");
   await expect(page.getByRole("img", { name: "FSHING" })).toBeVisible();

@@ -1,65 +1,63 @@
-# Fishing Spot Rework — Design QA
+# Fishing Cross-Section — Design QA
 
 ## Visual truth and test state
 
-- Primary references: `/Users/liam/.codex/attachments/73a385fd-120f-470c-a96a-1a0de9cc7a82/image-1.png` and `/Users/liam/.codex/attachments/73a385fd-120f-470c-a96a-1a0de9cc7a82/image-2.png`.
-- Final implementation capture: `Docs/screenshots/06-fishing-spot-hybrid.jpg`.
-- Centered interaction-cue capture: `Docs/screenshots/10-fishing-hook-centered.jpg`.
-- Discovery capture: `Docs/screenshots/07-fishing-spot-discovery.jpg`.
-- Mobile accessibility capture: `Docs/screenshots/08-fishing-spot-mobile-accessibility.jpg`.
-- Full hook-placement comparison: `/Users/liam/.codex/visualizations/2026/08/05/019fd145-e573-7c23-a56c-8ad5c07df804/fishing-spot-hook-above-comparison.jpg`.
-- Focused hook, boat, and shoal comparison: `/Users/liam/.codex/visualizations/2026/08/05/019fd145-e573-7c23-a56c-8ad5c07df804/fishing-spot-hook-above-focus.jpg`.
-- Desktop viewport: 1380 × 1140 CSS pixels at DPR 1, matching the reference dimensions.
-- Mobile viewport: 844 × 390 CSS pixels at DPR 1.
-- Desktop state: first contract accepted, boat centered at Sunward Shoal, inside interaction range, normal contrast and motion, tutorial and toast visually dismissed.
-- Mobile state: Sunward Shoal in range, normal contrast and motion, touch controls visible.
+- Approved reference: `/Users/liam/.codex/generated_images/019fd968-1e5a-7d93-8ae7-eb2d82bb84b8/exec-4d585b59-3cb4-4e4a-aa81-88ea61a82a6a.png`.
+- Desktop implementation: `/Users/liam/.codex/visualizations/2026/08/07/fishing-cross-section/implementation-desktop.png`.
+- Mobile implementation: `/Users/liam/.codex/visualizations/2026/08/07/fishing-cross-section/implementation-mobile.png`.
+- Full comparison: `/Users/liam/.codex/visualizations/2026/08/07/fishing-cross-section/full-comparison.png`.
+- Focused specimen and line-limit comparison: `/Users/liam/.codex/visualizations/2026/08/07/fishing-cross-section/focused-comparison.png`.
+- Reference source: 1586 × 992 pixels, normalized to the 1440 × 900 desktop viewport for comparison.
+- Implementation viewports: 1440 × 900 and 844 × 390 CSS pixels at DPR 1.
+- State: settled Sunward Shoal fishing view, Reedfin common-rarity target, normal contrast and motion, tutorial and transient toast dismissed.
 
 ## Comparison history
 
-1. **P1 — cue occlusion:** the first implementation rendered the shoal before the boat's water-contact pass, which repainted nearby fish and the hook. The boat now renders first and the complete fishing cue renders above its water contact.
-2. **P1 — asset fidelity:** the early lens and cue were procedural and visually too geometric. All visible surface fish, hook, arc, and polarized-lens art were replaced with dedicated GPT Image outputs; Canvas now only positions, fades, scales, and animates those sprites.
-3. **P2 — scale and density:** an initial generated-asset pass made the fish and hook too large and dispersed. Fish scale, shoal width, hook scale, and depth distribution were tightened to match the compact school in the approved directions.
-4. **P2 — discovery readability:** the distant school was too close to invisible. Its minimum visibility was raised while the lens still ramps only on approach and the hook remains exactly hidden outside interaction range.
-5. **P1 — hook position and ownership:** the first delivered hybrid placed the hook at sea level and recomputed its horizontal position from the boat. The revised implementation anchors the hook to the fishing ground's projected world position and places it in clear air above the boat, matching Direction A. A browser test moves the boat within the interaction radius and confirms the hook shifts on screen with the ground rather than staying attached to the boat.
-6. **P1 — interaction-ring desynchronization and optical alignment:** the HTML hit target previously moved only during the 15 Hz HUD refresh while the Canvas hook moved every rendered frame, and the authored hook art sat above-left of its atlas cell center. The target now synchronizes immediately after every Canvas render. Atlas-measured optical-center offsets align the complete hook-and-arc artwork with the target center. The browser regression samples 24 rendered frames during boat movement and requires more than eight distinct target positions.
+1. **P2 — line-limit asset mismatch:** the first implementation reused a world-atlas buoy cell, which became a row of irregular orange spikes at gameplay size. It was replaced with a dedicated round cream-and-amber survey-float sprite generated for the selected mockup and repeated along the boundary.
+2. **P2 — small-landscape overlap:** the line-limit label initially competed with the `Leave fishing` control at 844 × 390. The compact layout now places the label above the boundary, clear of the control.
+3. **P2 — target readability:** the selected fish was readable as a sprite but the target state was too subtle at normal gameplay scale. The final treatment uses a silhouette-following outline plus a downward chevron; the outline changes by rarity while the chevron remains a non-color cue.
 
 ## Required fidelity surfaces
 
-### Typography
+### Camera and composition
 
-The approved fishing cue contains no persistent type. The implementation removes the former floating nameplate completely. The transparent interaction target retains the accessible name `Drop line · Sunward Shoal` without adding visible text.
+The view eases down through the existing sailing waterline instead of cutting to a separate aquarium. The settled composition retains the real sailing panorama and boat in the narrow top band while the selected site's underwater painting fills the play space. Reduced-motion mode skips directly to the settled framing.
 
-### Spacing and layout
+### Typography and hierarchy
 
-The hook is centered above the fishing ground in clear air, with the ground, lens, and school sharing one world-space horizontal anchor. It stays fixed to that ground while the boat moves inside interaction range. Direction A's above-water hook and wider living school are combined with Direction B's localized lens. The production panorama has a lower waterline and larger boat than the concept renders; preserving the game's existing camera, panorama, and boat scale is an intentional scope constraint rather than a cue mismatch.
+The target specimen is an unboxed upper-right cue with the authored fish sprite, name, and shape description. The depth ruler, line-limit label, and desktop movement hint use the existing condensed game typography and remain subordinate to the moving hook and fish.
 
-### Color and tokens
+### Color and target states
 
-The generated cue uses the references' desaturated ink-teal fish, pale turquoise clear-water reveal, cream hook, and restrained amber highlight. The normal mode remains atmospheric; high contrast increases cue opacity and highlight separation without introducing a new hue family.
+Common targets use warm ivory, uncommon targets sea-glass green, rare targets amber, and legendary targets restrained violet. The outline follows the sprite alpha rather than drawing a rectangular bracket, and the chevron preserves target identification without relying on color.
 
-### Image quality and assets
+### Assets and layering
 
-`surface-fishing-cues.png` and `polarized-lens.png` are built-in GPT Image outputs, uniformly downscaled for 2× runtime use. The magenta atlas matte is keyed in memory and the black lens field is removed through screen compositing. Final desktop and mobile captures show no rectangular edges, hard lens polygon, key-color halo, blur from upscaling, or sprite clipping. The retired fishing-spot landmark atlas is no longer imported or emitted in the production build.
+Sunward Shoal, Mosswater Pool, and Outer Gloam each use a distinct generated background-only environment. Fish, hook, line, target outline, depth ruler, line-limit floats, and labels remain separate movable or procedural layers. The production backgrounds are quality-compressed JPEGs; the line-limit float retains authored transparency.
 
-### Copy and content
+### Responsive behavior
 
-Permanent fishing-ground names, species labels, buoy-like landmarks, and interaction rings are gone. Supporting copy now consistently directs the player to follow the shoal and wait for the hook. The fishing action's accessible label and the survey flow still communicate the specific ground name.
+At 844 × 390, the waterline, target fish, depth ruler, specimen cue, line-limit boundary, touch control, and leave control remain visible without clipping. The boundary label moves above the line to avoid the leave control. Desktop-only movement help is removed in favor of the existing touch joystick.
 
-## Responsive, interaction, and accessibility checks
+## Intentional differences
 
-- Desktop normal mode: cue is centered, unobscured, and readable against the harbor panorama.
-- Far discovery state: submerged fish remain faintly discoverable; the hook control is hidden.
-- Mobile landscape state: the hook remains above the boat and the school remains clear of the touch controls, with no overlap or clipping.
-- Interaction state: the transparent 78 × 78 DOM target follows the fixed-world Canvas hook every rendered frame; the generated hook-and-arc artwork is optically centered within it and the target provides visible hover/focus treatment without duplicating the artwork.
-- In-app browser console audit: no errors or warnings in the verified fishing and survey states.
-- Survey interaction opened successfully from the generated hook cue.
+- The implementation uses the live sailing panorama and camera, so the boat is larger and the harbor crop is tighter than the concept image. This preserves visual continuity with actual sailing, as requested.
+- The comparison shows the active contract's Reedfin instead of the concept's Silver Dart. Species, target positions, and rarity color are gameplay-driven rather than baked into the environment.
+- Two Reedfin targets can be outlined because the deterministic school spawns two residents of each valid species. Both are valid targets and move independently.
+
+## Verification
+
+- Full-view and focused side-by-side comparisons show the final reference and implementation at matching 1440 × 900 dimensions.
+- In-app browser desktop and mobile checks completed with no console warnings or errors.
+- The camera descent, site key, rarity, and accessible fishing label are covered by browser tests.
+- Pure presentation tests cover camera progress, reduced motion, line-tier boundary depth, rarity colors, and per-site environment selection.
 
 ## Final severity audit
 
 - P0 blockers: none.
 - P1 fidelity or usability issues: none.
 - P2 polish issues: none.
-- P3 note: the production panorama's daytime crop is brighter than the concept images; changing the world panorama was deliberately excluded from this fishing-spot-only rework.
+- P3 note: live simulation content creates small composition differences from the static concept, while preserving the approved hierarchy and interaction cues.
 
 ## Final result
 

@@ -12,6 +12,7 @@ export type HarborId = "brindle" | "gloam";
 export type SpotId = "sunwardShoal" | "mosswaterPool" | "outerGloam";
 export type UpgradeId = "cargo" | "engine" | "lamp" | "line";
 export type RegionId = "brindleCoast" | "mosswaterReach" | "violetGloam";
+export type FishRarity = "common" | "uncommon" | "rare" | "legendary";
 
 export interface WorldPoint {
   x: number;
@@ -42,6 +43,7 @@ export interface FishDefinition {
   atlasCell: readonly [number, number];
   hue: number;
   scale: number;
+  rarity: FishRarity;
 }
 
 export interface RegionDefinition {
@@ -89,15 +91,15 @@ export const HARBORS: readonly HarborDefinition[] = [
 ];
 
 export const FISH: Record<FishSpecies, FishDefinition> = {
-  reedfin: { id: "reedfin", name: "Reedfin", shape: "Round body · fan fins", value: 18, depthTier: 0, atlasCell: [0, 0], hue: 0, scale: 0.86 },
-  sunPerch: { id: "sunPerch", name: "Sun Perch", shape: "Tall body · bright crest", value: 22, depthTier: 0, atlasCell: [1, 0], hue: 0, scale: 0.78 },
-  silverDart: { id: "silverDart", name: "Silver Dart", shape: "Slim body · split tail", value: 26, depthTier: 0, atlasCell: [2, 0], hue: 0, scale: 0.82 },
-  needlePike: { id: "needlePike", name: "Needle Pike", shape: "Long body · pointed snout", value: 34, depthTier: 1, atlasCell: [0, 1], hue: 0, scale: 0.96 },
-  mossback: { id: "mossback", name: "Mossback", shape: "Heavy hump · leaf fins", value: 46, depthTier: 2, atlasCell: [1, 1], hue: 0, scale: 1.02 },
-  lanternEel: { id: "lanternEel", name: "Lantern Eel", shape: "Snake body · glowing lure", value: 58, depthTier: 2, atlasCell: [2, 1], hue: 0, scale: 1.04 },
-  gloamGill: { id: "gloamGill", name: "Gloam Gill", shape: "Fork tail · eye mark", value: 72, depthTier: 3, atlasCell: [0, 2], hue: 0, scale: 1.02 },
-  violetRay: { id: "violetRay", name: "Violet Ray", shape: "Wing fins · ribbon tail", value: 92, depthTier: 4, atlasCell: [1, 2], hue: 0, scale: 1.14 },
-  abyssCrown: { id: "abyssCrown", name: "Abyss Crown", shape: "Crowned head · pale eye", value: 125, depthTier: 5, atlasCell: [2, 2], hue: 0, scale: 1.22 },
+  reedfin: { id: "reedfin", name: "Reedfin", shape: "Round body · fan fins", value: 18, depthTier: 0, atlasCell: [0, 0], hue: 0, scale: 0.86, rarity: "common" },
+  sunPerch: { id: "sunPerch", name: "Sun Perch", shape: "Tall body · bright crest", value: 22, depthTier: 0, atlasCell: [1, 0], hue: 0, scale: 0.78, rarity: "common" },
+  silverDart: { id: "silverDart", name: "Silver Dart", shape: "Slim body · split tail", value: 26, depthTier: 0, atlasCell: [2, 0], hue: 0, scale: 0.82, rarity: "common" },
+  needlePike: { id: "needlePike", name: "Needle Pike", shape: "Long body · pointed snout", value: 34, depthTier: 1, atlasCell: [0, 1], hue: 0, scale: 0.96, rarity: "uncommon" },
+  mossback: { id: "mossback", name: "Mossback", shape: "Heavy hump · leaf fins", value: 46, depthTier: 2, atlasCell: [1, 1], hue: 0, scale: 1.02, rarity: "uncommon" },
+  lanternEel: { id: "lanternEel", name: "Lantern Eel", shape: "Snake body · glowing lure", value: 58, depthTier: 2, atlasCell: [2, 1], hue: 0, scale: 1.04, rarity: "uncommon" },
+  gloamGill: { id: "gloamGill", name: "Gloam Gill", shape: "Fork tail · eye mark", value: 72, depthTier: 3, atlasCell: [0, 2], hue: 0, scale: 1.02, rarity: "rare" },
+  violetRay: { id: "violetRay", name: "Violet Ray", shape: "Wing fins · ribbon tail", value: 92, depthTier: 4, atlasCell: [1, 2], hue: 0, scale: 1.14, rarity: "rare" },
+  abyssCrown: { id: "abyssCrown", name: "Abyss Crown", shape: "Crowned head · pale eye", value: 125, depthTier: 5, atlasCell: [2, 2], hue: 0, scale: 1.22, rarity: "legendary" },
 };
 
 export const FISHING_SPOTS: readonly FishingSpotDefinition[] = [

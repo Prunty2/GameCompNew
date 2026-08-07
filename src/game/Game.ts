@@ -97,10 +97,12 @@ declare global {
     __FSHING_TEST__?: {
       sailToSpot(id: SpotId): void;
       sailToHarbor(id: HarborId): void;
+      previewFishing(id: SpotId, species: FishSpecies): void;
       catchSpecies(species: FishSpecies): void;
       damage(amount: number): void;
       setElapsed(seconds: number): void;
       elapsed(): number;
+      mode(): Simulation["mode"];
       boatX(): number;
       facing(): -1 | 1;
     };
@@ -1169,6 +1171,19 @@ export class Game {
     window.__FSHING_TEST__ = {
       sailToSpot: (id) => moveBoatForTesting(this.simulation, spotById(id)),
       sailToHarbor: (id) => moveBoatForTesting(this.simulation, harborById(id)),
+      previewFishing: (id, species) => {
+        const spot = spotById(id);
+        this.simulation.progress.upgrades.line = spot.requiredDepthTier;
+        this.simulation.progress.outerUnlocked = true;
+        if (this.simulation.activeContract) {
+          this.simulation.activeContract.spot = id;
+          this.simulation.activeContract.species = species;
+        }
+        moveBoatForTesting(this.simulation, spot);
+        startFishing(this.simulation, id);
+        this.setOverlay(null);
+        this.refreshHud();
+      },
       catchSpecies: (species) => {
         resolveCatch(this.simulation, species);
         this.handleSimulationEvents();
@@ -1182,6 +1197,7 @@ export class Game {
         this.refreshHud();
       },
       elapsed: () => this.simulation.elapsed,
+      mode: () => this.simulation.mode,
       boatX: () => this.simulation.boat.x,
       facing: () => this.simulation.boat.facing,
     };
