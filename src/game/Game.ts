@@ -1160,7 +1160,7 @@ export class Game {
         const target = this.simulation.fishing?.targets.find((candidate) => candidate.species === species);
         if (!this.simulation.fishing || !target) return;
         this.simulation.fishing.hook = { x: target.x, y: target.y };
-        updateSimulation(this.simulation, { travel: 0, hookX: 0, hookY: 0 }, 0);
+        updateSimulation(this.simulation, { travel: 0, hookX: 0, hookY: 0, boost: false }, 0);
         this.refreshHud();
       },
       damage: (amount) => {

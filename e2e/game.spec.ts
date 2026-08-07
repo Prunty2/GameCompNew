@@ -307,8 +307,6 @@ test("reels a hooked fish to the boat before securing the catch", async ({ page 
   await page.getByRole("button", { name: "Play", exact: true }).click();
   await page.getByRole("button", { name: "Accept contract" }).click();
   await page.getByRole("button", { name: "Drop line · Sunward Shoal" }).click();
-  await page.getByRole("button", { name: /Reedfin/ }).click();
-  await page.getByRole("button", { name: "Use the evidence and drop the line" }).click();
 
   const canvas = page.locator("#game-canvas");
   await expect.poll(async () => Number(await canvas.getAttribute("data-fishing-dive-progress"))).toBeGreaterThan(0.99);
