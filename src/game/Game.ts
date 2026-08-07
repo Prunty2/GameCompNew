@@ -564,7 +564,7 @@ export class Game {
             <li><span>2</span><div><small>Keep it</small><strong>${available.minimumFreshness}% fresh</strong></div></li>
             <li><span>3</span><div><small>Deliver to</small><strong>${harborById(available.destination).name}</strong></div></li>
           </ol>
-          ${available.accessGrant ? `<p class="next-step"><span class="ui-icon icon-permit" aria-hidden="true"></span><span><strong>Access grant</strong> ${available.accessGrant.label}</span></p>` : ""}
+          ${available.accessGrant ? `<div class="quest-access-grant" role="note" aria-label="Access grant: ${available.accessGrant.label}"><span class="ui-icon icon-permit" aria-hidden="true"></span><span class="quest-access-copy"><small>Access grant</small><strong>${available.accessGrant.label}</strong></span></div>` : ""}
           <button class="primary-button mission-button" type="button" data-action="accept-contract" aria-label="Accept contract">
             <span><strong>${isFirstJobOffer ? "Begin the First Voyage" : "Take this job"}</strong></span><b aria-hidden="true">→</b>
           </button>

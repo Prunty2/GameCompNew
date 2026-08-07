@@ -412,6 +412,11 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await expect(reward).toHaveCSS("border-top-width", "0px");
   await expect(reward.locator(".reward-label")).toHaveCSS("font-size", "11.52px");
   await expect(reward.locator("strong")).toHaveCSS("font-size", "20px");
+  const accessGrant = page.getByRole("note", { name: "Access grant: Mosswater line kit · tier 1" });
+  await expect(accessGrant).toBeVisible();
+  await expect(accessGrant).toHaveCSS("background-color", "rgba(238, 158, 65, 0.12)");
+  await expect(accessGrant).toHaveCSS("color", "rgb(247, 241, 227)");
+  await expect(accessGrant.locator("small")).toHaveCSS("color", "rgb(232, 164, 77)");
   await expect(page.getByRole("button", { name: "Accept contract" })).toContainText("Begin the First Voyage");
   await expect(page.getByRole("heading", { name: "Your cargo" })).toHaveCount(0);
   await expect(page.getByRole("region", { name: "Dock services" })).toHaveCount(0);

@@ -185,6 +185,51 @@
   font-size: 1.25rem;
 }
 
+.harbor-screen.is-first-voyage .quest-access-grant {
+  display: grid;
+  min-height: 44px;
+  grid-template-columns: 30px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  box-sizing: border-box;
+  margin: 0 0 12px;
+  padding: 7px 11px 7px 9px;
+  border: 1px solid rgb(238 158 65 / 44%);
+  border-left: 3px solid var(--menu-signal);
+  border-radius: 9px;
+  background-color: rgb(238 158 65 / 12%);
+  color: var(--menu-paper);
+}
+
+.harbor-screen.is-first-voyage .quest-access-grant > .ui-icon {
+  width: 30px;
+  height: 30px;
+}
+
+.harbor-screen.is-first-voyage .quest-access-copy {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.harbor-screen.is-first-voyage .quest-access-copy small {
+  color: var(--menu-signal);
+  font-size: 0.58rem;
+  font-weight: 950;
+  letter-spacing: 0.1em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.harbor-screen.is-first-voyage .quest-access-copy strong {
+  overflow: hidden;
+  color: var(--menu-paper);
+  font-size: 0.78rem;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .harbor-screen.is-first-voyage.is-first-job-offer .mission-button strong {
   font-size: 1.24rem;
 }
