@@ -206,6 +206,68 @@ input:focus-visible {
   animation: night-indicator-in 520ms cubic-bezier(0.2, 0.82, 0.2, 1) both;
 }
 
+.boost-gauge {
+  position: absolute;
+  z-index: 7;
+  top: max(16px, env(safe-area-inset-top));
+  right: max(16px, env(safe-area-inset-right));
+  display: grid;
+  width: min(230px, 34vw);
+  grid-template-columns: auto minmax(70px, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 12px;
+  border: 1px solid rgb(244 230 197 / 28%);
+  border-radius: 999px;
+  background: rgb(6 26 42 / 92%);
+  color: var(--cream);
+  box-shadow: 0 8px 24px rgb(1 10 18 / 32%), inset 0 1px 0 rgb(255 255 255 / 7%);
+  pointer-events: none;
+}
+
+.boost-gauge-label,
+.boost-gauge small {
+  font-size: 0.62rem;
+  font-weight: 1000;
+  letter-spacing: 0.1em;
+}
+
+.boost-gauge small {
+  color: rgb(244 230 197 / 62%);
+}
+
+.boost-gauge-track {
+  height: 9px;
+  overflow: hidden;
+  border: 1px solid rgb(2 12 18 / 72%);
+  border-radius: 999px;
+  background: #263a43;
+  box-shadow: inset 0 1px 3px rgb(1 9 14 / 70%);
+}
+
+.boost-gauge-track i {
+  display: block;
+  width: var(--boost-charge, 100%);
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #f2a33d, #ffd778);
+  box-shadow: 0 0 10px rgb(255 177 64 / 50%);
+  transition: width 100ms linear;
+}
+
+.boost-gauge.is-active {
+  border-color: rgb(255 190 88 / 70%);
+  box-shadow: 0 8px 24px rgb(1 10 18 / 32%), 0 0 20px rgb(255 159 52 / 20%);
+}
+
+.boost-gauge.is-overheated .boost-gauge-track i {
+  background: #b85d41;
+}
+
+.boost-gauge.is-overheated .boost-gauge-label {
+  color: #ffb19a;
+}
+
 .night-indicator-icon {
   position: relative;
   width: 29px;
@@ -348,6 +410,10 @@ input:focus-visible {
 }
 
 .tutorial-callout:not([hidden]) + .toast {
+  top: max(70px, calc(env(safe-area-inset-top) + 58px));
+}
+
+.game-ui:has(.boost-gauge:not([hidden])) .toast {
   top: max(70px, calc(env(safe-area-inset-top) + 58px));
 }
 
@@ -498,6 +564,10 @@ input:focus-visible {
 
 .touch-action {
   width: 78px !important;
+}
+
+.navigation-controls .touch-boost {
+  background-image: linear-gradient(rgb(6 26 42 / 22%), rgb(6 26 42 / 22%)), var(--button-art);
 }
 
 .fishing-controls {
@@ -1920,6 +1990,15 @@ kbd {
 @media (max-width: 980px) {
   .touch-controls:not([hidden]) {
     display: flex !important;
+  }
+
+  .boost-gauge {
+    top: auto;
+    right: auto;
+    bottom: max(18px, env(safe-area-inset-bottom));
+    left: 50%;
+    width: min(230px, 38vw);
+    transform: translateX(-50%);
   }
 }
 
@@ -4544,6 +4623,10 @@ kbd {
   font-size: 0.82rem;
   letter-spacing: 0.01em;
   text-transform: none;
+}
+
+.screen-overlay .pause-secondary-actions .menu-button[data-action="title"] {
+  grid-column: 1 / -1;
 }
 
 .screen-overlay .pause-secondary-actions .menu-button:hover,

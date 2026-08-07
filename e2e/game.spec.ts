@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+const BOOST_CAMERA_VIEW_MULTIPLIER = 1.18;
+
 async function expectHorizontallyCentered(page: import("@playwright/test").Page, selector: string): Promise<void> {
   const offset = await page.locator(selector).evaluate((element) => {
     const bounds = element.getBoundingClientRect();
@@ -16,7 +18,7 @@ test("main menu presents only centered play and settings actions", async ({ page
   await page.goto("/");
 
   const version = page.locator(".title-build-version");
-  await expect(version).toHaveText("v0.1.0 (PR #16)");
+  await expect(version).toHaveText("v0.2.0 (PR #37)");
   const versionBounds = await version.boundingBox();
   expect(versionBounds).not.toBeNull();
   expect(versionBounds!.x).toBeLessThan(24);
@@ -164,6 +166,45 @@ test("development shortcuts jump to dusk and full night", async ({ page }) => {
   )).not.toBe(transitionFrame);
 });
 
+test("B temporarily unlocks the rechargeable engine boost", async ({ page }) => {
+  await page.goto("/?e2e=1");
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.getByRole("button", { name: "Accept contract" }).click();
+
+  await page.keyboard.press("b");
+  await expect(page.locator("#toast")).toContainText("Boost temporarily unlocked");
+  const gauge = page.getByRole("meter", { name: "Boost charge" });
+  await expect(gauge).toBeVisible();
+  await expect(gauge).toHaveAttribute("aria-valuenow", "100");
+  const canvas = page.locator("#game-canvas");
+  const normalViewWidth = Number(await canvas.getAttribute("data-surface-camera-view-width"));
+  const normalBoatWidth = Number(await canvas.getAttribute("data-surface-boat-width"));
+
+  await page.keyboard.down("KeyD");
+  await page.keyboard.down("ShiftLeft");
+  await expect.poll(async () => Number(await gauge.getAttribute("aria-valuenow"))).toBeLessThan(100);
+  await expect(gauge).toHaveClass(/is-active/);
+  await page.waitForTimeout(250);
+  const openingViewWidth = Number(await canvas.getAttribute("data-surface-camera-view-width"));
+  const openingBoatWidth = Number(await canvas.getAttribute("data-surface-boat-width"));
+  expect(openingViewWidth).toBeGreaterThan(normalViewWidth);
+  expect(openingViewWidth).toBeLessThan(normalViewWidth * BOOST_CAMERA_VIEW_MULTIPLIER - 0.003);
+  expect(openingBoatWidth).toBeLessThan(normalBoatWidth);
+  expect(openingBoatWidth).toBeGreaterThan(normalBoatWidth / BOOST_CAMERA_VIEW_MULTIPLIER + 2);
+  await expect.poll(async () => Number(await canvas.getAttribute("data-surface-camera-view-width"))).toBeGreaterThan(normalViewWidth + 0.045);
+  await expect.poll(async () => Number(await canvas.getAttribute("data-surface-boat-width"))).toBeLessThan(normalBoatWidth * 0.87);
+  await page.keyboard.up("ShiftLeft");
+  await page.keyboard.up("KeyD");
+  await page.waitForTimeout(250);
+  const closingViewWidth = Number(await canvas.getAttribute("data-surface-camera-view-width"));
+  const closingBoatWidth = Number(await canvas.getAttribute("data-surface-boat-width"));
+  expect(closingViewWidth).toBeGreaterThan(normalViewWidth + 0.003);
+  expect(closingViewWidth).toBeLessThan(normalViewWidth + 0.05);
+  expect(closingBoatWidth).toBeGreaterThan(normalBoatWidth * 0.85);
+  expect(closingBoatWidth).toBeLessThan(normalBoatWidth);
+  await expect.poll(async () => Number(await canvas.getAttribute("data-surface-camera-view-width"))).toBeLessThan(normalViewWidth + 0.005);
+});
+
 test("pause blurs the lake and slides the compact menu in and out", async ({ page }) => {
   test.setTimeout(60_000);
   await page.goto("/");
@@ -182,6 +223,10 @@ test("pause blurs the lake and slides the compact menu in and out", async ({ pag
   await expect(page.getByRole("button", { name: "Resume" })).toHaveCSS("animation-name", "menu-button-hover-wobble");
   await expect(page.locator(".pause-actions button")).toHaveCount(4);
   await expectHorizontallyCentered(page, ".pause-menu");
+
+  const pauseSecondaryWidth = await page.locator(".pause-secondary-actions").evaluate((element) => element.getBoundingClientRect().width);
+  const titleScreenButtonWidth = await page.getByRole("button", { name: "Title screen" }).evaluate((element) => element.getBoundingClientRect().width);
+  expect(titleScreenButtonWidth).toBeCloseTo(pauseSecondaryWidth, 0);
 
   const pauseLogoWidth = await page.locator(".pause-wordmark").evaluate((element) => element.getBoundingClientRect().width);
   expect(pauseLogoWidth).toBeLessThan(titleLogoWidth);
@@ -277,8 +322,6 @@ test("fishing descends through the sailing waterline into a site-specific scene"
   await page.getByRole("button", { name: "Play", exact: true }).click();
   await page.getByRole("button", { name: "Accept contract" }).click();
   await page.getByRole("button", { name: "Drop line · Sunward Shoal" }).click();
-  await page.getByRole("button", { name: /Reedfin/ }).click();
-  await page.getByRole("button", { name: "Use the evidence and drop the line" }).click();
 
   const canvas = page.locator("#game-canvas");
   await expect(canvas).toHaveAttribute("data-fishing-spot", "sunwardShoal");
@@ -338,11 +381,7 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
 
   await page.evaluate(() => window.__FSHING_TEST__?.sailToSpot("sunwardShoal"));
   await page.getByRole("button", { name: "Drop line · Sunward Shoal" }).click();
-  await expect(page.getByRole("heading", { name: "Read the lake" })).toBeVisible();
-  await expect(page.getByText("8.4 mg/L")).toBeVisible();
-  await page.getByRole("button", { name: /Reedfin/ }).click();
-  await expect(page.getByRole("heading", { name: "Prediction supported" })).toBeVisible();
-  await page.getByRole("button", { name: "Use the evidence and drop the line" }).click();
+  await expect(page.getByRole("heading", { name: "Read the lake" })).toHaveCount(0);
   await expect(page.getByText(/Guide the hook toward the Reedfin/)).toBeVisible();
   await page.evaluate(() => window.__FSHING_TEST__?.catchSpecies("reedfin"));
   await expect(page.getByRole("heading", { name: "Plan your crossing" })).toHaveCount(0);
@@ -397,7 +436,7 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await expect(page.getByRole("button", { name: "Services", exact: true })).toBeFocused();
   await expect(page.locator(".harbor-tab .ui-icon")).toHaveCount(3);
   await expect(page.getByRole("region", { name: "Dock services" })).toBeVisible();
-  await expect(page.locator(".service-card > .ui-icon")).toHaveCount(5);
+  await expect(page.locator(".service-card > .ui-icon")).toHaveCount(6);
   await expect(page.getByRole("heading", { name: "Repair hull" })).toHaveCount(0);
   await expect(page.locator(".service-card > .icon-line")).toHaveCSS("background-image", /ui-icons/);
   await expect(page.locator(".service-card > .icon-line")).toHaveCSS("background-color", "rgb(7, 27, 41)");
@@ -476,7 +515,8 @@ test("settings, keyboard pause, and local SDK fallback remain usable", async ({ 
   await page.getByRole("button", { name: "Controls" }).click();
   await expectHorizontallyCentered(page, ".controls-panel");
   await expect(page.locator(".controls-wordmark")).toBeVisible();
-  await expect(page.locator(".binding-row")).toHaveCount(6);
+  await expect(page.locator(".binding-row")).toHaveCount(7);
+  await expect(page.getByRole("button", { name: "Rebind Boost" })).toHaveText("Left Shift");
   await expect(page.locator(".binding-row").first()).toHaveCSS("border-radius", "12px");
   await expect(page.locator(".controls-overlay")).toHaveCSS("backdrop-filter", "blur(8px) saturate(0.78)");
   await expect(page.getByRole("button", { name: "Rebind Hook up" })).toHaveText("W");
@@ -506,6 +546,13 @@ test("settings, keyboard pause, and local SDK fallback remain usable", async ({ 
   await expect(page.getByRole("button", { name: "Pause and options" })).toHaveCount(0);
   await expect(page.locator("body")).toHaveClass(/high-contrast/);
   await expect(page.locator("body")).toHaveClass(/reduced-motion/);
+  await page.keyboard.press("b");
+  await page.keyboard.down("KeyD");
+  await page.keyboard.down("ShiftLeft");
+  await expect(page.getByRole("meter", { name: "Boost charge" })).toHaveClass(/is-active/);
+  await expect(page.locator("#game-canvas")).toHaveAttribute("data-surface-camera-view-width", "0.300");
+  await page.keyboard.up("ShiftLeft");
+  await page.keyboard.up("KeyD");
 });
 
 test("how to play instructions advance one card at a time", async ({ page }) => {
@@ -516,22 +563,22 @@ test("how to play instructions advance one card at a time", async ({ page }) => 
   await expect(page.locator(".help-panel")).toHaveCSS("background-color", "rgba(4, 23, 31, 0.94)");
   await expect(page.locator(".help-panel")).toHaveCSS("border-radius", "20px");
   await expect(page.locator(".help-header .harbor-wordmark")).toBeVisible();
-  await expect(page.getByText("Step 1 of 5")).toBeVisible();
+  await expect(page.getByText("Step 1 of 4")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Take a job" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Previous" })).toBeDisabled();
 
   await page.getByRole("button", { name: "Next" }).click();
-  await expect(page.getByText("Step 2 of 5")).toBeVisible();
+  await expect(page.getByText("Step 2 of 4")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Follow the shoal" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Take a job" })).toHaveCount(0);
 
   await page.getByRole("button", { name: "Previous" }).click();
-  await expect(page.getByText("Step 1 of 5")).toBeVisible();
+  await expect(page.getByText("Step 1 of 4")).toBeVisible();
 
-  for (let step = 1; step < 5; step += 1) {
+  for (let step = 1; step < 4; step += 1) {
     await page.getByRole("button", { name: "Next" }).click();
   }
-  await expect(page.getByText("Step 5 of 5")).toBeVisible();
+  await expect(page.getByText("Step 4 of 4")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Fish sustainably" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Next" })).toBeDisabled();
 
