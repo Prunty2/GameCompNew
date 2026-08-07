@@ -47,6 +47,7 @@ import {
   getInteractionPrompt,
   interact,
   moveBoatForTesting,
+  navigationGuidance,
   nightVisualIntensity,
   releaseCargo,
   resolveCatch,
@@ -244,6 +245,7 @@ export class Game {
           <span class="boost-gauge-track"><i></i></span>
           <small>SHIFT</small>
         </div>
+        <p class="visually-hidden navigation-status" role="status" aria-live="polite"></p>
         <button class="tutorial-callout" id="tutorial-callout" type="button" data-action="dismiss-tutorial" title="Dismiss instruction" hidden>
           <span class="tutorial-label" aria-hidden="true">Next</span>
           <span class="tutorial-message" aria-live="polite"></span>
@@ -398,6 +400,15 @@ export class Game {
       } else if (!tutorial.classList.contains("is-dismissing")) {
         tutorial.hidden = true;
       }
+    }
+
+    const guidance = navigationGuidance(simulation);
+    const navigationStatus = this.uiRoot.querySelector<HTMLElement>(".navigation-status");
+    const navigationStatusText = this.overlay === null && simulation.mode === "cruising"
+      ? `${guidance.kicker} ${guidance.label}. ${guidance.instruction}`
+      : "";
+    if (navigationStatus && navigationStatus.textContent !== navigationStatusText) {
+      navigationStatus.textContent = navigationStatusText;
     }
 
     this.refreshContextAction();
@@ -1177,6 +1188,7 @@ export class Game {
       catchSpecies: (species) => {
         resolveCatch(this.simulation, species);
         this.handleSimulationEvents();
+        this.refreshHud();
       },
       hookSpecies: (species) => {
         const target = this.simulation.fishing?.targets.find((candidate) => candidate.species === species);

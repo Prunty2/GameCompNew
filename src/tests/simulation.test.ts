@@ -23,6 +23,7 @@ import {
   learningAccuracy,
   maxFishingDepth,
   moveBoatForTesting,
+  navigationGuidance,
   nightVisualIntensity,
   recordSurvey,
   releaseCargo,
@@ -92,6 +93,93 @@ describe("FSHING side-on simulation", () => {
       "violetRay",
       "abyssCrown",
     ]));
+  });
+
+  test("keeps navigation guidance aligned with every first-delivery phase", () => {
+    const simulation = createSimulation();
+    expect(navigationGuidance(simulation)).toMatchObject({ kicker: "JOB AT", label: "Brindle Harbor" });
+
+    expect(acceptAvailableContract(simulation)).toBe(true);
+    undock(simulation);
+    expect(navigationGuidance(simulation)).toMatchObject({ kicker: "FISH AT", label: "Sunward Shoal" });
+    expect(tutorialPrompt(simulation)).toContain("Head right to Sunward Shoal");
+
+    moveBoatForTesting(simulation, spotById("sunwardShoal"));
+    expect(tutorialPrompt(simulation)).toBe("Drop the line at Sunward Shoal and catch a Reedfin.");
+
+    simulation.boat.speed = BALANCE.interactionMaxSpeed + 0.001;
+    expect(tutorialPrompt(simulation)).toBe("Slow beneath Sunward Shoal, then drop the line to catch a Reedfin.");
+
+    simulation.boat.speed = 0;
+    expect(resolveCatch(simulation, "reedfin")).toBe(true);
+    expect(navigationGuidance(simulation)).toMatchObject({ kicker: "DELIVER TO", label: "Gloam Ferry" });
+    expect(tutorialPrompt(simulation)).toContain("Keep the Reedfin above 35% freshness");
+
+    moveBoatForTesting(simulation, harborById("gloam"));
+    expect(tutorialPrompt(simulation)).toBe("Dock at Gloam Ferry and deliver the Reedfin.");
+  });
+
+  test("sends spoiled, blocked, and full-cargo contracts to an actionable next step", () => {
+    const spoiled = createSimulation();
+    acceptAvailableContract(spoiled);
+    undock(spoiled);
+    spoiled.cargo = [{ species: "reedfin", freshness: 34 }];
+    expect(navigationGuidance(spoiled)).toMatchObject({ kicker: "FISH AT", label: "Sunward Shoal" });
+    expect(navigationGuidance(spoiled).instruction).toContain("catch a fresher Reedfin");
+
+    const full = createSimulation();
+    acceptAvailableContract(full);
+    undock(full);
+    full.cargo = [
+      { species: "sunPerch", freshness: 100 },
+      { species: "silverDart", freshness: 100 },
+      { species: "needlePike", freshness: 100 },
+    ];
+    expect(navigationGuidance(full)).toMatchObject({ kicker: "MANAGE CARGO", label: "Brindle Harbor" });
+    expect(navigationGuidance(full).instruction).toContain("release a catch");
+
+    const protectedStock = createSimulation();
+    acceptAvailableContract(protectedStock);
+    undock(protectedStock);
+    protectedStock.progress.populations.reedfin = 10;
+    expect(navigationGuidance(protectedStock)).toMatchObject({ kicker: "RECOVER AT", label: "Brindle Harbor" });
+    moveBoatForTesting(protectedStock, harborById("brindle"));
+    interact(protectedStock);
+    expect(protectedStock.progress.populations.reedfin).toBe(18);
+  });
+
+  test("uses the nearest harbor and actual travel direction outside the opening route", () => {
+    const recovery = createSimulation();
+    recovery.availableContract = null;
+    undock(recovery);
+    recovery.boat.x = 0.89;
+    expect(navigationGuidance(recovery)).toMatchObject({ kicker: "RECOVER AT", label: "Gloam Ferry" });
+
+    const laterRoute = createSimulation(1, {
+      completedContracts: 1,
+      upgrades: { cargo: 1, engine: 0, lamp: 0, line: 0 },
+    });
+    if (!laterRoute.availableContract) throw new Error("Expected a later contract.");
+    laterRoute.availableContract = {
+      ...laterRoute.availableContract,
+      origin: "gloam",
+      destination: "brindle",
+    };
+    laterRoute.dockedAt = "gloam";
+    expect(acceptAvailableContract(laterRoute)).toBe(true);
+    undock(laterRoute);
+    expect(navigationGuidance(laterRoute).instruction).toContain("Head left to Sunward Shoal");
+    laterRoute.cargo = [{ species: laterRoute.activeContract!.species, freshness: 100 }];
+    expect(navigationGuidance(laterRoute)).toMatchObject({ kicker: "DELIVER TO", label: "Brindle Harbor" });
+    expect(navigationGuidance(laterRoute).instruction).toContain("Head left to Brindle Harbor");
+  });
+
+  test("keeps the first-upgrade reminder tied to its harbor", () => {
+    const simulation = createSimulation(1, { completedContracts: 1 });
+    undock(simulation);
+
+    expect(navigationGuidance(simulation)).toMatchObject({ kicker: "UPGRADE AT", label: "Brindle Harbor" });
+    expect(tutorialPrompt(simulation)).toContain("buy one boat upgrade");
   });
 
   test("blends region surface tints across ecosystem boundaries", () => {

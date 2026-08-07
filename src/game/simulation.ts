@@ -153,6 +153,13 @@ export interface InteractionPrompt {
   reason?: string;
 }
 
+export interface NavigationGuidance {
+  point: WorldPoint;
+  label: string;
+  kicker: "JOB AT" | "FISH AT" | "DELIVER TO" | "MANAGE CARGO" | "RECOVER AT" | "UPGRADE AT";
+  instruction: string;
+}
+
 const FISHING_HOOK_SPEED = 0.48;
 const FISHING_CATCH_RADIUS = 0.058;
 const PROTECTED_POPULATION = 15;
@@ -271,6 +278,12 @@ export function interact(simulation: Simulation): InteractionPrompt | null {
     if (!simulation.activeContract && !simulation.availableContract) {
       regeneratePopulations(simulation, 8);
       simulation.availableContract = createAvailableContract(simulation, prompt.harbor);
+    } else if (
+      simulation.activeContract
+      && simulation.progress.populations[simulation.activeContract.species] <= PROTECTED_POPULATION
+      && !hasDeliverableCatch(simulation, simulation.activeContract)
+    ) {
+      regeneratePopulations(simulation, 8);
     }
     simulation.events.push({ type: "docked", harbor: prompt.harbor });
   } else if (prompt.kind === "fishing" && prompt.spot) {
@@ -588,29 +601,95 @@ export function fogIntensity(simulation: Simulation): number {
   return Math.max(0, Math.sin((phase - 0.18) * Math.PI * 2)) * 0.72;
 }
 
-export function objective(simulation: Simulation): { point: WorldPoint; label: string } {
+export function navigationGuidance(simulation: Simulation): NavigationGuidance {
+  const totalUpgradeTiers = Object.values(simulation.progress.upgrades).reduce((sum, tier) => sum + tier, 0);
+  if (simulation.progress.completedContracts > 0 && totalUpgradeTiers === 0) {
+    const harbor = harborById(simulation.availableContract?.origin ?? closestHarbor(simulation).id);
+    return {
+      point: harbor,
+      label: harbor.name,
+      kicker: "UPGRADE AT",
+      instruction: harborInstruction(simulation, harbor, "buy one boat upgrade"),
+    };
+  }
+
   const contract = simulation.activeContract;
   if (!contract) {
-    const harbor = harborById(simulation.availableContract?.origin ?? simulation.dockedAt ?? "brindle");
-    return { point: harbor, label: harbor.name };
+    const harbor = simulation.availableContract
+      ? harborById(simulation.availableContract.origin)
+      : closestHarbor(simulation);
+    if (simulation.availableContract) {
+      return {
+        point: harbor,
+        label: harbor.name,
+        kicker: "JOB AT",
+        instruction: harborInstruction(simulation, harbor, `take ${simulation.availableContract.title}`),
+      };
+    }
+    return {
+      point: harbor,
+      label: harbor.name,
+      kicker: "RECOVER AT",
+      instruction: harborInstruction(simulation, harbor, "help protected fish stocks recover"),
+    };
   }
-  if (simulation.cargo.some((item) => item.species === contract.species)) {
+
+  if (hasDeliverableCatch(simulation, contract)) {
     const harbor = harborById(contract.destination);
-    return { point: harbor, label: harbor.name };
+    return {
+      point: harbor,
+      label: harbor.name,
+      kicker: "DELIVER TO",
+      instruction: deliveryInstruction(simulation, harbor, contract),
+    };
   }
+
+  const fish = FISH[contract.species];
+  if (simulation.cargo.length >= cargoCapacity(simulation)) {
+    const harbor = closestHarbor(simulation);
+    return {
+      point: harbor,
+      label: harbor.name,
+      kicker: "MANAGE CARGO",
+      instruction: harborInstruction(simulation, harbor, `release a catch to make room for ${fish.name}`),
+    };
+  }
+
+  if (simulation.progress.populations[contract.species] <= PROTECTED_POPULATION) {
+    const harbor = closestHarbor(simulation);
+    return {
+      point: harbor,
+      label: harbor.name,
+      kicker: "RECOVER AT",
+      instruction: harborInstruction(simulation, harbor, `help the protected ${fish.name} stock recover`),
+    };
+  }
+
   const spot = spotById(contract.spot);
-  return { point: spot, label: spot.name };
+  const spoiledCatch = simulation.cargo.some((item) => item.species === contract.species);
+  const prompt = getInteractionPrompt(simulation);
+  const catchAction = spoiledCatch
+    ? `catch a fresher ${fish.name}; the current catch is below ${contract.minimumFreshness}%`
+    : `catch a ${fish.name}`;
+  const instruction = prompt?.kind === "fishing" && prompt.spot === spot.id
+    ? prompt.enabled
+      ? `Drop the line at ${spot.name} and ${catchAction}.`
+      : prompt.reason === "Too fast to fish"
+        ? `Slow beneath ${spot.name}, then drop the line to ${catchAction}.`
+        : `${prompt.reason ?? "Fishing is unavailable"} at ${spot.name}.`
+    : `Head ${horizontalDirection(simulation.boat.x, spot.x)} to ${spot.name}, then ${catchAction}.`;
+  return {
+    point: spot,
+    label: spot.name,
+    kicker: "FISH AT",
+    instruction,
+  };
 }
 
 export function tutorialPrompt(simulation: Simulation): string | null {
   const totalUpgradeTiers = Object.values(simulation.progress.upgrades).reduce((sum, tier) => sum + tier, 0);
   if (simulation.progress.completedContracts > 0) {
-    return totalUpgradeTiers === 0 ? "Spend the payment on one boat upgrade." : null;
-  }
-  if (!simulation.activeContract) {
-    return simulation.availableContract
-      ? "Take The Morning Order from the contract board."
-      : "Stocks are recovering. Leave the harbor and dock again to advance recovery.";
+    return totalUpgradeTiers === 0 ? navigationGuidance(simulation).instruction : null;
   }
   if (simulation.mode === "fishing" && simulation.fishing) {
     if (simulation.fishing.reeling) {
@@ -622,10 +701,7 @@ export function tutorialPrompt(simulation: Simulation): string | null {
       : spot.species;
     return `Guide the hook toward the ${FISH[target].name}.`;
   }
-  if (!simulation.cargo.some((item) => item.species === simulation.activeContract?.species)) {
-    return "Hold right for Sunward Shoal. Follow the fish activity and slow when the hook appears.";
-  }
-  return "The catch is losing freshness. Head right for Gloam Ferry.";
+  return navigationGuidance(simulation).instruction;
 }
 
 export function consumeEvents(simulation: Simulation): SimulationEvent[] {
@@ -785,6 +861,51 @@ function createAvailableContract(simulation: Simulation, origin: HarborId): Cont
     reward: FISH[species].value * 2 + 34,
     minimumFreshness: 28 + (simulation.progress.completedContracts % 3) * 8,
   };
+}
+
+function hasDeliverableCatch(simulation: Simulation, contract: Contract): boolean {
+  return simulation.cargo.some(
+    (item) => item.species === contract.species && item.freshness >= contract.minimumFreshness,
+  );
+}
+
+function closestHarbor(simulation: Simulation): (typeof HARBORS)[number] {
+  return HARBORS.reduce((closest, harbor) => (
+    Math.abs(simulation.boat.x - harbor.x) < Math.abs(simulation.boat.x - closest.x) ? harbor : closest
+  ));
+}
+
+function horizontalDirection(fromX: number, toX: number): "left" | "right" {
+  return toX < fromX ? "left" : "right";
+}
+
+function harborInstruction(
+  simulation: Simulation,
+  harbor: (typeof HARBORS)[number],
+  action: string,
+): string {
+  const prompt = getInteractionPrompt(simulation);
+  if (prompt?.kind === "harbor" && prompt.harbor === harbor.id) {
+    return prompt.enabled
+      ? `Dock at ${harbor.name} and ${action}.`
+      : `Slow down to dock at ${harbor.name}, then ${action}.`;
+  }
+  return `Head ${horizontalDirection(simulation.boat.x, harbor.x)} to ${harbor.name} and ${action}.`;
+}
+
+function deliveryInstruction(
+  simulation: Simulation,
+  harbor: (typeof HARBORS)[number],
+  contract: Contract,
+): string {
+  const prompt = getInteractionPrompt(simulation);
+  const fishName = FISH[contract.species].name;
+  if (prompt?.kind === "harbor" && prompt.harbor === harbor.id) {
+    return prompt.enabled
+      ? `Dock at ${harbor.name} and deliver the ${fishName}.`
+      : `Slow down to dock at ${harbor.name}, then deliver the ${fishName}.`;
+  }
+  return `Head ${horizontalDirection(simulation.boat.x, harbor.x)} to ${harbor.name}. Keep the ${fishName} above ${contract.minimumFreshness}% freshness.`;
 }
 
 function nearestHorizontal<T extends WorldPoint>(x: number, choices: readonly T[], radius: number): T | null {

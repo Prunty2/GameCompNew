@@ -45,8 +45,8 @@ import { surfaceFishingCue, surfaceFishPose, type SurfaceFishingCue } from "./fi
 import { calculatePanoramaLayout } from "./panorama";
 import {
   maxFishingDepth,
+  navigationGuidance,
   nightVisualIntensity,
-  objective,
   type Simulation,
 } from "./simulation";
 import {
@@ -935,7 +935,7 @@ export class CanvasRenderer {
     height: number,
     settings: RenderSettings,
   ): void {
-    const goal = objective(simulation);
+    const goal = navigationGuidance(simulation);
     const distance = Math.abs(goal.point.x - simulation.boat.x);
     const opacity = objectiveIndicatorOpacity(distance, BALANCE.fishingRadius);
     if (opacity <= 0) return;
@@ -980,7 +980,7 @@ export class CanvasRenderer {
     context.textBaseline = "middle";
     context.fillStyle = "#e9b65f";
     context.font = '700 10px "Avenir Next Condensed", "Arial Narrow", sans-serif';
-    context.fillText("HEAD TO", layout.textCenterX, layout.markerY - 10);
+    context.fillText(goal.kicker, layout.textCenterX, layout.markerY - 10);
     context.fillStyle = "#fff4cf";
     context.font = '700 16px "Avenir Next Condensed", "Arial Narrow", sans-serif';
     context.fillText(goal.label.toUpperCase(), layout.textCenterX, layout.markerY + 9);
