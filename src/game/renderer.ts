@@ -443,9 +443,9 @@ export class CanvasRenderer {
       this.drawFishingLineLimit(depthLine, width, height, settings.highContrast);
     }
 
-    for (const [targetIndex, target] of fishing.targets.entries()) {
+    for (const target of fishing.targets) {
       const point = fishingPointToScreen(target, width, layout, maximumDepth);
-      const pose = fishingFishPose(simulation.elapsed, targetIndex, target.speed, settings.reducedMotion);
+      const pose = fishingFishPose(target.species, simulation.elapsed, target.phase, settings.reducedMotion);
       const animatedPoint = {
         x: point.x,
         y: point.y + pose.verticalOffsetRatio * layout.underwaterHeight,
@@ -476,7 +476,6 @@ export class CanvasRenderer {
     const hookSize = clamp(Math.min(width, height) * 0.076, 46, 68);
     this.drawTackleCell(1, 1, hook.x, hook.y, hookSize, hookSize);
 
-    this.drawFishingDepthScale(width * 0.5 + 38, layout, height, settings.highContrast);
     this.drawFishingTargetGuide(targetSpecies, width, height, settings.highContrast, layout.surfaceY);
     this.drawFishingControlCue(width, height, settings.highContrast);
     context.restore();
@@ -599,43 +598,6 @@ export class CanvasRenderer {
     context.textBaseline = "top";
     const labelY = height < 520 ? depthLine - 24 : depthLine + 17;
     context.fillText(height < 520 ? "UPGRADE LINE" : "UPGRADE LINE TO GO DEEPER", width - 24, labelY);
-    context.restore();
-  }
-
-  private drawFishingDepthScale(
-    x: number,
-    layout: FishingViewLayout,
-    height: number,
-    highContrast: boolean,
-  ): void {
-    const { context } = this;
-    const top = layout.surfaceY + layout.underwaterHeight * 0.08;
-    const bottom = layout.lineLimitY - 10;
-    const scaleHeight = Math.max(24, bottom - top);
-    context.save();
-    context.strokeStyle = highContrast ? "#ffffff" : "rgba(244, 230, 197, 0.88)";
-    context.fillStyle = highContrast ? "#ffffff" : "#f4e6c5";
-    context.lineWidth = highContrast ? 2.5 : 1.5;
-    context.beginPath();
-    context.moveTo(x, top);
-    context.lineTo(x, bottom);
-    context.stroke();
-    const labels = ["1 m", "3 m", "6 m"];
-    for (let index = 0; index < 7; index += 1) {
-      const y = top + (scaleHeight * index) / 6;
-      const major = index === 1 || index === 3 || index === 6;
-      context.beginPath();
-      context.moveTo(x, y);
-      context.lineTo(x + (major ? 15 : 8), y);
-      context.stroke();
-      if (major) {
-        const labelIndex = index === 1 ? 0 : index === 3 ? 1 : 2;
-        context.font = `800 ${clamp(height * 0.016, 10, 14)}px system-ui, sans-serif`;
-        context.textAlign = "left";
-        context.textBaseline = "middle";
-        context.fillText(labels[labelIndex] ?? "", x + 20, y);
-      }
-    }
     context.restore();
   }
 

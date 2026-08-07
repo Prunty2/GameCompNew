@@ -1,4 +1,5 @@
 import type { FishRarity, FishSpecies, SpotId, WorldPoint } from "./balance";
+import { FISHING_MOVEMENT_PROFILES, fishingSpeciesMotion } from "./fishingMovement";
 
 export interface FishingViewLayout {
   surfaceY: number;
@@ -50,22 +51,21 @@ export function fishingViewLayout(height: number, lineTier: number, diveProgress
 }
 
 export function fishingFishPose(
+  species: FishSpecies,
   elapsed: number,
-  targetIndex: number,
-  speed: number,
+  phase: number,
   reducedMotion: boolean,
 ): FishingFishPose {
   if (reducedMotion) {
     return { verticalOffsetRatio: 0, rotation: 0, scaleX: 1, scaleY: 1 };
   }
-  const phase = targetIndex * 1.73;
-  const finCycle = Math.sin(elapsed * (2.4 + speed * 12) + phase);
-  const glideCycle = Math.sin(elapsed * (0.8 + speed * 3) + phase * 0.7);
+  const profile = FISHING_MOVEMENT_PROFILES[species];
+  const motion = fishingSpeciesMotion(species, elapsed, phase);
   return {
-    verticalOffsetRatio: finCycle * 0.004 + glideCycle * 0.008,
-    rotation: glideCycle * 0.035 + finCycle * 0.012,
-    scaleX: 1 + finCycle * 0.028,
-    scaleY: 1 - finCycle * 0.018,
+    verticalOffsetRatio: motion.flex * profile.flexAmount * 0.08,
+    rotation: motion.pitch,
+    scaleX: 1 + motion.flex * profile.flexAmount,
+    scaleY: 1 - motion.flex * profile.flexAmount * 0.62,
   };
 }
 

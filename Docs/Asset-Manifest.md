@@ -74,7 +74,7 @@ The boat, harbor pier, fish atlas, and world atlas were requested on a uniform `
 ### Fishing environment backgrounds
 
 - Runtime files: `fishing-sunward-shoal.jpg`, `fishing-mosswater-pool.jpg`, and `fishing-outer-gloam.jpg`
-- Runtime role: three swappable background-only underwater paintings for Sunward Shoal, Mosswater Pool, and Outer Gloam. Fish, hook, line, target treatment, depth scale, and UI are rendered separately so gameplay objects remain movable.
+- Runtime role: three swappable background-only underwater paintings for Sunward Shoal, Mosswater Pool, and Outer Gloam. Fish, hook, line, target treatment, line-limit boundary, and UI are rendered separately so gameplay objects remain movable.
 - Generated and runtime dimensions: 1536 × 1024 each. Runtime copies use quality-82 JPEG compression because the paintings need no transparency.
 - Generation mode: OpenAI built-in image generation using the approved revised Living Cross-Section fishing mockup and the existing sailing-water screenshots as visual references
 - Shared constraints: one side-on underwater lake environment with an open central gameplay area; restrained painterly gouache and screen-print texture matching the sailing panorama; no fish, hook, line, boat, UI, text, labels, icons, reticles, or watermark.

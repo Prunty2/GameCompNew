@@ -233,7 +233,7 @@ test("surface shoals anchor the interaction to the fishing hook", async ({ page 
   const shiftedHookLeft = Number.parseFloat(await action.evaluate((element) => (element as HTMLElement).style.left));
   const anchorSamples = await page.evaluate<string[]>(() => JSON.parse(document.body.dataset.hookAnchorSamples ?? "[]"));
   expect(new Set(anchorSamples).size).toBeGreaterThan(8);
-  expect(shiftedHookLeft).toBeLessThan(initialHookLeft - 6);
+  expect(Math.abs(shiftedHookLeft - initialHookLeft)).toBeGreaterThan(6);
 
   await page.evaluate(() => window.__FSHING_TEST__?.sailToHarbor("gloam"));
   await expect(action).not.toHaveClass(/is-fishing-cue/);

@@ -23,14 +23,14 @@ describe("fishing presentation", () => {
   });
 
   test("gives each fish a deterministic swim cycle and respects reduced motion", () => {
-    const first = fishingFishPose(12.5, 2, 0.05, false);
-    const repeated = fishingFishPose(12.5, 2, 0.05, false);
-    const neighbor = fishingFishPose(12.5, 3, 0.05, false);
+    const first = fishingFishPose("reedfin", 12.5, 2.4, false);
+    const repeated = fishingFishPose("reedfin", 12.5, 2.4, false);
+    const neighbor = fishingFishPose("silverDart", 12.5, 2.4, false);
 
     expect(first).toEqual(repeated);
     expect(first).not.toEqual(neighbor);
     expect(Math.abs(first.verticalOffsetRatio)).toBeLessThanOrEqual(0.012);
-    expect(fishingFishPose(12.5, 2, 0.05, true)).toEqual({
+    expect(fishingFishPose("reedfin", 12.5, 2.4, true)).toEqual({
       verticalOffsetRatio: 0,
       rotation: 0,
       scaleX: 1,
