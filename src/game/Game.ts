@@ -51,6 +51,8 @@ import {
   nightVisualIntensity,
   releaseCargo,
   resolveCatch,
+  sellCargoAtGloamMarket,
+  gloamMarketSalePrice,
   shouldShowNightIndicator,
   startFishing,
   tutorialPrompt,
@@ -91,10 +93,11 @@ type OverlayScreen =
   | "seasonReport"
   | null;
 
-type HarborSection = "delivery" | "cargo" | "services";
+type HarborSection = "delivery" | "market" | "cargo" | "services";
 
 const HARBOR_SECTION_ICON: Record<HarborSection, string> = {
   delivery: "objective",
+  market: "cargo",
   cargo: "cargo",
   services: "repair",
 };
@@ -331,7 +334,10 @@ export class Game {
         break;
       case "docked":
         this.feedback.cue("dock");
-        this.harborSection = "delivery";
+        this.harborSection = event.harbor === "gloam"
+          && this.simulation.activeContract?.destination !== "gloam"
+          ? "market"
+          : "delivery";
         this.setOverlay("harbor", true);
         break;
       case "full-cargo":
@@ -374,6 +380,14 @@ export class Game {
         break;
       case "released":
         this.showToast(`${FISH[event.species].name} released · population +${event.restored}`);
+        break;
+      case "sold":
+        this.feedback.cue("delivery");
+        this.showToast(`${FISH[event.species].name} sold at Gloam market · +${event.payment} shells`);
+        break;
+      case "access-granted":
+        this.feedback.cue("upgrade");
+        this.showToast(`Research access granted · ${event.label}`);
         break;
       case "season-complete":
         this.seasonReportQueued = true;
@@ -534,8 +548,11 @@ export class Game {
     const isFirstJobOffer = this.simulation.progress.completedContracts === 0 && available?.id === "morning-order";
     const showCargo = !isFirstJobOffer;
     const showServices = !isFirstJobOffer;
-    const availableSections: HarborSection[] = ["delivery", ...(showCargo ? ["cargo" as const] : []), ...(showServices ? ["services" as const] : [])];
-    const activeSection: HarborSection = availableSections.includes(this.harborSection) ? this.harborSection : "delivery";
+    const availableSections: HarborSection[] = harborId === "gloam"
+      ? [...(deliverable ? ["delivery" as const] : []), "market", ...(showServices ? ["services" as const] : [])]
+      : ["delivery", ...(showCargo ? ["cargo" as const] : []), ...(showServices ? ["services" as const] : [])];
+    const defaultSection: HarborSection = harborId === "gloam" && !deliverable ? "market" : "delivery";
+    const activeSection: HarborSection = availableSections.includes(this.harborSection) ? this.harborSection : defaultSection;
     const contractMarkup = available
       ? `<div class="contract-card job-ticket ${isFirstJobOffer ? "is-guided" : ""}">
           <div class="job-ticket-heading">
@@ -547,6 +564,7 @@ export class Game {
             <li><span>2</span><div><small>Keep it</small><strong>${available.minimumFreshness}% fresh</strong></div></li>
             <li><span>3</span><div><small>Deliver to</small><strong>${harborById(available.destination).name}</strong></div></li>
           </ol>
+          ${available.accessGrant ? `<p class="next-step"><span class="ui-icon icon-permit" aria-hidden="true"></span><span><strong>Access grant</strong> ${available.accessGrant.label}</span></p>` : ""}
           <button class="primary-button mission-button" type="button" data-action="accept-contract" aria-label="Accept contract">
             <span><strong>${isFirstJobOffer ? "Begin the First Voyage" : "Take this job"}</strong></span><b aria-hidden="true">→</b>
           </button>
@@ -571,7 +589,12 @@ export class Game {
       const item = this.simulation.cargo[index];
       const slotNumber = String(index + 1).padStart(2, "0");
       if (item) {
-        return `<article class="cargo-slot is-occupied" aria-label="Cargo slot ${index + 1}: ${FISH[item.species].name}, ${Math.ceil(item.freshness)}% fresh"><span class="cargo-slot-number">${slotNumber}</span><span class="ui-icon icon-freshness cargo-fish-icon" aria-hidden="true"></span><div class="cargo-slot-copy"><strong>${FISH[item.species].name}</strong><small>${Math.ceil(item.freshness)}% fresh</small></div><button class="cargo-release" type="button" data-action="release" data-index="${index}" aria-label="Release ${FISH[item.species].name}">Release</button></article>`;
+        const reserved = activeSection === "market" && this.simulation.activeContract?.species === item.species;
+        const marketPrice = gloamMarketSalePrice(item);
+        const inventoryAction = activeSection === "market"
+          ? `<button class="cargo-release" type="button" data-action="sell-cargo" data-index="${index}" aria-label="${reserved ? `${FISH[item.species].name} reserved for active delivery` : `Sell ${FISH[item.species].name} for ${marketPrice} shells`}" ${reserved ? "disabled" : ""}>${reserved ? "Reserved" : `Sell · ${marketPrice}`}</button>`
+          : `<button class="cargo-release" type="button" data-action="release" data-index="${index}" aria-label="Release ${FISH[item.species].name}">Release</button>`;
+        return `<article class="cargo-slot is-occupied" aria-label="Cargo slot ${index + 1}: ${FISH[item.species].name}, ${Math.ceil(item.freshness)}% fresh"><span class="cargo-slot-number">${slotNumber}</span><span class="ui-icon icon-freshness cargo-fish-icon" aria-hidden="true"></span><div class="cargo-slot-copy"><strong>${FISH[item.species].name}</strong><small>${Math.ceil(item.freshness)}% fresh</small></div>${inventoryAction}</article>`;
       }
       if (index < availableCargoSlots) {
         return `<div class="cargo-slot is-empty" aria-label="Cargo slot ${index + 1}: empty"><span class="cargo-slot-number">${slotNumber}</span><span class="ui-icon icon-cargo" aria-hidden="true"></span><small>Empty</small></div>`;
@@ -585,9 +608,9 @@ export class Game {
         </nav>`
       : "";
 
-    const activeContent = activeSection === "cargo"
+    const activeContent = activeSection === "cargo" || activeSection === "market"
       ? `<aside class="cargo-section" aria-labelledby="cargo-heading">
-          <div class="cargo-inventory-heading"><h3 id="cargo-heading">Fish inventory</h3><span>${this.simulation.cargo.length} carried · ${availableCargoSlots} unlocked</span></div>
+          <div class="cargo-inventory-heading"><h3 id="cargo-heading">${activeSection === "market" ? "Gloam fish market" : "Fish inventory"}</h3><span>${activeSection === "market" ? "Lower cash price · jobs pay more" : `${this.simulation.cargo.length} carried · ${availableCargoSlots} unlocked`}</span></div>
           <div class="cargo-slot-grid" aria-label="Cargo inventory">${cargoMarkup}</div>
         </aside>`
       : activeSection === "services"
@@ -742,7 +765,7 @@ export class Game {
     const steps = [
       {
         title: "Take a job",
-        body: "At a harbor, choose the delivery job. It tells you exactly which fish to catch and where to take it.",
+        body: "Brindle Harbor posts assignments in a fixed research order. Gloam Ferry receives deliveries and buys spare catches for less than a job pays.",
       },
       {
         title: "Follow the shoal",
@@ -803,6 +826,7 @@ export class Game {
           </div>
           <p class="result-explanation">The ${result.route === "fast" ? "express" : "survey"} route took ${result.travelSeconds} in-game seconds. The result was ${Math.abs(difference)} percentage points ${difference >= 0 ? "above" : "below"} the estimate.</p>
           <div class="payment-summary"><span>Delivery payment</span><strong>${result.payment} shells</strong>${result.populationBonus > 0 ? `<small>Includes ${result.populationBonus}-shell healthy-ecosystem bonus</small>` : `<small>Keep at least five populations healthy to earn an ecosystem bonus.</small>`}</div>
+          ${result.accessGrantLabel ? `<div class="payment-summary"><span>Research access granted</span><strong>${result.accessGrantLabel}</strong><small>This access is permanent and prepares the next ecosystem.</small></div>` : ""}
           <button class="primary-button" type="button" data-action="continue-after-delivery">Continue at harbor</button>
         </div>
       </section>`;
@@ -1043,7 +1067,7 @@ export class Game {
       case "title": this.started = false; this.setOverlay("title", true); break;
       case "harbor-section": {
         const section = target.dataset.harborSection as HarborSection | undefined;
-        if (!section || !(["delivery", "cargo", "services"] as HarborSection[]).includes(section)) break;
+        if (!section || !(["delivery", "market", "cargo", "services"] as HarborSection[]).includes(section)) break;
         this.harborSection = section;
         this.renderOverlay();
         requestAnimationFrame(() => this.uiRoot.querySelector<HTMLButtonElement>(`[data-harbor-section="${section}"]`)?.focus({ preventScroll: true }));
@@ -1101,11 +1125,14 @@ export class Game {
           this.seasonReportQueued = false;
           this.setOverlay("seasonReport");
         } else {
-          this.harborSection = "delivery";
+          this.harborSection = this.simulation.dockedAt === "gloam" ? "market" : "delivery";
           this.setOverlay("harbor");
         }
         break;
-      case "continue-season": this.harborSection = "delivery"; this.setOverlay("harbor"); break;
+      case "continue-season":
+        this.harborSection = this.simulation.dockedAt === "gloam" ? "market" : "delivery";
+        this.setOverlay("harbor");
+        break;
       case "buy-upgrade": {
         const upgrade = target.dataset.upgrade as UpgradeId | undefined;
         if (upgrade && buyUpgrade(this.simulation, upgrade)) {
@@ -1134,6 +1161,14 @@ export class Game {
         }
         break;
       }
+      case "sell-cargo": {
+        const index = Number(target.dataset.index);
+        if (sellCargoAtGloamMarket(this.simulation, index) !== null) {
+          this.handleSimulationEvents();
+          this.renderOverlay();
+        }
+        break;
+      }
       case "leave-fishing":
         if (this.simulation.fishing?.reeling) break;
         this.feedback.cue("cast");
@@ -1143,6 +1178,7 @@ export class Game {
         break;
     }
   };
+
 
   private readonly onChange = (event: Event): void => {
     const input = (event.target as HTMLElement).closest<HTMLInputElement>("[data-setting]");

@@ -23,6 +23,7 @@ import {
   evaluateSurvey,
   type SurveyResult,
 } from "./stem";
+import { earnedFirstSeasonAccess, firstSeasonQuest, type QuestAccessGrant } from "./quests";
 
 export interface InputState {
   travel: number;
@@ -51,6 +52,7 @@ export interface Contract {
   spot: SpotId;
   reward: number;
   minimumFreshness: number;
+  accessGrant?: QuestAccessGrant;
 }
 
 export type RouteChoice = "safe" | "fast";
@@ -104,6 +106,7 @@ export interface DeliveryResult {
   actualFreshness: number;
   travelSeconds: number;
   populationBonus: number;
+  accessGrantLabel: string | null;
 }
 
 export type SimulationEvent =
@@ -119,6 +122,8 @@ export type SimulationEvent =
   | { type: "boost-unlocked"; temporary: boolean }
   | { type: "population-protected"; species: FishSpecies }
   | { type: "released"; species: FishSpecies; restored: number }
+  | { type: "sold"; species: FishSpecies; payment: number }
+  | { type: "access-granted"; label: string }
   | { type: "season-complete" };
 
 export interface Simulation {
@@ -195,6 +200,9 @@ export function createSimulation(seed = 1, progress?: Partial<ProgressState>): S
     },
     seasonCompleted: progress?.seasonCompleted === true,
   };
+  const earnedAccess = earnedFirstSeasonAccess(resolvedProgress.completedContracts);
+  resolvedProgress.upgrades.line = Math.max(resolvedProgress.upgrades.line, earnedAccess.lineTier);
+  resolvedProgress.outerUnlocked ||= earnedAccess.outerPermit;
   const simulation: Simulation = {
     boat: {
       x: 0.11,
@@ -223,7 +231,7 @@ export function createSimulation(seed = 1, progress?: Partial<ProgressState>): S
       temporaryUnlocked: false,
     },
   };
-  simulation.availableContract = createAvailableContract(simulation, "brindle");
+  simulation.availableContract = createAvailableContract(simulation);
   return simulation;
 }
 
@@ -275,9 +283,9 @@ export function interact(simulation: Simulation): InteractionPrompt | null {
   if (prompt.kind === "harbor" && prompt.harbor) {
     simulation.boat.speed = 0;
     simulation.dockedAt = prompt.harbor;
-    if (!simulation.activeContract && !simulation.availableContract) {
+    if (prompt.harbor === "brindle" && !simulation.activeContract && !simulation.availableContract) {
       regeneratePopulations(simulation, 8);
-      simulation.availableContract = createAvailableContract(simulation, prompt.harbor);
+      simulation.availableContract = createAvailableContract(simulation);
     } else if (
       simulation.activeContract
       && simulation.progress.populations[simulation.activeContract.species] <= PROTECTED_POPULATION
@@ -435,6 +443,7 @@ export function deliverContract(simulation: Simulation): number | null {
   simulation.cargo.splice(cargoIndex, 1);
   simulation.progress.money += payment;
   simulation.progress.completedContracts += 1;
+  applyAccessGrant(simulation, contract.accessGrant);
   regeneratePopulations(simulation, 2);
   simulation.lastDeliveryResult = {
     payment,
@@ -443,11 +452,12 @@ export function deliverContract(simulation: Simulation): number | null {
     actualFreshness: Math.round(item.freshness),
     travelSeconds: Math.round(travelSeconds),
     populationBonus,
+    accessGrantLabel: contract.accessGrant?.label ?? null,
   };
   simulation.activeContract = null;
   simulation.routeChoice = null;
   simulation.deliveryStartedAt = null;
-  simulation.availableContract = createAvailableContract(simulation, contract.destination);
+  simulation.availableContract = createAvailableContract(simulation);
   simulation.events.push({ type: "delivered", payment });
   if (!simulation.progress.seasonCompleted && simulation.progress.completedContracts >= SEASON_DELIVERIES) {
     simulation.progress.seasonCompleted = true;
@@ -545,6 +555,22 @@ export function releaseCargo(simulation: Simulation, index: number): boolean {
   return true;
 }
 
+export function gloamMarketSalePrice(item: CargoItem): number {
+  const freshnessFactor = 0.25 + clamp(item.freshness, 0, 100) / 100 * 0.75;
+  return Math.max(1, Math.floor(FISH[item.species].value * BALANCE.gloamMarketValueMultiplier * freshnessFactor));
+}
+
+export function sellCargoAtGloamMarket(simulation: Simulation, index: number): number | null {
+  if (simulation.dockedAt !== "gloam" || index < 0 || index >= simulation.cargo.length) return null;
+  const item = simulation.cargo[index];
+  if (!item || simulation.activeContract?.species === item.species) return null;
+  const payment = gloamMarketSalePrice(item);
+  simulation.cargo.splice(index, 1);
+  simulation.progress.money += payment;
+  simulation.events.push({ type: "sold", species: item.species, payment });
+  return payment;
+}
+
 /** @deprecated Use releaseCargo so removing a catch has an ecological outcome. */
 export const discardCargo = releaseCargo;
 
@@ -602,8 +628,7 @@ export function fogIntensity(simulation: Simulation): number {
 }
 
 export function navigationGuidance(simulation: Simulation): NavigationGuidance {
-  const totalUpgradeTiers = Object.values(simulation.progress.upgrades).reduce((sum, tier) => sum + tier, 0);
-  if (simulation.progress.completedContracts > 0 && totalUpgradeTiers === 0) {
+  if (simulation.progress.completedContracts > 0 && !hasDiscretionaryUpgrade(simulation)) {
     const harbor = harborById(simulation.availableContract?.origin ?? closestHarbor(simulation).id);
     return {
       point: harbor,
@@ -687,9 +712,8 @@ export function navigationGuidance(simulation: Simulation): NavigationGuidance {
 }
 
 export function tutorialPrompt(simulation: Simulation): string | null {
-  const totalUpgradeTiers = Object.values(simulation.progress.upgrades).reduce((sum, tier) => sum + tier, 0);
   if (simulation.progress.completedContracts > 0) {
-    return totalUpgradeTiers === 0 ? navigationGuidance(simulation).instruction : null;
+    return !hasDiscretionaryUpgrade(simulation) ? navigationGuidance(simulation).instruction : null;
   }
   if (simulation.mode === "fishing" && simulation.fishing) {
     if (simulation.fishing.reeling) {
@@ -815,21 +839,13 @@ function rescue(simulation: Simulation): void {
   simulation.events.push({ type: "rescued", harbor: harbor.id, cost });
 }
 
-function createAvailableContract(simulation: Simulation, origin: HarborId): Contract | null {
-  if (simulation.progress.completedContracts === 0) {
-    if (simulation.progress.populations.reedfin <= PROTECTED_POPULATION) return null;
-    return {
-      id: "morning-order",
-      title: "The Morning Order",
-      species: "reedfin",
-      origin: "brindle",
-      destination: "gloam",
-      spot: "sunwardShoal",
-      reward: 90,
-      minimumFreshness: 35,
-    };
+function createAvailableContract(simulation: Simulation): Contract | null {
+  const authoredQuest = firstSeasonQuest(simulation.progress.completedContracts);
+  if (authoredQuest) {
+    return simulation.progress.populations[authoredQuest.species] > PROTECTED_POPULATION
+      ? authoredQuest
+      : null;
   }
-  const destination: HarborId = origin === "brindle" ? "gloam" : "brindle";
   const spotForSpecies: Record<FishSpecies, SpotId> = {
     reedfin: "sunwardShoal",
     sunPerch: "sunwardShoal",
@@ -855,8 +871,8 @@ function createAvailableContract(simulation: Simulation, origin: HarborId): Cont
     id: `route-${simulation.progress.completedContracts + 1}`,
     title: FISH[species].depthTier >= 3 ? "A Light in Deep Water" : "Harbor Trade",
     species,
-    origin,
-    destination,
+    origin: "brindle",
+    destination: "gloam",
     spot: spotForSpecies[species],
     reward: FISH[species].value * 2 + 34,
     minimumFreshness: 28 + (simulation.progress.completedContracts % 3) * 8,
@@ -906,6 +922,23 @@ function deliveryInstruction(
       : `Slow down to dock at ${harbor.name}, then deliver the ${fishName}.`;
   }
   return `Head ${horizontalDirection(simulation.boat.x, harbor.x)} to ${harbor.name}. Keep the ${fishName} above ${contract.minimumFreshness}% freshness.`;
+}
+
+function applyAccessGrant(simulation: Simulation, grant: QuestAccessGrant | undefined): void {
+  if (!grant) return;
+  if (grant.lineTier !== undefined) {
+    simulation.progress.upgrades.line = Math.max(simulation.progress.upgrades.line, grant.lineTier);
+  }
+  if (grant.outerPermit) simulation.progress.outerUnlocked = true;
+  simulation.events.push({ type: "access-granted", label: grant.label });
+}
+
+function hasDiscretionaryUpgrade(simulation: Simulation): boolean {
+  const earnedAccess = earnedFirstSeasonAccess(simulation.progress.completedContracts);
+  return simulation.progress.upgrades.cargo > 0
+    || simulation.progress.upgrades.engine > 0
+    || simulation.progress.upgrades.lamp > 0
+    || simulation.progress.upgrades.line > earnedAccess.lineTier;
 }
 
 function nearestHorizontal<T extends WorldPoint>(x: number, choices: readonly T[], radius: number): T | null {

@@ -19,6 +19,7 @@ import {
   damageBoat,
   deliverContract,
   getInteractionPrompt,
+  gloamMarketSalePrice,
   interact,
   learningAccuracy,
   maxFishingDepth,
@@ -28,6 +29,7 @@ import {
   recordSurvey,
   releaseCargo,
   resolveCatch,
+  sellCargoAtGloamMarket,
   shouldShowNightIndicator,
   startFishing,
   tutorialPrompt,
@@ -37,6 +39,7 @@ import {
   type InputState,
 } from "../game/simulation";
 import { defaultPopulations, estimateRoute } from "../game/stem";
+import { FIRST_SEASON_QUESTS } from "../game/quests";
 
 const idle: InputState = {
   travel: 0,
@@ -306,10 +309,69 @@ describe("FSHING side-on simulation", () => {
     expect(deliverContract(simulation)).toBe(102);
     expect(simulation.progress.completedContracts).toBe(1);
     expect(simulation.progress.money).toBe(102);
+    expect(simulation.progress.upgrades.line).toBe(1);
+    expect(simulation.lastDeliveryResult?.accessGrantLabel).toContain("tier 1");
     expect(buyUpgrade(simulation, "cargo")).toBe(true);
     expect(cargoCapacity(simulation)).toBe(4);
     expect(simulation.progress.money).toBe(42);
     expect(simulation.lastDeliveryResult?.populationBonus).toBe(12);
+  });
+
+  test("offers the first season in a fixed teaching order and grants access before it is required", () => {
+    const simulation = createSimulation(8);
+    const offeredSpecies: string[] = [];
+
+    for (const expectedQuest of FIRST_SEASON_QUESTS) {
+      expect(simulation.dockedAt).toBe("brindle");
+      expect(simulation.availableContract).toMatchObject({
+        id: expectedQuest.id,
+        species: expectedQuest.species,
+        origin: "brindle",
+        destination: "gloam",
+      });
+      offeredSpecies.push(simulation.availableContract?.species ?? "missing");
+      expect(acceptAvailableContract(simulation)).toBe(true);
+      expect(resolveCatch(simulation, expectedQuest.species)).toBe(true);
+      expect(chooseRoute(simulation, "safe")).toBe(true);
+      undock(simulation);
+      moveBoatForTesting(simulation, harborById("gloam"));
+      interact(simulation);
+      expect(deliverContract(simulation)).not.toBeNull();
+
+      if (expectedQuest.accessGrant?.lineTier !== undefined) {
+        expect(simulation.progress.upgrades.line).toBeGreaterThanOrEqual(expectedQuest.accessGrant.lineTier);
+      }
+      if (expectedQuest.accessGrant?.outerPermit) expect(simulation.progress.outerUnlocked).toBe(true);
+
+      if (simulation.progress.completedContracts < FIRST_SEASON_QUESTS.length) {
+        expect(acceptAvailableContract(simulation)).toBe(false);
+        undock(simulation);
+        moveBoatForTesting(simulation, harborById("brindle"));
+        interact(simulation);
+      }
+    }
+
+    expect(offeredSpecies).toEqual(FIRST_SEASON_QUESTS.map((quest) => quest.species));
+    expect(simulation.progress.upgrades.line).toBeGreaterThanOrEqual(5);
+    expect(simulation.progress.outerUnlocked).toBe(true);
+    expect(simulation.availableContract?.origin).toBe("brindle");
+  });
+
+  test("keeps Gloam job-free and buys only unreserved cargo below quest value", () => {
+    const simulation = createSimulation();
+    expect(acceptAvailableContract(simulation)).toBe(true);
+    expect(resolveCatch(simulation, "reedfin")).toBe(true);
+    expect(resolveCatch(simulation, "sunPerch")).toBe(true);
+    const sparePrice = gloamMarketSalePrice(simulation.cargo[1]!);
+    expect(sparePrice).toBeLessThan(FIRST_SEASON_QUESTS[1]!.reward);
+
+    undock(simulation);
+    moveBoatForTesting(simulation, harborById("gloam"));
+    interact(simulation);
+    expect(sellCargoAtGloamMarket(simulation, 0)).toBeNull();
+    expect(sellCargoAtGloamMarket(simulation, 1)).toBe(sparePrice);
+    expect(simulation.progress.money).toBe(sparePrice);
+    expect(simulation.cargo).toEqual([{ species: "reedfin", freshness: 100 }]);
   });
 
   test("starts a delivery when accepting a contract for an existing catch", () => {
@@ -491,6 +553,8 @@ describe("FSHING side-on simulation", () => {
 
   test("finishes the research season after eight completed deliveries", () => {
     const simulation = createSimulation(4, { completedContracts: 7 });
+    expect(simulation.progress.upgrades.line).toBe(4);
+    expect(simulation.progress.outerUnlocked).toBe(true);
     const contract = simulation.availableContract;
     if (!contract) throw new Error("Expected a season contract.");
     expect(acceptAvailableContract(simulation)).toBe(true);

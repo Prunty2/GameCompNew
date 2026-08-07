@@ -457,10 +457,12 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   expect(Math.abs((deliveryTabsBounds?.width ?? 0) - (deliveryCardBounds?.width ?? 0))).toBeLessThanOrEqual(1);
   expect(Math.abs((deliveryTabsBounds?.x ?? 0) - (deliveryFooterBounds?.x ?? 0))).toBeLessThanOrEqual(1);
   expect(Math.abs((deliveryTabsBounds?.width ?? 0) - (deliveryFooterBounds?.width ?? 0))).toBeLessThanOrEqual(1);
-  await page.getByRole("button", { name: "Cargo", exact: true }).click();
-  await expect(page.getByRole("button", { name: "Cargo", exact: true })).toBeFocused();
+  await page.getByRole("button", { name: "Market", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Market", exact: true })).toBeFocused();
   await expect(page.locator(".harbor-tab .ui-icon")).toHaveCount(3);
-  await expect(page.getByRole("heading", { name: "Fish inventory" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Gloam fish market" })).toBeVisible();
+  await expect(page.getByText("Lower cash price · jobs pay more")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Reedfin reserved for active delivery" })).toBeDisabled();
   await expect(page.locator(".harbor-intro")).toHaveCount(0);
   await expect(page.locator(".cargo-slot")).toHaveCount(10);
   await expect(page.locator(".cargo-slot:not(.is-locked)")).toHaveCount(3);
@@ -480,12 +482,13 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await page.getByRole("button", { name: "Complete delivery" }).click();
   await expect(page.getByRole("heading", { name: "Delivery analysed" })).toBeVisible();
   await expect(page.getByText("Prediction versus result")).toBeVisible();
+  await expect(page.getByText("Mosswater line kit · tier 1")).toBeVisible();
   await page.getByRole("button", { name: "Continue at harbor" }).click();
   await expect(page.getByRole("region", { name: "Dock services" })).toHaveCount(0);
   const deliveryHubBounds = await page.locator(".harbor-panel").boundingBox();
   await page.getByRole("button", { name: "Services", exact: true }).click();
   await expect(page.getByRole("button", { name: "Services", exact: true })).toBeFocused();
-  await expect(page.locator(".harbor-tab .ui-icon")).toHaveCount(3);
+  await expect(page.locator(".harbor-tab .ui-icon")).toHaveCount(2);
   await expect(page.getByRole("region", { name: "Dock services" })).toBeVisible();
   await expect(page.locator(".service-card > .ui-icon")).toHaveCount(6);
   await expect(page.getByRole("heading", { name: "Repair hull" })).toHaveCount(0);
@@ -531,6 +534,7 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
 test("delivers a matching catch that was aboard before accepting the contract", async ({ page }) => {
   await page.goto("/?e2e=1");
   await page.evaluate(() => window.__FSHING_TEST__?.catchSpecies("reedfin"));
+  await page.evaluate(() => window.__FSHING_TEST__?.catchSpecies("sunPerch"));
   await page.getByRole("button", { name: "Play", exact: true }).click();
   await page.getByRole("button", { name: "Accept contract" }).click();
 
@@ -543,7 +547,12 @@ test("delivers a matching catch that was aboard before accepting the contract", 
   await expect(page.getByRole("heading", { name: "Delivery analysed" })).toBeVisible();
   await page.getByRole("button", { name: "Continue at harbor" }).click();
   await expect(page.locator(".shell-balance strong")).toHaveText(/^[1-9]\d*$/);
-  await expect(page.getByRole("heading", { name: "Harbor Trade" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Gloam fish market" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Accept contract" })).toHaveCount(0);
+  const balanceBeforeSale = Number(await page.locator(".shell-balance strong").textContent());
+  await page.getByRole("button", { name: /Sell Sun Perch for \d+ shells/ }).click();
+  await expect(page.locator(".shell-balance strong")).not.toHaveText(String(balanceBeforeSale));
+  await expect(page.getByText(/Sun Perch sold at Gloam market/)).toBeVisible();
 });
 
 test("settings, keyboard pause, and local SDK fallback remain usable", async ({ page }) => {

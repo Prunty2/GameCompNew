@@ -89,6 +89,7 @@ export const BALANCE = {
   baseCargoSlots: 3,
   maxCargoSlots: 10,
   repairDamagePerShell: 2,
+  gloamMarketValueMultiplier: 0.55,
 } as const;
 
 export const SURFACE_Y = 0.61;
