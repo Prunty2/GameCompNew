@@ -6,8 +6,32 @@
   justify-content: center;
   padding: 16px;
   overflow: hidden;
-  background: rgb(3 12 18 / 52%);
-  backdrop-filter: blur(3px) saturate(0.88);
+  background:
+    linear-gradient(rgb(3 12 18 / 52%), rgb(3 12 18 / 52%)),
+    var(--dock-day-background) center / cover no-repeat;
+  backdrop-filter: saturate(0.88);
+}
+
+.harbor-screen.is-first-voyage::before {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  background:
+    linear-gradient(rgb(3 12 18 / 52%), rgb(3 12 18 / 52%)),
+    var(--dock-night-background) center / cover no-repeat;
+  content: "";
+  opacity: var(--dock-night-opacity, 0);
+  pointer-events: none;
+}
+
+.harbor-screen.is-dock-gloam,
+.harbor-screen.is-dock-gloam::before {
+  background-position: center, 54% center;
+}
+
+.harbor-screen.is-first-voyage > .harbor-panel {
+  position: relative;
+  z-index: 1;
 }
 
 .harbor-screen.is-first-voyage .harbor-panel,

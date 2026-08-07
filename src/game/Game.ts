@@ -1,3 +1,7 @@
+import brindleDockDayUrl from "../assets/dock-brindle-day.jpg";
+import brindleDockNightUrl from "../assets/dock-brindle-night.jpg";
+import gloamDockDayUrl from "../assets/dock-gloam-day.jpg";
+import gloamDockNightUrl from "../assets/dock-gloam-night.jpg";
 import wordmarkUrl from "../assets/fshing-wordmark.png";
 import padlockIconUrl from "../assets/padlock-icon.png";
 import uiButtonUrl from "../assets/ui-button.png";
@@ -43,6 +47,7 @@ import {
   getInteractionPrompt,
   interact,
   moveBoatForTesting,
+  nightVisualIntensity,
   releaseCargo,
   resolveCatch,
   shouldShowNightIndicator,
@@ -68,6 +73,11 @@ const PAUSE_EXIT_DURATION = 340;
 const SETTINGS_EXIT_DURATION = 340;
 const SCENE_COVER_DURATION = 120;
 const SCENE_REVEAL_DURATION = 160;
+
+const DOCK_BACKGROUND_URL: Record<HarborId, { day: string; night: string }> = {
+  brindle: { day: brindleDockDayUrl, night: brindleDockNightUrl },
+  gloam: { day: gloamDockDayUrl, night: gloamDockNightUrl },
+};
 
 type OverlayScreen =
   | "title"
@@ -134,6 +144,10 @@ export class Game {
     ? new URLSearchParams(window.location.search).get("e2eSpot") as SpotId | null
     : null;
   private readonly interfaceReady = Promise.all([
+    preloadImage(brindleDockDayUrl),
+    preloadImage(brindleDockNightUrl),
+    preloadImage(gloamDockDayUrl),
+    preloadImage(gloamDockNightUrl),
     preloadImage(wordmarkUrl),
     preloadImage(uiButtonUrl),
     preloadImage(uiIconsUrl),
@@ -316,7 +330,7 @@ export class Game {
       case "docked":
         this.feedback.cue("dock");
         this.harborSection = "delivery";
-        this.setOverlay("harbor");
+        this.setOverlay("harbor", true);
         break;
       case "full-cargo":
         this.feedback.cue("deny");
@@ -334,7 +348,7 @@ export class Game {
         this.feedback.cue("collision");
         this.showToast(`Harbor rescue · ${event.cost} shells · cargo lost`);
         this.harborSection = "delivery";
-        this.setOverlay("harbor");
+        this.setOverlay("harbor", true);
         break;
       case "upgrade":
         this.feedback.cue("upgrade");
@@ -579,7 +593,7 @@ export class Game {
         : `<section class="mission-section" aria-label="Delivery job">${contractMarkup}</section>`;
 
     return `
-      <section class="screen-overlay harbor-screen is-first-voyage${isFirstJobOffer ? " is-first-job-offer" : " is-expanded-harbor"} is-harbor-${activeSection}" role="dialog" aria-labelledby="harbor-title">
+      <section class="screen-overlay harbor-screen is-first-voyage${isFirstJobOffer ? " is-first-job-offer" : " is-expanded-harbor"} is-harbor-${activeSection} is-dock-${harborId}" ${this.dockBackdropAttributes(harborId)} role="dialog" aria-labelledby="harbor-title">
         <div class="art-panel harbor-panel side-sheet">
           <header class="panel-heading harbor-header">
             <div class="harbor-title-block"><img class="wordmark harbor-wordmark" src="${wordmarkUrl}" alt="FSHING" /><span class="harbor-title-divider" aria-hidden="true"></span><div><h2 id="harbor-title">${harbor.name}</h2></div></div>
@@ -590,6 +604,13 @@ export class Game {
           <footer class="panel-actions ${isFirstJobOffer ? "is-guided" : ""}"><div><button class="text-button harbor-utility-button" type="button" data-action="open-help" aria-label="How to play"><span class="ui-icon icon-objective" aria-hidden="true"></span><strong>Help</strong></button></div>${isFirstJobOffer ? `<button class="leave-button harbor-main-menu-button" type="button" data-action="title" aria-label="Back to main menu"><span class="harbor-back-arrow" aria-hidden="true">←</span><strong>Main Menu</strong></button>` : `<button class="leave-button" type="button" data-action="undock" aria-label="Back to lake →"><span class="ui-icon icon-hull" aria-hidden="true"></span><strong>Return to Lake</strong></button>`}</footer>
         </div>
       </section>`;
+  }
+
+  private dockBackdropAttributes(harborId: HarborId): string {
+    const nightOpacity = nightVisualIntensity(this.simulation);
+    const timeOfDay = nightOpacity >= 0.5 ? "night" : "day";
+    const background = DOCK_BACKGROUND_URL[harborId];
+    return `data-dock="${harborId}" data-time-of-day="${timeOfDay}" style="--dock-day-background: url(&quot;${background.day}&quot;); --dock-night-background: url(&quot;${background.night}&quot;); --dock-night-opacity: ${nightOpacity}"`;
   }
 
   private upgradeCard(upgrade: UpgradeId, title: string, detail: string): string {
@@ -706,6 +727,7 @@ export class Game {
   }
 
   private helpScreen(): string {
+    const harborId = this.simulation.dockedAt ?? "brindle";
     const steps = [
       {
         title: "Take a job",
@@ -727,7 +749,7 @@ export class Game {
     const step = steps[this.helpStep] ?? steps[0];
     const progress = steps.map((_, index) => `<span class="${index === this.helpStep ? "is-current" : ""}" aria-hidden="true"></span>`).join("");
     return `
-      <section class="screen-overlay harbor-screen help-screen is-first-voyage" role="dialog" aria-labelledby="help-title">
+      <section class="screen-overlay harbor-screen help-screen is-first-voyage is-dock-${harborId}" ${this.dockBackdropAttributes(harborId)} role="dialog" aria-labelledby="help-title">
         <div class="art-panel harbor-panel help-panel side-sheet">
           <header class="panel-heading harbor-header help-header">
             <div class="harbor-title-block"><img class="wordmark harbor-wordmark" src="${wordmarkUrl}" alt="FSHING" /><span class="harbor-title-divider" aria-hidden="true"></span><div><h2 id="help-title">How to play</h2></div></div>
@@ -1040,7 +1062,7 @@ export class Game {
           chooseRoute(this.simulation, "fast");
         }
         undock(this.simulation);
-        this.setOverlay(null);
+        this.setOverlay(null, true);
         break;
       case "accept-contract":
         if (acceptAvailableContract(this.simulation)) {
@@ -1053,7 +1075,7 @@ export class Game {
               // Ignore malformed development-only visual test parameters.
             }
           }
-          this.setOverlay(null);
+          this.setOverlay(null, true);
           this.showToast("Contract accepted. Follow the shoal and drop your line.");
         }
         break;
