@@ -26,6 +26,7 @@ import {
 
 export interface InputState {
   travel: number;
+  boost: boolean;
   hookX: number;
   hookY: number;
 }
@@ -65,6 +66,7 @@ export interface ProgressState {
   money: number;
   upgrades: Record<UpgradeId, number>;
   outerUnlocked: boolean;
+  boostUnlocked: boolean;
   completedContracts: number;
   populations: Record<FishSpecies, number>;
   discovered: FishSpecies[];
@@ -114,6 +116,7 @@ export type SimulationEvent =
   | { type: "rescued"; harbor: HarborId; cost: number }
   | { type: "upgrade"; upgrade: UpgradeId }
   | { type: "permit" }
+  | { type: "boost-unlocked"; temporary: boolean }
   | { type: "population-protected"; species: FishSpecies }
   | { type: "released"; species: FishSpecies; restored: number }
   | { type: "season-complete" };
@@ -133,6 +136,12 @@ export interface Simulation {
   routeChoice: RouteChoice | null;
   deliveryStartedAt: number | null;
   lastDeliveryResult: DeliveryResult | null;
+  boost: {
+    heat: number;
+    active: boolean;
+    overheated: boolean;
+    temporaryUnlocked: boolean;
+  };
 }
 
 export interface InteractionPrompt {
@@ -167,6 +176,7 @@ export function createSimulation(seed = 1, progress?: Partial<ProgressState>): S
       line: clampInteger(progress?.upgrades?.line, 0, BALANCE.maxUpgradeTier),
     },
     outerUnlocked: progress?.outerUnlocked === true,
+    boostUnlocked: progress?.boostUnlocked === true,
     completedContracts: clampInteger(progress?.completedContracts, 0, 99_999),
     populations,
     discovered: [...new Set(discovered)],
@@ -199,6 +209,12 @@ export function createSimulation(seed = 1, progress?: Partial<ProgressState>): S
     routeChoice: null,
     deliveryStartedAt: null,
     lastDeliveryResult: null,
+    boost: {
+      heat: 0,
+      active: false,
+      overheated: false,
+      temporaryUnlocked: false,
+    },
   };
   simulation.availableContract = createAvailableContract(simulation, "brindle");
   return simulation;
@@ -210,16 +226,22 @@ export function updateSimulation(simulation: Simulation, input: InputState, dt: 
   ageCargo(simulation, safeDt);
 
   if (simulation.mode === "fishing") {
+    coolBoost(simulation, safeDt);
     updateFishing(simulation, input, safeDt);
     return;
   }
-  if (simulation.dockedAt) return;
+  if (simulation.dockedAt) {
+    coolBoost(simulation, safeDt);
+    return;
+  }
 
   const { boat } = simulation;
   const travel = Math.sign(clamp(input.travel, -1, 1));
+  updateBoost(simulation, input.boost && travel !== 0, safeDt);
 
   if (travel !== 0) {
-    boat.speed += travel * BALANCE.horizontalThrust * safeDt;
+    const thrustMultiplier = simulation.boost.active ? BALANCE.boostThrustMultiplier : 1;
+    boat.speed += travel * BALANCE.horizontalThrust * thrustMultiplier * safeDt;
   } else {
     boat.speed *= Math.max(0, 1 - BALANCE.waterDrag * safeDt);
   }
@@ -230,7 +252,8 @@ export function updateSimulation(simulation: Simulation, input: InputState, dt: 
     : simulation.routeChoice === "safe"
       ? BALANCE.safeRouteSpeedMultiplier
       : 1;
-  const maximumSpeed = BALANCE.maxSurfaceSpeed * engineMultiplier * routeMultiplier;
+  const boostMultiplier = simulation.boost.active ? BALANCE.boostSpeedMultiplier : 1;
+  const maximumSpeed = BALANCE.maxSurfaceSpeed * engineMultiplier * routeMultiplier * boostMultiplier;
   boat.speed = clamp(boat.speed, -maximumSpeed, maximumSpeed);
   if (Math.abs(boat.speed) > 0.004) boat.facing = boat.speed < 0 ? -1 : 1;
 
@@ -472,6 +495,21 @@ export function buyPermit(simulation: Simulation): boolean {
   return true;
 }
 
+export function buyBoost(simulation: Simulation): boolean {
+  if (!simulation.dockedAt || simulation.progress.boostUnlocked || simulation.progress.money < BALANCE.boostUnlockCost) return false;
+  simulation.progress.money -= BALANCE.boostUnlockCost;
+  simulation.progress.boostUnlocked = true;
+  simulation.events.push({ type: "boost-unlocked", temporary: false });
+  return true;
+}
+
+export function unlockBoostForTesting(simulation: Simulation): boolean {
+  if (simulation.progress.boostUnlocked || simulation.boost.temporaryUnlocked) return false;
+  simulation.boost.temporaryUnlocked = true;
+  simulation.events.push({ type: "boost-unlocked", temporary: true });
+  return true;
+}
+
 export function repairBoat(simulation: Simulation): number {
   if (!simulation.dockedAt || simulation.boat.damage <= 0) return 0;
   const quoted = repairCost(simulation);
@@ -599,6 +637,30 @@ export function moveBoatForTesting(simulation: Simulation, point: WorldPoint): v
   simulation.boat.x = point.x;
   simulation.boat.y = SURFACE_Y;
   simulation.boat.speed = 0;
+}
+
+function updateBoost(simulation: Simulation, requested: boolean, dt: number): void {
+  const unlocked = simulation.progress.boostUnlocked || simulation.boost.temporaryUnlocked;
+  simulation.boost.active = unlocked && requested && !simulation.boost.overheated;
+  if (!simulation.boost.active) {
+    coolBoost(simulation, dt);
+    return;
+  }
+
+  simulation.boost.heat = clamp(simulation.boost.heat + dt / BALANCE.boostHeatSeconds, 0, 1);
+  if (simulation.boost.heat >= 1 - Number.EPSILON * 16) {
+    simulation.boost.heat = 1;
+    simulation.boost.active = false;
+    simulation.boost.overheated = true;
+  }
+}
+
+function coolBoost(simulation: Simulation, dt: number): void {
+  simulation.boost.active = false;
+  simulation.boost.heat = clamp(simulation.boost.heat - dt / BALANCE.boostCoolingSeconds, 0, 1);
+  if (simulation.boost.overheated && simulation.boost.heat <= BALANCE.boostRecoveryThreshold + Number.EPSILON * 16) {
+    simulation.boost.overheated = false;
+  }
 }
 
 function updateFishing(simulation: Simulation, input: InputState, dt: number): void {

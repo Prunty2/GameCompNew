@@ -1,4 +1,4 @@
-export const CONTROL_ACTIONS = ["left", "right", "up", "down", "action", "pause"] as const;
+export const CONTROL_ACTIONS = ["left", "right", "up", "down", "boost", "action", "pause"] as const;
 
 export type ControlAction = typeof CONTROL_ACTIONS[number];
 
@@ -9,6 +9,7 @@ export const DEFAULT_CONTROL_BINDINGS: ControlBindings = {
   right: "KeyD",
   up: "KeyW",
   down: "KeyS",
+  boost: "ShiftLeft",
   action: "KeyE",
   pause: "KeyP",
 };
@@ -18,6 +19,7 @@ export const CONTROL_LABELS: Record<ControlAction, { label: string; detail: stri
   right: { label: "Travel right", detail: "Thrust or steer the hook right." },
   up: { label: "Hook up", detail: "Steer the hook up while fishing." },
   down: { label: "Hook down", detail: "Steer the hook down while fishing." },
+  boost: { label: "Boost", detail: "Hold while sailing to overclock the engine." },
   action: { label: "Interact", detail: "Dock, cast, and use nearby actions." },
   pause: { label: "Pause", detail: "Pause or resume while on the lake." },
 };
@@ -27,7 +29,7 @@ export function isBindableCode(code: unknown): code is string {
     /^Key[A-Z]$/.test(code)
     || /^Digit[0-9]$/.test(code)
     || /^Numpad[0-9]$/.test(code)
-    || ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Space", "Enter"].includes(code)
+    || ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Space", "Enter", "ShiftLeft", "ShiftRight"].includes(code)
   );
 }
 
@@ -42,6 +44,8 @@ export function formatKey(code: string): string {
     ArrowDown: "↓",
     Space: "Space",
     Enter: "Enter",
+    ShiftLeft: "Left Shift",
+    ShiftRight: "Right Shift",
   }[code] ?? code;
 }
 
