@@ -1,6 +1,10 @@
 import boatSteamAtlasUrl from "../assets/boat-steam-atlas.png";
 import tackleAtlasUrl from "../assets/fish-atlas.png";
 import fishAtlasUrl from "../assets/fish-atlas-v2.png";
+import fishingLineLimitFloatUrl from "../assets/fishing-line-limit-float.png";
+import mosswaterFishingUrl from "../assets/fishing-mosswater-pool.jpg";
+import gloamFishingUrl from "../assets/fishing-outer-gloam.jpg";
+import sunwardFishingUrl from "../assets/fishing-sunward-shoal.jpg";
 import harborPierUrl from "../assets/harbor-pier.png";
 import lakeChartUrl from "../assets/lake-chart.png";
 import lakeChartNightUrl from "../assets/lake-chart-night.png";
@@ -13,9 +17,10 @@ import {
   FISH,
   FISHING_SPOTS,
   HARBORS,
-  regionById,
   regionSurfaceTintAt,
+  type FishRarity,
   type FishSpecies,
+  type SpotId,
   type WorldPoint,
 } from "./balance";
 import { boatSteamPuffs } from "./boatSteam";
@@ -26,6 +31,14 @@ import {
   worldToScreenX,
   type SideScrollCamera,
 } from "./camera";
+import {
+  FISHING_RARITY_COLOURS,
+  fishingDiveProgress,
+  fishingFishPose,
+  fishingPointToScreen,
+  fishingViewLayout,
+  type FishingViewLayout,
+} from "./fishingPresentation";
 import { surfaceFishingCue, surfaceFishPose, type SurfaceFishingCue } from "./fishingSpotEffects";
 import { calculatePanoramaLayout } from "./panorama";
 import {
@@ -49,6 +62,9 @@ interface LoadedArt {
   pier: HTMLImageElement;
   boat: HTMLCanvasElement;
   fish: HTMLCanvasElement;
+  fishOutlines: Record<FishRarity, HTMLCanvasElement>;
+  fishingEnvironments: Record<SpotId, HTMLImageElement>;
+  lineLimitFloat: HTMLImageElement;
   fishingCues: HTMLCanvasElement;
   polarizedLens: HTMLImageElement;
   tackle: HTMLCanvasElement;
@@ -98,11 +114,30 @@ export class CanvasRenderer {
       loadImage(harborPierUrl),
       loadImage(playerBoatUrl),
       loadImage(fishAtlasUrl),
+      loadImage(sunwardFishingUrl),
+      loadImage(mosswaterFishingUrl),
+      loadImage(gloamFishingUrl),
+      loadImage(fishingLineLimitFloatUrl),
       loadImage(surfaceFishingCuesUrl),
       loadImage(polarizedLensUrl),
       loadImage(tackleAtlasUrl),
       loadImage(worldAtlasUrl),
-    ]).then(([boatSteam, lake, lakeNight, pier, boat, fish, fishingCues, polarizedLens, tackle, world]) => {
+    ]).then(([
+      boatSteam,
+      lake,
+      lakeNight,
+      pier,
+      boat,
+      fish,
+      sunwardFishing,
+      mosswaterFishing,
+      gloamFishing,
+      lineLimitFloat,
+      fishingCues,
+      polarizedLens,
+      tackle,
+      world,
+    ]) => {
       const keyedFish = keyMagenta(fish, false);
       this.art = {
         boatSteam,
@@ -111,6 +146,18 @@ export class CanvasRenderer {
         pier,
         boat: keyMagenta(boat, true),
         fish: keyedFish,
+        fishOutlines: {
+          common: tintAlpha(keyedFish, FISHING_RARITY_COLOURS.common),
+          uncommon: tintAlpha(keyedFish, FISHING_RARITY_COLOURS.uncommon),
+          rare: tintAlpha(keyedFish, FISHING_RARITY_COLOURS.rare),
+          legendary: tintAlpha(keyedFish, FISHING_RARITY_COLOURS.legendary),
+        },
+        fishingEnvironments: {
+          sunwardShoal: sunwardFishing,
+          mosswaterPool: mosswaterFishing,
+          outerGloam: gloamFishing,
+        },
+        lineLimitFloat,
         fishingCues: keyMagenta(fishingCues, false),
         polarizedLens,
         tackle: keyMagenta(tackle, false),
@@ -142,6 +189,10 @@ export class CanvasRenderer {
     if (simulation.mode === "fishing" && simulation.fishing) {
       this.renderFishing(simulation, settings, width, height);
     } else {
+      delete this.canvas.dataset.fishingDiveProgress;
+      delete this.canvas.dataset.fishingSpot;
+      delete this.canvas.dataset.targetRarity;
+      this.canvas.setAttribute("aria-label", "Game area");
       this.renderSurface(simulation, settings, width, height);
     }
     this.context.restore();
@@ -361,87 +412,238 @@ export class CanvasRenderer {
   private renderFishing(simulation: Simulation, settings: RenderSettings, width: number, height: number): void {
     const fishing = simulation.fishing;
     if (!fishing) return;
+    const art = this.art;
+    if (!art) return;
     const { context } = this;
     const spot = FISHING_SPOTS.find((candidate) => candidate.id === fishing.spot);
     if (!spot) return;
     const targetSpecies = simulation.activeContract?.spot === spot.id
       ? simulation.activeContract.species
       : spot.species;
-    const region = regionById(spot.region);
-    const gradient = context.createLinearGradient(0, 0, 0, height);
-    gradient.addColorStop(0, settings.highContrast ? "#72aeb0" : region.shallow);
-    gradient.addColorStop(0.42, region.middle);
-    gradient.addColorStop(1, region.deep);
-    context.fillStyle = gradient;
-    context.fillRect(0, 0, width, height);
-
-    context.fillStyle = "#d6dacb";
-    context.fillRect(0, 0, width, Math.max(5, height * 0.012));
-    context.save();
-    context.globalAlpha = 0.13;
-    context.strokeStyle = "#d7eee6";
-    const currentOffset = settings.reducedMotion ? 0 : (simulation.elapsed * 18) % 90;
-    for (let y = 72; y < height; y += 82) {
-      context.beginPath();
-      context.moveTo(-80 + currentOffset, y);
-      context.bezierCurveTo(width * 0.28, y - 18, width * 0.65, y + 18, width + 80, y - 4);
-      context.stroke();
-    }
-    context.restore();
-
-    context.save();
-    context.globalAlpha = settings.highContrast ? 0.45 : 0.24;
-    this.drawWorldCell(2, 1, width * 0.7, height * 0.86, 260, 150);
-    context.restore();
-
     const maximumDepth = maxFishingDepth(simulation);
-    const depthLine = this.fishingToScreen({ x: 0.5, y: maximumDepth }, width, height).y;
+    const diveProgress = fishingDiveProgress(simulation.elapsed, fishing.startedAt, settings.reducedMotion);
+    const layout = fishingViewLayout(height, simulation.progress.upgrades.line, diveProgress);
+    this.canvas.dataset.fishingDiveProgress = diveProgress.toFixed(3);
+    this.canvas.dataset.fishingSpot = spot.id;
+    this.canvas.dataset.targetRarity = FISH[targetSpecies].rarity;
+    this.canvas.setAttribute(
+      "aria-label",
+      `Fishing at ${spot.name}. Target ${FISH[targetSpecies].name}, ${FISH[targetSpecies].rarity} rarity.`,
+    );
+    this.drawFishingEnvironment(art.fishingEnvironments[spot.id], layout, width, height, settings.highContrast);
+    this.drawFishingSurfaceBand(simulation, settings, width, height, layout.surfaceY);
+
+    const gameplayVisibility = clamp((diveProgress - 0.24) / 0.54, 0, 1);
+    context.save();
+    context.globalAlpha = gameplayVisibility;
+    const depthLine = layout.lineLimitY;
     if (maximumDepth < 0.93) {
-      context.fillStyle = "rgba(4, 12, 25, 0.3)";
+      context.fillStyle = "rgba(3, 12, 21, 0.2)";
       context.fillRect(0, depthLine, width, height - depthLine);
-      context.save();
-      context.setLineDash([10, 8]);
-      context.strokeStyle = "#e8a44d";
-      context.lineWidth = 2;
-      context.beginPath();
-      context.moveTo(0, depthLine);
-      context.lineTo(width, depthLine);
-      context.stroke();
-      context.restore();
-      context.fillStyle = "rgba(8, 31, 40, 0.88)";
-      context.fillRect(width - 214, depthLine + 10, 194, 30);
-      context.fillStyle = "#f7f1e3";
-      context.font = "800 11px system-ui, sans-serif";
-      context.textAlign = "center";
-      context.textBaseline = "middle";
-      context.fillText("UPGRADE LINE TO GO DEEPER", width - 117, depthLine + 25);
+      this.drawFishingLineLimit(depthLine, width, height, settings.highContrast);
     }
 
     for (const target of fishing.targets) {
-      const point = this.fishingToScreen(target, width, height);
+      const point = fishingPointToScreen(target, width, layout, maximumDepth);
+      const pose = fishingFishPose(target.species, simulation.elapsed, target.phase, settings.reducedMotion);
+      const animatedPoint = {
+        x: point.x,
+        y: point.y + pose.verticalOffsetRatio * layout.underwaterHeight,
+      };
       const reachable = FISH[target.species].depthTier <= simulation.progress.upgrades.line;
       context.save();
       context.globalAlpha = reachable ? 1 : 0.3;
+      context.translate(animatedPoint.x, animatedPoint.y);
+      context.rotate(pose.rotation * target.direction);
+      context.scale(pose.scaleX, pose.scaleY);
       if (target.species === targetSpecies) {
-        this.drawFishingTargetMarker(point, target.species, width, height, settings.highContrast);
+        this.drawFishOutline(target.species, { x: 0, y: 0 }, target.direction, width, height, settings.highContrast);
       }
-      this.drawFish(target.species, point, target.direction, width, height, settings.highContrast);
+      this.drawFish(target.species, { x: 0, y: 0 }, target.direction, width, height, settings.highContrast);
       context.restore();
+      if (target.species === targetSpecies) {
+        this.drawFishingTargetChevron(animatedPoint, target.species, width, height, settings.highContrast);
+      }
     }
 
-    const hook = this.fishingToScreen(fishing.hook, width, height);
+    const hook = fishingPointToScreen(fishing.hook, width, layout, maximumDepth);
     context.strokeStyle = settings.highContrast ? "#ffffff" : "#f4e2b9";
     context.lineWidth = settings.highContrast ? 3 : 2;
     context.beginPath();
-    context.moveTo(width * 0.5, 0);
+    context.moveTo(width * 0.5, layout.surfaceY - 2);
     context.lineTo(hook.x, hook.y);
     context.stroke();
-    this.drawTackleCell(1, 1, hook.x, hook.y, 72, 72);
-    context.strokeStyle = "#e8a44d";
-    context.lineWidth = 2;
-    context.strokeRect(hook.x - 20, hook.y - 20, 40, 40);
+    const hookSize = clamp(Math.min(width, height) * 0.076, 46, 68);
+    this.drawTackleCell(1, 1, hook.x, hook.y, hookSize, hookSize);
 
-    this.drawFishingTargetGuide(targetSpecies, width, height, settings.highContrast);
+    this.drawFishingTargetGuide(targetSpecies, width, height, settings.highContrast, layout.surfaceY);
+    this.drawFishingControlCue(width, height, settings.highContrast);
+    context.restore();
+  }
+
+  private drawFishingEnvironment(
+    image: HTMLImageElement,
+    layout: FishingViewLayout,
+    width: number,
+    height: number,
+    highContrast: boolean,
+  ): void {
+    const { context } = this;
+    context.fillStyle = "#071c27";
+    context.fillRect(0, 0, width, height);
+    context.save();
+    context.beginPath();
+    context.rect(0, layout.surfaceY, width, layout.underwaterHeight);
+    context.clip();
+    this.drawImageCover(image, 0, layout.surfaceY, width, layout.underwaterHeight);
+    if (highContrast) {
+      context.globalCompositeOperation = "screen";
+      context.fillStyle = "rgba(214, 232, 218, 0.08)";
+      context.fillRect(0, layout.surfaceY, width, layout.underwaterHeight);
+    }
+    context.restore();
+  }
+
+  private drawFishingSurfaceBand(
+    simulation: Simulation,
+    settings: RenderSettings,
+    width: number,
+    height: number,
+    surfaceY: number,
+  ): void {
+    const art = this.art;
+    if (!art) return;
+    const { context } = this;
+    const motionDelta = this.updateSurfaceMotion(simulation, false, settings.reducedMotion);
+    const camera = this.camera(simulation, false, settings.reducedMotion, motionDelta);
+    const nightIntensity = nightVisualIntensity(simulation);
+    const drawSurfaceImage = (image: HTMLImageElement, alpha: number): void => {
+      const panorama = calculatePanoramaLayout({
+        imageWidth: image.naturalWidth,
+        imageHeight: image.naturalHeight,
+        camera,
+        viewportWidth: width,
+        viewportHeight: height,
+      });
+      context.save();
+      context.beginPath();
+      context.rect(0, 0, width, surfaceY + 3);
+      context.clip();
+      context.globalAlpha = alpha;
+      context.drawImage(
+        image,
+        panorama.sourceX,
+        panorama.sourceY,
+        panorama.sourceWidth,
+        panorama.sourceHeight,
+        0,
+        surfaceY - panorama.waterline,
+        width,
+        height,
+      );
+      context.restore();
+    };
+    drawSurfaceImage(art.lake, 1);
+    if (nightIntensity > 0) drawSurfaceImage(art.lakeNight, nightIntensity);
+
+    context.save();
+    context.beginPath();
+    context.rect(0, 0, width, surfaceY);
+    context.clip();
+    context.globalAlpha = settings.highContrast ? 0.06 : 0.08;
+    context.fillStyle = regionSurfaceTintAt(simulation.boat.x);
+    context.fillRect(0, 0, width, surfaceY);
+    context.restore();
+
+    const surfaceLayer = captureSurfaceLayer(this.canvas, this.surfaceLayer);
+    this.drawBoat(simulation, camera, width, height, surfaceY, surfaceLayer, settings, motionDelta);
+    context.save();
+    context.strokeStyle = settings.highContrast ? "rgba(255, 255, 255, 0.88)" : "rgba(244, 230, 197, 0.72)";
+    context.lineWidth = settings.highContrast ? 3 : 2;
+    context.beginPath();
+    context.moveTo(0, surfaceY);
+    const motion = settings.reducedMotion ? 0 : Math.sin(simulation.elapsed * 2.6) * 3;
+    context.bezierCurveTo(width * 0.26, surfaceY - 3 + motion, width * 0.7, surfaceY + 4 - motion, width, surfaceY);
+    context.stroke();
+    context.restore();
+  }
+
+  private drawFishingLineLimit(depthLine: number, width: number, height: number, highContrast: boolean): void {
+    const art = this.art;
+    if (!art) return;
+    const { context } = this;
+    context.save();
+    context.strokeStyle = highContrast ? "rgba(255, 246, 216, 0.9)" : "rgba(232, 164, 77, 0.52)";
+    context.lineWidth = highContrast ? 2 : 1;
+    context.beginPath();
+    context.moveTo(0, depthLine);
+    context.lineTo(width, depthLine);
+    context.stroke();
+    for (const ratio of [0.14, 0.38, 0.62, 0.86]) {
+      const x = width * ratio;
+      const floatSize = clamp(height * 0.052, 38, 50);
+      context.drawImage(
+        art.lineLimitFloat,
+        x - floatSize / 2,
+        depthLine - floatSize / 2,
+        floatSize,
+        floatSize,
+      );
+    }
+    context.fillStyle = highContrast ? "#fff6d8" : "#f4e6c5";
+    context.shadowColor = "rgba(2, 10, 18, 0.9)";
+    context.shadowBlur = 7;
+    context.font = `900 ${clamp(height * 0.015, 10, 14)}px system-ui, sans-serif`;
+    context.textAlign = "right";
+    context.textBaseline = "top";
+    const labelY = height < 520 ? depthLine - 24 : depthLine + 17;
+    context.fillText(height < 520 ? "UPGRADE LINE" : "UPGRADE LINE TO GO DEEPER", width - 24, labelY);
+    context.restore();
+  }
+
+  private drawFishingControlCue(width: number, height: number, highContrast: boolean): void {
+    if (width < 900 || height < 520) return;
+    const { context } = this;
+    const x = 34;
+    const y = height - 42;
+    context.save();
+    context.fillStyle = highContrast ? "#ffffff" : "#f4e6c5";
+    context.strokeStyle = highContrast ? "#ffffff" : "rgba(244, 230, 197, 0.78)";
+    context.lineWidth = 1;
+    context.font = "900 13px system-ui, sans-serif";
+    context.textBaseline = "middle";
+    for (const [index, key] of ["W", "S"].entries()) {
+      const keyX = x + index * 28;
+      context.strokeRect(keyX, y - 12, 22, 22);
+      context.textAlign = "center";
+      context.fillText(key, keyX + 11, y - 1);
+    }
+    context.textAlign = "left";
+    context.fillText("MOVE HOOK", x + 67, y - 1);
+    context.restore();
+  }
+
+  private drawImageCover(
+    image: HTMLImageElement,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+  ): void {
+    const sourceAspect = image.naturalWidth / image.naturalHeight;
+    const targetAspect = width / height;
+    let sourceWidth = image.naturalWidth;
+    let sourceHeight = image.naturalHeight;
+    let sourceX = 0;
+    let sourceY = 0;
+    if (sourceAspect > targetAspect) {
+      sourceWidth = image.naturalHeight * targetAspect;
+      sourceX = (image.naturalWidth - sourceWidth) / 2;
+    } else {
+      sourceHeight = image.naturalWidth / targetAspect;
+      sourceY = (image.naturalHeight - sourceHeight) / 2;
+    }
+    this.context.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, x, y, width, height);
   }
 
   private drawPanorama(
@@ -663,75 +865,80 @@ export class CanvasRenderer {
   ): void {
     const fish = FISH[species];
     const [column, row] = fish.atlasCell;
-    const scale = clamp(Math.min(width, height) * 0.105, 54, 92) * fish.scale;
-    const longBody = species === "needlePike" || species === "lanternEel";
-    const wideBody = species === "violetRay";
-    const fishWidth = scale * (longBody ? 1.42 : wideBody ? 1.24 : 1.08);
-    const fishHeight = scale * (longBody ? 0.82 : wideBody ? 0.94 : 1);
+    const { fishWidth, fishHeight } = this.fishDimensions(species, width, height);
     this.context.save();
     this.context.translate(point.x, point.y);
     this.context.scale(direction, 1);
     this.drawFishCell(column, row, 0, 0, fishWidth, fishHeight);
     this.context.restore();
     if (highContrast) {
-      this.context.strokeStyle = "#fff6d8";
-      this.context.lineWidth = 2;
-      this.context.strokeRect(
-        point.x - fishWidth * 0.38,
-        point.y - fishHeight * 0.34,
-        fishWidth * 0.76,
-        fishHeight * 0.68,
-      );
+      this.context.save();
+      this.context.globalCompositeOperation = "screen";
+      this.context.globalAlpha = 0.12;
+      this.context.fillStyle = "#ffffff";
+      this.context.beginPath();
+      this.context.ellipse(point.x, point.y, fishWidth * 0.46, fishHeight * 0.38, 0, 0, Math.PI * 2);
+      this.context.fill();
+      this.context.restore();
     }
   }
 
-  private drawFishingTargetMarker(
+  private drawFishOutline(
+    species: FishSpecies,
+    point: WorldPoint,
+    direction: -1 | 1,
+    width: number,
+    height: number,
+    highContrast: boolean,
+  ): void {
+    const art = this.art;
+    if (!art) return;
+    const fish = FISH[species];
+    const [column, row] = fish.atlasCell;
+    const { fishWidth, fishHeight } = this.fishDimensions(species, width, height);
+    const outlineAtlas = art.fishOutlines[fish.rarity];
+    const offset = highContrast ? 4 : 3;
+    const { context } = this;
+    context.save();
+    context.translate(point.x, point.y);
+    context.scale(direction, 1);
+    for (const [offsetX, offsetY] of [
+      [-offset, 0],
+      [offset, 0],
+      [0, -offset],
+      [0, offset],
+      [-offset * 0.72, -offset * 0.72],
+      [offset * 0.72, -offset * 0.72],
+      [-offset * 0.72, offset * 0.72],
+      [offset * 0.72, offset * 0.72],
+    ] as const) {
+      this.drawFishAtlasCell(outlineAtlas, column, row, offsetX, offsetY, fishWidth, fishHeight);
+    }
+    context.restore();
+  }
+
+  private drawFishingTargetChevron(
     point: WorldPoint,
     species: FishSpecies,
     width: number,
     height: number,
     highContrast: boolean,
   ): void {
+    const { fishHeight } = this.fishDimensions(species, width, height);
     const { context } = this;
-    const scale = clamp(Math.min(width, height) * 0.17, 82, 142);
-    const markerWidth = species === "needlePike" ? scale * 1.36 : scale * 0.96;
-    const markerHeight = species === "needlePike" ? scale * 0.68 : scale * 0.9;
-    const left = point.x - markerWidth / 2;
-    const top = point.y - markerHeight / 2;
-    const corner = Math.max(12, scale * 0.15);
-
+    const y = point.y + fishHeight * 0.46;
+    const size = clamp(Math.min(width, height) * 0.016, 10, 15);
     context.save();
-    context.strokeStyle = highContrast ? "#fff6d8" : "#ff7b21";
+    context.strokeStyle = highContrast ? "#ffffff" : "#e8a44d";
     context.lineWidth = highContrast ? 4 : 3;
+    context.lineCap = "round";
+    context.shadowColor = "rgba(2, 10, 18, 0.82)";
+    context.shadowBlur = 5;
     context.beginPath();
-    context.moveTo(left + corner, top);
-    context.lineTo(left, top);
-    context.lineTo(left, top + corner);
-    context.moveTo(left + markerWidth - corner, top);
-    context.lineTo(left + markerWidth, top);
-    context.lineTo(left + markerWidth, top + corner);
-    context.moveTo(left, top + markerHeight - corner);
-    context.lineTo(left, top + markerHeight);
-    context.lineTo(left + corner, top + markerHeight);
-    context.moveTo(left + markerWidth, top + markerHeight - corner);
-    context.lineTo(left + markerWidth, top + markerHeight);
-    context.lineTo(left + markerWidth - corner, top + markerHeight);
+    context.moveTo(point.x - size, y);
+    context.lineTo(point.x, y + size * 0.7);
+    context.lineTo(point.x + size, y);
     context.stroke();
-
-    const label = "TARGET";
-    context.font = "900 11px system-ui, sans-serif";
-    const labelWidth = context.measureText(label).width + 18;
-    const labelX = point.x - labelWidth / 2;
-    const guideRight = clamp(width * 0.04, 18, 42) + clamp(width * 0.26, 250, 330);
-    const guideBottom = clamp(height * 0.075, 22, 68) + clamp(height * 0.12, 78, 96);
-    const overlapsGuide = labelX < guideRight && labelX + labelWidth > 0 && top - 22 < guideBottom + 6;
-    const labelY = overlapsGuide ? top + markerHeight + 2 : top - 22;
-    context.fillStyle = highContrast ? "#fff6d8" : "#ff7b21";
-    context.fillRect(labelX, labelY, labelWidth, 20);
-    context.fillStyle = "#04121d";
-    context.textAlign = "center";
-    context.textBaseline = "middle";
-    context.fillText(label, point.x, labelY + 10);
     context.restore();
   }
 
@@ -740,62 +947,68 @@ export class CanvasRenderer {
     width: number,
     height: number,
     highContrast: boolean,
+    surfaceY: number,
   ): void {
     const { context } = this;
     const fish = FISH[species];
     const [column, row] = fish.atlasCell;
-    const cardX = clamp(width * 0.04, 18, 42);
-    const cardY = clamp(height * 0.075, 22, 68);
-    const cardWidth = clamp(width * 0.26, 250, 330);
-    const cardHeight = clamp(height * 0.12, 78, 96);
-    const portraitSize = cardHeight - 18;
-    const portraitX = cardX + 10;
-    const portraitY = cardY + 9;
+    const guideWidth = clamp(width * 0.22, 190, 300);
+    const guideX = width - guideWidth - clamp(width * 0.035, 20, 48);
+    const guideY = Math.max(18, Math.min(surfaceY * 0.14, 42));
+    const portraitWidth = clamp(guideWidth * 0.56, 110, 160);
+    const portraitHeight = portraitWidth * 0.58;
 
     context.save();
-    context.fillStyle = "rgba(4, 18, 29, 0.9)";
-    context.fillRect(cardX, cardY, cardWidth, cardHeight);
-    context.fillStyle = highContrast ? "#fff6d8" : "#ff7b21";
-    context.fillRect(cardX, cardY, 5, cardHeight);
-    context.strokeStyle = highContrast ? "#fff6d8" : "rgba(245, 231, 200, 0.5)";
-    context.lineWidth = highContrast ? 2 : 1;
-    context.strokeRect(cardX + 0.5, cardY + 0.5, cardWidth - 1, cardHeight - 1);
-    context.fillStyle = "rgba(255, 255, 255, 0.06)";
-    context.fillRect(portraitX, portraitY, portraitSize, portraitSize);
-
-    const previewWidth = species === "needlePike" ? portraitSize * 1.08 : portraitSize * 0.86;
-    const previewHeight = species === "needlePike" ? portraitSize * 0.55 : portraitSize * 0.86;
+    context.shadowColor = "rgba(2, 10, 18, 0.86)";
+    context.shadowBlur = 9;
     this.drawFishCell(
       column,
       row,
-      portraitX + portraitSize / 2,
-      portraitY + portraitSize / 2,
-      previewWidth,
-      previewHeight,
+      guideX + guideWidth / 2,
+      guideY + portraitHeight / 2,
+      portraitWidth,
+      portraitHeight,
     );
 
-    const textX = portraitX + portraitSize + 14;
-    context.textAlign = "left";
+    const textY = guideY + portraitHeight + 8;
+    context.textAlign = "center";
     context.textBaseline = "alphabetic";
-    context.fillStyle = highContrast ? "#fff6d8" : "#ff7b21";
-    context.font = "800 10px system-ui, sans-serif";
-    context.fillText("CATCH THIS FISH", textX, cardY + cardHeight * 0.31);
-    context.fillStyle = "#f5e7c8";
-    context.font = "900 16px system-ui, sans-serif";
-    context.fillText(fishShortName(species), textX, cardY + cardHeight * 0.56);
-    context.fillStyle = "#b8c8c3";
-    context.font = "700 11px system-ui, sans-serif";
-    context.fillText(fish.shape.toUpperCase(), textX, cardY + cardHeight * 0.77);
+    context.fillStyle = highContrast ? "#ffffff" : "#f4e6c5";
+    context.font = `900 ${clamp(height * 0.022, 14, 21)}px system-ui, sans-serif`;
+    context.fillText(fishShortName(species), guideX + guideWidth / 2, textY + 15);
     context.restore();
+  }
+
+  private fishDimensions(species: FishSpecies, width: number, height: number): { fishWidth: number; fishHeight: number } {
+    const fish = FISH[species];
+    const scale = clamp(Math.min(width, height) * 0.105, 54, 92) * fish.scale;
+    const longBody = species === "needlePike" || species === "lanternEel";
+    const wideBody = species === "violetRay";
+    return {
+      fishWidth: scale * (longBody ? 1.42 : wideBody ? 1.24 : 1.08),
+      fishHeight: scale * (longBody ? 0.82 : wideBody ? 0.94 : 1),
+    };
   }
 
   private drawFishCell(column: number, row: number, x: number, y: number, width: number, height: number): void {
     const art = this.art;
     if (!art) return;
-    const sourceWidth = art.fish.width / 3;
-    const sourceHeight = art.fish.height / 3;
+    this.drawFishAtlasCell(art.fish, column, row, x, y, width, height);
+  }
+
+  private drawFishAtlasCell(
+    atlas: HTMLCanvasElement,
+    column: number,
+    row: number,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+  ): void {
+    const sourceWidth = atlas.width / 3;
+    const sourceHeight = atlas.height / 3;
     this.context.drawImage(
-      art.fish,
+      atlas,
       column * sourceWidth,
       row * sourceHeight,
       sourceWidth,
@@ -896,13 +1109,6 @@ export class CanvasRenderer {
     return camera;
   }
 
-  private fishingToScreen(point: WorldPoint, width: number, height: number): WorldPoint {
-    return {
-      x: point.x * width,
-      y: height * 0.08 + point.y * height * 0.88,
-    };
-  }
-
   private resize(): void {
     const ratio = Math.min(window.devicePixelRatio || 1, 2);
     const width = Math.round(this.canvas.clientWidth * ratio);
@@ -967,6 +1173,20 @@ function keyMagenta(image: HTMLImageElement, crop: boolean): HTMLCanvasElement {
   output.width = cropWidth;
   output.height = cropHeight;
   output.getContext("2d")?.drawImage(source, cropLeft, cropTop, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
+  return output;
+}
+
+function tintAlpha(source: HTMLCanvasElement, colour: string): HTMLCanvasElement {
+  const output = document.createElement("canvas");
+  output.width = source.width;
+  output.height = source.height;
+  const context = output.getContext("2d");
+  if (!context) return output;
+  context.drawImage(source, 0, 0);
+  context.globalCompositeOperation = "source-in";
+  context.fillStyle = colour;
+  context.fillRect(0, 0, output.width, output.height);
+  context.globalCompositeOperation = "source-over";
   return output;
 }
 

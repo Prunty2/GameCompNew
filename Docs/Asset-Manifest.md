@@ -71,6 +71,25 @@ The boat, harbor pier, fish atlas, and world atlas were requested on a uniform `
 - Prompt: “Use case: stylized-concept. Asset type: production additive-blend game sprite for the polarized survey lens in FSHING. Image 1 is the authoritative shape and mood target for the soft localized clear-water reveal beneath the boat. Image 2 is the supporting target for restrained caustic orbit trails around a living shoal. Image 3 is the authoritative muted lake palette, painterly texture, and atmospheric grain reference. Create exactly one isolated vertical underwater clarity-lens sprite. It is a softly feathered oval/column of pale desaturated turquoise, blue-green, and tiny cream caustic highlights, narrowest at the very top where it meets the waterline, gently widening through the middle, and fading completely before every canvas edge. Include three extremely subtle incomplete elliptical caustic trails inside the light, but no fish and no hook. Restrained painterly gouache and soft screen print, hazy dry-brush texture, subtle aged-paper grain, subdued contrast. The lens must feel like slightly clearer water, not a flashlight, sonar beam, sci-fi cone, magical portal, or solid geometric overlay. Single centered vertical lens occupying about 48% of the canvas width and 78% of the canvas height; perfectly soft feathered boundary with no visible trapezoid, polygon, hard rim, or rectangular edge. Perfectly uniform full-bleed pure black #000000 everywhere outside the fading lens, designed for Canvas screen additive blending; the outer 12% border remains pure black. No text, labels, fish, hook, boat, waterline, bubbles, plants, scenery, objects, neon, photorealism, glossy 3D, hard contour, watermark, or extra sprites.”
 - Runtime processing: the black field is removed visually with Canvas `screen` compositing; the generated light, texture, and caustic trails are rendered intact.
 
+### Fishing environment backgrounds
+
+- Runtime files: `fishing-sunward-shoal.jpg`, `fishing-mosswater-pool.jpg`, and `fishing-outer-gloam.jpg`
+- Runtime role: three swappable background-only underwater paintings for Sunward Shoal, Mosswater Pool, and Outer Gloam. Fish, hook, line, target treatment, line-limit boundary, and UI are rendered separately so gameplay objects remain movable.
+- Generated and runtime dimensions: 1536 × 1024 each. Runtime copies use quality-82 JPEG compression because the paintings need no transparency.
+- Generation mode: OpenAI built-in image generation using the approved revised Living Cross-Section fishing mockup and the existing sailing-water screenshots as visual references
+- Shared constraints: one side-on underwater lake environment with an open central gameplay area; restrained painterly gouache and screen-print texture matching the sailing panorama; no fish, hook, line, boat, UI, text, labels, icons, reticles, or watermark.
+- Sunward Shoal direction: warm blue-green shallows, bright cream surface reflections, sunlit reeds, suspended particles, and scattered submerged timber.
+- Mosswater Pool direction: greener lower-visibility water, mossy vegetation, hanging roots, silt pockets, and a darker central pool.
+- Outer Gloam direction: cold violet-blue near-black water, poor visibility, sparse pale reeds, rock shelves, faint mineral or silt glow, and restrained ambiguous distant scenery.
+
+### `fishing-line-limit-float.png`
+
+- Runtime role: repeated round survey-float sprite along the reachable fishing-depth boundary
+- Generated source size: 1254 × 1254; runtime size: 512 × 512 with authored alpha
+- Generation mode: OpenAI built-in image generation using the approved revised fishing mockup and `world-atlas.png` as visual references
+- Prompt direction: one compact circular weathered cream survey housing with a small amber center, rope fastenings, and a tiny bottom mount; restrained FSHING gouache and screen-print texture; isolated on a uniform chroma-magenta matte; no line, fish, hook, boat, water, scenery, UI, text, shadow, or extra object
+- Processing: the border-sampled magenta matte was removed with a soft alpha ramp and despill, then the sprite was uniformly downscaled to 512 × 512.
+
 ### `world-atlas.png`
 
 - Runtime role: fog and night wake; the original dock, rock, buoy, and fishing-marker cells remain in the source atlas but are not rendered

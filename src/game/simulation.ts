@@ -1,4 +1,5 @@
 import { clamp, createRandom, type RandomSource } from "./math";
+import { fishingSpeciesMotion } from "./fishingMovement";
 import {
   BALANCE,
   FISH,
@@ -74,10 +75,13 @@ export interface FishingTarget extends WorldPoint {
   species: FishSpecies;
   direction: -1 | 1;
   speed: number;
+  homeY: number;
+  phase: number;
 }
 
 export interface FishingState {
   spot: SpotId;
+  startedAt: number;
   hook: WorldPoint;
   targets: FishingTarget[];
 }
@@ -305,17 +309,21 @@ export function startFishing(simulation: Simulation, spotId: SpotId): boolean {
   simulation.mode = "fishing";
   simulation.fishing = {
     spot: spotId,
+    startedAt: simulation.elapsed,
     hook: { x: 0.5, y: 0.08 },
     targets: residents.flatMap((fishSpecies, residentIndex) => (
       [0, 1].map((schoolIndex) => {
         const fish = FISH[fishSpecies];
         const index = residentIndex * 2 + schoolIndex;
+        const homeY = Math.min(0.92, 0.19 + fish.depthTier * 0.135 + simulation.random.next() * 0.05);
         return {
           species: fishSpecies,
           x: 0.12 + ((index * 0.153) % 0.76),
-          y: Math.min(0.92, 0.19 + fish.depthTier * 0.135 + simulation.random.next() * 0.05),
+          y: homeY,
           direction: index % 2 === 0 ? 1 : -1,
           speed: 0.035 + fish.depthTier * 0.006 + simulation.random.next() * 0.025,
+          homeY,
+          phase: (index * 1.73 + fish.depthTier * 0.61) % (Math.PI * 2),
         };
       })
     )),
@@ -561,7 +569,7 @@ export function tutorialPrompt(simulation: Simulation): string | null {
     const target = simulation.activeContract?.spot === spot.id
       ? simulation.activeContract.species
       : spot.species;
-    return `Guide the hook toward the ${FISH[target].name}. Match its ${FISH[target].shape.toLowerCase()}.`;
+    return `Guide the hook toward the ${FISH[target].name}.`;
   }
   if (!simulation.cargo.some((item) => item.species === simulation.activeContract?.species)) {
     return "Hold right for Sunward Shoal. Follow the fish activity and slow when the hook appears.";
@@ -586,7 +594,9 @@ function updateFishing(simulation: Simulation, input: InputState, dt: number): v
   fishing.hook.x = clamp(fishing.hook.x + input.hookX * FISHING_HOOK_SPEED * dt, 0.07, 0.93);
   fishing.hook.y = clamp(fishing.hook.y + input.hookY * FISHING_HOOK_SPEED * dt, 0.07, maxFishingDepth(simulation));
   for (const target of fishing.targets) {
-    target.x += target.speed * target.direction * dt;
+    const motion = fishingSpeciesMotion(target.species, simulation.elapsed, target.phase);
+    target.x += target.speed * motion.horizontalMultiplier * target.direction * dt;
+    target.y = clamp(target.homeY + motion.depthOffset, 0.1, 0.92);
     if (target.x < 0.1 || target.x > 0.9) {
       target.x = clamp(target.x, 0.1, 0.9);
       target.direction = target.direction === 1 ? -1 : 1;
