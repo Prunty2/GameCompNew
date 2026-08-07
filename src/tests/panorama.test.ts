@@ -1,5 +1,10 @@
 import { describe, expect, test } from "vitest";
-import { createSideScrollCamera, worldToScreenX } from "../game/camera";
+import {
+  createSideScrollCamera,
+  dampMotionValue,
+  dampSideScrollCamera,
+  worldToScreenX,
+} from "../game/camera";
 import { calculatePanoramaLayout } from "../game/panorama";
 
 const IMAGE_WIDTH = 1672;
@@ -91,5 +96,31 @@ describe("panorama layout", () => {
     expect(leftCamera.left).toBe(0);
     expect(rightCamera.right).toBe(1);
     expect(leftCamera.viewWidth).toBe(rightCamera.viewWidth);
+  });
+
+  test("damps camera follow while preserving the unified projection", () => {
+    const target = createSideScrollCamera({
+      focusX: 0.7,
+      velocityX: 0.05,
+      viewWidth: 0.3,
+      lookAheadTime: 0.24,
+    });
+    const camera = dampSideScrollCamera(0.5, target, 1 / 60, 3.2);
+
+    expect(camera.center).toBeGreaterThan(0.5);
+    expect(camera.center).toBeLessThan(target.center);
+    expect(camera.right - camera.left).toBeCloseTo(target.viewWidth);
+    expect(worldToScreenX(camera.center, camera, 1440)).toBeCloseTo(720);
+  });
+
+  test("filters rapid direction changes without snapping velocity look-ahead", () => {
+    let smoothedVelocity = 0.04;
+
+    for (const targetVelocity of [-0.04, 0.04, -0.04, 0.04]) {
+      smoothedVelocity = dampMotionValue(smoothedVelocity, targetVelocity, 1 / 30, 2.8);
+    }
+
+    expect(smoothedVelocity).toBeGreaterThan(0);
+    expect(smoothedVelocity).toBeLessThan(0.04);
   });
 });

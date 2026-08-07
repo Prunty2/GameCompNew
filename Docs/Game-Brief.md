@@ -231,7 +231,7 @@ The boat uses direct horizontal side-scrolling movement:
 - The boat faces its current travel direction and uses restrained bob and tilt so motion remains calm and readable
 - Boat movement stays on the open horizontal surface without fixed collision obstacles
 
-The lake panorama and every surface effect share one normalized world-space camera projection. The camera owns a single visible span, clamped left edge, and speed-based look-ahead; background crop bounds, harbors, fishing-ground shoals, objectives, weather lighting, and the boat all derive their screen positions from that same projection. This prevents scenery and gameplay objects from drifting at different apparent speeds while preserving a wider, static title-screen view.
+The lake panorama and every surface effect share one normalized world-space camera projection. The camera owns a single visible span, clamped left edge, damped velocity look-ahead, and restrained follow slack; background crop bounds, harbors, fishing-ground shoals, objectives, weather lighting, and the boat all derive their screen positions from that same projection. This prevents scenery and gameplay objects from drifting at different apparent speeds while letting acceleration and braking move the boat slightly within the frame before the view settles. Alternating thrust cannot snap the camera between raw direction targets. Reduced-motion mode uses the direct camera, and the title retains its wider static view.
 
 The handling should feel smooth, measured, and forgiving rather than physically realistic. Acceleration builds gradually, direction changes retain readable momentum, and the lower cruising speed gives the player time to plan without a complicated turning arc.
 
@@ -327,6 +327,7 @@ The game uses a cozy illustrated 2D style with unsettling nighttime transformati
 - Layered side-view sky, distant shoreline, near reeds, waterline, docks, and underwater space
 - Harbor piers extend inward from their shoreline edge and visually connect to land instead of floating as isolated platforms
 - Warm harbor lights contrasted against cool lake colors
+- Large, soft white steam clouds rise from the tugboat stack and stretch into a longer trail with speed; at full speed, seeded downwash and turbulence keep the plume lower and loosely animated. Emitted puffs retain world orientation while the hull turns, and damped exhaust velocity prevents alternating thrust from snapping or mirroring the whole trail. Eight painted sprite variations rotate deterministically so the plume stays organic without reading as dark pollution smoke
 - Clear daytime navigation landmarks
 - Night palettes that preserve gameplay readability while hiding distant threats
 - Subtle wake, rain, fog, current, and light-cone effects

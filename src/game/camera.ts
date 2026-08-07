@@ -28,6 +28,40 @@ export function createSideScrollCamera(input: SideScrollCameraInput): SideScroll
   };
 }
 
+export function dampSideScrollCamera(
+  currentCenter: number,
+  target: SideScrollCamera,
+  deltaSeconds: number,
+  followRate: number,
+): SideScrollCamera {
+  const minimumCenter = target.viewWidth / 2;
+  const maximumCenter = 1 - target.viewWidth / 2;
+  const center = clamp(
+    dampMotionValue(currentCenter, target.center, deltaSeconds, followRate),
+    minimumCenter,
+    maximumCenter,
+  );
+  const left = center - target.viewWidth / 2;
+
+  return {
+    left,
+    right: left + target.viewWidth,
+    center,
+    viewWidth: target.viewWidth,
+  };
+}
+
+export function dampMotionValue(
+  current: number,
+  target: number,
+  deltaSeconds: number,
+  followRate: number,
+): number {
+  const safeDelta = clamp(deltaSeconds, 0, 0.1);
+  const blend = 1 - Math.exp(-Math.max(0, followRate) * safeDelta);
+  return current + (target - current) * blend;
+}
+
 export function worldToScreenX(worldX: number, camera: SideScrollCamera, viewportWidth: number): number {
   return ((worldX - camera.left) / camera.viewWidth) * viewportWidth;
 }

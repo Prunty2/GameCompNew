@@ -1,3 +1,4 @@
+import boatSteamAtlasUrl from "../assets/boat-steam-atlas.png";
 import tackleAtlasUrl from "../assets/fish-atlas.png";
 import fishAtlasUrl from "../assets/fish-atlas-v2.png";
 import harborPierUrl from "../assets/harbor-pier.png";
@@ -17,7 +18,14 @@ import {
   type FishSpecies,
   type WorldPoint,
 } from "./balance";
-import { createSideScrollCamera, worldToScreenX, type SideScrollCamera } from "./camera";
+import { boatSteamPuffs } from "./boatSteam";
+import {
+  createSideScrollCamera,
+  dampMotionValue,
+  dampSideScrollCamera,
+  worldToScreenX,
+  type SideScrollCamera,
+} from "./camera";
 import { surfaceFishingCue, surfaceFishPose, type SurfaceFishingCue } from "./fishingSpotEffects";
 import { calculatePanoramaLayout } from "./panorama";
 import {
@@ -35,6 +43,7 @@ export interface RenderSettings {
 }
 
 interface LoadedArt {
+  boatSteam: HTMLImageElement;
   lake: HTMLImageElement;
   lakeNight: HTMLImageElement;
   pier: HTMLImageElement;
@@ -62,6 +71,9 @@ const SURFACE_HOOK_OPTICAL_CENTER = {
 } as const;
 const SURFACE_HOOK_SCALE = 1.05;
 const SURFACE_HOOK_RAISE_PX = 12;
+// Optical top-center of the exhaust stack in the keyed 1132 × 545 boat crop.
+const BOAT_STACK_ANCHOR_X = -0.133;
+const BOAT_STACK_ANCHOR_Y = -0.71;
 
 export class CanvasRenderer {
   private readonly context: CanvasRenderingContext2D;
@@ -69,12 +81,18 @@ export class CanvasRenderer {
   private readonly surfaceLayer = document.createElement("canvas");
   private art: LoadedArt | null = null;
   private interactionAnchor: WorldPoint | null = null;
+  private surfaceCameraCenter: number | null = null;
+  private surfaceMotionElapsed: number | null = null;
+  private surfaceCameraVelocity = 0;
+  private surfaceSteamVelocity = 0;
+  private surfaceSteamStackOffsetX: number | null = null;
 
   constructor(private readonly canvas: HTMLCanvasElement) {
     const context = canvas.getContext("2d");
     if (!context) throw new Error("Canvas 2D is unavailable.");
     this.context = context;
     this.artReady = Promise.all([
+      loadImage(boatSteamAtlasUrl),
       loadImage(lakeChartUrl),
       loadImage(lakeChartNightUrl),
       loadImage(harborPierUrl),
@@ -84,9 +102,10 @@ export class CanvasRenderer {
       loadImage(polarizedLensUrl),
       loadImage(tackleAtlasUrl),
       loadImage(worldAtlasUrl),
-    ]).then(([lake, lakeNight, pier, boat, fish, fishingCues, polarizedLens, tackle, world]) => {
+    ]).then(([boatSteam, lake, lakeNight, pier, boat, fish, fishingCues, polarizedLens, tackle, world]) => {
       const keyedFish = keyMagenta(fish, false);
       this.art = {
+        boatSteam,
         lake,
         lakeNight,
         pier,
@@ -132,7 +151,8 @@ export class CanvasRenderer {
     const art = this.art;
     if (!art) return;
     const { context } = this;
-    const camera = this.camera(simulation, settings.cinematic);
+    const motionDelta = this.updateSurfaceMotion(simulation, settings.cinematic, settings.reducedMotion);
+    const camera = this.camera(simulation, settings.cinematic, settings.reducedMotion, motionDelta);
     const nightIntensity = nightVisualIntensity(simulation);
     const waterline = this.drawPanorama(nightIntensity >= 1 ? art.lakeNight : art.lake, camera, width, height);
     if (nightIntensity > 0 && nightIntensity < 1) {
@@ -165,7 +185,7 @@ export class CanvasRenderer {
       );
     }
 
-    this.drawBoat(simulation, camera, width, height, waterline, surfaceLayer, settings);
+    this.drawBoat(simulation, camera, width, height, waterline, surfaceLayer, settings, motionDelta);
 
     let activeFishingCue: { cue: SurfaceFishingCue; x: number } | null = null;
     for (const [spotIndex, spot] of FISHING_SPOTS.entries()) {
@@ -459,6 +479,7 @@ export class CanvasRenderer {
     waterline: number,
     surfaceLayer: HTMLCanvasElement,
     settings: RenderSettings,
+    motionDelta: number,
   ): void {
     const art = this.art;
     if (!art) return;
@@ -468,16 +489,42 @@ export class CanvasRenderer {
     const boatWidth = clamp(this.canvas.clientHeight * 0.421 * boatScale, 172, 412);
     const boatHeight = boatWidth * (art.boat.height / art.boat.width);
     const speedRatio = Math.min(1, Math.abs(simulation.boat.speed) / BALANCE.maxSurfaceSpeed);
+    const steamSpeedRatio = Math.min(1, Math.abs(this.surfaceSteamVelocity) / BALANCE.maxSurfaceSpeed);
     const bob = settings.reducedMotion ? 0 : Math.sin(simulation.elapsed * (2 + speedRatio)) * (1.1 + speedRatio * 0.8);
     const tilt = settings.reducedMotion ? 0 : clamp(simulation.boat.speed * 0.16, -0.02, 0.02);
     const boatLift = clamp(boatHeight * 0.04, 4, 9);
+    const boatY = waterline + bob - boatLift;
+    const stackLocalX = boatWidth * BOAT_STACK_ANCHOR_X;
+    const stackLocalY = boatHeight * BOAT_STACK_ANCHOR_Y;
+    const targetStackOffsetX = simulation.boat.facing
+      * (Math.cos(tilt) * stackLocalX - Math.sin(tilt) * stackLocalY);
+    this.surfaceSteamStackOffsetX = settings.reducedMotion || this.surfaceSteamStackOffsetX === null
+      ? targetStackOffsetX
+      : dampMotionValue(this.surfaceSteamStackOffsetX, targetStackOffsetX, motionDelta, 5);
+    const stackX = x + this.surfaceSteamStackOffsetX;
+    const stackY = boatY + Math.sin(tilt) * stackLocalX + Math.cos(tilt) * stackLocalY;
+    const nightIntensity = nightVisualIntensity(simulation);
+    const boatFilter = `brightness(${1 - nightIntensity * 0.18}) saturate(${1 - nightIntensity * 0.08})`;
 
     context.save();
-    context.translate(x, waterline + bob - boatLift);
+    context.filter = boatFilter;
+    this.drawBoatSteam(
+      art.boatSteam,
+      boatWidth,
+      stackX,
+      stackY,
+      steamSpeedRatio,
+      Math.sign(this.surfaceSteamVelocity),
+      simulation.elapsed,
+      settings,
+    );
+    context.restore();
+
+    context.save();
+    context.translate(x, boatY);
     context.scale(simulation.boat.facing, 1);
     context.rotate(tilt);
-    const nightIntensity = nightVisualIntensity(simulation);
-    context.filter = `brightness(${1 - nightIntensity * 0.18}) saturate(${1 - nightIntensity * 0.08})`;
+    context.filter = boatFilter;
     context.drawImage(art.boat, -boatWidth / 2, -boatHeight * 0.86, boatWidth, boatHeight);
     context.restore();
 
@@ -492,6 +539,51 @@ export class CanvasRenderer {
       highContrast: settings.highContrast,
       seed: 1.3,
     });
+  }
+
+  private drawBoatSteam(
+    atlas: HTMLImageElement,
+    boatWidth: number,
+    stackX: number,
+    stackY: number,
+    speedRatio: number,
+    movementDirection: number,
+    elapsed: number,
+    settings: RenderSettings,
+  ): void {
+    const columns = 4;
+    const rows = 2;
+    const cellWidth = atlas.naturalWidth / columns;
+    const cellHeight = atlas.naturalHeight / rows;
+    const puffs = boatSteamPuffs(elapsed, speedRatio, movementDirection, settings.reducedMotion);
+
+    this.context.save();
+    this.context.globalCompositeOperation = "screen";
+    for (const puff of puffs) {
+      const column = puff.spriteIndex % columns;
+      const row = Math.floor(puff.spriteIndex / columns);
+      const size = puff.radius * boatWidth * 2.7;
+      const drawWidth = size * puff.stretchX;
+      const drawHeight = size * puff.stretchY;
+
+      this.context.save();
+      this.context.translate(stackX + puff.x * boatWidth, stackY + puff.y * boatWidth);
+      this.context.rotate(puff.rotation);
+      this.context.globalAlpha = puff.opacity * (settings.highContrast ? 1.12 : 1);
+      this.context.drawImage(
+        atlas,
+        column * cellWidth,
+        row * cellHeight,
+        cellWidth,
+        cellHeight,
+        -drawWidth / 2,
+        -drawHeight / 2,
+        drawWidth,
+        drawHeight,
+      );
+      this.context.restore();
+    }
+    this.context.restore();
   }
 
   private drawObjective(simulation: Simulation, camera: SideScrollCamera, width: number, height: number): void {
@@ -769,13 +861,39 @@ export class CanvasRenderer {
     );
   }
 
-  private camera(simulation: Simulation, cinematic: boolean): SideScrollCamera {
-    return createSideScrollCamera({
+  private updateSurfaceMotion(simulation: Simulation, cinematic: boolean, reducedMotion: boolean): number {
+    const reset = this.surfaceMotionElapsed === null || simulation.elapsed < this.surfaceMotionElapsed;
+    const deltaSeconds = reset ? 0 : Math.max(0, simulation.elapsed - this.surfaceMotionElapsed!);
+    const direct = reset || cinematic || reducedMotion;
+
+    this.surfaceCameraVelocity = direct
+      ? simulation.boat.speed
+      : dampMotionValue(this.surfaceCameraVelocity, simulation.boat.speed, deltaSeconds, 2.8);
+    this.surfaceSteamVelocity = direct
+      ? simulation.boat.speed
+      : dampMotionValue(this.surfaceSteamVelocity, simulation.boat.speed, deltaSeconds, 2.2);
+    this.surfaceMotionElapsed = simulation.elapsed;
+    return deltaSeconds;
+  }
+
+  private camera(
+    simulation: Simulation,
+    cinematic: boolean,
+    reducedMotion: boolean,
+    deltaSeconds: number,
+  ): SideScrollCamera {
+    const target = createSideScrollCamera({
       focusX: simulation.boat.x,
-      velocityX: cinematic ? 0 : simulation.boat.speed,
+      velocityX: cinematic ? 0 : this.surfaceCameraVelocity,
       viewWidth: cinematic ? 0.54 : BALANCE.cameraViewWidth,
       lookAheadTime: 0.24,
     });
+    const camera = cinematic || reducedMotion || this.surfaceCameraCenter === null
+      ? target
+      : dampSideScrollCamera(this.surfaceCameraCenter, target, deltaSeconds, 3.2);
+
+    this.surfaceCameraCenter = camera.center;
+    return camera;
   }
 
   private fishingToScreen(point: WorldPoint, width: number, height: number): WorldPoint {
