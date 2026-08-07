@@ -82,6 +82,17 @@ The boat, harbor pier, fish atlas, and world atlas were requested on a uniform `
 - Mosswater Pool direction: greener lower-visibility water, mossy vegetation, hanging roots, silt pockets, and a darker central pool.
 - Outer Gloam direction: cold violet-blue near-black water, poor visibility, sparse pale reeds, rock shelves, faint mineral or silt glow, and restrained ambiguous distant scenery.
 
+### Dock menu backgrounds
+
+- Runtime files: `dock-brindle.jpg` and `dock-gloam.jpg`
+- Runtime role: harbor-specific full-screen settings behind the shared dock menu. Brindle Harbor is a warm working pier; Gloam Ferry is a colder, isolated outer-lake landing. The paintings are interface backdrops only and contain no boat, characters, labels, or UI.
+- Authoring sources: `output/imagegen/dock-brindle-source.png` and `output/imagegen/dock-gloam-source.png`
+- Generated source dimensions: 1536 × 1024 for Brindle and 1548 × 1016 for Gloam. Both runtime files are normalized to 1536 × 1024 and use quality-82 JPEG compression.
+- Generation mode: OpenAI built-in image generation using `lake-chart.png` as the authoritative painting, palette, atmosphere, and world reference and `harbor-pier.png` as the dock timber/material-scale reference.
+- Shared prompt direction: a close, straight-on dockside setting in restrained editorial gouache and screen print, with identity concentrated in the outer thirds and a calm low-detail center behind the menu panel; full bleed; no boat, fish, people, text, logo, UI, detached sprite, chroma key, or transparency.
+- Brindle direction: warm practical freshwater working harbor at first light, with a weathered foreground pier, modest net shed and research office, creels, rope, reeds, low wooded hills, blue-green water, warm cream, and sparse safety-orange lamps.
+- Gloam direction: cold outer-lake ferry landing at last light, with a weathered foreground pier, small ferry shelter, single amber beacon, rock shelf, sparse pale reeds, dark conifers, violet hills, and deep cold water.
+
 ### `fishing-line-limit-float.png`
 
 - Runtime role: repeated round survey-float sprite along the reachable fishing-depth boundary

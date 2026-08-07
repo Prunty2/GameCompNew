@@ -1,3 +1,5 @@
+import brindleDockUrl from "../assets/dock-brindle.jpg";
+import gloamDockUrl from "../assets/dock-gloam.jpg";
 import wordmarkUrl from "../assets/fshing-wordmark.png";
 import padlockIconUrl from "../assets/padlock-icon.png";
 import uiButtonUrl from "../assets/ui-button.png";
@@ -72,6 +74,11 @@ const SETTINGS_EXIT_DURATION = 340;
 const SCENE_COVER_DURATION = 120;
 const SCENE_REVEAL_DURATION = 160;
 
+const DOCK_BACKGROUND_URL: Record<HarborId, string> = {
+  brindle: brindleDockUrl,
+  gloam: gloamDockUrl,
+};
+
 type OverlayScreen =
   | "title"
   | "harbor"
@@ -139,6 +146,8 @@ export class Game {
     ? new URLSearchParams(window.location.search).get("e2eSpot") as SpotId | null
     : null;
   private readonly interfaceReady = Promise.all([
+    preloadImage(brindleDockUrl),
+    preloadImage(gloamDockUrl),
     preloadImage(wordmarkUrl),
     preloadImage(uiButtonUrl),
     preloadImage(uiIconsUrl),
@@ -309,7 +318,7 @@ export class Game {
       case "docked":
         this.feedback.cue("dock");
         this.harborSection = "delivery";
-        this.setOverlay("harbor");
+        this.setOverlay("harbor", true);
         break;
       case "full-cargo":
         this.feedback.cue("deny");
@@ -327,7 +336,7 @@ export class Game {
         this.feedback.cue("collision");
         this.showToast(`Harbor rescue · ${event.cost} shells · cargo lost`);
         this.harborSection = "delivery";
-        this.setOverlay("harbor");
+        this.setOverlay("harbor", true);
         break;
       case "upgrade":
         this.feedback.cue("upgrade");
@@ -552,7 +561,7 @@ export class Game {
         : `<section class="mission-section" aria-label="Delivery job">${contractMarkup}</section>`;
 
     return `
-      <section class="screen-overlay harbor-screen is-first-voyage${isFirstJobOffer ? " is-first-job-offer" : " is-expanded-harbor"} is-harbor-${activeSection}" role="dialog" aria-labelledby="harbor-title">
+      <section class="screen-overlay harbor-screen is-first-voyage${isFirstJobOffer ? " is-first-job-offer" : " is-expanded-harbor"} is-harbor-${activeSection} is-dock-${harborId}" data-dock="${harborId}" style="--dock-background: url(&quot;${DOCK_BACKGROUND_URL[harborId]}&quot;)" role="dialog" aria-labelledby="harbor-title">
         <div class="art-panel harbor-panel side-sheet">
           <header class="panel-heading harbor-header">
             <div class="harbor-title-block"><img class="wordmark harbor-wordmark" src="${wordmarkUrl}" alt="FSHING" /><span class="harbor-title-divider" aria-hidden="true"></span><div><h2 id="harbor-title">${harbor.name}</h2></div></div>
@@ -1054,7 +1063,7 @@ export class Game {
           chooseRoute(this.simulation, "fast");
         }
         undock(this.simulation);
-        this.setOverlay(null);
+        this.setOverlay(null, true);
         break;
       case "accept-contract":
         if (acceptAvailableContract(this.simulation)) {
@@ -1067,7 +1076,7 @@ export class Game {
               // Ignore malformed development-only visual test parameters.
             }
           }
-          this.setOverlay(null);
+          this.setOverlay(null, true);
           this.showToast("Contract accepted. Follow the shoal and survey its habitat first.");
         }
         break;
