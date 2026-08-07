@@ -104,6 +104,7 @@ export class CanvasRenderer {
   private surfaceCameraCenter: number | null = null;
   private surfaceMotionElapsed: number | null = null;
   private surfaceCameraVelocity = 0;
+  private surfaceCameraViewWidth: number = BALANCE.cameraViewWidth;
   private surfaceSteamVelocity = 0;
   private surfaceSteamStackOffsetX: number | null = null;
 
@@ -208,6 +209,7 @@ export class CanvasRenderer {
     const { context } = this;
     const motionDelta = this.updateSurfaceMotion(simulation, settings.cinematic, settings.reducedMotion);
     const camera = this.camera(simulation, settings.cinematic, settings.reducedMotion, motionDelta);
+    this.canvas.dataset.surfaceCameraViewWidth = camera.viewWidth.toFixed(3);
     const nightIntensity = nightVisualIntensity(simulation);
     const waterline = this.drawPanorama(nightIntensity >= 1 ? art.lakeNight : art.lake, camera, width, height);
     if (nightIntensity > 0 && nightIntensity < 1) {
@@ -692,7 +694,9 @@ export class CanvasRenderer {
     const { context } = this;
     const x = worldToScreenX(simulation.boat.x, camera, width);
     const boatScale = 1 + simulation.progress.upgrades.cargo * 0.055;
-    const boatWidth = clamp(this.canvas.clientHeight * 0.421 * boatScale, 172, 412);
+    const cameraScale = BALANCE.cameraViewWidth / camera.viewWidth;
+    const boatWidth = clamp(this.canvas.clientHeight * 0.421 * boatScale, 172, 412) * cameraScale;
+    this.canvas.dataset.surfaceBoatWidth = boatWidth.toFixed(2);
     const boatHeight = boatWidth * (art.boat.height / art.boat.width);
     const speedRatio = Math.min(1, Math.abs(simulation.boat.speed) / BALANCE.maxSurfaceSpeed);
     const steamSpeedRatio = Math.min(1, Math.abs(this.surfaceSteamVelocity) / BALANCE.maxSurfaceSpeed);
@@ -711,6 +715,8 @@ export class CanvasRenderer {
     const stackY = boatY + Math.sin(tilt) * stackLocalX + Math.cos(tilt) * stackLocalY;
     const nightIntensity = nightVisualIntensity(simulation);
     const boatFilter = `brightness(${1 - nightIntensity * 0.18}) saturate(${1 - nightIntensity * 0.08})`;
+
+    this.drawBoostTrail(simulation, x, waterline + bob, boatWidth, settings);
 
     context.save();
     context.filter = boatFilter;
@@ -745,6 +751,34 @@ export class CanvasRenderer {
       highContrast: settings.highContrast,
       seed: 1.3,
     });
+  }
+
+  private drawBoostTrail(
+    simulation: Simulation,
+    boatX: number,
+    waterline: number,
+    boatWidth: number,
+    settings: RenderSettings,
+  ): void {
+    if (!simulation.boost.active) return;
+    const direction = simulation.boat.facing;
+    const pulse = settings.reducedMotion ? 0 : (simulation.elapsed * 3.7) % 1;
+    const trailOrigin = boatX - direction * boatWidth * 0.42;
+    this.context.save();
+    this.context.globalCompositeOperation = "screen";
+    this.context.lineCap = "round";
+    for (let index = 0; index < 4; index += 1) {
+      const offset = ((index / 4 + pulse) % 1) * boatWidth * 0.35;
+      const startX = trailOrigin - direction * offset;
+      const length = boatWidth * (0.13 + index * 0.025);
+      this.context.beginPath();
+      this.context.moveTo(startX, waterline + 5 + index * 4);
+      this.context.lineTo(startX - direction * length, waterline + 7 + index * 5);
+      this.context.strokeStyle = index % 2 === 0 ? "rgb(255 190 86 / 62%)" : "rgb(134 224 231 / 48%)";
+      this.context.lineWidth = Math.max(1.5, boatWidth * 0.008 - index * 0.35);
+      this.context.stroke();
+    }
+    this.context.restore();
   }
 
   private drawBoatSteam(
@@ -1150,10 +1184,23 @@ export class CanvasRenderer {
     reducedMotion: boolean,
     deltaSeconds: number,
   ): SideScrollCamera {
+    const gameplayViewWidth = simulation.boost.active && !reducedMotion
+      ? BALANCE.cameraViewWidth * BALANCE.boostCameraViewMultiplier
+      : BALANCE.cameraViewWidth;
+    if (!cinematic) {
+      this.surfaceCameraViewWidth = reducedMotion
+        ? gameplayViewWidth
+        : dampMotionValue(
+          this.surfaceCameraViewWidth,
+          gameplayViewWidth,
+          deltaSeconds,
+          BALANCE.boostCameraPullRate,
+        );
+    }
     const target = createSideScrollCamera({
       focusX: simulation.boat.x,
       velocityX: cinematic ? 0 : this.surfaceCameraVelocity,
-      viewWidth: cinematic ? 0.54 : BALANCE.cameraViewWidth,
+      viewWidth: cinematic ? 0.54 : this.surfaceCameraViewWidth,
       lookAheadTime: 0.24,
     });
     const camera = cinematic || reducedMotion || this.surfaceCameraCenter === null
