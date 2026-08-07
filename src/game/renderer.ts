@@ -192,6 +192,7 @@ export class CanvasRenderer {
       this.renderFishing(simulation, settings, width, height);
     } else {
       delete this.canvas.dataset.fishingDiveProgress;
+      delete this.canvas.dataset.fishingSurfaceBlend;
       delete this.canvas.dataset.fishingSpot;
       delete this.canvas.dataset.fishingState;
       delete this.canvas.dataset.targetRarity;
@@ -433,6 +434,7 @@ export class CanvasRenderer {
       : entryDiveProgress;
     const layout = fishingViewLayout(height, simulation.progress.upgrades.line, diveProgress);
     this.canvas.dataset.fishingDiveProgress = diveProgress.toFixed(3);
+    this.canvas.dataset.fishingSurfaceBlend = fishing.reeling ? reelProgress.toFixed(3) : "0.000";
     this.canvas.dataset.fishingSpot = spot.id;
     this.canvas.dataset.targetRarity = FISH[targetSpecies].rarity;
     this.canvas.dataset.fishingState = fishing.reeling ? "reeling" : "steering";
@@ -443,7 +445,14 @@ export class CanvasRenderer {
         : `Fishing at ${spot.name}. Target ${FISH[targetSpecies].name}, ${FISH[targetSpecies].rarity} rarity.`,
     );
     this.drawFishingEnvironment(art.fishingEnvironments[spot.id], layout, width, height, settings.highContrast);
-    this.drawFishingSurfaceBand(simulation, settings, width, height, layout.surfaceY);
+    this.drawFishingSurfaceBand(
+      simulation,
+      settings,
+      width,
+      height,
+      layout.surfaceY,
+      fishing.reeling ? reelProgress : 0,
+    );
 
     const gameplayVisibility = clamp((diveProgress - 0.24) / 0.54, 0, 1);
     context.save();
@@ -578,6 +587,7 @@ export class CanvasRenderer {
     width: number,
     height: number,
     surfaceY: number,
+    underwaterReveal: number,
   ): void {
     const art = this.art;
     if (!art) return;
@@ -585,7 +595,11 @@ export class CanvasRenderer {
     const motionDelta = this.updateSurfaceMotion(simulation, false, settings.reducedMotion);
     const camera = this.camera(simulation, false, settings.reducedMotion, motionDelta);
     const nightIntensity = nightVisualIntensity(simulation);
-    const drawSurfaceImage = (image: HTMLImageElement, alpha: number): void => {
+    const drawSurfaceImage = (
+      image: HTMLImageElement,
+      alpha: number,
+      layer: "above" | "below",
+    ): void => {
       const panorama = calculatePanoramaLayout({
         imageWidth: image.naturalWidth,
         imageHeight: image.naturalHeight,
@@ -595,7 +609,11 @@ export class CanvasRenderer {
       });
       context.save();
       context.beginPath();
-      context.rect(0, 0, width, surfaceY + 3);
+      if (layer === "above") {
+        context.rect(0, 0, width, surfaceY + 3);
+      } else {
+        context.rect(0, surfaceY, width, height - surfaceY);
+      }
       context.clip();
       context.globalAlpha = alpha;
       context.drawImage(
@@ -611,8 +629,23 @@ export class CanvasRenderer {
       );
       context.restore();
     };
-    drawSurfaceImage(art.lake, 1);
-    if (nightIntensity > 0) drawSurfaceImage(art.lakeNight, nightIntensity);
+    const surfaceBlend = clamp(underwaterReveal, 0, 1);
+    if (surfaceBlend > 0) {
+      drawSurfaceImage(art.lake, surfaceBlend, "below");
+      if (nightIntensity > 0) {
+        drawSurfaceImage(art.lakeNight, surfaceBlend * nightIntensity, "below");
+      }
+      context.save();
+      context.beginPath();
+      context.rect(0, surfaceY, width, height - surfaceY);
+      context.clip();
+      context.globalAlpha = surfaceBlend * (settings.highContrast ? 0.08 : 0.07);
+      context.fillStyle = regionSurfaceTintAt(simulation.boat.x);
+      context.fillRect(0, surfaceY, width, height - surfaceY);
+      context.restore();
+    }
+    drawSurfaceImage(art.lake, 1, "above");
+    if (nightIntensity > 0) drawSurfaceImage(art.lakeNight, nightIntensity, "above");
 
     context.save();
     context.beginPath();

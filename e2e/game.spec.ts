@@ -276,11 +276,15 @@ test("reels a hooked fish to the boat before securing the catch", async ({ page 
   await page.evaluate(() => window.__FSHING_TEST__?.hookSpecies("reedfin"));
   await expect(canvas).toHaveAttribute("data-fishing-state", "reeling");
   const reelStartProgress = Number(await canvas.getAttribute("data-fishing-dive-progress"));
+  const surfaceBlendStart = Number(await canvas.getAttribute("data-fishing-surface-blend"));
   await page.waitForTimeout(400);
   const reelMidpointProgress = Number(await canvas.getAttribute("data-fishing-dive-progress"));
+  const surfaceBlendMidpoint = Number(await canvas.getAttribute("data-fishing-surface-blend"));
   expect(reelStartProgress).toBeGreaterThan(0.95);
   expect(reelMidpointProgress).toBeLessThan(reelStartProgress);
   expect(reelMidpointProgress).toBeGreaterThan(0.25);
+  expect(surfaceBlendStart).toBeLessThan(0.05);
+  expect(surfaceBlendMidpoint).toBeGreaterThan(surfaceBlendStart);
   await expect(page.locator(".fishing-controls")).toBeHidden();
   await expect.poll(async () => page.evaluate(() => window.__FSHING_TEST__?.mode())).toBe("cruising");
   await expect(canvas).not.toHaveAttribute("data-fishing-state");
