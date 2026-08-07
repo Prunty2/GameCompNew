@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { objectiveIndicatorLayout } from "../game/objectiveIndicator";
+import { objectiveIndicatorLayout, objectiveIndicatorOpacity } from "../game/objectiveIndicator";
 
 describe("objective indicator layout", () => {
   test("keeps a prominent left-pointing destination badge inside the viewport", () => {
@@ -26,5 +26,25 @@ describe("objective indicator layout", () => {
 
     expect(layout.direction).toBe("down");
     expect(layout.panelX + layout.panelWidth / 2).toBe(640);
+  });
+});
+
+describe("objective indicator opacity", () => {
+  const interactionRadius = 0.027;
+
+  test("remains fully visible until the player is close to the destination", () => {
+    expect(objectiveIndicatorOpacity(interactionRadius * 3.2, interactionRadius)).toBe(1);
+    expect(objectiveIndicatorOpacity(interactionRadius * 4, interactionRadius)).toBe(1);
+  });
+
+  test("fades smoothly through the final approach", () => {
+    const halfwayDistance = interactionRadius * 2.1;
+
+    expect(objectiveIndicatorOpacity(halfwayDistance, interactionRadius)).toBeCloseTo(0.5);
+  });
+
+  test("clears only once the destination is in interaction range", () => {
+    expect(objectiveIndicatorOpacity(interactionRadius, interactionRadius)).toBe(0);
+    expect(objectiveIndicatorOpacity(interactionRadius * 0.5, interactionRadius)).toBe(0);
   });
 });

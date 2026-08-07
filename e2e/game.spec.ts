@@ -401,10 +401,12 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await expect(page.getByRole("heading", { name: "First Assignment" })).toBeVisible();
   await page.getByRole("button", { name: "Accept contract" }).click();
   await expect(page.locator("#tutorial-callout")).toContainText("Sunward Shoal");
+  await expect(page.locator(".navigation-status")).toContainText("FISH AT Sunward Shoal");
   await page.locator("#tutorial-callout").click();
   await expect(page.locator("#tutorial-callout")).toBeHidden();
 
   await page.evaluate(() => window.__FSHING_TEST__?.sailToSpot("sunwardShoal"));
+  await expect(page.locator("#tutorial-callout")).toContainText("Drop the line at Sunward Shoal");
   await page.getByRole("button", { name: "Drop line · Sunward Shoal" }).click();
   await expect(page.getByRole("heading", { name: "Read the lake" })).toHaveCount(0);
   await expect(page.getByText(/Guide the hook toward the Reedfin/)).toBeVisible();
@@ -412,8 +414,10 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await expect(page.getByRole("heading", { name: "Plan your crossing" })).toHaveCount(0);
   await expect(page.getByText("Applied mathematics")).toHaveCount(0);
   await expect(page.locator("#tutorial-callout")).toContainText("Gloam Ferry");
+  await expect(page.locator(".navigation-status")).toContainText("DELIVER TO Gloam Ferry");
 
   await page.evaluate(() => window.__FSHING_TEST__?.sailToHarbor("gloam"));
+  await expect(page.locator("#tutorial-callout")).toContainText("Dock at Gloam Ferry");
   await page.getByRole("button", { name: "Dock · Gloam Ferry" }).click();
   await expect(page.getByRole("heading", { name: "Gloam Ferry" })).toBeVisible();
   await expect(page.locator(".harbor-screen")).toHaveAttribute("data-dock", "gloam");
@@ -627,6 +631,7 @@ test("dock interaction starts on pointer press", async ({ page }) => {
   await page.goto("/?e2e=1");
   await page.getByRole("button", { name: "Play", exact: true }).click();
   await page.getByRole("button", { name: "Accept contract" }).click();
+  await expect(page.locator("#scene-transition")).not.toHaveClass(/is-(covering|revealing)/);
   await page.evaluate(() => window.__FSHING_TEST__?.sailToHarbor("brindle"));
 
   const dockButton = page.getByRole("button", { name: "Dock · Brindle Harbor" });

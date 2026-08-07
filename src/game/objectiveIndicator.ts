@@ -14,6 +14,14 @@ export interface ObjectiveIndicatorLayout {
 const EDGE_INSET = 16;
 const PANEL_HEIGHT = 64;
 const MARKER_OFFSET = 32;
+const FADE_START_RADIUS_MULTIPLIER = 3.2;
+
+export function objectiveIndicatorOpacity(distance: number, interactionRadius: number): number {
+  const fadeDistance = interactionRadius * (FADE_START_RADIUS_MULTIPLIER - 1);
+  if (fadeDistance <= 0) return distance > interactionRadius ? 1 : 0;
+  const linearOpacity = Math.min(1, Math.max(0, (distance - interactionRadius) / fadeDistance));
+  return linearOpacity * linearOpacity * (3 - 2 * linearOpacity);
+}
 
 export function objectiveIndicatorLayout(
   goalScreenX: number,

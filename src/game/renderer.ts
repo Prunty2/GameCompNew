@@ -45,12 +45,13 @@ import { surfaceFishingCue, surfaceFishPose, type SurfaceFishingCue } from "./fi
 import { calculatePanoramaLayout } from "./panorama";
 import {
   maxFishingDepth,
+  navigationGuidance,
   nightVisualIntensity,
-  objective,
   type Simulation,
 } from "./simulation";
 import {
   objectiveIndicatorLayout,
+  objectiveIndicatorOpacity,
   type ObjectiveIndicatorDirection,
 } from "./objectiveIndicator";
 import { captureSurfaceLayer, drawWaterContact } from "./surfaceEffects";
@@ -934,11 +935,14 @@ export class CanvasRenderer {
     height: number,
     settings: RenderSettings,
   ): void {
-    const goal = objective(simulation);
-    if (Math.abs(goal.point.x - simulation.boat.x) <= BALANCE.fishingRadius * 3.6) return;
+    const goal = navigationGuidance(simulation);
+    const distance = Math.abs(goal.point.x - simulation.boat.x);
+    const opacity = objectiveIndicatorOpacity(distance, BALANCE.fishingRadius);
+    if (opacity <= 0) return;
     const x = worldToScreenX(goal.point.x, camera, width);
     const { context } = this;
     context.save();
+    context.globalAlpha = opacity;
     context.font = '700 16px "Avenir Next Condensed", "Arial Narrow", sans-serif';
     const layout = objectiveIndicatorLayout(x, width, height, context.measureText(goal.label.toUpperCase()).width);
     const pulse = settings.reducedMotion ? 0 : (Math.sin(simulation.elapsed * 3.2) + 1) / 2;
@@ -955,13 +959,13 @@ export class CanvasRenderer {
     context.stroke();
 
     context.shadowColor = "transparent";
-    context.globalAlpha = 0.18 + pulse * 0.18;
+    context.globalAlpha = opacity * (0.18 + pulse * 0.18);
     context.strokeStyle = "#ffd67d";
     context.lineWidth = 3;
     context.beginPath();
     context.arc(layout.markerX, layout.markerY, 28 + pulse * 3, 0, Math.PI * 2);
     context.stroke();
-    context.globalAlpha = 1;
+    context.globalAlpha = opacity;
 
     context.fillStyle = settings.highContrast ? "#f6a83f" : "#d77f2f";
     context.strokeStyle = "#fff1c7";
@@ -976,7 +980,7 @@ export class CanvasRenderer {
     context.textBaseline = "middle";
     context.fillStyle = "#e9b65f";
     context.font = '700 10px "Avenir Next Condensed", "Arial Narrow", sans-serif';
-    context.fillText("HEAD TO", layout.textCenterX, layout.markerY - 10);
+    context.fillText(goal.kicker, layout.textCenterX, layout.markerY - 10);
     context.fillStyle = "#fff4cf";
     context.font = '700 16px "Avenir Next Condensed", "Arial Narrow", sans-serif';
     context.fillText(goal.label.toUpperCase(), layout.textCenterX, layout.markerY + 9);
