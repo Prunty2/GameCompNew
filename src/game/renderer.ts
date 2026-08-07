@@ -47,6 +47,10 @@ import {
   objective,
   type Simulation,
 } from "./simulation";
+import {
+  objectiveIndicatorLayout,
+  type ObjectiveIndicatorDirection,
+} from "./objectiveIndicator";
 import { captureSurfaceLayer, drawWaterContact } from "./surfaceEffects";
 
 export interface RenderSettings {
@@ -277,7 +281,7 @@ export class CanvasRenderer {
       this.interactionAnchor = { x: activeFishingCue.x, y: hookY };
     }
 
-    this.drawObjective(simulation, camera, width, height);
+    this.drawObjective(simulation, camera, width, height, settings);
     this.drawWeather(simulation, camera, width, height, settings);
 
   }
@@ -822,34 +826,85 @@ export class CanvasRenderer {
     this.context.restore();
   }
 
-  private drawObjective(simulation: Simulation, camera: SideScrollCamera, width: number, height: number): void {
+  private drawObjective(
+    simulation: Simulation,
+    camera: SideScrollCamera,
+    width: number,
+    height: number,
+    settings: RenderSettings,
+  ): void {
     const goal = objective(simulation);
     if (Math.abs(goal.point.x - simulation.boat.x) <= BALANCE.fishingRadius * 3.6) return;
     const x = worldToScreenX(goal.point.x, camera, width);
-    const clampedX = clamp(x, 30, width - 30);
-    const edge = x < 0 ? -1 : x > width ? 1 : 0;
-    const y = height * 0.27;
     const { context } = this;
     context.save();
-    context.translate(clampedX, y);
-    context.fillStyle = "#e8a44d";
+    context.font = '700 16px "Avenir Next Condensed", "Arial Narrow", sans-serif';
+    const layout = objectiveIndicatorLayout(x, width, height, context.measureText(goal.label.toUpperCase()).width);
+    const pulse = settings.reducedMotion ? 0 : (Math.sin(simulation.elapsed * 3.2) + 1) / 2;
+
+    context.shadowColor = "rgba(2, 12, 17, 0.55)";
+    context.shadowBlur = 12;
+    context.shadowOffsetY = 3;
+    context.fillStyle = settings.highContrast ? "rgba(1, 12, 17, 0.98)" : "rgba(8, 29, 35, 0.92)";
+    context.strokeStyle = settings.highContrast ? "#fff4cf" : "#e9b65f";
+    context.lineWidth = settings.highContrast ? 4 : 3;
     context.beginPath();
-    if (edge < 0) {
-      context.moveTo(-12, 0);
-      context.lineTo(8, -10);
-      context.lineTo(8, 10);
-    } else if (edge > 0) {
-      context.moveTo(12, 0);
-      context.lineTo(-8, -10);
-      context.lineTo(-8, 10);
-    } else {
-      context.moveTo(0, 12);
-      context.lineTo(-10, -8);
-      context.lineTo(10, -8);
-    }
-    context.closePath();
+    context.roundRect(layout.panelX, layout.panelY, layout.panelWidth, layout.panelHeight, 32);
     context.fill();
+    context.stroke();
+
+    context.shadowColor = "transparent";
+    context.globalAlpha = 0.18 + pulse * 0.18;
+    context.strokeStyle = "#ffd67d";
+    context.lineWidth = 3;
+    context.beginPath();
+    context.arc(layout.markerX, layout.markerY, 28 + pulse * 3, 0, Math.PI * 2);
+    context.stroke();
+    context.globalAlpha = 1;
+
+    context.fillStyle = settings.highContrast ? "#f6a83f" : "#d77f2f";
+    context.strokeStyle = "#fff1c7";
+    context.lineWidth = 3;
+    context.beginPath();
+    context.arc(layout.markerX, layout.markerY, 25, 0, Math.PI * 2);
+    context.fill();
+    context.stroke();
+    this.drawObjectiveArrow(layout.markerX, layout.markerY, layout.direction);
+
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+    context.fillStyle = "#e9b65f";
+    context.font = '700 10px "Avenir Next Condensed", "Arial Narrow", sans-serif';
+    context.fillText("HEAD TO", layout.textCenterX, layout.markerY - 10);
+    context.fillStyle = "#fff4cf";
+    context.font = '700 16px "Avenir Next Condensed", "Arial Narrow", sans-serif';
+    context.fillText(goal.label.toUpperCase(), layout.textCenterX, layout.markerY + 9);
     context.restore();
+  }
+
+  private drawObjectiveArrow(x: number, y: number, direction: ObjectiveIndicatorDirection): void {
+    const vector = direction === "left"
+      ? { x: -1, y: 0 }
+      : direction === "right"
+        ? { x: 1, y: 0 }
+        : { x: 0, y: 1 };
+    const perpendicular = { x: -vector.y, y: vector.x };
+    const tip = { x: x + vector.x * 13, y: y + vector.y * 13 };
+    const tail = { x: x - vector.x * 10, y: y - vector.y * 10 };
+    const headBase = { x: tip.x - vector.x * 10, y: tip.y - vector.y * 10 };
+    const { context } = this;
+
+    context.strokeStyle = "#fff4cf";
+    context.lineWidth = 6;
+    context.lineCap = "round";
+    context.lineJoin = "round";
+    context.beginPath();
+    context.moveTo(tail.x, tail.y);
+    context.lineTo(tip.x, tip.y);
+    context.moveTo(headBase.x + perpendicular.x * 8, headBase.y + perpendicular.y * 8);
+    context.lineTo(tip.x, tip.y);
+    context.lineTo(headBase.x - perpendicular.x * 8, headBase.y - perpendicular.y * 8);
+    context.stroke();
   }
 
   private drawWeather(

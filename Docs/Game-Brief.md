@@ -167,6 +167,8 @@ The harbor interface opens on Delivery and separates Cargo and Dock services int
 
 Deliveries are the main source of income and direction.
 
+While travelling, a high-contrast edge badge uses a thick directional arrow plus the destination name so the next harbor or fishing ground remains unmistakable against every panorama. The badge points down when its destination is visible and left or right when it lies beyond the viewport; reduced-motion mode keeps the emphasis static.
+
 Each contract defines:
 
 - Requested fish species and quantity
