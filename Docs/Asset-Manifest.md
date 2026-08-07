@@ -84,14 +84,14 @@ The boat, harbor pier, fish atlas, and world atlas were requested on a uniform `
 
 ### Dock menu backgrounds
 
-- Runtime files: `dock-brindle.jpg` and `dock-gloam.jpg`
-- Runtime role: harbor-specific full-screen settings behind the shared dock menu. Brindle Harbor is a warm working pier; Gloam Ferry is a colder, isolated outer-lake landing. The paintings are interface backdrops only and contain no boat, characters, labels, or UI.
-- Authoring sources: `output/imagegen/dock-brindle-source.png` and `output/imagegen/dock-gloam-source.png`
-- Generated source dimensions: 1536 × 1024 for Brindle and 1548 × 1016 for Gloam. Both runtime files are normalized to 1536 × 1024 and use quality-82 JPEG compression.
+- Runtime files: `dock-brindle-day.jpg`, `dock-brindle-night.jpg`, `dock-gloam-day.jpg`, and `dock-gloam-night.jpg`
+- Runtime role: harbor- and time-specific full-screen settings behind the shared dock menu. Brindle Harbor is a practical working pier; Gloam Ferry is a colder, isolated outer-lake landing. Each harbor's day and night plates blend using the sailing scene's night intensity. The paintings are interface backdrops only and contain no boat, characters, labels, or UI.
+- Authoring sources: matching `output/imagegen/dock-*-source.png` files for all four runtime plates
+- Generated source dimensions: all four runtime compositions are normalized to 1536 × 1024 and use quality-82 JPEG compression.
 - Generation mode: OpenAI built-in image generation using `lake-chart.png` as the authoritative painting, palette, atmosphere, and world reference and `harbor-pier.png` as the dock timber/material-scale reference.
 - Shared prompt direction: a close, straight-on dockside setting in restrained editorial gouache and screen print, with identity concentrated in the outer thirds and a calm low-detail center behind the menu panel; full bleed; no boat, fish, people, text, logo, UI, detached sprite, chroma key, or transparency.
-- Brindle direction: warm practical freshwater working harbor at first light, with a weathered foreground pier, modest net shed and research office, creels, rope, reeds, low wooded hills, blue-green water, warm cream, and sparse safety-orange lamps.
-- Gloam direction: cold outer-lake ferry landing at last light, with a weathered foreground pier, small ferry shelter, single amber beacon, rock shelf, sparse pale reeds, dark conifers, violet hills, and deep cold water.
+- Brindle direction: practical freshwater working harbor with a weathered foreground pier, modest net shed and research office, creels, rope, reeds, low wooded hills, and blue-green water. The day plate uses warm overcast light; its lighting-weather edit uses readable blue-black night and restrained amber work lamps while preserving the exact composition.
+- Gloam direction: cold outer-lake ferry landing with a weathered foreground pier, small ferry shelter, single beacon, rock shelf, sparse pale reeds, dark conifers, and deep water. The night plate uses cold violet last light; its lighting-weather edit uses clear cool overcast daytime and an unlit beacon while preserving the exact composition.
 
 ### `fishing-line-limit-float.png`
 

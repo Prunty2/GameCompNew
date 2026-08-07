@@ -56,7 +56,8 @@ test("the waterline transition carries title, dock, and lake scene changes", asy
   await expect(transition).toHaveClass(/is-(covering|revealing)/);
   await expect(page.getByRole("heading", { name: "Brindle Harbor" })).toBeVisible();
   await expect(page.locator(".harbor-screen")).toHaveAttribute("data-dock", "brindle");
-  await expect(page.locator(".harbor-screen")).toHaveCSS("background-image", /dock-brindle/);
+  await expect(page.locator(".harbor-screen")).toHaveAttribute("data-time-of-day", "day");
+  await expect(page.locator(".harbor-screen")).toHaveCSS("background-image", /dock-brindle-day/);
   await expect(transition).not.toHaveClass(/is-(covering|revealing)/);
 
   await page.getByRole("button", { name: "Accept contract" }).click();
@@ -68,12 +69,28 @@ test("the waterline transition carries title, dock, and lake scene changes", asy
   await page.getByRole("button", { name: "Dock · Gloam Ferry" }).click();
   await expect(transition).toHaveClass(/is-(covering|revealing)/);
   await expect(page.locator(".harbor-screen")).toHaveAttribute("data-dock", "gloam");
-  await expect(page.locator(".harbor-screen")).toHaveCSS("background-image", /dock-gloam/);
+  await expect(page.locator(".harbor-screen")).toHaveAttribute("data-time-of-day", "day");
+  await expect(page.locator(".harbor-screen")).toHaveCSS("background-image", /dock-gloam-day/);
   await expect(transition).not.toHaveClass(/is-(covering|revealing)/);
 
   await page.getByRole("button", { name: "Back to lake →" }).click();
   await expect(transition).toHaveClass(/is-(covering|revealing)/);
   await expect(page.locator(".screen-overlay")).toHaveCount(0);
+  await expect(transition).not.toHaveClass(/is-(covering|revealing)/);
+
+  await page.evaluate(() => window.__FSHING_TEST__?.setElapsed(165));
+  await page.evaluate(() => window.__FSHING_TEST__?.sailToHarbor("brindle"));
+  await page.getByRole("button", { name: "Dock · Brindle Harbor" }).click();
+  await expect(page.locator(".harbor-screen")).toHaveAttribute("data-time-of-day", "night");
+  expect(await page.locator(".harbor-screen").evaluate((element) => getComputedStyle(element, "::before").backgroundImage)).toContain("dock-brindle-night");
+  await page.getByRole("button", { name: "Back to lake →" }).click();
+  await expect(transition).not.toHaveClass(/is-(covering|revealing)/);
+
+  await page.evaluate(() => window.__FSHING_TEST__?.sailToHarbor("gloam"));
+  await page.getByRole("button", { name: "Dock · Gloam Ferry" }).click();
+  await expect(page.locator(".harbor-screen")).toHaveAttribute("data-time-of-day", "night");
+  expect(await page.locator(".harbor-screen").evaluate((element) => getComputedStyle(element, "::before").backgroundImage)).toContain("dock-gloam-night");
+  await page.getByRole("button", { name: "Back to lake →" }).click();
   await expect(transition).not.toHaveClass(/is-(covering|revealing)/);
 
   await page.keyboard.press("Escape");
@@ -336,7 +353,8 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await page.getByRole("button", { name: "Dock · Gloam Ferry" }).click();
   await expect(page.getByRole("heading", { name: "Gloam Ferry" })).toBeVisible();
   await expect(page.locator(".harbor-screen")).toHaveAttribute("data-dock", "gloam");
-  await expect(page.locator(".harbor-screen")).toHaveCSS("background-image", /dock-gloam/);
+  await expect(page.locator(".harbor-screen")).toHaveAttribute("data-time-of-day", "day");
+  await expect(page.locator(".harbor-screen")).toHaveCSS("background-image", /dock-gloam-day/);
   await expect(page.getByText("Last light before the outer water.")).toHaveCount(0);
   await expect(page.locator(".harbor-intro")).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Delivery job" })).toHaveCount(0);
