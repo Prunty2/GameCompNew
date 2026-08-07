@@ -302,6 +302,31 @@ test("fishing descends through the sailing waterline into a site-specific scene"
   await expect.poll(async () => Number(await canvas.getAttribute("data-fishing-dive-progress"))).toBeGreaterThan(0.99);
 });
 
+test("reels a hooked fish to the boat before securing the catch", async ({ page }) => {
+  await page.goto("/?e2e=1&e2eSpot=sunwardShoal");
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.getByRole("button", { name: "Accept contract" }).click();
+  await page.getByRole("button", { name: "Drop line · Sunward Shoal" }).click();
+
+  const canvas = page.locator("#game-canvas");
+  await expect.poll(async () => Number(await canvas.getAttribute("data-fishing-dive-progress"))).toBeGreaterThan(0.99);
+  await page.evaluate(() => window.__FSHING_TEST__?.hookSpecies("reedfin"));
+  await expect(canvas).toHaveAttribute("data-fishing-state", "reeling");
+  const reelStartProgress = Number(await canvas.getAttribute("data-fishing-dive-progress"));
+  const surfaceBlendStart = Number(await canvas.getAttribute("data-fishing-surface-blend"));
+  await page.waitForTimeout(400);
+  const reelMidpointProgress = Number(await canvas.getAttribute("data-fishing-dive-progress"));
+  const surfaceBlendMidpoint = Number(await canvas.getAttribute("data-fishing-surface-blend"));
+  expect(reelStartProgress).toBeGreaterThan(0.95);
+  expect(reelMidpointProgress).toBeLessThan(reelStartProgress);
+  expect(reelMidpointProgress).toBeGreaterThan(0.25);
+  expect(surfaceBlendStart).toBeLessThan(0.05);
+  expect(surfaceBlendMidpoint).toBeGreaterThan(surfaceBlendStart);
+  await expect(page.locator(".fishing-controls")).toBeHidden();
+  await expect.poll(async () => page.evaluate(() => window.__FSHING_TEST__?.mode())).toBe("cruising");
+  await expect(canvas).not.toHaveAttribute("data-fishing-state");
+});
+
 test("completes the tutorial delivery, buys an upgrade, and persists it", async ({ page }) => {
   test.setTimeout(60_000);
   await page.goto("/?e2e=1");

@@ -36,9 +36,11 @@ import {
   fishingDiveProgress,
   fishingFishPose,
   fishingPointToScreen,
+  fishingReelCameraProgress,
   fishingViewLayout,
   type FishingViewLayout,
 } from "./fishingPresentation";
+import { fishingReelProgress, fishingReelWriggle } from "./fishingReeling";
 import { surfaceFishingCue, surfaceFishPose, type SurfaceFishingCue } from "./fishingSpotEffects";
 import { calculatePanoramaLayout } from "./panorama";
 import {
@@ -195,7 +197,9 @@ export class CanvasRenderer {
       this.renderFishing(simulation, settings, width, height);
     } else {
       delete this.canvas.dataset.fishingDiveProgress;
+      delete this.canvas.dataset.fishingSurfaceBlend;
       delete this.canvas.dataset.fishingSpot;
+      delete this.canvas.dataset.fishingState;
       delete this.canvas.dataset.targetRarity;
       this.canvas.setAttribute("aria-label", "Game area");
       this.renderSurface(simulation, settings, width, height);
@@ -427,17 +431,34 @@ export class CanvasRenderer {
       ? simulation.activeContract.species
       : spot.species;
     const maximumDepth = maxFishingDepth(simulation);
-    const diveProgress = fishingDiveProgress(simulation.elapsed, fishing.startedAt, settings.reducedMotion);
+    const entryDiveProgress = fishingDiveProgress(simulation.elapsed, fishing.startedAt, settings.reducedMotion);
+    const reelProgress = fishing.reeling
+      ? fishingReelProgress(simulation.elapsed, fishing.reeling.hookedAt)
+      : 0;
+    const diveProgress = fishing.reeling
+      ? fishingReelCameraProgress(entryDiveProgress, reelProgress, settings.reducedMotion)
+      : entryDiveProgress;
     const layout = fishingViewLayout(height, simulation.progress.upgrades.line, diveProgress);
     this.canvas.dataset.fishingDiveProgress = diveProgress.toFixed(3);
+    this.canvas.dataset.fishingSurfaceBlend = fishing.reeling ? reelProgress.toFixed(3) : "0.000";
     this.canvas.dataset.fishingSpot = spot.id;
     this.canvas.dataset.targetRarity = FISH[targetSpecies].rarity;
+    this.canvas.dataset.fishingState = fishing.reeling ? "reeling" : "steering";
     this.canvas.setAttribute(
       "aria-label",
-      `Fishing at ${spot.name}. Target ${FISH[targetSpecies].name}, ${FISH[targetSpecies].rarity} rarity.`,
+      fishing.reeling
+        ? `Fishing at ${spot.name}. Reeling ${FISH[fishing.reeling.species].name} to the boat.`
+        : `Fishing at ${spot.name}. Target ${FISH[targetSpecies].name}, ${FISH[targetSpecies].rarity} rarity.`,
     );
     this.drawFishingEnvironment(art.fishingEnvironments[spot.id], layout, width, height, settings.highContrast);
-    this.drawFishingSurfaceBand(simulation, settings, width, height, layout.surfaceY);
+    this.drawFishingSurfaceBand(
+      simulation,
+      settings,
+      width,
+      height,
+      layout.surfaceY,
+      fishing.reeling ? reelProgress : 0,
+    );
 
     const gameplayVisibility = clamp((diveProgress - 0.24) / 0.54, 0, 1);
     context.save();
@@ -449,7 +470,8 @@ export class CanvasRenderer {
       this.drawFishingLineLimit(depthLine, width, height, settings.highContrast);
     }
 
-    for (const target of fishing.targets) {
+    for (const [targetIndex, target] of fishing.targets.entries()) {
+      if (fishing.reeling?.targetIndex === targetIndex) continue;
       const point = fishingPointToScreen(target, width, layout, maximumDepth);
       const pose = fishingFishPose(target.species, simulation.elapsed, target.phase, settings.reducedMotion);
       const animatedPoint = {
@@ -472,7 +494,13 @@ export class CanvasRenderer {
       }
     }
 
-    const hook = fishingPointToScreen(fishing.hook, width, layout, maximumDepth);
+    const restingHook = fishingPointToScreen(fishing.hook, width, layout, maximumDepth);
+    const hook = fishing.reeling
+      ? {
+          x: restingHook.x + (width * 0.5 - restingHook.x) * reelProgress,
+          y: restingHook.y + (layout.surfaceY + 10 - restingHook.y) * reelProgress,
+        }
+      : restingHook;
     context.strokeStyle = settings.highContrast ? "#ffffff" : "#f4e2b9";
     context.lineWidth = settings.highContrast ? 3 : 2;
     context.beginPath();
@@ -480,10 +508,59 @@ export class CanvasRenderer {
     context.lineTo(hook.x, hook.y);
     context.stroke();
     const hookSize = clamp(Math.min(width, height) * 0.076, 46, 68);
+    if (fishing.reeling) {
+      const wriggle = fishingReelWriggle(
+        simulation.elapsed,
+        fishing.reeling.hookedAt,
+        settings.reducedMotion,
+      );
+      const fishOffset = fishing.reeling.direction * hookSize * 0.24;
+      context.save();
+      context.translate(hook.x - fishOffset, hook.y + hookSize * 0.08);
+      context.rotate(wriggle * 0.18);
+      context.scale(1, 1 + Math.abs(wriggle) * 0.06);
+      this.drawFish(
+        fishing.reeling.species,
+        { x: 0, y: 0 },
+        fishing.reeling.direction,
+        width,
+        height,
+        settings.highContrast,
+      );
+      context.restore();
+    }
     this.drawTackleCell(1, 1, hook.x, hook.y, hookSize, hookSize);
 
     this.drawFishingTargetGuide(targetSpecies, width, height, settings.highContrast, layout.surfaceY);
-    this.drawFishingControlCue(width, height, settings.highContrast);
+    if (fishing.reeling) {
+      this.drawReelingCue(fishing.reeling.species, reelProgress, width, height, settings.highContrast);
+    } else {
+      this.drawFishingControlCue(width, height, settings.highContrast);
+    }
+    context.restore();
+  }
+
+  private drawReelingCue(
+    species: FishSpecies,
+    progress: number,
+    width: number,
+    height: number,
+    highContrast: boolean,
+  ): void {
+    const { context } = this;
+    const barWidth = clamp(width * 0.23, 180, 300);
+    const x = (width - barWidth) / 2;
+    const y = height - clamp(height * 0.09, 44, 72);
+    context.save();
+    context.textAlign = "center";
+    context.textBaseline = "bottom";
+    context.fillStyle = highContrast ? "#ffffff" : "#f4e6c5";
+    context.font = `900 ${clamp(height * 0.021, 14, 19)}px system-ui, sans-serif`;
+    context.fillText(`REELING ${fishShortName(species)}`, width / 2, y - 9);
+    context.fillStyle = "rgba(3, 12, 21, 0.72)";
+    context.fillRect(x, y, barWidth, 6);
+    context.fillStyle = highContrast ? "#ffffff" : "#e8a44d";
+    context.fillRect(x, y, barWidth * progress, 6);
     context.restore();
   }
 
@@ -516,6 +593,7 @@ export class CanvasRenderer {
     width: number,
     height: number,
     surfaceY: number,
+    underwaterReveal: number,
   ): void {
     const art = this.art;
     if (!art) return;
@@ -523,7 +601,11 @@ export class CanvasRenderer {
     const motionDelta = this.updateSurfaceMotion(simulation, false, settings.reducedMotion);
     const camera = this.camera(simulation, false, settings.reducedMotion, motionDelta);
     const nightIntensity = nightVisualIntensity(simulation);
-    const drawSurfaceImage = (image: HTMLImageElement, alpha: number): void => {
+    const drawSurfaceImage = (
+      image: HTMLImageElement,
+      alpha: number,
+      layer: "above" | "below",
+    ): void => {
       const panorama = calculatePanoramaLayout({
         imageWidth: image.naturalWidth,
         imageHeight: image.naturalHeight,
@@ -533,7 +615,11 @@ export class CanvasRenderer {
       });
       context.save();
       context.beginPath();
-      context.rect(0, 0, width, surfaceY + 3);
+      if (layer === "above") {
+        context.rect(0, 0, width, surfaceY + 3);
+      } else {
+        context.rect(0, surfaceY, width, height - surfaceY);
+      }
       context.clip();
       context.globalAlpha = alpha;
       context.drawImage(
@@ -549,8 +635,23 @@ export class CanvasRenderer {
       );
       context.restore();
     };
-    drawSurfaceImage(art.lake, 1);
-    if (nightIntensity > 0) drawSurfaceImage(art.lakeNight, nightIntensity);
+    const surfaceBlend = clamp(underwaterReveal, 0, 1);
+    if (surfaceBlend > 0) {
+      drawSurfaceImage(art.lake, surfaceBlend, "below");
+      if (nightIntensity > 0) {
+        drawSurfaceImage(art.lakeNight, surfaceBlend * nightIntensity, "below");
+      }
+      context.save();
+      context.beginPath();
+      context.rect(0, surfaceY, width, height - surfaceY);
+      context.clip();
+      context.globalAlpha = surfaceBlend * (settings.highContrast ? 0.08 : 0.07);
+      context.fillStyle = regionSurfaceTintAt(simulation.boat.x);
+      context.fillRect(0, surfaceY, width, height - surfaceY);
+      context.restore();
+    }
+    drawSurfaceImage(art.lake, 1, "above");
+    if (nightIntensity > 0) drawSurfaceImage(art.lakeNight, nightIntensity, "above");
 
     context.save();
     context.beginPath();

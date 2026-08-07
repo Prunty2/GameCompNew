@@ -95,6 +95,7 @@ declare global {
       sailToHarbor(id: HarborId): void;
       previewFishing(id: SpotId, species: FishSpecies): void;
       catchSpecies(species: FishSpecies): void;
+      hookSpecies(species: FishSpecies): void;
       damage(amount: number): void;
       setElapsed(seconds: number): void;
       elapsed(): number;
@@ -390,7 +391,9 @@ export class Game {
     const navigation = this.uiRoot.querySelector<HTMLElement>(".navigation-controls");
     const fishing = this.uiRoot.querySelector<HTMLElement>(".fishing-controls");
     if (navigation) navigation.hidden = this.overlay !== null || simulation.mode === "fishing";
-    if (fishing) fishing.hidden = this.overlay !== null || simulation.mode !== "fishing";
+    if (fishing) fishing.hidden = this.overlay !== null
+      || simulation.mode !== "fishing"
+      || simulation.fishing?.reeling !== null;
     const showNightIndicator = shouldShowNightIndicator(simulation);
     document.body.classList.toggle("show-night-indicator", showNightIndicator);
     this.uiRoot.querySelector<HTMLElement>(".night-indicator")
@@ -1099,6 +1102,7 @@ export class Game {
         break;
       }
       case "leave-fishing":
+        if (this.simulation.fishing?.reeling) break;
         this.feedback.cue("cast");
         this.simulation.mode = "cruising";
         this.simulation.fishing = null;
@@ -1151,6 +1155,13 @@ export class Game {
       catchSpecies: (species) => {
         resolveCatch(this.simulation, species);
         this.handleSimulationEvents();
+      },
+      hookSpecies: (species) => {
+        const target = this.simulation.fishing?.targets.find((candidate) => candidate.species === species);
+        if (!this.simulation.fishing || !target) return;
+        this.simulation.fishing.hook = { x: target.x, y: target.y };
+        updateSimulation(this.simulation, { travel: 0, hookX: 0, hookY: 0, boost: false }, 0);
+        this.refreshHud();
       },
       damage: (amount) => {
         damageBoat(this.simulation, amount);
