@@ -30,6 +30,7 @@ import { InputController } from "./input";
 import { CanvasRenderer } from "./renderer";
 import {
   acceptAvailableContract,
+  buyBoost,
   buyPermit,
   buyUpgrade,
   cargoCapacity,
@@ -50,6 +51,7 @@ import {
   startFishing,
   tutorialPrompt,
   undock,
+  unlockBoostForTesting,
   updateSimulation,
   upgradeCost,
   type Simulation,
@@ -189,6 +191,11 @@ export class Game {
       }
     }
 
+    if (this.input.consumeDebugBoostUnlock() && this.started) {
+      if (!unlockBoostForTesting(this.simulation)) this.showToast("Boost is already unlocked.");
+      this.handleSimulationEvents();
+    }
+
     if (this.started && this.overlay === null && !this.sceneTransitioning) {
       while (this.accumulator >= FIXED_STEP) {
         updateSimulation(this.simulation, this.input.read(), FIXED_STEP);
@@ -225,6 +232,11 @@ export class Game {
         <div class="night-indicator" role="img" aria-label="Nighttime" aria-hidden="true">
           <span class="night-indicator-icon" aria-hidden="true"></span>
         </div>
+        <div class="boost-gauge" role="meter" aria-label="Boost charge" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100" hidden>
+          <span class="boost-gauge-label">BOOST</span>
+          <span class="boost-gauge-track"><i></i></span>
+          <small>SHIFT</small>
+        </div>
         <button class="tutorial-callout" id="tutorial-callout" type="button" data-action="dismiss-tutorial" title="Dismiss instruction" hidden>
           <span class="tutorial-label" aria-hidden="true">Next</span>
           <span class="tutorial-message" aria-live="polite"></span>
@@ -237,6 +249,7 @@ export class Game {
         <section class="touch-controls navigation-controls" aria-label="Touch boat controls">
           <div class="travel-controls">
             <button type="button" data-control="left" aria-label="Move left"><span>←</span><small>LEFT</small></button>
+            <button class="touch-boost" type="button" data-control="boost" aria-label="Hold boost"><span>⚡</span><small>BOOST</small></button>
             <button type="button" data-control="right" aria-label="Move right"><span>→</span><small>RIGHT</small></button>
           </div>
           <button class="touch-action" type="button" data-control="action" aria-label="Interact or cast"><span>E</span><small>ACT</small></button>
@@ -338,6 +351,13 @@ export class Game {
         this.feedback.cue("upgrade");
         this.showToast("Outer Gloam permit granted. Keep your lamp close.");
         break;
+      case "boost-unlocked":
+        this.feedback.cue("upgrade");
+        this.pulseFeedback("upgrade");
+        this.showToast(event.temporary
+          ? "Boost temporarily unlocked. Hold Shift while sailing."
+          : "Boost unlocked. Hold Shift while sailing.");
+        break;
       case "population-protected":
         this.feedback.cue("deny");
         this.showToast(`${FISH[event.species].name} is protected while its population recovers.`);
@@ -383,6 +403,19 @@ export class Game {
     this.uiRoot.querySelector<HTMLElement>(".night-indicator")
       ?.setAttribute("aria-hidden", String(!showNightIndicator));
     document.documentElement.style.setProperty("--day-progress", String(dayProgress(simulation)));
+    const boostGauge = this.uiRoot.querySelector<HTMLElement>(".boost-gauge");
+    if (boostGauge) {
+      const unlocked = simulation.progress.boostUnlocked || simulation.boost.temporaryUnlocked;
+      const charge = Math.round((1 - simulation.boost.heat) * 100);
+      boostGauge.hidden = !unlocked || this.overlay !== null || simulation.mode !== "cruising";
+      boostGauge.classList.toggle("is-active", simulation.boost.active);
+      boostGauge.classList.toggle("is-overheated", simulation.boost.overheated);
+      boostGauge.style.setProperty("--boost-charge", `${charge}%`);
+      boostGauge.setAttribute("aria-valuenow", String(charge));
+      boostGauge.setAttribute("aria-valuetext", simulation.boost.overheated ? `${charge}% cooling` : `${charge}% available`);
+      const label = boostGauge.querySelector<HTMLElement>(".boost-gauge-label");
+      if (label) label.textContent = simulation.boost.overheated ? "COOLING" : "BOOST";
+    }
   }
 
   private refreshContextAction(): void {
@@ -546,6 +579,7 @@ export class Game {
               ${this.upgradeCard("engine", "Engine", "+11% speed")}
               ${this.upgradeCard("lamp", "Lamp", "Wider night view")}
               ${this.upgradeCard("line", "Line depth", "Next depth tier")}
+              ${this.boostCard()}
               ${harborId === "gloam" ? this.permitCard() : ""}
             </div>
           </section>`
@@ -577,6 +611,11 @@ export class Game {
   private permitCard(): string {
     const unlocked = this.simulation.progress.outerUnlocked;
     return `<article class="service-card"><span class="ui-icon icon-permit" aria-hidden="true"></span><div class="service-copy"><h4>Outer permit</h4><p>Outer water access</p></div>${this.upgradeMeter("Outer permit", unlocked ? BALANCE.maxUpgradeTier : 0, BALANCE.maxUpgradeTier)}<button class="service-purchase" type="button" data-action="buy-permit" aria-label="${unlocked ? "Outer permit owned" : `Buy Outer permit for ${BALANCE.permitCost} shells`}" ${unlocked || this.simulation.progress.money < BALANCE.permitCost ? "disabled" : ""}>${unlocked ? "<strong>OWNED</strong>" : `<span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${BALANCE.permitCost}</strong>`}</button></article>`;
+  }
+
+  private boostCard(): string {
+    const unlocked = this.simulation.progress.boostUnlocked;
+    return `<article class="service-card"><span class="ui-icon icon-engine" aria-hidden="true"></span><div class="service-copy"><h4>Engine boost</h4><p>${unlocked ? "Hold Shift to overclock" : "+33% speed until heat builds"}</p></div><span class="service-owned" aria-label="${unlocked ? "Engine boost owned" : "One-time unlock"}">${unlocked ? "OWNED" : "ABILITY"}</span><button class="service-purchase" type="button" data-action="buy-boost" aria-label="${unlocked ? "Engine boost owned" : `Unlock Engine boost for ${BALANCE.boostUnlockCost} shells`}" ${unlocked || this.simulation.progress.money < BALANCE.boostUnlockCost ? "disabled" : ""}>${unlocked ? "<strong>OWNED</strong>" : `<span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${BALANCE.boostUnlockCost}</strong>`}</button></article>`;
   }
 
   private upgradeMeter(label: string, level: number, tierCap: number): string {
@@ -918,6 +957,7 @@ export class Game {
       money: this.simulation.progress.money,
       upgrades: { ...this.simulation.progress.upgrades },
       outerUnlocked: this.simulation.progress.outerUnlocked,
+      boostUnlocked: this.simulation.progress.boostUnlocked,
       completedContracts: this.simulation.progress.completedContracts,
       populations: { ...this.simulation.progress.populations },
       discovered: [...this.simulation.progress.discovered],
@@ -1122,6 +1162,12 @@ export class Game {
       }
       case "buy-permit":
         if (buyPermit(this.simulation)) {
+          this.handleSimulationEvents();
+          this.renderOverlay();
+        }
+        break;
+      case "buy-boost":
+        if (buyBoost(this.simulation)) {
           this.handleSimulationEvents();
           this.renderOverlay();
         }

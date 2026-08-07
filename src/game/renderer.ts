@@ -708,6 +708,8 @@ export class CanvasRenderer {
     const nightIntensity = nightVisualIntensity(simulation);
     const boatFilter = `brightness(${1 - nightIntensity * 0.18}) saturate(${1 - nightIntensity * 0.08})`;
 
+    this.drawBoostTrail(simulation, x, waterline + bob, boatWidth, settings);
+
     context.save();
     context.filter = boatFilter;
     this.drawBoatSteam(
@@ -741,6 +743,34 @@ export class CanvasRenderer {
       highContrast: settings.highContrast,
       seed: 1.3,
     });
+  }
+
+  private drawBoostTrail(
+    simulation: Simulation,
+    boatX: number,
+    waterline: number,
+    boatWidth: number,
+    settings: RenderSettings,
+  ): void {
+    if (!simulation.boost.active) return;
+    const direction = simulation.boat.facing;
+    const pulse = settings.reducedMotion ? 0 : (simulation.elapsed * 3.7) % 1;
+    const trailOrigin = boatX - direction * boatWidth * 0.42;
+    this.context.save();
+    this.context.globalCompositeOperation = "screen";
+    this.context.lineCap = "round";
+    for (let index = 0; index < 4; index += 1) {
+      const offset = ((index / 4 + pulse) % 1) * boatWidth * 0.35;
+      const startX = trailOrigin - direction * offset;
+      const length = boatWidth * (0.13 + index * 0.025);
+      this.context.beginPath();
+      this.context.moveTo(startX, waterline + 5 + index * 4);
+      this.context.lineTo(startX - direction * length, waterline + 7 + index * 5);
+      this.context.strokeStyle = index % 2 === 0 ? "rgb(255 190 86 / 62%)" : "rgb(134 224 231 / 48%)";
+      this.context.lineWidth = Math.max(1.5, boatWidth * 0.008 - index * 0.35);
+      this.context.stroke();
+    }
+    this.context.restore();
   }
 
   private drawBoatSteam(

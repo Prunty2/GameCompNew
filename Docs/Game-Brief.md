@@ -23,6 +23,8 @@ After eight completed research deliveries, the player receives a season report s
 
 *Dredge* informed the broad contrast between calm travel and risky darkness. *Cat Goes Fishing* was examined as a competitor because its clear equipment, exploration, species-discovery, and catalogue progression are easy to understand. FSHING retains only those abstract genre patterns and transforms them into an original environmental-science loop. No names, fish designs, dialogue, interface layouts, balance values, art, code, map, or behaviours were copied.
 
+For the engine boost, mechanical research found that DREDGE's Haste is held for a temporary speed increase, builds engine heat while active, and dissipates heat after release; overheating damages an engine slot. Player timing tests estimate its immediate gain at roughly one third. FSHING adopts only the readable hold–heat–recover rhythm and approximate speed feel, replacing damage and panic with a forgiving cooling lockout suited to a short educational browser game.
+
 ### Points of originality
 
 FSHING is not intended to reproduce Dredge in 2D. Its distinct focus is a repeatable delivery economy:
@@ -230,6 +232,7 @@ The boat uses direct horizontal side-scrolling movement:
 - Hold left or right to apply thrust in that direction
 - Releasing thrust allows short, readable momentum before water drag slows the boat
 - Brake reduces speed quickly without instantly snapping the boat to a stop
+- Once purchased, holding boost overclocks the engine to 133% of its current maximum speed while filling an eight-second heat meter. Releasing boost cools the meter over ten seconds. Reaching full heat safely locks boost until the meter cools to 25%, preserving DREDGE's readable risk-and-recovery cadence without copying its engine-damage or panic penalties.
 - The boat faces its current travel direction and uses restrained bob and tilt so motion remains calm and readable
 - Boat movement stays on the open horizontal surface without fixed collision obstacles
 
@@ -243,13 +246,16 @@ The handling should feel smooth, measured, and forgiving rather than physically 
 
 - A/D or Left/Right Arrow: thrust left or right
 - W/S: steer the hook vertically while fishing
+- Left Shift: hold engine boost after unlocking it
 - Space or E: interact, dock, or cast
 - Escape or P: pause
+- Temporary testing — B: grant the boost unlock for the current run without saving it
 - Development builds only — G: jump to the start of the dusk transition; H: jump to full night
 
 **Pointer and touch**
 
 - On-screen left and right controls during navigation
+- On-screen hold control for boost after it is unlocked
 - Tap prominent interaction buttons to dock, accept contracts, and cast
 - Drag or virtual-stick input to steer the hook while fishing
 
@@ -296,6 +302,7 @@ Money is earned primarily from completed deliveries and spent on permanent impro
 
 - **Boat and cargo:** The hold starts with 3 slots. Seven cargo tiers unlock one slot each to a maximum of 10; the vessel grows through named classes, from the starter skiff to a lakebreaker.
 - **Engine speed:** Reach fishing areas and destinations before fish spoil.
+- **Engine boost:** A one-time 300-shell overclock unlock adds a temporary 33% speed increase governed by heat and passive cooling.
 - **Lights:** See landmarks and resist nighttime visibility penalties.
 - **Line depth:** Reach progressively deeper fish and new underwater color zones.
 - **Region access:** Purchase permits or equipment needed to enter new waters.
@@ -385,6 +392,7 @@ The game automatically saves stable progression, including:
 - Money
 - Purchased upgrade tiers
 - Unlocked regions
+- Permanent engine-boost unlock
 - Boat, engine, lamp, and line-depth upgrade tiers
 - Fish population values and discovered species
 - Survey accuracy, crossings started, conservation score, and season-completion state
@@ -659,6 +667,8 @@ All durations use simulation seconds; horizontal positions use normalized world 
 | Cargo capacity | 1 fish, then +1 per boat tier up to 7 |
 | Boat and cargo upgrade | 60 shells base; six tiers |
 | Engine upgrade | 70 shells base; +11% maximum speed per tier; six tiers |
+| Engine boost unlock | 300 shells; +33% maximum speed while held |
+| Boost heat and recovery | 8 seconds to full heat; 10 seconds to cool from full; recovers from lockout at 25% heat |
 | Lamp upgrade | 70 shells base; six tiers |
 | Line-depth upgrade | 55 shells base; six tiers unlock progressively deeper water |
 | Outer Gloam permit | 85 shells |

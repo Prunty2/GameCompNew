@@ -16,7 +16,7 @@ test("main menu presents only centered play and settings actions", async ({ page
   await page.goto("/");
 
   const version = page.locator(".title-build-version");
-  await expect(version).toHaveText("v0.1.0 (PR #16)");
+  await expect(version).toHaveText("v0.2.0 (PR #16)");
   const versionBounds = await version.boundingBox();
   expect(versionBounds).not.toBeNull();
   expect(versionBounds!.x).toBeLessThan(24);
@@ -129,6 +129,25 @@ test("development shortcuts jump to dusk and full night", async ({ page }) => {
   await expect.poll(() => page.locator("#game-canvas").evaluate(
     (element) => (element as HTMLCanvasElement).toDataURL(),
   )).not.toBe(transitionFrame);
+});
+
+test("B temporarily unlocks the rechargeable engine boost", async ({ page }) => {
+  await page.goto("/?e2e=1");
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.getByRole("button", { name: "Accept contract" }).click();
+
+  await page.keyboard.press("b");
+  await expect(page.locator("#toast")).toContainText("Boost temporarily unlocked");
+  const gauge = page.getByRole("meter", { name: "Boost charge" });
+  await expect(gauge).toBeVisible();
+  await expect(gauge).toHaveAttribute("aria-valuenow", "100");
+
+  await page.keyboard.down("KeyD");
+  await page.keyboard.down("ShiftLeft");
+  await expect.poll(async () => Number(await gauge.getAttribute("aria-valuenow"))).toBeLessThan(100);
+  await expect(gauge).toHaveClass(/is-active/);
+  await page.keyboard.up("ShiftLeft");
+  await page.keyboard.up("KeyD");
 });
 
 test("pause blurs the lake and slides the compact menu in and out", async ({ page }) => {
@@ -361,7 +380,7 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await expect(page.getByRole("button", { name: "Services", exact: true })).toBeFocused();
   await expect(page.locator(".harbor-tab .ui-icon")).toHaveCount(3);
   await expect(page.getByRole("region", { name: "Dock services" })).toBeVisible();
-  await expect(page.locator(".service-card > .ui-icon")).toHaveCount(5);
+  await expect(page.locator(".service-card > .ui-icon")).toHaveCount(6);
   await expect(page.getByRole("heading", { name: "Repair hull" })).toHaveCount(0);
   await expect(page.locator(".service-card > .icon-line")).toHaveCSS("background-image", /ui-icons/);
   await expect(page.locator(".service-card > .icon-line")).toHaveCSS("background-color", "rgb(7, 27, 41)");
@@ -440,7 +459,8 @@ test("settings, keyboard pause, and local SDK fallback remain usable", async ({ 
   await page.getByRole("button", { name: "Controls" }).click();
   await expectHorizontallyCentered(page, ".controls-panel");
   await expect(page.locator(".controls-wordmark")).toBeVisible();
-  await expect(page.locator(".binding-row")).toHaveCount(6);
+  await expect(page.locator(".binding-row")).toHaveCount(7);
+  await expect(page.getByRole("button", { name: "Rebind Boost" })).toHaveText("Left Shift");
   await expect(page.locator(".binding-row").first()).toHaveCSS("border-radius", "12px");
   await expect(page.locator(".controls-overlay")).toHaveCSS("backdrop-filter", "blur(8px) saturate(0.78)");
   await expect(page.getByRole("button", { name: "Rebind Hook up" })).toHaveText("W");

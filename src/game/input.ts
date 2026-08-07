@@ -1,7 +1,7 @@
 import type { InputState } from "./simulation";
 import type { ControlAction, ControlBindings } from "./controls";
 
-type VirtualControl = "left" | "right" | "action";
+type VirtualControl = "left" | "right" | "boost" | "action";
 export type DebugTimeJump = "transition-start" | "night-start";
 
 export class InputController {
@@ -10,6 +10,7 @@ export class InputController {
   private actionQueued = false;
   private pauseQueued = false;
   private debugTimeJumpQueued: DebugTimeJump | null = null;
+  private debugBoostUnlockQueued = false;
   private hookPointer = { x: 0, y: 0 };
   private bindings = new AbortController();
   private pendingRebind: { action: ControlAction; callback: (code: string | null) => void } | null = null;
@@ -26,6 +27,7 @@ export class InputController {
     const vertical = Number(this.hasAction("down")) - Number(this.hasAction("up"));
     return {
       travel,
+      boost: this.hasAction("boost") || this.virtualPressed.has("boost"),
       hookX: this.hookPointer.x || travel,
       hookY: this.hookPointer.y || vertical,
     };
@@ -75,6 +77,12 @@ export class InputController {
   consumeDebugTimeJump(): DebugTimeJump | null {
     const queued = this.debugTimeJumpQueued;
     this.debugTimeJumpQueued = null;
+    return queued;
+  }
+
+  consumeDebugBoostUnlock(): boolean {
+    const queued = this.debugBoostUnlockQueued;
+    this.debugBoostUnlockQueued = false;
     return queued;
   }
 
@@ -147,6 +155,11 @@ export class InputController {
         this.debugTimeJumpQueued = debugTimeJump;
         return;
       }
+    }
+    if (!event.repeat && event.code === "KeyB") {
+      event.preventDefault();
+      this.debugBoostUnlockQueued = true;
+      return;
     }
     if (event.code.startsWith("Arrow") || event.code === "Space") event.preventDefault();
     if (!event.repeat && event.code === this.controlBindings.action) this.actionQueued = true;
