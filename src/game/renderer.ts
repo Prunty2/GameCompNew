@@ -34,6 +34,7 @@ import {
 import {
   FISHING_RARITY_COLOURS,
   fishingDiveProgress,
+  fishingFishPose,
   fishingPointToScreen,
   fishingViewLayout,
   type FishingViewLayout,
@@ -442,19 +443,27 @@ export class CanvasRenderer {
       this.drawFishingLineLimit(depthLine, width, height, settings.highContrast);
     }
 
-    for (const target of fishing.targets) {
+    for (const [targetIndex, target] of fishing.targets.entries()) {
       const point = fishingPointToScreen(target, width, layout, maximumDepth);
+      const pose = fishingFishPose(simulation.elapsed, targetIndex, target.speed, settings.reducedMotion);
+      const animatedPoint = {
+        x: point.x,
+        y: point.y + pose.verticalOffsetRatio * layout.underwaterHeight,
+      };
       const reachable = FISH[target.species].depthTier <= simulation.progress.upgrades.line;
       context.save();
       context.globalAlpha = reachable ? 1 : 0.3;
+      context.translate(animatedPoint.x, animatedPoint.y);
+      context.rotate(pose.rotation * target.direction);
+      context.scale(pose.scaleX, pose.scaleY);
       if (target.species === targetSpecies) {
-        this.drawFishOutline(target.species, point, target.direction, width, height, settings.highContrast);
+        this.drawFishOutline(target.species, { x: 0, y: 0 }, target.direction, width, height, settings.highContrast);
       }
-      this.drawFish(target.species, point, target.direction, width, height, settings.highContrast);
-      if (target.species === targetSpecies) {
-        this.drawFishingTargetChevron(point, target.species, width, height, settings.highContrast);
-      }
+      this.drawFish(target.species, { x: 0, y: 0 }, target.direction, width, height, settings.highContrast);
       context.restore();
+      if (target.species === targetSpecies) {
+        this.drawFishingTargetChevron(animatedPoint, target.species, width, height, settings.highContrast);
+      }
     }
 
     const hook = fishingPointToScreen(fishing.hook, width, layout, maximumDepth);
@@ -565,15 +574,15 @@ export class CanvasRenderer {
     if (!art) return;
     const { context } = this;
     context.save();
-    context.strokeStyle = highContrast ? "#fff6d8" : "rgba(232, 164, 77, 0.82)";
-    context.lineWidth = highContrast ? 2.5 : 1.5;
+    context.strokeStyle = highContrast ? "rgba(255, 246, 216, 0.9)" : "rgba(232, 164, 77, 0.52)";
+    context.lineWidth = highContrast ? 2 : 1;
     context.beginPath();
     context.moveTo(0, depthLine);
     context.lineTo(width, depthLine);
     context.stroke();
-    const spacing = clamp(width * 0.082, 72, 118);
-    for (let x = spacing * 0.5; x < width; x += spacing) {
-      const floatSize = clamp(height * 0.066, 46, 66);
+    for (const ratio of [0.14, 0.38, 0.62, 0.86]) {
+      const x = width * ratio;
+      const floatSize = clamp(height * 0.052, 38, 50);
       context.drawImage(
         art.lineLimitFloat,
         x - floatSize / 2,
@@ -589,7 +598,7 @@ export class CanvasRenderer {
     context.textAlign = "right";
     context.textBaseline = "top";
     const labelY = height < 520 ? depthLine - 24 : depthLine + 17;
-    context.fillText("UPGRADE LINE TO GO DEEPER", width - 24, labelY);
+    context.fillText(height < 520 ? "UPGRADE LINE" : "UPGRADE LINE TO GO DEEPER", width - 24, labelY);
     context.restore();
   }
 
@@ -1005,8 +1014,6 @@ export class CanvasRenderer {
     context.fillStyle = highContrast ? "#ffffff" : "#f4e6c5";
     context.font = `900 ${clamp(height * 0.022, 14, 21)}px system-ui, sans-serif`;
     context.fillText(fishShortName(species), guideX + guideWidth / 2, textY + 15);
-    context.font = `800 ${clamp(height * 0.014, 9, 13)}px system-ui, sans-serif`;
-    context.fillText(fish.shape.toUpperCase(), guideX + guideWidth / 2, textY + 36);
     context.restore();
   }
 

@@ -5,6 +5,7 @@ import {
   FISHING_ENVIRONMENT_KEYS,
   FISHING_RARITY_COLOURS,
   fishingDiveProgress,
+  fishingFishPose,
   fishingPointToScreen,
   fishingViewLayout,
 } from "../game/fishingPresentation";
@@ -17,8 +18,24 @@ describe("fishing presentation", () => {
 
     expect(start.surfaceY).toBeCloseTo(702);
     expect(middle.surfaceY).toBeLessThan(start.surfaceY);
-    expect(settled.surfaceY).toBeCloseTo(198);
+    expect(settled.surfaceY).toBeCloseTo(279);
     expect(fishingDiveProgress(20, 20, true)).toBe(1);
+  });
+
+  test("gives each fish a deterministic swim cycle and respects reduced motion", () => {
+    const first = fishingFishPose(12.5, 2, 0.05, false);
+    const repeated = fishingFishPose(12.5, 2, 0.05, false);
+    const neighbor = fishingFishPose(12.5, 3, 0.05, false);
+
+    expect(first).toEqual(repeated);
+    expect(first).not.toEqual(neighbor);
+    expect(Math.abs(first.verticalOffsetRatio)).toBeLessThanOrEqual(0.012);
+    expect(fishingFishPose(12.5, 2, 0.05, true)).toEqual({
+      verticalOffsetRatio: 0,
+      rotation: 0,
+      scaleX: 1,
+      scaleY: 1,
+    });
   });
 
   test("keeps the simulated hook limit aligned with the visible float line", () => {

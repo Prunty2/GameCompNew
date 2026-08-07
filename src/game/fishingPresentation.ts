@@ -7,6 +7,13 @@ export interface FishingViewLayout {
   lineLimitRatio: number;
 }
 
+export interface FishingFishPose {
+  verticalOffsetRatio: number;
+  rotation: number;
+  scaleX: number;
+  scaleY: number;
+}
+
 export const FISHING_DIVE_DURATION = 0.85;
 
 export const FISHING_RARITY_COLOURS: Record<FishRarity, string> = {
@@ -29,7 +36,7 @@ export function fishingDiveProgress(elapsed: number, startedAt: number, reducedM
 }
 
 export function fishingViewLayout(height: number, lineTier: number, diveProgress: number): FishingViewLayout {
-  const settledSurfaceY = height * 0.22;
+  const settledSurfaceY = height * 0.31;
   const sailingSurfaceY = height * 0.78;
   const surfaceY = sailingSurfaceY + (settledSurfaceY - sailingSurfaceY) * clamp(diveProgress, 0, 1);
   const underwaterHeight = Math.max(1, height - surfaceY);
@@ -39,6 +46,26 @@ export function fishingViewLayout(height: number, lineTier: number, diveProgress
     underwaterHeight,
     lineLimitY: surfaceY + underwaterHeight * lineLimitRatio,
     lineLimitRatio,
+  };
+}
+
+export function fishingFishPose(
+  elapsed: number,
+  targetIndex: number,
+  speed: number,
+  reducedMotion: boolean,
+): FishingFishPose {
+  if (reducedMotion) {
+    return { verticalOffsetRatio: 0, rotation: 0, scaleX: 1, scaleY: 1 };
+  }
+  const phase = targetIndex * 1.73;
+  const finCycle = Math.sin(elapsed * (2.4 + speed * 12) + phase);
+  const glideCycle = Math.sin(elapsed * (0.8 + speed * 3) + phase * 0.7);
+  return {
+    verticalOffsetRatio: finCycle * 0.004 + glideCycle * 0.008,
+    rotation: glideCycle * 0.035 + finCycle * 0.012,
+    scaleX: 1 + finCycle * 0.028,
+    scaleY: 1 - finCycle * 0.018,
   };
 }
 

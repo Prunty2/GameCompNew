@@ -563,7 +563,7 @@ export function tutorialPrompt(simulation: Simulation): string | null {
     const target = simulation.activeContract?.spot === spot.id
       ? simulation.activeContract.species
       : spot.species;
-    return `Guide the hook toward the ${FISH[target].name}. Match its ${FISH[target].shape.toLowerCase()}.`;
+    return `Guide the hook toward the ${FISH[target].name}.`;
   }
   if (!simulation.cargo.some((item) => item.species === simulation.activeContract?.species)) {
     return "Hold right for Sunward Shoal. Follow the fish activity and slow when the hook appears.";
