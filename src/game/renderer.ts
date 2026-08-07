@@ -690,7 +690,9 @@ export class CanvasRenderer {
     const { context } = this;
     const x = worldToScreenX(simulation.boat.x, camera, width);
     const boatScale = 1 + simulation.progress.upgrades.cargo * 0.055;
-    const boatWidth = clamp(this.canvas.clientHeight * 0.421 * boatScale, 172, 412);
+    const cameraScale = BALANCE.cameraViewWidth / camera.viewWidth;
+    const boatWidth = clamp(this.canvas.clientHeight * 0.421 * boatScale, 172, 412) * cameraScale;
+    this.canvas.dataset.surfaceBoatWidth = boatWidth.toFixed(2);
     const boatHeight = boatWidth * (art.boat.height / art.boat.width);
     const speedRatio = Math.min(1, Math.abs(simulation.boat.speed) / BALANCE.maxSurfaceSpeed);
     const steamSpeedRatio = Math.min(1, Math.abs(this.surfaceSteamVelocity) / BALANCE.maxSurfaceSpeed);
@@ -1131,7 +1133,7 @@ export class CanvasRenderer {
       ? BALANCE.cameraViewWidth * BALANCE.boostCameraViewMultiplier
       : BALANCE.cameraViewWidth;
     if (!cinematic) {
-      this.surfaceCameraViewWidth = reducedMotion || deltaSeconds === 0
+      this.surfaceCameraViewWidth = reducedMotion
         ? gameplayViewWidth
         : dampMotionValue(
           this.surfaceCameraViewWidth,

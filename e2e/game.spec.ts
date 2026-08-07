@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+const BOOST_CAMERA_VIEW_MULTIPLIER = 1.18;
+
 async function expectHorizontallyCentered(page: import("@playwright/test").Page, selector: string): Promise<void> {
   const offset = await page.locator(selector).evaluate((element) => {
     const bounds = element.getBoundingClientRect();
@@ -143,14 +145,30 @@ test("B temporarily unlocks the rechargeable engine boost", async ({ page }) => 
   await expect(gauge).toHaveAttribute("aria-valuenow", "100");
   const canvas = page.locator("#game-canvas");
   const normalViewWidth = Number(await canvas.getAttribute("data-surface-camera-view-width"));
+  const normalBoatWidth = Number(await canvas.getAttribute("data-surface-boat-width"));
 
   await page.keyboard.down("KeyD");
   await page.keyboard.down("ShiftLeft");
   await expect.poll(async () => Number(await gauge.getAttribute("aria-valuenow"))).toBeLessThan(100);
   await expect(gauge).toHaveClass(/is-active/);
-  await expect.poll(async () => Number(await canvas.getAttribute("data-surface-camera-view-width"))).toBeGreaterThan(normalViewWidth + 0.025);
+  await page.waitForTimeout(250);
+  const openingViewWidth = Number(await canvas.getAttribute("data-surface-camera-view-width"));
+  const openingBoatWidth = Number(await canvas.getAttribute("data-surface-boat-width"));
+  expect(openingViewWidth).toBeGreaterThan(normalViewWidth);
+  expect(openingViewWidth).toBeLessThan(normalViewWidth * BOOST_CAMERA_VIEW_MULTIPLIER - 0.003);
+  expect(openingBoatWidth).toBeLessThan(normalBoatWidth);
+  expect(openingBoatWidth).toBeGreaterThan(normalBoatWidth / BOOST_CAMERA_VIEW_MULTIPLIER + 2);
+  await expect.poll(async () => Number(await canvas.getAttribute("data-surface-camera-view-width"))).toBeGreaterThan(normalViewWidth + 0.045);
+  await expect.poll(async () => Number(await canvas.getAttribute("data-surface-boat-width"))).toBeLessThan(normalBoatWidth * 0.87);
   await page.keyboard.up("ShiftLeft");
   await page.keyboard.up("KeyD");
+  await page.waitForTimeout(250);
+  const closingViewWidth = Number(await canvas.getAttribute("data-surface-camera-view-width"));
+  const closingBoatWidth = Number(await canvas.getAttribute("data-surface-boat-width"));
+  expect(closingViewWidth).toBeGreaterThan(normalViewWidth + 0.003);
+  expect(closingViewWidth).toBeLessThan(normalViewWidth + 0.05);
+  expect(closingBoatWidth).toBeGreaterThan(normalBoatWidth * 0.85);
+  expect(closingBoatWidth).toBeLessThan(normalBoatWidth);
   await expect.poll(async () => Number(await canvas.getAttribute("data-surface-camera-view-width"))).toBeLessThan(normalViewWidth + 0.005);
 });
 
