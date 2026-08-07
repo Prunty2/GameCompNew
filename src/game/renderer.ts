@@ -51,6 +51,7 @@ import {
 } from "./simulation";
 import {
   objectiveIndicatorLayout,
+  objectiveIndicatorOpacity,
   type ObjectiveIndicatorDirection,
 } from "./objectiveIndicator";
 import { captureSurfaceLayer, drawWaterContact } from "./surfaceEffects";
@@ -935,10 +936,13 @@ export class CanvasRenderer {
     settings: RenderSettings,
   ): void {
     const goal = objective(simulation);
-    if (Math.abs(goal.point.x - simulation.boat.x) <= BALANCE.fishingRadius * 3.6) return;
+    const distance = Math.abs(goal.point.x - simulation.boat.x);
+    const opacity = objectiveIndicatorOpacity(distance, BALANCE.fishingRadius);
+    if (opacity <= 0) return;
     const x = worldToScreenX(goal.point.x, camera, width);
     const { context } = this;
     context.save();
+    context.globalAlpha = opacity;
     context.font = '700 16px "Avenir Next Condensed", "Arial Narrow", sans-serif';
     const layout = objectiveIndicatorLayout(x, width, height, context.measureText(goal.label.toUpperCase()).width);
     const pulse = settings.reducedMotion ? 0 : (Math.sin(simulation.elapsed * 3.2) + 1) / 2;
@@ -955,13 +959,13 @@ export class CanvasRenderer {
     context.stroke();
 
     context.shadowColor = "transparent";
-    context.globalAlpha = 0.18 + pulse * 0.18;
+    context.globalAlpha = opacity * (0.18 + pulse * 0.18);
     context.strokeStyle = "#ffd67d";
     context.lineWidth = 3;
     context.beginPath();
     context.arc(layout.markerX, layout.markerY, 28 + pulse * 3, 0, Math.PI * 2);
     context.stroke();
-    context.globalAlpha = 1;
+    context.globalAlpha = opacity;
 
     context.fillStyle = settings.highContrast ? "#f6a83f" : "#d77f2f";
     context.strokeStyle = "#fff1c7";
