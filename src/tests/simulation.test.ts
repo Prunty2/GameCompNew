@@ -28,6 +28,7 @@ import {
   resolveCatch,
   shouldShowNightIndicator,
   startFishing,
+  tutorialPrompt,
   undock,
   updateSimulation,
   type InputState,
@@ -208,6 +209,11 @@ describe("FSHING side-on simulation", () => {
     if (!simulation.fishing || !target) throw new Error("Expected a fishing target.");
     simulation.fishing.hook = { x: target.x, y: target.y };
     updateSimulation(simulation, idle, 0);
+    expect(simulation.mode).toBe("fishing");
+    expect(simulation.fishing?.reeling).toMatchObject({ species: "reedfin" });
+    expect(tutorialPrompt(simulation)).toBe("Reeling the Reedfin to the boat.");
+    expect(simulation.cargo).toEqual([]);
+    for (let index = 0; index < 12; index += 1) updateSimulation(simulation, idle, 0.1);
     expect(simulation.mode).toBe("cruising");
     expect(simulation.cargo).toEqual([{ species: "reedfin", freshness: 100 }]);
   });

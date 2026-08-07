@@ -1,5 +1,6 @@
 import { clamp, createRandom, type RandomSource } from "./math";
 import { fishingSpeciesMotion } from "./fishingMovement";
+import { FISHING_REEL_DURATION } from "./fishingReeling";
 import {
   BALANCE,
   FISH,
@@ -84,6 +85,14 @@ export interface FishingState {
   startedAt: number;
   hook: WorldPoint;
   targets: FishingTarget[];
+  reeling: FishingReelState | null;
+}
+
+export interface FishingReelState {
+  species: FishSpecies;
+  targetIndex: number;
+  hookedAt: number;
+  direction: -1 | 1;
 }
 
 export interface DeliveryResult {
@@ -311,6 +320,7 @@ export function startFishing(simulation: Simulation, spotId: SpotId): boolean {
     spot: spotId,
     startedAt: simulation.elapsed,
     hook: { x: 0.5, y: 0.08 },
+    reeling: null,
     targets: residents.flatMap((fishSpecies, residentIndex) => (
       [0, 1].map((schoolIndex) => {
         const fish = FISH[fishSpecies];
@@ -565,6 +575,9 @@ export function tutorialPrompt(simulation: Simulation): string | null {
       : "Stocks are recovering. Leave the harbor and dock again to advance recovery.";
   }
   if (simulation.mode === "fishing" && simulation.fishing) {
+    if (simulation.fishing.reeling) {
+      return `Reeling the ${FISH[simulation.fishing.reeling.species].name} to the boat.`;
+    }
     const spot = spotById(simulation.fishing.spot);
     const target = simulation.activeContract?.spot === spot.id
       ? simulation.activeContract.species
@@ -591,9 +604,15 @@ export function moveBoatForTesting(simulation: Simulation, point: WorldPoint): v
 function updateFishing(simulation: Simulation, input: InputState, dt: number): void {
   const fishing = simulation.fishing;
   if (!fishing) return;
+  if (fishing.reeling) {
+    if (simulation.elapsed - fishing.reeling.hookedAt >= FISHING_REEL_DURATION) {
+      resolveCatch(simulation, fishing.reeling.species);
+    }
+    return;
+  }
   fishing.hook.x = clamp(fishing.hook.x + input.hookX * FISHING_HOOK_SPEED * dt, 0.07, 0.93);
   fishing.hook.y = clamp(fishing.hook.y + input.hookY * FISHING_HOOK_SPEED * dt, 0.07, maxFishingDepth(simulation));
-  for (const target of fishing.targets) {
+  for (const [targetIndex, target] of fishing.targets.entries()) {
     const motion = fishingSpeciesMotion(target.species, simulation.elapsed, target.phase);
     target.x += target.speed * motion.horizontalMultiplier * target.direction * dt;
     target.y = clamp(target.homeY + motion.depthOffset, 0.1, 0.92);
@@ -603,7 +622,16 @@ function updateFishing(simulation: Simulation, input: InputState, dt: number): v
     }
     const reachable = FISH[target.species].depthTier <= simulation.progress.upgrades.line;
     if (reachable && distance(fishing.hook, target) <= FISHING_CATCH_RADIUS) {
-      resolveCatch(simulation, target.species);
+      if (simulation.progress.populations[target.species] <= PROTECTED_POPULATION) {
+        resolveCatch(simulation, target.species);
+        return;
+      }
+      fishing.reeling = {
+        species: target.species,
+        targetIndex,
+        hookedAt: simulation.elapsed,
+        direction: target.direction,
+      };
       return;
     }
   }
