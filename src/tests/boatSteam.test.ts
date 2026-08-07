@@ -7,9 +7,22 @@ describe("boat steam", () => {
     const second = boatSteamPuffs(4.25, 0.7, 1, false);
 
     expect(first).toEqual(second);
-    expect(first).toHaveLength(8);
+    expect(first).toHaveLength(9);
     expect(first.every((puff) => puff.spriteIndex >= 0 && puff.spriteIndex < 8)).toBe(true);
     expect(new Set(first.map((puff) => puff.spriteIndex)).size).toBeGreaterThan(1);
+  });
+
+  it("keeps the first visible puff connected to the stack mouth", () => {
+    const puffs = boatSteamPuffs(0.1, 0, 1, false);
+    const newborn = puffs[0]!;
+    const stackWisp = puffs.at(-1)!;
+
+    expect(newborn.opacity).toBeGreaterThan(0.1);
+    expect(newborn.y).toBeGreaterThan(-0.01);
+    expect(Math.abs(stackWisp.x)).toBeLessThan(0.01);
+    expect(stackWisp.y).toBeGreaterThan(-0.025);
+    expect(stackWisp.y).toBeLessThan(-0.01);
+    expect(stackWisp.opacity).toBeGreaterThan(0.1);
   });
 
   it("trails opposite local movement while continuing to rise", () => {
@@ -18,7 +31,8 @@ describe("boat steam", () => {
 
     expect(average(forward.map((puff) => puff.x))).toBeLessThan(0);
     expect(average(reverse.map((puff) => puff.x))).toBeGreaterThan(0);
-    expect(forward.every((puff) => puff.y < 0)).toBe(true);
+    expect(average(forward.map((puff) => puff.y))).toBeLessThan(0);
+    expect(forward.filter((puff) => puff.y < 0).length).toBeGreaterThanOrEqual(6);
   });
 
   it("keeps individual clouds compact instead of stretching them across the plume", () => {

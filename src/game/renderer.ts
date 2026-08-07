@@ -71,6 +71,9 @@ const SURFACE_HOOK_OPTICAL_CENTER = {
 } as const;
 const SURFACE_HOOK_SCALE = 1.05;
 const SURFACE_HOOK_RAISE_PX = 12;
+// Optical top-center of the exhaust stack in the keyed 1132 × 545 boat crop.
+const BOAT_STACK_ANCHOR_X = -0.133;
+const BOAT_STACK_ANCHOR_Y = -0.71;
 
 export class CanvasRenderer {
   private readonly context: CanvasRenderingContext2D;
@@ -491,8 +494,8 @@ export class CanvasRenderer {
     const tilt = settings.reducedMotion ? 0 : clamp(simulation.boat.speed * 0.16, -0.02, 0.02);
     const boatLift = clamp(boatHeight * 0.04, 4, 9);
     const boatY = waterline + bob - boatLift;
-    const stackLocalX = -boatWidth * 0.078;
-    const stackLocalY = -boatHeight * 0.566;
+    const stackLocalX = boatWidth * BOAT_STACK_ANCHOR_X;
+    const stackLocalY = boatHeight * BOAT_STACK_ANCHOR_Y;
     const targetStackOffsetX = simulation.boat.facing
       * (Math.cos(tilt) * stackLocalX - Math.sin(tilt) * stackLocalY);
     this.surfaceSteamStackOffsetX = settings.reducedMotion || this.surfaceSteamStackOffsetX === null
