@@ -16,7 +16,7 @@ test("main menu presents only centered play and settings actions", async ({ page
   await page.goto("/");
 
   const version = page.locator(".title-build-version");
-  await expect(version).toHaveText("v0.1.0 (PR #16)");
+  await expect(version).toHaveText("v0.1.0 (PR #34)");
   const versionBounds = await version.boundingBox();
   expect(versionBounds).not.toBeNull();
   expect(versionBounds!.x).toBeLessThan(24);
@@ -248,8 +248,6 @@ test("fishing descends through the sailing waterline into a site-specific scene"
   await page.getByRole("button", { name: "Play", exact: true }).click();
   await page.getByRole("button", { name: "Accept contract" }).click();
   await page.getByRole("button", { name: "Drop line · Sunward Shoal" }).click();
-  await page.getByRole("button", { name: /Reedfin/ }).click();
-  await page.getByRole("button", { name: "Use the evidence and drop the line" }).click();
 
   const canvas = page.locator("#game-canvas");
   await expect(canvas).toHaveAttribute("data-fishing-spot", "sunwardShoal");
@@ -309,11 +307,7 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
 
   await page.evaluate(() => window.__FSHING_TEST__?.sailToSpot("sunwardShoal"));
   await page.getByRole("button", { name: "Drop line · Sunward Shoal" }).click();
-  await expect(page.getByRole("heading", { name: "Read the lake" })).toBeVisible();
-  await expect(page.getByText("8.4 mg/L")).toBeVisible();
-  await page.getByRole("button", { name: /Reedfin/ }).click();
-  await expect(page.getByRole("heading", { name: "Prediction supported" })).toBeVisible();
-  await page.getByRole("button", { name: "Use the evidence and drop the line" }).click();
+  await expect(page.getByRole("heading", { name: "Read the lake" })).toHaveCount(0);
   await expect(page.getByText(/Guide the hook toward the Reedfin/)).toBeVisible();
   await page.evaluate(() => window.__FSHING_TEST__?.catchSpecies("reedfin"));
   await expect(page.getByRole("heading", { name: "Plan your crossing" })).toHaveCount(0);
@@ -484,22 +478,22 @@ test("how to play instructions advance one card at a time", async ({ page }) => 
   await expect(page.locator(".help-panel")).toHaveCSS("background-color", "rgba(4, 23, 31, 0.94)");
   await expect(page.locator(".help-panel")).toHaveCSS("border-radius", "20px");
   await expect(page.locator(".help-header .harbor-wordmark")).toBeVisible();
-  await expect(page.getByText("Step 1 of 5")).toBeVisible();
+  await expect(page.getByText("Step 1 of 4")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Take a job" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Previous" })).toBeDisabled();
 
   await page.getByRole("button", { name: "Next" }).click();
-  await expect(page.getByText("Step 2 of 5")).toBeVisible();
+  await expect(page.getByText("Step 2 of 4")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Follow the shoal" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Take a job" })).toHaveCount(0);
 
   await page.getByRole("button", { name: "Previous" }).click();
-  await expect(page.getByText("Step 1 of 5")).toBeVisible();
+  await expect(page.getByText("Step 1 of 4")).toBeVisible();
 
-  for (let step = 1; step < 5; step += 1) {
+  for (let step = 1; step < 4; step += 1) {
     await page.getByRole("button", { name: "Next" }).click();
   }
-  await expect(page.getByText("Step 5 of 5")).toBeVisible();
+  await expect(page.getByText("Step 4 of 4")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Fish sustainably" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Next" })).toBeDisabled();
 
