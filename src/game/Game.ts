@@ -42,9 +42,7 @@ import {
   deliverContract,
   getInteractionPrompt,
   interact,
-  learningAccuracy,
   moveBoatForTesting,
-  recordSurvey,
   releaseCargo,
   resolveCatch,
   shouldShowNightIndicator,
@@ -58,17 +56,14 @@ import {
   type SimulationEvent,
 } from "./simulation";
 import {
-  WATER_READINGS,
   averagePopulation,
   populationLabel,
-  surveyChoices,
-  type SurveyResult,
 } from "./stem";
 
 const FIXED_STEP = 1 / 120;
 const MAX_FRAME = 0.05;
 const UI_REFRESH_INTERVAL = 100;
-const HELP_STEP_COUNT = 5;
+const HELP_STEP_COUNT = 4;
 const PAUSE_EXIT_DURATION = 340;
 const SETTINGS_EXIT_DURATION = 340;
 const SCENE_COVER_DURATION = 120;
@@ -81,7 +76,6 @@ type OverlayScreen =
   | "settings"
   | "controls"
   | "help"
-  | "survey"
   | "deliveryResult"
   | "seasonReport"
   | null;
@@ -134,8 +128,6 @@ export class Game {
   private sceneTransitionTarget: OverlayScreen | undefined;
   private queuedOverlay: { next: OverlayScreen; useSceneTransition: boolean } | null = null;
   private dismissedTutorialText: string | null = null;
-  private pendingSpot: SpotId | null = null;
-  private surveyResult: SurveyResult | null = null;
   private seasonReportQueued = false;
   private readonly visualTestSpot = import.meta.env.DEV
     ? new URLSearchParams(window.location.search).get("e2eSpot") as SpotId | null
@@ -281,9 +273,10 @@ export class Game {
     if (this.simulation.mode === "fishing") return;
     const prompt = getInteractionPrompt(this.simulation);
     if (prompt?.kind === "fishing" && prompt.enabled && prompt.spot) {
-      this.pendingSpot = prompt.spot;
-      this.surveyResult = null;
-      this.setOverlay("survey");
+      if (startFishing(this.simulation, prompt.spot)) {
+        this.feedback.cue("cast");
+        this.refreshHud();
+      }
       return;
     }
     interact(this.simulation);
@@ -475,9 +468,6 @@ export class Game {
         break;
       case "help":
         host.innerHTML = this.helpScreen();
-        break;
-      case "survey":
-        host.innerHTML = this.surveyScreen();
         break;
       case "deliveryResult":
         host.innerHTML = this.deliveryResultScreen();
@@ -723,12 +713,8 @@ export class Game {
         body: `Use <kbd>${formatKey(this.save.settings.controls.left)}</kbd> and <kbd>${formatKey(this.save.settings.controls.right)}</kbd> to follow faint fish activity. When the water clears and the hook appears, press <kbd>${formatKey(this.save.settings.controls.action)}</kbd>.`,
       },
       {
-        title: "Read and predict",
-        body: "Use temperature, dissolved oxygen, depth, turbidity and habitat evidence to predict which fish is best adapted to each site.",
-      },
-      {
         title: "Catch the right fish",
-        body: "Steer the hook with the movement keys or touch pad. Upgrade line depth to cross the amber depth boundary and reach rarer fish.",
+        body: "Drop the line, then steer the hook with the movement keys or touch pad. The requested fish is marked in the water.",
       },
       {
         title: "Fish sustainably",
@@ -764,48 +750,6 @@ export class Game {
       </section>`;
   }
 
-  private surveyScreen(): string {
-    const spotId = this.pendingSpot;
-    if (!spotId) return this.messageScreen("Survey unavailable", "Return to the lake and stop when the shoal gathers beneath your boat.", "cancel-survey", "Back to water");
-    const spot = spotById(spotId);
-    const reading = WATER_READINGS[spotId];
-    const researchTarget = this.simulation.activeContract?.spot === spotId
-      ? this.simulation.activeContract.species
-      : undefined;
-    const choices = surveyChoices(spotId, researchTarget);
-    const result = this.surveyResult;
-    const choicesMarkup = choices.map((species) => {
-      const fish = FISH[species];
-      const isExpected = result?.expected === species;
-      return `<button class="science-choice ${isExpected ? "is-answer" : ""}" type="button" data-action="survey-choice" data-species="${species}" ${result ? "disabled" : ""}>
-        <strong>${fish.name}</strong><span>${fish.shape}</span><small>Typical depth tier ${fish.depthTier}</small>
-      </button>`;
-    }).join("");
-    const feedback = result
-      ? `<div class="evidence-result ${result.correct ? "is-correct" : "is-rethink"}" role="status">
-          <span class="result-mark" aria-hidden="true">${result.correct ? "✓" : "↻"}</span>
-          <div><h3>${result.correct ? "Prediction supported" : `Evidence points to ${FISH[result.expected].name}`}</h3><p>${result.explanation}</p></div>
-        </div>
-        <button class="primary-button" type="button" data-action="continue-fishing">Use the evidence and drop the line</button>`
-      : `<p class="science-prompt">Which species is best adapted to these conditions? Make a prediction from the evidence—not the colour alone.</p>`;
-    return `
-      <section class="screen-overlay sheet-overlay science-overlay" role="dialog" aria-labelledby="survey-title">
-        <div class="art-panel science-panel side-sheet">
-          <header class="science-heading"><div><span class="panel-eyebrow">Water survey · ${spot.name}</span><h2 id="survey-title">Read the lake</h2></div><span class="depth-badge">Depth ${reading.depthM} m</span></header>
-          <div class="reading-grid" aria-label="Water-quality readings">
-            <div><small>Temperature</small><strong>${reading.temperatureC}°C</strong></div>
-            <div><small>Dissolved oxygen</small><strong>${reading.oxygenMgL.toFixed(1)} mg/L</strong></div>
-            <div><small>Turbidity</small><strong>${capitalise(reading.turbidity)}</strong></div>
-            <div><small>Habitat</small><strong>${capitalise(reading.habitat)}</strong></div>
-          </div>
-          <p class="evidence-clue"><strong>Field note:</strong> ${reading.clue}</p>
-          ${feedback}
-          <div class="science-choices" aria-label="Species predictions">${choicesMarkup}</div>
-          ${result ? "" : `<button class="text-button" type="button" data-action="cancel-survey">Cancel survey</button>`}
-        </div>
-      </section>`;
-  }
-
   private deliveryResultScreen(): string {
     const result = this.simulation.lastDeliveryResult;
     if (!result) return this.messageScreen("No delivery result", "Complete a delivery to compare your estimate with the result.", "continue-after-delivery", "Back to harbor");
@@ -831,19 +775,18 @@ export class Game {
   private seasonReportScreen(): string {
     const learning = this.simulation.progress.learning;
     const average = averagePopulation(this.simulation.progress.populations);
-    const accuracy = learningAccuracy(this.simulation);
     return `
       <section class="screen-overlay sheet-overlay science-overlay" role="dialog" aria-labelledby="season-title">
         <div class="art-panel science-panel result-panel side-sheet">
           <span class="panel-eyebrow">End-of-season evaluation</span><h2 id="season-title">Research season complete</h2>
-          <p>You completed ${this.simulation.progress.completedContracts} deliveries and unlocked a reusable evidence record. You can keep exploring and improving every result.</p>
+          <p>You completed ${this.simulation.progress.completedContracts} deliveries and built a reusable field record. You can keep exploring and improving every result.</p>
           <div class="report-grid">
-            <div><small>Species predictions</small><strong>${learning.correctPredictions} / ${learning.surveysCompleted}</strong><span>${accuracy}% accuracy</span></div>
+            <div><small>Species discovered</small><strong>${this.simulation.progress.discovered.length} / ${Object.keys(FISH).length}</strong><span>recorded this season</span></div>
             <div><small>Crossings started</small><strong>${learning.routePlans}</strong><span>contract catches secured</span></div>
             <div><small>Lake health</small><strong>${average}%</strong><span>${populationLabel(average)}</span></div>
             <div><small>Conservation</small><strong>${learning.conservationScore}</strong><span>population points restored</span></div>
           </div>
-          <p class="reflection-prompt"><strong>Reflect:</strong> Which water reading was most useful? When was the faster route worth its extra risk? What would you change to protect a vulnerable species?</p>
+          <p class="reflection-prompt"><strong>Reflect:</strong> Which fishing ground was most productive? How did engine speed affect freshness? What would you change to protect a vulnerable species?</p>
           <button class="primary-button" type="button" data-action="continue-season">Continue researching</button>
         </div>
       </section>`;
@@ -1108,33 +1051,8 @@ export class Game {
             }
           }
           this.setOverlay(null);
-          this.showToast("Contract accepted. Follow the shoal and survey its habitat first.");
+          this.showToast("Contract accepted. Follow the shoal and drop your line.");
         }
-        break;
-      case "survey-choice": {
-        const species = target.dataset.species as FishSpecies | undefined;
-        if (!this.pendingSpot || !species || !(species in FISH) || this.surveyResult) break;
-        const researchTarget = this.simulation.activeContract?.spot === this.pendingSpot
-          ? this.simulation.activeContract.species
-          : undefined;
-        this.surveyResult = recordSurvey(this.simulation, this.pendingSpot, species, researchTarget);
-        this.syncSave();
-        this.renderOverlay();
-        this.feedback.cue(this.surveyResult.correct ? "upgrade" : "deny");
-        break;
-      }
-      case "continue-fishing":
-        if (this.pendingSpot && this.surveyResult && startFishing(this.simulation, this.pendingSpot)) {
-          this.feedback.cue("cast");
-          this.pendingSpot = null;
-          this.surveyResult = null;
-          this.setOverlay(null);
-        }
-        break;
-      case "cancel-survey":
-        this.pendingSpot = null;
-        this.surveyResult = null;
-        this.setOverlay(null);
         break;
       case "deliver":
         if (deliverContract(this.simulation) !== null) {
