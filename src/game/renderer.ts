@@ -104,6 +104,7 @@ export class CanvasRenderer {
   private art: LoadedArt | null = null;
   private interactionAnchor: WorldPoint | null = null;
   private surfaceCameraCenter: number | null = null;
+  private surfaceCameraWasCinematic = false;
   private surfaceMotionElapsed: number | null = null;
   private surfaceCameraVelocity = 0;
   private surfaceCameraViewWidth: number = BALANCE.cameraViewWidth;
@@ -213,6 +214,7 @@ export class CanvasRenderer {
     const { context } = this;
     const motionDelta = this.updateSurfaceMotion(simulation, settings.cinematic, settings.reducedMotion);
     const camera = this.camera(simulation, settings.cinematic, settings.reducedMotion, motionDelta);
+    this.canvas.dataset.surfaceCameraCenter = camera.center.toFixed(3);
     this.canvas.dataset.surfaceCameraViewWidth = camera.viewWidth.toFixed(3);
     const nightIntensity = nightVisualIntensity(simulation);
     const waterline = this.drawPanorama(nightIntensity >= 1 ? art.lakeNight : art.lake, camera, width, height);
@@ -1304,11 +1306,13 @@ export class CanvasRenderer {
       viewWidth: cinematic ? 0.54 : this.surfaceCameraViewWidth,
       lookAheadTime: 0.24,
     });
-    const camera = cinematic || reducedMotion || this.surfaceCameraCenter === null
+    const enteringGameplay = this.surfaceCameraWasCinematic && !cinematic;
+    const camera = cinematic || enteringGameplay || reducedMotion || this.surfaceCameraCenter === null
       ? target
       : dampSideScrollCamera(this.surfaceCameraCenter, target, deltaSeconds, 3.2);
 
     this.surfaceCameraCenter = camera.center;
+    this.surfaceCameraWasCinematic = cinematic;
     return camera;
   }
 

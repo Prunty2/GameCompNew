@@ -109,6 +109,28 @@ test("the waterline transition carries title, dock, and lake scene changes", asy
   await expect(page.getByRole("button", { name: "Play", exact: true })).toBeVisible();
 });
 
+test("leaving the title frames the boat before gameplay is revealed", async ({ page }) => {
+  await page.goto("/?e2e=1");
+  const transition = page.locator("#scene-transition");
+  const canvas = page.locator("#game-canvas");
+
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.getByRole("button", { name: "Accept contract" }).click();
+  await expect(transition).not.toHaveClass(/is-(covering|revealing)/);
+  await page.evaluate(() => window.__FSHING_TEST__?.sailToHarbor("brindle"));
+
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "Title screen" }).click();
+  await expect(page.getByRole("button", { name: "Play", exact: true })).toBeVisible();
+  await expect(transition).not.toHaveClass(/is-(covering|revealing)/);
+  expect(Number(await canvas.getAttribute("data-surface-camera-center"))).toBeCloseTo(0.27, 2);
+
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await expect(page.locator(".screen-overlay")).toHaveCount(0);
+  await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())));
+  expect(Number(await canvas.getAttribute("data-surface-camera-center"))).toBeCloseTo(0.15, 2);
+});
+
 test("nightfall changes the panorama and keeps a moon indicator visible until morning", async ({ page }) => {
   await page.goto("/?e2e=1");
   await page.getByRole("button", { name: "Play", exact: true }).click();
@@ -630,10 +652,7 @@ test("dock interaction starts on pointer press", async ({ page }) => {
   await page.evaluate(() => window.__FSHING_TEST__?.sailToHarbor("brindle"));
 
   const dockButton = page.getByRole("button", { name: "Dock · Brindle Harbor" });
-  const bounds = await dockButton.boundingBox();
-  if (!bounds) throw new Error("Expected the dock button to have visible bounds.");
-
-  await page.mouse.move(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
+  await dockButton.hover();
   await page.mouse.down();
   await expect(page.getByRole("heading", { name: "Brindle Harbor" })).toBeVisible();
   await page.mouse.up();
