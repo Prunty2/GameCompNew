@@ -53,6 +53,12 @@ The boat, harbor pier, fish atlas, and world atlas were requested on a uniform `
 - Prompt: “Create one original strict 3 × 3 sprite atlas for FSHING. Use the supplied fish atlas only for the restrained editorial gouache/screen-print treatment and the lake image only for its desaturated teal, cream, ink-navy and sparse amber palette. Put exactly one complete fish in each equal cell with generous padding, strict orthographic side profile facing right, no overlap, and a uniform full-bleed chroma-magenta matte. Row 1: round Reedfin with fan fins; tall Sun Perch with crest; slim Silver Dart with split tail. Row 2: long Needle Pike with pointed snout; heavy Mossback with leaf-like fins; snake-like Lantern Eel with a small lure. Row 3: Gloam Gill with fork tail and eye marking; wide Violet Ray with ribbon tail; armoured Abyss Crown with crowned head and pale sensory eye. Make all nine silhouettes immediately different at gameplay size. No text, labels, borders, grid lines, hook, water, bubbles, plants, scenery, shadows, extra objects, copied characters, or designs from another fishing game.”
 - Originality note: species names, silhouettes, arrangement, palette direction, and prompt were authored specifically for FSHING. The output does not reproduce assets from *Cat Goes Fishing* or another commercial game.
 
+### `fish-atlas-ui.png`
+
+- Runtime role: transparent 3 × 3 derivative of `fish-atlas-v2.png` for target-fish icons in the HTML job ticket
+- Runtime size: 768 × 768 with authored alpha
+- Processing: the existing atlas's uniform chroma-magenta matte was mechanically removed with a soft chroma key and the result was uniformly downscaled with Lanczos filtering. Fish artwork, cell order, proportions, and colours were not redrawn or rearranged.
+
 ### `surface-fishing-cues.png`
 
 - Runtime role: strict 4 × 2 atlas containing six coordinated surface-school fish poses and the primary hook-and-arc cue; the disabled broken-arc cell is retained in the source atlas but is not rendered

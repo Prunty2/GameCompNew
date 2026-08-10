@@ -2,6 +2,7 @@ import brindleDockDayUrl from "../assets/dock-brindle-day.jpg";
 import brindleDockNightUrl from "../assets/dock-brindle-night.jpg";
 import gloamDockDayUrl from "../assets/dock-gloam-day.jpg";
 import gloamDockNightUrl from "../assets/dock-gloam-night.jpg";
+import fishAtlasUiUrl from "../assets/fish-atlas-ui.png";
 import wordmarkUrl from "../assets/fshing-wordmark.png";
 import padlockIconUrl from "../assets/padlock-icon.png";
 import uiButtonUrl from "../assets/ui-button.png";
@@ -546,17 +547,19 @@ export class Game {
     const defaultSection: HarborSection = harborId === "gloam" && !deliverable ? "market" : "delivery";
     const activeSection: HarborSection = availableSections.includes(this.harborSection) ? this.harborSection : defaultSection;
     const contractMarkup = available
-      ? `<div class="contract-card job-ticket ${isFirstJobOffer ? "is-guided" : ""}">
+      ? `<div class="contract-card job-ticket ${isFirstJobOffer ? "is-guided" : ""} ${available.accessGrant ? "has-access-grant" : ""}">
           <div class="job-ticket-heading">
             <div>${isFirstJobOffer ? "" : `<span class="card-kicker">Your next job</span>`}<h3>${isFirstJobOffer ? "First Assignment" : available.title}</h3></div>
-            <span class="reward-stamp" aria-label="Reward: ${available.reward} shells"><span class="reward-label">Reward</span><span class="reward-value"><span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${available.reward}</strong></span></span>
+            <span class="reward-stamp ${available.accessGrant ? "has-access-grant" : ""}" aria-label="Reward: ${available.reward} shells${available.accessGrant ? `. Access grant: ${available.accessGrant.label}` : ""}">
+              <span class="reward-main"><span class="reward-label">Reward</span><span class="reward-value"><span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${available.reward}</strong></span></span>
+              ${available.accessGrant ? `<span class="reward-access" aria-hidden="true"><span class="ui-icon icon-permit"></span><span><small>Plus access</small><b>${available.accessGrant.label}</b></span></span>` : ""}
+            </span>
           </div>
           <ol class="job-route" aria-label="Job steps">
-            <li><span>1</span><div><small>Catch</small><strong>${FISH[available.species].name}</strong></div></li>
+            <li><span>1</span><div><small>Catch</small><span class="job-target">${this.targetFishIcon(available.species)}<strong>${FISH[available.species].name}</strong></span></div></li>
             <li><span>2</span><div><small>Keep it</small><strong>${available.minimumFreshness}% fresh</strong></div></li>
             <li><span>3</span><div><small>Deliver to</small><strong>${harborById(available.destination).name}</strong></div></li>
           </ol>
-          ${available.accessGrant ? `<div class="quest-access-grant" role="note" aria-label="Access grant: ${available.accessGrant.label}"><span class="ui-icon icon-permit" aria-hidden="true"></span><span class="quest-access-copy"><small>Access grant</small><strong>${available.accessGrant.label}</strong></span></div>` : ""}
           <button class="primary-button mission-button" type="button" data-action="accept-contract" aria-label="Accept contract">
             <span><strong>${isFirstJobOffer ? "Begin the First Voyage" : "Take this job"}</strong></span><b aria-hidden="true">→</b>
           </button>
@@ -567,7 +570,7 @@ export class Game {
             <h3>${contract.title}</h3>
             <ol class="job-route" aria-label="Job steps">
               <li class="is-complete"><span>✓</span><div><small>Job</small><strong>Accepted</strong></div></li>
-              <li class="${this.simulation.cargo.some((item) => item.species === contract.species) ? "is-complete" : ""}"><span>2</span><div><small>Catch</small><strong>${FISH[contract.species].name}</strong></div></li>
+              <li class="${this.simulation.cargo.some((item) => item.species === contract.species) ? "is-complete" : ""}"><span>2</span><div><small>Catch</small><span class="job-target">${this.targetFishIcon(contract.species)}<strong>${FISH[contract.species].name}</strong></span></div></li>
               <li class="${deliverable ? "is-current" : ""}"><span>3</span><div><small>Deliver to</small><strong>${harborById(contract.destination).name}</strong></div></li>
             </ol>
             ${contract.destination === harborId
@@ -637,6 +640,11 @@ export class Game {
     const timeOfDay = nightOpacity >= 0.5 ? "night" : "day";
     const background = DOCK_BACKGROUND_URL[harborId];
     return `data-dock="${harborId}" data-time-of-day="${timeOfDay}" style="--dock-day-background: url(&quot;${background.day}&quot;); --dock-night-background: url(&quot;${background.night}&quot;); --dock-night-opacity: ${nightOpacity}"`;
+  }
+
+  private targetFishIcon(species: FishSpecies): string {
+    const [column, row] = FISH[species].atlasCell;
+    return `<span class="job-target-fish" data-species="${species}" role="img" aria-label="${FISH[species].name} target fish" style="--fish-atlas-url: url(&quot;${fishAtlasUiUrl}&quot;); --fish-atlas-x: ${column * 50}%; --fish-atlas-y: ${row * 50}%"></span>`;
   }
 
   private upgradeCard(upgrade: UpgradeId, title: string, detail: string): string {

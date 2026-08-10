@@ -144,9 +144,7 @@
 .harbor-screen.is-first-voyage .reward-stamp {
   display: grid;
   min-width: 132px;
-  grid-template-columns: 1fr auto;
-  align-items: center;
-  gap: 9px;
+  gap: 6px;
   padding: 8px 0 8px 16px;
   border: 0;
   border-left: 2px solid var(--menu-signal);
@@ -157,6 +155,13 @@
   line-height: 1;
   text-align: left;
   transform: none;
+}
+
+.harbor-screen.is-first-voyage .reward-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
 }
 
 .harbor-screen.is-first-voyage .reward-stamp .reward-label {
@@ -185,49 +190,72 @@
   font-size: 1.25rem;
 }
 
-.harbor-screen.is-first-voyage .quest-access-grant {
+.harbor-screen.is-first-voyage .reward-stamp.has-access-grant {
+  min-width: 224px;
+}
+
+.harbor-screen.is-first-voyage .reward-access {
   display: grid;
-  min-height: 44px;
-  grid-template-columns: 30px minmax(0, 1fr);
+  min-width: 0;
+  grid-template-columns: 24px minmax(0, 1fr);
   align-items: center;
-  gap: 10px;
-  box-sizing: border-box;
-  margin: 0 0 12px;
-  padding: 7px 11px 7px 9px;
-  border: 1px solid rgb(238 158 65 / 44%);
-  border-left: 3px solid var(--menu-signal);
-  border-radius: 9px;
-  background-color: rgb(238 158 65 / 12%);
+  gap: 7px;
+  padding-top: 6px;
+  border-top: 1px solid rgb(145 169 176 / 34%);
   color: var(--menu-paper);
 }
 
-.harbor-screen.is-first-voyage .quest-access-grant > .ui-icon {
-  width: 30px;
-  height: 30px;
+.harbor-screen.is-first-voyage .reward-access > .ui-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
 }
 
-.harbor-screen.is-first-voyage .quest-access-copy {
+.harbor-screen.is-first-voyage .reward-access > span:last-child {
   display: grid;
   min-width: 0;
   gap: 2px;
 }
 
-.harbor-screen.is-first-voyage .quest-access-copy small {
+.harbor-screen.is-first-voyage .reward-access small {
   color: var(--menu-signal);
-  font-size: 0.58rem;
+  font-size: 0.52rem;
   font-weight: 950;
   letter-spacing: 0.1em;
   line-height: 1;
   text-transform: uppercase;
 }
 
-.harbor-screen.is-first-voyage .quest-access-copy strong {
+.harbor-screen.is-first-voyage .reward-access b {
   overflow: hidden;
   color: var(--menu-paper);
-  font-size: 0.78rem;
+  font-size: 0.7rem;
   line-height: 1.15;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.harbor-screen.is-first-voyage .job-target {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  margin-top: 3px;
+}
+
+.harbor-screen.is-first-voyage .job-target-fish {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  background-image: var(--fish-atlas-url);
+  background-position: var(--fish-atlas-x) var(--fish-atlas-y);
+  background-repeat: no-repeat;
+  background-size: 300% 300%;
+  filter: drop-shadow(0 2px 3px rgb(1 10 18 / 50%));
+}
+
+.harbor-screen.is-first-voyage .job-target strong {
+  margin-top: 0;
 }
 
 .harbor-screen.is-first-voyage.is-first-job-offer .mission-button strong {
@@ -456,6 +484,14 @@
   box-shadow: none;
 }
 
+.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-ticket.has-access-grant .job-ticket-heading {
+  padding-inline: 210px;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .reward-stamp.has-access-grant {
+  min-width: 190px;
+}
+
 .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .reward-stamp .reward-label {
   display: block;
   color: var(--menu-fog);
@@ -509,6 +545,11 @@
   margin-top: 7px;
   font-size: 1.08rem;
   white-space: normal;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-target-fish {
+  width: 58px;
+  height: 58px;
 }
 
 .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .next-step {
@@ -1164,6 +1205,23 @@
     padding: 5px 0 5px 12px;
   }
 
+  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-ticket.has-access-grant .job-ticket-heading {
+    padding-inline: 160px;
+  }
+
+  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .reward-stamp.has-access-grant {
+    min-width: 148px;
+  }
+
+  .harbor-screen.is-first-voyage .reward-stamp.has-access-grant {
+    min-width: 148px;
+  }
+
+  .harbor-screen.is-first-voyage .reward-access b {
+    max-width: 112px;
+    font-size: 0.58rem;
+  }
+
   .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .reward-stamp .reward-label {
     font-size: 0.58rem;
   }
@@ -1197,6 +1255,11 @@
   .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-route strong {
     margin-top: 3px;
     font-size: 0.8rem;
+  }
+
+  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-target-fish {
+    width: 34px;
+    height: 34px;
   }
 
   .cargo-inventory-heading {
