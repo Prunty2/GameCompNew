@@ -2014,6 +2014,12 @@ kbd {
   }
 }
 
+@media (orientation: portrait) {
+  .touch-controls:not([hidden]) {
+    display: none !important;
+  }
+}
+
 @media (max-height: 620px) {
   .tutorial-callout {
     top: 8px;
