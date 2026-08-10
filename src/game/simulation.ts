@@ -160,7 +160,6 @@ export interface NavigationGuidance {
   instruction: string;
 }
 
-const FISHING_HOOK_SPEED = 0.48;
 const FISHING_CATCH_RADIUS = 0.058;
 const SEASON_DELIVERIES = 8;
 
@@ -728,8 +727,8 @@ function updateFishing(simulation: Simulation, input: InputState, dt: number): v
     }
     return;
   }
-  fishing.hook.x = clamp(fishing.hook.x + input.hookX * FISHING_HOOK_SPEED * dt, 0.07, 0.93);
-  fishing.hook.y = clamp(fishing.hook.y + input.hookY * FISHING_HOOK_SPEED * dt, 0.07, maxFishingDepth(simulation));
+  fishing.hook.x = clamp(fishing.hook.x + input.hookX * BALANCE.fishingHookSpeed * dt, 0.07, 0.93);
+  fishing.hook.y = clamp(fishing.hook.y + input.hookY * BALANCE.fishingHookSpeed * dt, 0.07, maxFishingDepth(simulation));
   for (const [targetIndex, target] of fishing.targets.entries()) {
     const motion = fishingSpeciesMotion(target.species, simulation.elapsed, target.phase);
     target.x += target.speed * motion.horizontalMultiplier * target.direction * dt;
