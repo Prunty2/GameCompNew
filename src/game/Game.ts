@@ -983,6 +983,22 @@ export class Game {
     else this.setOverlay(null, true);
   }
 
+  private openHarborSection(section: HarborSection): void {
+    const sectionOrder: HarborSection[] = ["delivery", "cargo", "services"];
+    const previousIndex = sectionOrder.indexOf(this.harborSection);
+    const nextIndex = sectionOrder.indexOf(section);
+    this.harborSection = section;
+    this.renderOverlay();
+
+    const content = this.uiRoot.querySelector<HTMLElement>(".harbor-content");
+    if (content && previousIndex !== nextIndex) {
+      content.classList.add(nextIndex > previousIndex ? "is-entering-forward" : "is-entering-backward");
+    }
+    requestAnimationFrame(() => {
+      this.uiRoot.querySelector<HTMLButtonElement>(`[data-harbor-section="${section}"]`)?.focus({ preventScroll: true });
+    });
+  }
+
   private syncSave(): void {
     this.save.progress = {
       money: this.simulation.progress.money,
@@ -1100,17 +1116,13 @@ export class Game {
       case "harbor-section": {
         const section = target.dataset.harborSection as HarborSection | undefined;
         if (!section || !(["delivery", "cargo", "services"] as HarborSection[]).includes(section)) break;
-        this.harborSection = section;
-        this.renderOverlay();
-        requestAnimationFrame(() => this.uiRoot.querySelector<HTMLButtonElement>(`[data-harbor-section="${section}"]`)?.focus({ preventScroll: true }));
+        this.openHarborSection(section);
         break;
       }
       case "open-cargo-upgrades": {
         const openCargoUpgrade = (): void => {
           if (this.overlay !== "harbor" || !this.simulation.dockedAt) return;
-          this.harborSection = "services";
-          this.renderOverlay();
-          requestAnimationFrame(() => this.uiRoot.querySelector<HTMLButtonElement>('[data-harbor-section="services"]')?.focus({ preventScroll: true }));
+          this.openHarborSection("services");
         };
         window.clearTimeout(this.cargoUpgradeTransitionTimer);
         if (this.save.settings.reducedMotion) {

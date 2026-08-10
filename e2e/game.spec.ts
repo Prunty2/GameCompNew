@@ -494,6 +494,7 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   expect(Math.abs((deliveryTabsBounds?.width ?? 0) - (deliveryFooterBounds?.width ?? 0))).toBeLessThanOrEqual(1);
   await page.getByRole("button", { name: "Cargo", exact: true }).click();
   await expect(page.getByRole("button", { name: "Cargo", exact: true })).toBeFocused();
+  await expect(page.locator(".harbor-content")).toHaveCSS("animation-name", "harbor-page-enter-forward");
   await expect(page.locator(".harbor-tab .ui-icon")).toHaveCount(3);
   await expect(page.getByRole("heading", { name: "Fish inventory" })).toBeVisible();
   await expect(page.locator(".harbor-intro")).toHaveCount(0);
@@ -512,6 +513,7 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await expect(page.getByRole("region", { name: "Dock services" })).toBeVisible();
   await expect(page.locator(".harbor-intro")).toHaveCount(0);
   await page.getByRole("button", { name: "Delivery", exact: true }).click();
+  await expect(page.locator(".harbor-content")).toHaveCSS("animation-name", "harbor-page-enter-backward");
   await page.getByRole("button", { name: "Complete delivery" }).click();
   await expect(page.getByRole("heading", { name: "Delivery analysed" })).toBeVisible();
   await expect(page.getByText("Prediction versus result")).toBeVisible();
