@@ -257,8 +257,7 @@ export class CanvasRenderer {
       if (!isNearScreen(x, width, 260)) continue;
       const permitLocked = spot.requiresPermit && !simulation.progress.outerUnlocked;
       const depthLocked = spot.requiredDepthTier > simulation.progress.upgrades.line;
-      const population = simulation.progress.populations[spot.species];
-      const cue = surfaceFishingCue(simulation.boat.x, spot.x, BALANCE.fishingRadius, population);
+      const cue = surfaceFishingCue(simulation.boat.x, spot.x, BALANCE.fishingRadius);
       this.drawSurfaceFishingGround({
         spotIndex,
         cue,
