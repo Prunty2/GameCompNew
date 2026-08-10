@@ -357,6 +357,40 @@
   animation: none;
 }
 
+@keyframes harbor-page-enter-forward {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+}
+
+@keyframes harbor-page-enter-backward {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+}
+
+.harbor-screen.is-first-voyage .harbor-content.is-entering-forward {
+  animation: harbor-page-enter-forward 160ms ease-out;
+}
+
+.harbor-screen.is-first-voyage .harbor-content.is-entering-backward {
+  animation: harbor-page-enter-backward 160ms ease-out;
+}
+
+.reduced-motion .harbor-screen.is-first-voyage .harbor-content.is-entering-forward,
+.reduced-motion .harbor-screen.is-first-voyage .harbor-content.is-entering-backward {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .harbor-screen.is-first-voyage .harbor-content.is-entering-forward,
+  .harbor-screen.is-first-voyage .harbor-content.is-entering-backward {
+    animation: none;
+  }
+}
+
 .harbor-screen.is-first-voyage .harbor-content .mission-section,
 .harbor-screen.is-first-voyage .harbor-content .cargo-section,
 .harbor-screen.is-first-voyage .harbor-content .services {

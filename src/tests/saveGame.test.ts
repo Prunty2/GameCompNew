@@ -1,6 +1,5 @@
 import { describe, expect, test } from "vitest";
 import { DEFAULT_CONTROL_BINDINGS } from "../game/controls";
-import { defaultPopulations } from "../game/stem";
 import { defaultSave, loadSave, saveGame } from "../services/saveGame";
 import type { SaveStorage } from "../services/platformService";
 
@@ -35,20 +34,18 @@ describe("versioned save data", () => {
       },
     }));
     expect(loadSave(storage)).toEqual({
-      version: 7,
+      version: 8,
       progress: {
         money: 999_999,
         upgrades: { cargo: 7, engine: 0, lamp: 1, line: 0 },
         outerUnlocked: false,
         boostUnlocked: false,
         completedContracts: 0,
-        populations: defaultPopulations(),
         discovered: [],
         learning: {
           surveysCompleted: 0,
           correctPredictions: 0,
           routePlans: 0,
-          conservationScore: 0,
         },
         seasonCompleted: false,
       },
@@ -67,7 +64,7 @@ describe("versioned save data", () => {
     const migrated = loadSave(storage);
     expect(migrated.progress.money).toBe(0);
     expect(migrated.settings.muted).toBe(true);
-    expect(migrated.version).toBe(7);
+    expect(migrated.version).toBe(8);
   });
 
   test("adds a safe line-depth default to older saves", () => {
@@ -82,10 +79,9 @@ describe("versioned save data", () => {
       settings: defaultSave().settings,
     }));
     const migrated = loadSave(storage);
-    expect(migrated.version).toBe(7);
+    expect(migrated.version).toBe(8);
     expect(migrated.progress.upgrades).toEqual({ cargo: 2, engine: 1, lamp: 2, line: 0 });
     expect(migrated.progress.money).toBe(140);
-    expect(migrated.progress.populations).toEqual(defaultPopulations());
   });
 
   test("migrates removed boost and brake bindings to the W and S hook defaults", () => {
@@ -107,11 +103,11 @@ describe("versioned save data", () => {
     }));
 
     const migrated = loadSave(storage);
-    expect(migrated.version).toBe(7);
+    expect(migrated.version).toBe(8);
     expect(migrated.settings.controls).toEqual(DEFAULT_CONTROL_BINDINGS);
   });
 
-  test("validates learning records, species discovery, and populations", () => {
+  test("validates learning records and species discovery while ignoring removed ecology data", () => {
     const storage = memoryStorage(JSON.stringify({
       version: 5,
       progress: {
@@ -130,15 +126,12 @@ describe("versioned save data", () => {
       settings: defaultSave().settings,
     }));
     const loaded = loadSave(storage);
-    expect(loaded.progress.populations.reedfin).toBe(0);
-    expect(loaded.progress.populations.abyssCrown).toBe(100);
-    expect(loaded.progress.populations.sunPerch).toBe(100);
+    expect("populations" in loaded.progress).toBe(false);
     expect(loaded.progress.discovered).toEqual(["reedfin"]);
     expect(loaded.progress.learning).toEqual({
       surveysCompleted: 12,
       correctPredictions: 0,
       routePlans: 3,
-      conservationScore: 0,
     });
     expect(loaded.progress.seasonCompleted).toBe(true);
   });

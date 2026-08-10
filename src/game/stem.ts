@@ -1,7 +1,6 @@
 import {
   BALANCE,
   FISH,
-  FISHING_SPOTS,
   SPOT_RESIDENTS,
   harborById,
   spotById,
@@ -190,27 +189,6 @@ export function estimateRoute(contract: Contract, engineTier: number): RouteEsti
     safeArrivalFreshness: Math.max(0, Math.round(100 - safeMinutes * BALANCE.routeFreshnessLossPerMinute)),
     fastArrivalFreshness: Math.max(0, Math.round(100 - fastMinutes * BALANCE.routeFreshnessLossPerMinute)),
   };
-}
-
-export function defaultPopulations(): Record<FishSpecies, number> {
-  return Object.fromEntries((Object.keys(FISH) as FishSpecies[]).map((species) => [species, 100])) as Record<FishSpecies, number>;
-}
-
-export function populationLabel(population: number): string {
-  if (population >= 70) return "Healthy";
-  if (population >= 40) return "Watch";
-  if (population >= 20) return "Vulnerable";
-  return "Protected";
-}
-
-export function averagePopulation(populations: Record<FishSpecies, number>): number {
-  const values = Object.values(populations);
-  return Math.round(values.reduce((sum, population) => sum + population, 0) / values.length);
-}
-
-export function spotPopulation(spotId: SpotId, populations: Record<FishSpecies, number>): number {
-  const species = FISHING_SPOTS.filter((spot) => spot.id === spotId).map((spot) => spot.species);
-  return species.length === 0 ? 100 : Math.round(species.reduce((sum, fish) => sum + populations[fish], 0) / species.length);
 }
 
 function roundOne(value: number): number {

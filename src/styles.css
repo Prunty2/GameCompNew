@@ -3856,8 +3856,7 @@ kbd {
   text-transform: uppercase;
 }
 
-.depth-badge,
-.population-chip {
+.depth-badge {
   flex: 0 0 auto;
   padding: 8px 10px;
   border: 1px solid rgb(247 241 227 / 30%);
@@ -4216,17 +4215,6 @@ kbd {
   color: var(--menu-fog);
   font-size: 0.6rem;
 }
-
-.population-chip {
-  align-self: start;
-  padding: 5px 7px;
-  font-size: 0.5rem;
-}
-
-.population-chip.is-healthy { border-color: #72b998; }
-.population-chip.is-watch { border-color: #e5b865; }
-.population-chip.is-vulnerable,
-.population-chip.is-protected { border-color: #e88673; }
 
 .guide-actions {
   display: flex;

@@ -6,7 +6,6 @@ import {
   type ControlBindings,
 } from "../game/controls";
 import type { ProgressState } from "../game/simulation";
-import { defaultPopulations } from "../game/stem";
 import type { SaveStorage } from "./platformService";
 
 const SAVE_KEY = "gamecomp-new.save";
@@ -20,27 +19,25 @@ export interface GameSettings {
 }
 
 export interface SaveData {
-  version: 7;
+  version: 8;
   progress: ProgressState;
   settings: GameSettings;
 }
 
 export function defaultSave(): SaveData {
   return {
-    version: 7,
+    version: 8,
     progress: {
       money: 0,
       upgrades: { cargo: 0, engine: 0, lamp: 0, line: 0 },
       outerUnlocked: false,
       boostUnlocked: false,
       completedContracts: 0,
-      populations: defaultPopulations(),
       discovered: [],
       learning: {
         surveysCompleted: 0,
         correctPredictions: 0,
         routePlans: 0,
-        conservationScore: 0,
       },
       seasonCompleted: false,
     },
@@ -65,20 +62,18 @@ export function loadSave(storage: SaveStorage): SaveData {
     const learning = objectValue(progress.learning);
     const settings = objectValue(candidate.settings);
     return {
-      version: 7,
+      version: 8,
       progress: {
         money: finiteInteger(progress.money, 0, 999_999),
         upgrades: readUpgrades(upgrades),
         outerUnlocked: progress.outerUnlocked === true,
         boostUnlocked: progress.boostUnlocked === true,
         completedContracts: finiteInteger(progress.completedContracts, 0, 99_999),
-        populations: readPopulations(progress.populations),
         discovered: readDiscovered(progress.discovered),
         learning: {
           surveysCompleted: finiteInteger(learning.surveysCompleted, 0, 99_999),
           correctPredictions: finiteInteger(learning.correctPredictions, 0, 99_999),
           routePlans: finiteInteger(learning.routePlans, 0, 99_999),
-          conservationScore: finiteInteger(learning.conservationScore, 0, 99_999),
         },
         seasonCompleted: progress.seasonCompleted === true,
       },
@@ -132,18 +127,6 @@ function readUpgrades(candidate: Record<string, unknown>): Record<UpgradeId, num
     lamp: finiteInteger(candidate.lamp, 0, BALANCE.maxUpgradeTier),
     line: finiteInteger(candidate.line, 0, BALANCE.maxUpgradeTier),
   };
-}
-
-function readPopulations(value: unknown): Record<FishSpecies, number> {
-  const candidate = objectValue(value);
-  const populations = defaultPopulations();
-  for (const species of Object.keys(FISH) as FishSpecies[]) {
-    const stored = candidate[species];
-    if (typeof stored === "number" && Number.isFinite(stored)) {
-      populations[species] = finiteInteger(stored, 0, 100);
-    }
-  }
-  return populations;
 }
 
 function readDiscovered(value: unknown): FishSpecies[] {

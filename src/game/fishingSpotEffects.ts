@@ -13,8 +13,7 @@ export interface SurfaceFishPose {
   scale: number;
 }
 
-const MINIMUM_VISIBLE_FISH = 4;
-const MAXIMUM_VISIBLE_FISH = 12;
+const VISIBLE_FISH = 12;
 const HOOK_REVEAL_RADIUS_MULTIPLIER = 3;
 const MINIMUM_HOOK_VISIBILITY = 0.4;
 const DISTANT_FISH_VISIBILITY = 0.3;
@@ -38,7 +37,6 @@ export function surfaceFishingCue(
   boatX: number,
   spotX: number,
   interactionRadius: number,
-  population: number,
 ): SurfaceFishingCue {
   const safeRadius = Math.max(0.000_001, interactionRadius);
   const distance = Math.abs(boatX - spotX);
@@ -49,16 +47,9 @@ export function surfaceFishingCue(
     ? 0
     : MINIMUM_HOOK_VISIBILITY
       + smootherStep(1 - distance / hookRadius) * (1 - MINIMUM_HOOK_VISIBILITY);
-  const boundedPopulation = clamp(population, 0, 100);
-  const fishCount = clampInteger(
-    Math.round(MINIMUM_VISIBLE_FISH + boundedPopulation / 10),
-    MINIMUM_VISIBLE_FISH,
-    MAXIMUM_VISIBLE_FISH,
-  );
-
   return {
     distance,
-    fishCount,
+    fishCount: VISIBLE_FISH,
     fishVisibility: DISTANT_FISH_VISIBILITY + lensVisibility * PROXIMITY_FISH_VISIBILITY,
     lensVisibility,
     hookVisibility,
@@ -98,8 +89,4 @@ function hash01(value: number): number {
 
 function clamp(value: number, minimum: number, maximum: number): number {
   return Math.max(minimum, Math.min(maximum, value));
-}
-
-function clampInteger(value: number, minimum: number, maximum: number): number {
-  return Math.max(minimum, Math.min(maximum, Math.round(value)));
 }

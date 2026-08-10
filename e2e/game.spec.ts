@@ -464,6 +464,7 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   expect(Math.abs((deliveryTabsBounds?.width ?? 0) - (deliveryFooterBounds?.width ?? 0))).toBeLessThanOrEqual(1);
   await page.getByRole("button", { name: "Market", exact: true }).click();
   await expect(page.getByRole("button", { name: "Market", exact: true })).toBeFocused();
+  await expect(page.locator(".harbor-content")).toHaveCSS("animation-name", "harbor-page-enter-forward");
   await expect(page.locator(".harbor-tab .ui-icon")).toHaveCount(3);
   await expect(page.getByRole("heading", { name: "Gloam fish market" })).toBeVisible();
   await expect(page.getByText("Lower cash price · jobs pay more")).toBeVisible();
@@ -484,6 +485,7 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await expect(page.getByRole("region", { name: "Dock services" })).toBeVisible();
   await expect(page.locator(".harbor-intro")).toHaveCount(0);
   await page.getByRole("button", { name: "Delivery", exact: true }).click();
+  await expect(page.locator(".harbor-content")).toHaveCSS("animation-name", "harbor-page-enter-backward");
   await page.getByRole("button", { name: "Complete delivery" }).click();
   await expect(page.getByRole("heading", { name: "Delivery analysed" })).toBeVisible();
   await expect(page.getByText("Prediction versus result")).toBeVisible();
@@ -644,7 +646,7 @@ test("how to play instructions advance one card at a time", async ({ page }) => 
     await page.getByRole("button", { name: "Next" }).click();
   }
   await expect(page.getByText("Step 4 of 4")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Fish sustainably" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Manage your cargo" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Next" })).toBeDisabled();
 
   await page.getByRole("button", { name: "Back", exact: true }).click();
