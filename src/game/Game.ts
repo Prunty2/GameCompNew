@@ -31,6 +31,7 @@ import {
   type ControlAction,
 } from "./controls";
 import { InputController } from "./input";
+import { questTrackerView } from "./questTracker";
 import { CanvasRenderer } from "./renderer";
 import {
   acceptAvailableContract,
@@ -141,6 +142,7 @@ export class Game {
   private queuedOverlay: { next: OverlayScreen; useSceneTransition: boolean } | null = null;
   private dismissedTutorialText: string | null = null;
   private seasonReportQueued = false;
+  private questTrackerExpanded = true;
   private readonly visualTestSpot = import.meta.env.DEV
     ? new URLSearchParams(window.location.search).get("e2eSpot") as SpotId | null
     : null;
@@ -245,6 +247,21 @@ export class Game {
           <span class="boost-gauge-track"><i></i></span>
           <small>SHIFT</small>
         </div>
+        <aside class="quest-tracker is-expanded" aria-label="Current quest" hidden>
+          <button class="quest-tracker-toggle" type="button" data-action="toggle-quest-tracker" aria-controls="quest-tracker-panel" aria-expanded="true" aria-label="Hide current quest">
+            <span class="ui-icon icon-objective" aria-hidden="true"></span>
+            <span class="quest-tracker-chevron" aria-hidden="true">‹</span>
+          </button>
+          <div class="quest-tracker-panel" id="quest-tracker-panel">
+            <div class="quest-tracker-heading"><span>Current assignment</span><strong class="quest-tracker-progress-copy">1 / 3</strong></div>
+            <h2 data-ui="quest-title"></h2>
+            <div class="quest-tracker-progress" role="progressbar" aria-label="Quest progress" aria-valuemin="0" aria-valuemax="3" aria-valuenow="1"><i></i></div>
+            <ol class="quest-tracker-steps">
+              ${[0, 1, 2].map((index) => `<li class="quest-tracker-step" data-quest-step="${index}"><strong class="quest-step-label"></strong><span class="quest-step-detail"></span></li>`).join("")}
+            </ol>
+            <p class="quest-tracker-instruction" data-ui="quest-instruction"></p>
+          </div>
+        </aside>
         <p class="visually-hidden navigation-status" role="status" aria-live="polite"></p>
         <button class="tutorial-callout" id="tutorial-callout" type="button" data-action="dismiss-tutorial" title="Dismiss instruction" hidden>
           <span class="tutorial-label" aria-hidden="true">Next</span>
@@ -411,6 +428,8 @@ export class Game {
       navigationStatus.textContent = navigationStatusText;
     }
 
+    this.refreshQuestTracker();
+
     this.refreshContextAction();
 
     const navigation = this.uiRoot.querySelector<HTMLElement>(".navigation-controls");
@@ -437,6 +456,39 @@ export class Game {
       const label = boostGauge.querySelector<HTMLElement>(".boost-gauge-label");
       if (label) label.textContent = simulation.boost.overheated ? "COOLING" : "BOOST";
     }
+  }
+
+  private refreshQuestTracker(): void {
+    const tracker = this.uiRoot.querySelector<HTMLElement>(".quest-tracker");
+    if (!tracker) return;
+    const view = questTrackerView(this.simulation);
+    tracker.hidden = !view || this.overlay !== null;
+    tracker.classList.toggle("is-expanded", this.questTrackerExpanded);
+    if (!view) return;
+
+    const toggle = tracker.querySelector<HTMLButtonElement>(".quest-tracker-toggle");
+    toggle?.setAttribute("aria-expanded", String(this.questTrackerExpanded));
+    toggle?.setAttribute("aria-label", this.questTrackerExpanded ? "Hide current quest" : "Show current quest");
+    const title = tracker.querySelector<HTMLElement>("[data-ui='quest-title']");
+    const instruction = tracker.querySelector<HTMLElement>("[data-ui='quest-instruction']");
+    const copy = tracker.querySelector<HTMLElement>(".quest-tracker-progress-copy");
+    if (title) title.textContent = view.title;
+    if (instruction) instruction.textContent = view.instruction;
+    if (copy) copy.textContent = `${view.completedSteps} / ${view.totalSteps}`;
+
+    const progress = tracker.querySelector<HTMLElement>(".quest-tracker-progress");
+    progress?.style.setProperty("--quest-progress", `${view.completedSteps / view.totalSteps * 100}%`);
+    progress?.setAttribute("aria-valuenow", String(view.completedSteps));
+    progress?.setAttribute("aria-valuetext", `${view.completedSteps} of ${view.totalSteps} steps complete`);
+    view.steps.forEach((step, index) => {
+      const row = tracker.querySelector<HTMLElement>(`[data-quest-step='${index}']`);
+      row?.classList.toggle("is-complete", step.complete);
+      row?.classList.toggle("is-current", step.current);
+      const label = row?.querySelector<HTMLElement>(".quest-step-label");
+      const detail = row?.querySelector<HTMLElement>(".quest-step-detail");
+      if (label) label.textContent = step.label;
+      if (detail) detail.textContent = step.detail;
+    });
   }
 
   private refreshContextAction(): void {
@@ -988,6 +1040,10 @@ export class Game {
         }, this.save.settings.reducedMotion ? 0 : 280);
         break;
       }
+      case "toggle-quest-tracker":
+        this.questTrackerExpanded = !this.questTrackerExpanded;
+        this.refreshQuestTracker();
+        break;
       case "start": this.beginVoyage(); break;
       case "interact": this.handleInteract(); break;
       case "resume": this.setOverlay(null); break;
@@ -1077,6 +1133,7 @@ export class Game {
         break;
       case "accept-contract":
         if (acceptAvailableContract(this.simulation)) {
+          this.questTrackerExpanded = true;
           this.syncSave();
           undock(this.simulation);
           if (this.visualTestSpot) {

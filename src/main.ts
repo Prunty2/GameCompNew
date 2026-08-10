@@ -1,6 +1,7 @@
 import "./styles.css";
 import "./harbor.css";
 import "./menu-motion.css";
+import "./quest-tracker.css";
 import { Game } from "./game/Game";
 import { PlatformService } from "./services/platformService";
 import { loadSave } from "./services/saveGame";

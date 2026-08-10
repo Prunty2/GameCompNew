@@ -1,0 +1,276 @@
+.quest-tracker {
+  position: absolute;
+  z-index: 6;
+  top: max(16px, env(safe-area-inset-top));
+  right: 0;
+  display: grid;
+  width: min(342px, calc(100vw - 12px));
+  grid-template-columns: 46px minmax(0, 1fr);
+  align-items: start;
+  color: var(--cream);
+  filter: drop-shadow(0 12px 24px rgb(1 10 18 / 34%));
+  transform: translateX(calc(100% - 46px));
+  transition: transform 360ms cubic-bezier(0.2, 0.82, 0.2, 1);
+}
+
+.quest-tracker.is-expanded {
+  transform: translateX(0);
+}
+
+.quest-tracker-toggle {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: 46px;
+  height: 54px;
+  place-items: center;
+  margin-top: 12px;
+  padding: 0;
+  border: 1px solid rgb(244 230 197 / 32%);
+  border-right: 0;
+  border-radius: 14px 0 0 14px;
+  background: rgb(6 26 42 / 94%);
+  color: var(--cream);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 7%);
+  cursor: pointer;
+  pointer-events: auto;
+  touch-action: manipulation;
+}
+
+.quest-tracker-toggle:hover {
+  background: rgb(14 55 65 / 97%);
+}
+
+.quest-tracker-toggle .ui-icon {
+  width: 27px;
+  height: 27px;
+}
+
+.quest-tracker-chevron {
+  position: absolute;
+  right: 4px;
+  bottom: 3px;
+  color: var(--orange);
+  font-size: 0.7rem;
+  font-weight: 1000;
+  line-height: 1;
+  transition: transform 360ms cubic-bezier(0.2, 0.82, 0.2, 1);
+}
+
+.quest-tracker.is-expanded .quest-tracker-chevron {
+  transform: rotate(180deg);
+}
+
+.quest-tracker-panel {
+  position: relative;
+  min-height: 178px;
+  padding: 15px 18px 16px;
+  border: 1px solid rgb(244 230 197 / 30%);
+  border-right: 0;
+  background:
+    linear-gradient(135deg, transparent 0 12px, rgb(6 26 42 / 95%) 13px) top left / 100% 100% no-repeat;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 7%);
+  pointer-events: auto;
+}
+
+.quest-tracker-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 5px;
+}
+
+.quest-tracker-heading span,
+.quest-tracker-progress-copy {
+  color: rgb(244 230 197 / 62%);
+  font-size: 0.56rem;
+  font-weight: 1000;
+  letter-spacing: 0.14em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.quest-tracker h2 {
+  overflow: hidden;
+  margin: 0;
+  color: var(--cream);
+  font-family: var(--display-face);
+  font-size: 1.03rem;
+  line-height: 1.08;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.quest-tracker-progress {
+  height: 5px;
+  margin: 9px 0 11px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgb(244 230 197 / 15%);
+}
+
+.quest-tracker-progress i {
+  display: block;
+  width: var(--quest-progress, 0%);
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #4d9a96, var(--orange));
+  transition: width 260ms ease;
+}
+
+.quest-tracker-steps {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.quest-tracker-step {
+  position: relative;
+  display: grid;
+  min-height: 27px;
+  grid-template-columns: 18px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px;
+  color: rgb(244 230 197 / 48%);
+}
+
+.quest-tracker-step::before {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: 14px;
+  height: 14px;
+  place-items: center;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  background: #061a2a;
+  content: "";
+}
+
+.quest-tracker-step:not(:last-child)::after {
+  position: absolute;
+  top: 20px;
+  bottom: -9px;
+  left: 6px;
+  width: 2px;
+  background: rgb(244 230 197 / 16%);
+  content: "";
+}
+
+.quest-tracker-step.is-complete {
+  color: #8ec2b8;
+}
+
+.quest-tracker-step.is-complete::before {
+  border-color: #8ec2b8;
+  background: #4d9a96;
+  box-shadow: inset 0 0 0 3px #061a2a;
+}
+
+.quest-tracker-step.is-current {
+  color: var(--cream);
+}
+
+.quest-tracker-step.is-current::before {
+  border-color: var(--orange);
+  background: var(--orange);
+  box-shadow: 0 0 0 3px rgb(255 122 26 / 15%);
+}
+
+.quest-step-label {
+  overflow: hidden;
+  font-size: 0.7rem;
+  font-weight: 900;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.quest-step-detail {
+  overflow: hidden;
+  max-width: 92px;
+  color: inherit;
+  font-size: 0.56rem;
+  font-weight: 800;
+  line-height: 1.1;
+  opacity: 0.72;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.quest-tracker-instruction {
+  margin: 10px 0 0;
+  padding-top: 9px;
+  border-top: 1px solid rgb(244 230 197 / 14%);
+  color: rgb(244 230 197 / 78%);
+  font-size: 0.64rem;
+  font-weight: 750;
+  line-height: 1.32;
+}
+
+.game-ui:has(.boost-gauge:not([hidden])) .quest-tracker {
+  top: max(78px, calc(env(safe-area-inset-top) + 62px));
+}
+
+.game-ui:has(.quest-tracker:not([hidden])) .toast {
+  top: max(216px, calc(env(safe-area-inset-top) + 200px));
+}
+
+.high-contrast .quest-tracker-panel,
+.high-contrast .quest-tracker-toggle {
+  border-color: var(--cream);
+  background-color: var(--ink);
+}
+
+.high-contrast .quest-tracker-step,
+.high-contrast .quest-tracker-instruction,
+.high-contrast .quest-tracker-heading span,
+.high-contrast .quest-tracker-progress-copy {
+  color: var(--cream);
+  opacity: 1;
+}
+
+.reduced-motion .quest-tracker,
+.reduced-motion .quest-tracker-chevron,
+.reduced-motion .quest-tracker-progress i {
+  transition-duration: 0.001ms !important;
+}
+
+@media (max-width: 600px) {
+  .quest-tracker {
+    width: min(316px, calc(100vw - 8px));
+    grid-template-columns: 44px minmax(0, 1fr);
+    transform: translateX(calc(100% - 44px));
+  }
+
+  .quest-tracker-toggle {
+    width: 44px;
+    height: 50px;
+  }
+
+  .quest-tracker-panel {
+    padding: 13px 14px 14px;
+  }
+
+  .quest-tracker-instruction {
+    font-size: 0.61rem;
+  }
+}
+
+@media (max-height: 500px) and (min-width: 601px) {
+  .quest-tracker {
+    width: 306px;
+  }
+
+  .quest-tracker-panel {
+    min-height: 0;
+    padding-block: 11px;
+  }
+
+  .quest-tracker-instruction {
+    display: none;
+  }
+}

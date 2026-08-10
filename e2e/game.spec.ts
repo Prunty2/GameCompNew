@@ -109,6 +109,41 @@ test("the waterline transition carries title, dock, and lake scene changes", asy
   await expect(page.getByRole("button", { name: "Play", exact: true })).toBeVisible();
 });
 
+test("the current quest drawer slides from the right and updates after the catch", async ({ page }) => {
+  await page.goto("/?e2e=1");
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await expect(page.getByLabel("Current quest", { exact: true })).toBeHidden();
+  await page.getByRole("button", { name: "Accept contract" }).click();
+
+  const tracker = page.getByLabel("Current quest", { exact: true });
+  const toggle = page.getByRole("button", { name: "Hide current quest" });
+  const progress = page.getByRole("progressbar", { name: "Quest progress" });
+  await expect(tracker).toBeVisible();
+  await expect(tracker.getByRole("heading", { name: "The Morning Order" })).toBeVisible();
+  await expect(progress).toHaveAttribute("aria-valuenow", "1");
+  await expect(progress).toHaveAttribute("aria-valuetext", "1 of 3 steps complete");
+  await expect(tracker.locator(".quest-tracker-step.is-current")).toContainText("Catch Reedfin");
+  await expect(tracker).toHaveCSS("right", "0px");
+
+  await toggle.click();
+  await expect(page.getByRole("button", { name: "Show current quest" })).toHaveAttribute("aria-expanded", "false");
+  await expect(tracker).not.toHaveClass(/is-expanded/);
+  const viewportWidth = await page.evaluate(() => window.innerWidth);
+  await expect.poll(async () => {
+    const bounds = await tracker.boundingBox();
+    return bounds ? bounds.x + 50 : 0;
+  }).toBeGreaterThanOrEqual(viewportWidth);
+
+  await page.getByRole("button", { name: "Show current quest" }).click();
+  await expect(tracker).toHaveClass(/is-expanded/);
+  await page.evaluate(() => window.__FSHING_TEST__?.catchSpecies("reedfin"));
+  await expect(progress).toHaveAttribute("aria-valuenow", "2");
+  await expect(tracker.locator(".quest-tracker-step.is-current")).toContainText("Deliver specimen");
+
+  await page.keyboard.press("Escape");
+  await expect(tracker).toBeHidden();
+});
+
 test("leaving the title frames the boat before gameplay is revealed", async ({ page }) => {
   await page.goto("/?e2e=1");
   const transition = page.locator("#scene-transition");
