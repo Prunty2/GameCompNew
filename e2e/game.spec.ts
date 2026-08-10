@@ -651,6 +651,16 @@ test("touch controls are available at a mobile landscape viewport", async ({ pag
   await expect(page.getByRole("button", { name: "Interact or cast" })).toBeVisible();
 });
 
+test("touch controls stay hidden at a portrait viewport", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.getByRole("button", { name: "Accept contract" }).click();
+  await expect(page.getByRole("button", { name: "Move right" })).toBeHidden();
+  await expect(page.getByRole("button", { name: "Move left" })).toBeHidden();
+  await expect(page.getByRole("button", { name: "Interact or cast" })).toBeHidden();
+});
+
 test("dock interaction starts on pointer press", async ({ page }) => {
   await page.goto("/?e2e=1");
   await page.getByRole("button", { name: "Play", exact: true }).click();

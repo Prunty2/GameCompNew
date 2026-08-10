@@ -236,8 +236,8 @@ The handling should feel smooth, measured, and forgiving rather than physically 
 
 **Pointer and touch**
 
-- On-screen left and right controls during navigation
-- On-screen hold control for boost after it is unlocked
+- On-screen left and right controls during navigation in landscape viewports; portrait viewports omit the mobile control overlay
+- On-screen hold control for boost after it is unlocked in landscape viewports
 - Tap prominent interaction buttons to dock, accept contracts, and cast
 - Drag or virtual-stick input to steer the hook while fishing
 
