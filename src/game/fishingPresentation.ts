@@ -9,6 +9,7 @@ export interface FishingViewLayout {
 }
 
 export interface FishingFishPose {
+  animationFrame: number;
   verticalOffsetRatio: number;
   rotation: number;
   scaleX: number;
@@ -66,11 +67,13 @@ export function fishingFishPose(
   reducedMotion: boolean,
 ): FishingFishPose {
   if (reducedMotion) {
-    return { verticalOffsetRatio: 0, rotation: 0, scaleX: 1, scaleY: 1 };
+    return { animationFrame: 0, verticalOffsetRatio: 0, rotation: 0, scaleX: 1, scaleY: 1 };
   }
   const profile = FISHING_MOVEMENT_PROFILES[species];
   const motion = fishingSpeciesMotion(species, elapsed, phase);
+  const framePhase = ((elapsed * profile.bodyFrequency + phase * 0.8) / (Math.PI * 2)) % 1;
   return {
+    animationFrame: Math.floor((framePhase < 0 ? framePhase + 1 : framePhase) * 4) % 4,
     verticalOffsetRatio: motion.flex * profile.flexAmount * 0.08,
     rotation: motion.pitch,
     scaleX: 1 + motion.flex * profile.flexAmount,

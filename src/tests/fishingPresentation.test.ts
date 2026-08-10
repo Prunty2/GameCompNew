@@ -37,8 +37,14 @@ describe("fishing presentation", () => {
 
     expect(first).toEqual(repeated);
     expect(first).not.toEqual(neighbor);
+    expect(first.animationFrame).toBeGreaterThanOrEqual(0);
+    expect(first.animationFrame).toBeLessThan(4);
+    expect(new Set(Array.from({ length: 24 }, (_, index) => (
+      fishingFishPose("reedfin", index * 0.2, 0, false).animationFrame
+    )))).toHaveProperty("size", 4);
     expect(Math.abs(first.verticalOffsetRatio)).toBeLessThanOrEqual(0.012);
     expect(fishingFishPose("reedfin", 12.5, 2.4, true)).toEqual({
+      animationFrame: 0,
       verticalOffsetRatio: 0,
       rotation: 0,
       scaleX: 1,
