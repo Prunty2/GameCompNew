@@ -334,6 +334,21 @@ describe("FSHING side-on simulation", () => {
     expect(simulation.cargo).toEqual([{ species: "reedfin", freshness: 100 }]);
   });
 
+  test("moves the fishing hook at the slower balanced steering speed", () => {
+    const simulation = createSimulation(9);
+    expect(startFishing(simulation, "sunwardShoal")).toBe(true);
+    const startingHook = simulation.fishing?.hook;
+    if (!startingHook) throw new Error("Expected a fishing hook.");
+    const startX = startingHook.x;
+    const startY = startingHook.y;
+
+    updateSimulation(simulation, { ...idle, hookX: 1, hookY: 1 }, 0.1);
+
+    expect(simulation.fishing?.hook.x).toBeCloseTo(startX + BALANCE.fishingHookSpeed * 0.1);
+    expect(simulation.fishing?.hook.y).toBeCloseTo(startY + BALANCE.fishingHookSpeed * 0.1);
+    expect(BALANCE.fishingHookSpeed).toBe(0.34);
+  });
+
   test("ages cargo and rejects a spoiled tutorial delivery", () => {
     const simulation = createSimulation();
     acceptAvailableContract(simulation);
