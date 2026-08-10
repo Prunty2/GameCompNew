@@ -47,11 +47,23 @@ The boat, harbor pier, fish atlas, and world atlas were requested on a uniform `
 
 ### `fish-atlas-v2.png`
 
-- Runtime role: nine distinct fish sprites in the exact row-major order Reedfin, Sun Perch, Silver Dart, Needle Pike, Mossback, Lantern Eel, Gloam Gill, Violet Ray, and Abyss Crown
+- Authoring role: superseded static nine-species reference retained for provenance; no longer imported at runtime
 - Generated size: 1254 × 1254
 - Generation mode: OpenAI built-in image generation, using `fish-atlas.png` for sprite treatment and `lake-chart.png` for palette/painting context
 - Prompt: “Create one original strict 3 × 3 sprite atlas for FSHING. Use the supplied fish atlas only for the restrained editorial gouache/screen-print treatment and the lake image only for its desaturated teal, cream, ink-navy and sparse amber palette. Put exactly one complete fish in each equal cell with generous padding, strict orthographic side profile facing right, no overlap, and a uniform full-bleed chroma-magenta matte. Row 1: round Reedfin with fan fins; tall Sun Perch with crest; slim Silver Dart with split tail. Row 2: long Needle Pike with pointed snout; heavy Mossback with leaf-like fins; snake-like Lantern Eel with a small lure. Row 3: Gloam Gill with fork tail and eye marking; wide Violet Ray with ribbon tail; armoured Abyss Crown with crowned head and pale sensory eye. Make all nine silhouettes immediately different at gameplay size. No text, labels, borders, grid lines, hook, water, bubbles, plants, scenery, shadows, extra objects, copied characters, or designs from another fishing game.”
 - Originality note: species names, silhouettes, arrangement, palette direction, and prompt were authored specifically for FSHING. The output does not reproduce assets from *Cat Goes Fishing* or another commercial game.
+
+### Animated habitat fish sheets
+
+- Runtime files: `fish-sunward-swim.png`, `fish-mosswater-swim.png`, and `fish-gloam-swim.png`
+- Runtime role: four authored swim frames for every resident species, grouped by fishing site in strict 4-column × 3-row sheets. Columns are neutral glide, tail or fin flex, neutral return, and opposite flex. Rows follow each site's resident order from `SPOT_RESIDENTS`.
+- Authoring sources: `output/imagegen/fish-*-swim-source.png`
+- Generated on: 10 August 2026 with OpenAI's built-in image-generation tool
+- Runtime processing: authoring sheets are proportionally downscaled to 768 px wide; the uniform magenta matte is keyed in memory. The deterministic presentation cycle selects one of four cells and reduced-motion mode holds frame zero. The renderer derives a thin, partially translucent rarity outline from the active frame only for the requested fish.
+- Shared prompt direction: “Create one strict 4 columns × 3 rows animation sprite sheet. Each row is one consistent fish individual shown through four sequential subtle swimming frames. Keep head, eye, body size, markings, lighting, and centre position identical across frames; move only the tail, rear body, and small fins. Strict orthographic side profile facing right; visually appealing semi-realistic natural-history gouache; anatomically plausible proportions; softly painted scales; controlled detail readable at 55–100 px. Exactly one complete fish per equal cell with generous safe padding on a uniform full-bleed `#FF00FF` matte. No pale sticker outline; only a thin soft habitat-dark keyline integrated into the painting. No text, labels, grid, borders, water, bubbles, scenery, shadows, extra objects, or watermark.”
+- Sunward rows: realistic rounded olive-teal Reedfin; compact amber barred Sun Perch; slim steel-blue Silver Dart.
+- Mosswater rows: long olive-silver Needle Pike; heavy mottled Mossback; charcoal-teal Lantern Eel with a restrained warm lure.
+- Outer Gloam rows: compact blue-violet Gloam Gill with a natural eye spot; dusky Violet Ray with subtly undulating wings; dark armored Abyss Crown with restrained raised head plates.
 
 ### `surface-fishing-cues.png`
 

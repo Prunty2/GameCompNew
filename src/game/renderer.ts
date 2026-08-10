@@ -1,6 +1,8 @@
 import boatSteamAtlasUrl from "../assets/boat-steam-atlas.png";
 import tackleAtlasUrl from "../assets/fish-atlas.png";
-import fishAtlasUrl from "../assets/fish-atlas-v2.png";
+import gloamFishAtlasUrl from "../assets/fish-gloam-swim.png";
+import mosswaterFishAtlasUrl from "../assets/fish-mosswater-swim.png";
+import sunwardFishAtlasUrl from "../assets/fish-sunward-swim.png";
 import fishingLineLimitFloatUrl from "../assets/fishing-line-limit-float.png";
 import mosswaterFishingUrl from "../assets/fishing-mosswater-pool.jpg";
 import gloamFishingUrl from "../assets/fishing-outer-gloam.jpg";
@@ -68,8 +70,8 @@ interface LoadedArt {
   lakeNight: HTMLImageElement;
   pier: HTMLImageElement;
   boat: HTMLCanvasElement;
-  fish: HTMLCanvasElement;
-  fishOutlines: Record<FishRarity, HTMLCanvasElement>;
+  fish: Record<SpotId, HTMLCanvasElement>;
+  fishOutlines: Record<FishRarity, Record<SpotId, HTMLCanvasElement>>;
   fishingEnvironments: Record<SpotId, HTMLImageElement>;
   lineLimitFloat: HTMLImageElement;
   fishingCues: HTMLCanvasElement;
@@ -86,6 +88,18 @@ const SURFACE_FISH_CELLS = [
   [0, 1],
   [1, 1],
 ] as const;
+
+const FISH_SPRITE_CELLS: Record<FishSpecies, { sheet: SpotId; row: number }> = {
+  reedfin: { sheet: "sunwardShoal", row: 0 },
+  sunPerch: { sheet: "sunwardShoal", row: 1 },
+  silverDart: { sheet: "sunwardShoal", row: 2 },
+  needlePike: { sheet: "mosswaterPool", row: 0 },
+  mossback: { sheet: "mosswaterPool", row: 1 },
+  lanternEel: { sheet: "mosswaterPool", row: 2 },
+  gloamGill: { sheet: "outerGloam", row: 0 },
+  violetRay: { sheet: "outerGloam", row: 1 },
+  abyssCrown: { sheet: "outerGloam", row: 2 },
+};
 
 // Center of the visible hook-and-arc paint inside each 192 × 256 authored atlas cell.
 const SURFACE_HOOK_OPTICAL_CENTER = {
@@ -122,7 +136,9 @@ export class CanvasRenderer {
       loadImage(lakeChartNightUrl),
       loadImage(harborPierUrl),
       loadImage(playerBoatUrl),
-      loadImage(fishAtlasUrl),
+      loadImage(sunwardFishAtlasUrl),
+      loadImage(mosswaterFishAtlasUrl),
+      loadImage(gloamFishAtlasUrl),
       loadImage(sunwardFishingUrl),
       loadImage(mosswaterFishingUrl),
       loadImage(gloamFishingUrl),
@@ -137,7 +153,9 @@ export class CanvasRenderer {
       lakeNight,
       pier,
       boat,
-      fish,
+      sunwardFish,
+      mosswaterFish,
+      gloamFish,
       sunwardFishing,
       mosswaterFishing,
       gloamFishing,
@@ -147,7 +165,16 @@ export class CanvasRenderer {
       tackle,
       world,
     ]) => {
-      const keyedFish = keyMagenta(fish, false);
+      const keyedFish: Record<SpotId, HTMLCanvasElement> = {
+        sunwardShoal: keyMagenta(sunwardFish, false),
+        mosswaterPool: keyMagenta(mosswaterFish, false),
+        outerGloam: keyMagenta(gloamFish, false),
+      };
+      const tintedFish = (colour: string): Record<SpotId, HTMLCanvasElement> => ({
+        sunwardShoal: tintAlpha(keyedFish.sunwardShoal, colour),
+        mosswaterPool: tintAlpha(keyedFish.mosswaterPool, colour),
+        outerGloam: tintAlpha(keyedFish.outerGloam, colour),
+      });
       this.art = {
         boatSteam,
         lake,
@@ -156,10 +183,10 @@ export class CanvasRenderer {
         boat: keyMagenta(boat, true),
         fish: keyedFish,
         fishOutlines: {
-          common: tintAlpha(keyedFish, FISHING_RARITY_COLOURS.common),
-          uncommon: tintAlpha(keyedFish, FISHING_RARITY_COLOURS.uncommon),
-          rare: tintAlpha(keyedFish, FISHING_RARITY_COLOURS.rare),
-          legendary: tintAlpha(keyedFish, FISHING_RARITY_COLOURS.legendary),
+          common: tintedFish(FISHING_RARITY_COLOURS.common),
+          uncommon: tintedFish(FISHING_RARITY_COLOURS.uncommon),
+          rare: tintedFish(FISHING_RARITY_COLOURS.rare),
+          legendary: tintedFish(FISHING_RARITY_COLOURS.legendary),
         },
         fishingEnvironments: {
           sunwardShoal: sunwardFishing,
@@ -488,9 +515,9 @@ export class CanvasRenderer {
       context.rotate(pose.rotation * target.direction);
       context.scale(pose.scaleX, pose.scaleY);
       if (target.species === targetSpecies) {
-        this.drawFishOutline(target.species, { x: 0, y: 0 }, target.direction, width, height, settings.highContrast);
+        this.drawFishOutline(target.species, pose.animationFrame, { x: 0, y: 0 }, target.direction, width, height, settings.highContrast);
       }
-      this.drawFish(target.species, { x: 0, y: 0 }, target.direction, width, height, settings.highContrast);
+      this.drawFish(target.species, pose.animationFrame, { x: 0, y: 0 }, target.direction, width, height, settings.highContrast);
       context.restore();
       if (target.species === targetSpecies) {
         this.drawFishingTargetChevron(animatedPoint, target.species, width, height, settings.highContrast);
@@ -524,6 +551,7 @@ export class CanvasRenderer {
       context.scale(1, 1 + Math.abs(wriggle) * 0.06);
       this.drawFish(
         fishing.reeling.species,
+        fishingFishPose(fishing.reeling.species, simulation.elapsed, 0, settings.reducedMotion).animationFrame,
         { x: 0, y: 0 },
         fishing.reeling.direction,
         width,
@@ -1053,19 +1081,18 @@ export class CanvasRenderer {
 
   private drawFish(
     species: FishSpecies,
+    animationFrame: number,
     point: WorldPoint,
     direction: -1 | 1,
     width: number,
     height: number,
     highContrast: boolean,
   ): void {
-    const fish = FISH[species];
-    const [column, row] = fish.atlasCell;
     const { fishWidth, fishHeight } = this.fishDimensions(species, width, height);
     this.context.save();
     this.context.translate(point.x, point.y);
     this.context.scale(direction, 1);
-    this.drawFishCell(column, row, 0, 0, fishWidth, fishHeight);
+    this.drawFishCell(species, animationFrame, 0, 0, fishWidth, fishHeight);
     this.context.restore();
     if (highContrast) {
       this.context.save();
@@ -1081,6 +1108,7 @@ export class CanvasRenderer {
 
   private drawFishOutline(
     species: FishSpecies,
+    animationFrame: number,
     point: WorldPoint,
     direction: -1 | 1,
     width: number,
@@ -1090,12 +1118,13 @@ export class CanvasRenderer {
     const art = this.art;
     if (!art) return;
     const fish = FISH[species];
-    const [column, row] = fish.atlasCell;
     const { fishWidth, fishHeight } = this.fishDimensions(species, width, height);
-    const outlineAtlas = art.fishOutlines[fish.rarity];
-    const offset = highContrast ? 4 : 3;
+    const spriteCell = FISH_SPRITE_CELLS[species];
+    const outlineAtlas = art.fishOutlines[fish.rarity][spriteCell.sheet];
+    const offset = highContrast ? 2.25 : 1;
     const { context } = this;
     context.save();
+    context.globalAlpha = highContrast ? 0.88 : 0.62;
     context.translate(point.x, point.y);
     context.scale(direction, 1);
     for (const [offsetX, offsetY] of [
@@ -1108,7 +1137,7 @@ export class CanvasRenderer {
       [-offset * 0.72, offset * 0.72],
       [offset * 0.72, offset * 0.72],
     ] as const) {
-      this.drawFishAtlasCell(outlineAtlas, column, row, offsetX, offsetY, fishWidth, fishHeight);
+      this.drawFishAtlasCell(outlineAtlas, animationFrame, spriteCell.row, offsetX, offsetY, fishWidth, fishHeight);
     }
     context.restore();
   }
@@ -1146,8 +1175,6 @@ export class CanvasRenderer {
     surfaceY: number,
   ): void {
     const { context } = this;
-    const fish = FISH[species];
-    const [column, row] = fish.atlasCell;
     const guideWidth = clamp(width * 0.22, 190, 300);
     const guideX = width - guideWidth - clamp(width * 0.035, 20, 48);
     const guideY = Math.max(18, Math.min(surfaceY * 0.14, 42));
@@ -1158,8 +1185,8 @@ export class CanvasRenderer {
     context.shadowColor = "rgba(2, 10, 18, 0.86)";
     context.shadowBlur = 9;
     this.drawFishCell(
-      column,
-      row,
+      species,
+      0,
       guideX + guideWidth / 2,
       guideY + portraitHeight / 2,
       portraitWidth,
@@ -1186,10 +1213,11 @@ export class CanvasRenderer {
     };
   }
 
-  private drawFishCell(column: number, row: number, x: number, y: number, width: number, height: number): void {
+  private drawFishCell(species: FishSpecies, animationFrame: number, x: number, y: number, width: number, height: number): void {
     const art = this.art;
     if (!art) return;
-    this.drawFishAtlasCell(art.fish, column, row, x, y, width, height);
+    const spriteCell = FISH_SPRITE_CELLS[species];
+    this.drawFishAtlasCell(art.fish[spriteCell.sheet], animationFrame, spriteCell.row, x, y, width, height);
   }
 
   private drawFishAtlasCell(
@@ -1201,7 +1229,7 @@ export class CanvasRenderer {
     width: number,
     height: number,
   ): void {
-    const sourceWidth = atlas.width / 3;
+    const sourceWidth = atlas.width / 4;
     const sourceHeight = atlas.height / 3;
     this.context.drawImage(
       atlas,
