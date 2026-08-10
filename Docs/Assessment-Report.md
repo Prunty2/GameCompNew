@@ -13,7 +13,7 @@
 
 FSHING is an original side-on environmental-science fishing and delivery game. The player operates a research boat across a lake that spans several camera widths. At each site, the player reads depth, temperature, dissolved oxygen, turbidity, and habitat evidence, predicts which fish is adapted to those conditions, and then tests the prediction by fishing underwater. A delivery requires a second STEM decision: compare distance, travel time, predicted freshness, and hazard risk before choosing a survey or express route.
 
-The game teaches through cause and effect. Catching a fish lowers its population. Releasing an unneeded fish reverses that catch's modelled population cost. Very low stocks become protected, and healthy ecosystems provide a delivery bonus. The field guide records discoveries, adaptations, food-web roles, population labels, survey accuracy, and depth access. After eight deliveries, a season report asks the player to evaluate their evidence, route decisions, and conservation impact.
+The game teaches through cause and effect. Habitat readings and fish adaptations guide each catch, while travel speed determines how much freshness reaches the destination. After eight deliveries, a season report asks the player to evaluate their evidence, survey accuracy, and route decisions.
 
 The completed vertical slice contains:
 
@@ -21,7 +21,7 @@ The completed vertical slice contains:
 - two harbors, three ecosystem regions, three widely separated fishing sites, and three visible hazards;
 - nine original fish with different silhouettes, habitat profiles, values, and depth tiers;
 - four upgrade paths with six tiers each and seven visible boat classes;
-- water surveys, route mathematics, freshness, contracts, hazards, populations, protection, release, recovery, and a mastery report;
+- water surveys, route mathematics, freshness, contracts, hazards, cargo release, and a mastery report;
 - keyboard, pointer, and touch controls;
 - mute, volume, high-contrast, reduced-motion, remappable controls, and pause on focus loss;
 - deterministic gameplay tests, browser interaction tests, and versioned validated saves.
@@ -40,7 +40,7 @@ By the end of a research season, a player should be able to:
 2. explain how fish body shapes and sensory features can suit a habitat;
 3. calculate or compare journey time using `time = distance ÷ speed`;
 4. explain a speed–freshness–risk trade-off;
-5. predict how harvesting, release, protection, and recovery affect populations;
+5. use habitat evidence to predict which species belongs at a fishing ground;
 6. revise a prediction after receiving evidence-based feedback.
 
 ### Learning-to-gameplay alignment
@@ -51,7 +51,6 @@ By the end of a research season, a player should be able to:
 | Connect adaptation to habitat | Choose one contract species from three silhouettes and descriptions | Supported/rethink result explains the fish feature | Correct predictions and field-guide discovery |
 | Apply distance–speed–time | Compare catch-to-harbor route distance and two calculated times | Both estimates show the same equation and units | Route-plan count; chosen route stored |
 | Evaluate a risk trade-off | Choose safer/slower or faster/higher-damage travel | Route card and hazard hit report show multipliers | Predicted versus actual freshness result |
-| Predict population change | Catch, release, revisit, and observe a 0–100 stock index | Written percentage and Healthy/Watch/Vulnerable/Protected label | Lake-health average and conservation score |
 | Revise a model | Read an explanation after any prediction, then fish in that habitat | Incorrect answers remain playable and reveal the supported species | Accuracy across the eight-delivery season |
 
 ### Target audience
@@ -66,13 +65,13 @@ The primary audience is Year 7–10 students. The secondary audience is casual b
 | Understand why an answer is right | Immediate written explanation connecting measurements, habitat, and adaptation |
 | Learn without a punishing quiz | Incorrect predictions still reveal evidence and allow play to continue |
 | Recognise fish without colour | Distinct silhouettes, shape descriptions, names, and depth tiers |
-| See the consequence of fishing | Population-aware shoal size plus written percentage and status in the survey, harbor, and field guide |
-| Recover from mistakes | Rescue keeps the save, release restores stocks, and contracts remain repeatable |
+| Manage limited cargo | Release an unneeded catch at harbor to free a slot |
+| Recover from mistakes | Rescue keeps the save and contracts remain repeatable |
 | Use different devices or needs | Keyboard, pointer, touch, remapping, high contrast, reduced motion, mute |
 
 ## 3. Research, inspiration, and originality
 
-I analysed fishing games at the level of general design patterns. The official *Cat Goes Fishing* store description demonstrates a clear progression from simple equipment to different fish, quests, boats, deeper water, and a catalogue. FSHING transforms those abstract patterns into a scientific evidence loop: survey water, predict a species, plan a route, manage populations, and evaluate results. [Official Steam listing](https://store.steampowered.com/app/343780/Cat_Goes_Fishing/)
+I analysed fishing games at the level of general design patterns. The official *Cat Goes Fishing* store description demonstrates a clear progression from simple equipment to different fish, quests, boats, deeper water, and a catalogue. FSHING transforms those abstract patterns into a scientific evidence loop: survey water, predict a species, plan a route, and evaluate results. [Official Steam listing](https://store.steampowered.com/app/343780/Cat_Goes_Fishing/)
 
 The project does **not** copy another game’s protagonist, title treatment, humour, fish names, silhouettes, art, animations, interface, map, dialogue, prices, balance curve, source code, or data. Every FSHING species, ecosystem, visual prompt, rule, and line of implementation was produced for this project. The original-art record is maintained in `Docs/Asset-Manifest.md`.
 
@@ -89,7 +88,7 @@ flowchart LR
   C --> D["Predict a contract species"]
   D --> E["Review explanation"]
   E --> F["Fish at unlocked depth"]
-  F --> G["Population changes and freshness starts"]
+  F --> G["Freshness starts"]
   G --> H["Compare catch-to-harbor routes"]
   H --> I["Navigate hazards"]
   I --> J["Compare predicted and actual freshness"]
@@ -106,12 +105,12 @@ flowchart LR
 4. Read: 4 m, 21°C, 8.4 mg/L dissolved oxygen, low turbidity, sunlit reeds.
 5. Predict the Reedfin from three species descriptions.
 6. Read why broad fins help it manoeuvre in reeds, then lower the hook.
-7. Catch the Reedfin. Its population changes from 100 to 93 and freshness begins at 100%.
+7. Catch the Reedfin. Its freshness begins at 100%.
 8. Compare two routes from the catch site to Gloam Ferry. The screen displays distance, estimated minutes, predicted freshness, and hazard multiplier.
 9. Select a route and cross the lake, using visible yellow hazard signs and braking when needed.
 10. Dock, deliver, and compare the catch-to-harbor prediction with actual freshness.
 11. Spend the reward on a larger boat, engine, lamp, or line depth.
-12. Open the field guide to review the confirmed species and lake-health data.
+12. Review the confirmed species and survey results in the season report.
 
 ### World and scientific progression
 
@@ -140,10 +139,9 @@ Each fishing view contains two individuals from each of its three documented res
 
 - Survey feedback names whether evidence supported the prediction and explains the relationship.
 - Underwater depth boundaries remain visible with an upgrade instruction.
-- Fishing grounds remain faintly discoverable through GPT Image school sprites; proximity reveals a GPT Image polarized-water lens and interaction-range hook cue, while survey and field-guide screens provide the written site, species, and population information.
+- Fishing grounds remain faintly discoverable through GPT Image school sprites; proximity reveals a GPT Image polarized-water lens and interaction-range hook cue.
 - Hazards use a shape, `!` symbol, written name, and colour.
 - Delivery results compare prediction and actual outcome instead of showing only currency.
-- A healthy-ecosystem bonus rewards sustainability without blocking ordinary progress.
 - The season report displays four measurable outcomes and includes reflection questions.
 
 ## 5. Algorithms and computational thinking
@@ -180,26 +178,6 @@ FUNCTION recordSurvey(site, prediction, contractTarget)
 END FUNCTION
 ```
 
-### Population algorithm
-
-```text
-FUNCTION catch(species)
-  IF cargo is full THEN reject
-  IF population[species] ≤ 15 THEN protect and reject
-  cargo.add(species, freshness = 100)
-  depletion ← 7 + species.depthTier × 2
-  population[species] ← MAX(0, population[species] - depletion)
-END FUNCTION
-
-FUNCTION release(cargoItem)
-  restored ← 7 + cargoItem.depthTier × 2
-  population[cargoItem.species] ← MIN(100, population + restored)
-  conservationScore ← conservationScore + restored
-END FUNCTION
-```
-
-This model is intentionally simplified into a 0–100 index. It is not presented as a real population count. The abstraction makes the direction and relative impact of a decision understandable to the target audience.
-
 ### Route algorithm
 
 ```text
@@ -222,7 +200,7 @@ Gameplay uses a fixed `1/120`-second simulation step. Random target positions an
 
 ### Save validation
 
-Save version 5 treats stored data as untrusted. Money, upgrade tiers, populations, learning counters, volume, and other numerical values are checked and clamped. Species identifiers are filtered against the real species list, duplicate discoveries are removed, old saves receive safe defaults, and malformed JSON falls back to a valid new save.
+Save version 8 treats stored data as untrusted. Money, upgrade tiers, learning counters, volume, and other numerical values are checked and clamped. Species identifiers are filtered against the real species list, duplicate discoveries are removed, obsolete population fields are ignored, and malformed JSON falls back to a valid new save.
 
 ## 6. Interface and accessibility design
 
@@ -244,9 +222,9 @@ Science overlays use the same hierarchy: heading, measurements, evidence clue, d
 - lighter teal and sea-glass: regions and neutral information;
 - warm ivory: readable text;
 - muted amber: actionable or caution information;
-- restrained green/yellow/coral: supported, watch, and vulnerable states.
+- restrained green/yellow/coral: supported and warning states.
 
-Colour is redundant. Population states include words and percentages. Hazards include a symbol and name. Fish use names and silhouette descriptions. Buttons have focus outlines, and depth locks include text.
+Colour is redundant. Hazards include a symbol and name. Fish use names and silhouette descriptions. Buttons have focus outlines, and depth locks include text.
 
 ### Input and inclusion
 
@@ -297,7 +275,6 @@ Important design decisions:
 | --- | --- |
 | ![Water survey showing depth, temperature, oxygen, turbidity, habitat and three predictions](screenshots/03-water-survey.png) | ![Six fish from three documented Silver Bay residents, including a dimmed deeper species below the line limit](screenshots/04-underwater-depth.png) |
 
-![Scientific field guide with ecosystem map, depth access, discovery, accuracy and written population labels](screenshots/05-field-guide.png)
 
 ## 8. Testing and iteration
 
@@ -310,12 +287,12 @@ The development brief was refined through direct stakeholder requests:
 | “Make it a much larger map” | The voyage felt too small | Camera view reduced to 0.30 world width, making the harbor span about three views |
 | “Menu screen … a lot more normal” | Initial menu hierarchy was unusual | Centred bounded panel, dominant Play button, familiar secondary actions |
 | “Fix the colour scheme” | Colours lacked cohesion | Unified deep teal, sea-glass, ivory, amber, and restrained warning colours |
-| “Fishing spots should feel alive” | Large labelled landmarks felt artificial and cluttered the waterline | Faint population-aware fish schools, a proximity-strengthened polarized-water lens, and a hook shown only inside the true interaction radius |
+| “Fishing spots should feel alive” | Large labelled landmarks felt artificial and cluttered the waterline | Full resident fish schools, a proximity-strengthened polarized-water lens, and a hook shown only inside the true interaction radius |
 | “Lots of different types of fish” | Repeated fish did not support discovery | Nine named, illustrated, silhouette-distinct species and profiles |
 | “Water deeper … only with upgrades” | Depth progression was unclear | Six visible depth tiers and labelled upgrade boundary |
 | “Larger boats … upgrade way more” | Progression ended too quickly | Six tiers in four upgrade paths and seven named boat classes |
 | “Different worlds … colour schemes” | Areas lacked identity | Three connected ecosystems with separate above/below-water palettes |
-| Assignment needed a clear STEM purpose | Fishing loop alone did not demonstrate learning | Surveys, route mathematics, populations, field guide, explanations, season evaluation |
+| Assignment needed a clear STEM purpose | Fishing loop alone did not demonstrate learning | Surveys, route mathematics, habitat evidence, explanations, and season evaluation |
 
 ### Automated test strategy
 
@@ -326,8 +303,7 @@ Unit/model tests cover:
 - contracts, freshness, payments, upgrades, rescue, and progression;
 - survey correctness, explanations, discoveries, and accuracy;
 - contract-specific survey targets and habitat-specific fish spawning;
-- population depletion, release, protection, and conservation score;
-- protected-stock contract filtering, harbor recovery, and invalid-save fallbacks;
+- cargo release and repeatable contract generation;
 - route estimates, engine effect, and safe/fast hazard damage;
 - season completion;
 - save corruption, migration, clamping, learning records, and round-trip persistence.
@@ -340,7 +316,7 @@ Browser tests cover:
 - six-step help navigation;
 - touch controls at mobile landscape size;
 - horizontal keyboard movement and facing;
-- field-guide regions, depth access, and written population labels.
+- removed field-guide menu and buttons.
 
 ### Automated verification record
 
@@ -366,7 +342,6 @@ An em dash means that a real participant result is still pending.
 | Time to first survey prediction | Stopwatch | Under 3 minutes | — | — | — |
 | Habitat explanation | Ask “Why did that fish fit?” | 2/3 cite a measurement + adaptation | — | — | — |
 | Route reasoning | Ask why they chose safe/fast | 2/3 mention time and risk/freshness | — | — | — |
-| Population comprehension | Ask effect of repeated catches | 3/3 predict a decline | — | — | — |
 | Control errors | Count wrong/unclear actions | No repeated blocker | — | — | — |
 | Readability/accessibility | Toggle contrast/reduced motion | All information remains available | — | — | — |
 | Enjoyment | 1–5 rating plus reason | Mean at least 3.5 | — | — | — |
@@ -377,9 +352,9 @@ For each test, record the observation, not only the score. Convert each repeated
 
 ### What is effective
 
-The strongest decision was integrating learning into the same decisions that already make a fishing-delivery game interesting. The survey controls where the player fishes; route mathematics controls travel; and population data controls catch/release decisions. This is more effective than pausing the game for unrelated multiple-choice questions.
+The strongest decision was integrating learning into the same decisions that already make a fishing-delivery game interesting. Habitat evidence controls where the player fishes, while route mathematics controls travel. This is more effective than pausing the game for unrelated multiple-choice questions.
 
-The deterministic architecture also improved quality. Rules can be tested without Canvas, audio, the DOM, or wall-clock time. Central balance values made the larger lake, six tiers, freshness, hazard risk, and population change easier to revise without searching through interface code.
+The deterministic architecture also improved quality. Rules can be tested without Canvas, audio, the DOM, or wall-clock time. Central balance values made the larger lake, six tiers, freshness, and hazard risk easier to revise without searching through interface code.
 
 The interface now gives a clear progression of information and uses written non-colour feedback. The new atlas gives each species a recognisable identity. Visible but inaccessible deep fish create curiosity while the labelled boundary explains how to reach them.
 
@@ -397,18 +372,15 @@ Solution: define three scientifically plausible residents per site, spawn two of
 **Challenge: an early route forecast measured a different journey from the delivered catch.**  
 Solution: open planning after the catch and calculate catch-site-to-destination time with the same maximum-speed and freshness model used by the simulation.
 
-**Challenge: “sustainability” could become decorative text.**  
-Solution: attach a numerical population cost to catching, a protection threshold, recovery to release/delivery/harbor return, protected-contract filtering, a field-guide display, and a currency bonus. If all unlocked stocks are protected, no impossible catch contract is created; repeated harbor visits visibly restore a viable stock.
-
 **Challenge: existing save files lacked new learning data.**  
-Solution: bump to version 5, validate every field, and supply safe 100-population and zero-mastery defaults.
+Solution: use versioned migration, validate every field, and supply safe defaults. Version 8 removes obsolete population and conservation fields without invalidating older saves.
 
 **Challenge: nine fish based on three atlas cells would not be genuinely distinct.**  
 Solution: produce a new original 3 × 3 atlas and map each typed species to one cell.
 
 ### Limitations
 
-The ecological model is simplified. A 0–100 index does not model age structure, reproduction, carrying capacity, predator–prey feedback, seasonal variation, or sampling uncertainty. The route display uses scaled in-game values rather than a real lake. These simplifications are acceptable for the audience only if the interface calls them population and route **estimates**, not real-world measurements.
+The route display uses scaled in-game values rather than a real lake. These simplifications are acceptable for the audience only if the interface calls them route **estimates**, not real-world measurements.
 
 Fish currently share a general swimming algorithm; silhouette, depth, and speed vary more than behaviour. The lamp primarily changes visibility rather than scientific sampling. Three hazards are fixed, so expert players can memorise them. Most importantly, the human playtest table is pending and must be completed before making claims about learning effectiveness.
 
@@ -426,7 +398,7 @@ Fish currently share a general swimming algorithm; silhouette, depth, and speed 
 
 | Rubric criterion | Evidence in this submission |
 | --- | --- |
-| Game purpose and STEM learning | Sections 1–2; playable surveys, route maths, populations, season evaluation |
+| Game purpose and STEM learning | Sections 1–2; playable surveys, route maths, habitat evidence, season evaluation |
 | Target audience | Section 2; scaffolded language, short loop, accessibility |
 | Gameplay mechanics | Sections 4–5 and `Docs/Game-Brief.md` |
 | Design plans and assets | Sections 6–7; `Docs/Asset-Manifest.md`; typed balance tables |

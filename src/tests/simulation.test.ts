@@ -36,7 +36,7 @@ import {
   updateSimulation,
   type InputState,
 } from "../game/simulation";
-import { defaultPopulations, estimateRoute } from "../game/stem";
+import { estimateRoute } from "../game/stem";
 
 const idle: InputState = {
   travel: 0,
@@ -119,7 +119,7 @@ describe("FSHING side-on simulation", () => {
     expect(tutorialPrompt(simulation)).toBe("Dock at Gloam Ferry and deliver the Reedfin.");
   });
 
-  test("sends spoiled, blocked, and full-cargo contracts to an actionable next step", () => {
+  test("sends spoiled and full-cargo contracts to an actionable next step", () => {
     const spoiled = createSimulation();
     acceptAvailableContract(spoiled);
     undock(spoiled);
@@ -137,23 +137,14 @@ describe("FSHING side-on simulation", () => {
     ];
     expect(navigationGuidance(full)).toMatchObject({ kicker: "MANAGE CARGO", label: "Brindle Harbor" });
     expect(navigationGuidance(full).instruction).toContain("release a catch");
-
-    const protectedStock = createSimulation();
-    acceptAvailableContract(protectedStock);
-    undock(protectedStock);
-    protectedStock.progress.populations.reedfin = 10;
-    expect(navigationGuidance(protectedStock)).toMatchObject({ kicker: "RECOVER AT", label: "Brindle Harbor" });
-    moveBoatForTesting(protectedStock, harborById("brindle"));
-    interact(protectedStock);
-    expect(protectedStock.progress.populations.reedfin).toBe(18);
   });
 
   test("uses the nearest harbor and actual travel direction outside the opening route", () => {
-    const recovery = createSimulation();
-    recovery.availableContract = null;
-    undock(recovery);
-    recovery.boat.x = 0.89;
-    expect(navigationGuidance(recovery)).toMatchObject({ kicker: "RECOVER AT", label: "Gloam Ferry" });
+    const missingJob = createSimulation();
+    missingJob.availableContract = null;
+    undock(missingJob);
+    missingJob.boat.x = 0.89;
+    expect(navigationGuidance(missingJob)).toMatchObject({ kicker: "JOB AT", label: "Gloam Ferry" });
 
     const laterRoute = createSimulation(1, {
       completedContracts: 1,
@@ -303,13 +294,12 @@ describe("FSHING side-on simulation", () => {
     moveBoatForTesting(simulation, harborById("gloam"));
     expect(getInteractionPrompt(simulation)?.label).toContain("Gloam Ferry");
     interact(simulation);
-    expect(deliverContract(simulation)).toBe(102);
+    expect(deliverContract(simulation)).toBe(90);
     expect(simulation.progress.completedContracts).toBe(1);
-    expect(simulation.progress.money).toBe(102);
+    expect(simulation.progress.money).toBe(90);
     expect(buyUpgrade(simulation, "cargo")).toBe(true);
     expect(cargoCapacity(simulation)).toBe(4);
-    expect(simulation.progress.money).toBe(42);
-    expect(simulation.lastDeliveryResult?.populationBonus).toBe(12);
+    expect(simulation.progress.money).toBe(30);
   });
 
   test("starts a delivery when accepting a contract for an existing catch", () => {
@@ -440,20 +430,15 @@ describe("FSHING side-on simulation", () => {
     expect(learningAccuracy(simulation)).toBe(67);
   });
 
-  test("depletes populations, restores released catches, and protects rare stocks", () => {
+  test("allows repeated catches and releases unneeded cargo", () => {
     const simulation = createSimulation();
     expect(resolveCatch(simulation, "reedfin")).toBe(true);
-    expect(simulation.progress.populations.reedfin).toBe(93);
     expect(simulation.progress.discovered).toContain("reedfin");
 
     expect(releaseCargo(simulation, 0)).toBe(true);
-    expect(simulation.progress.populations.reedfin).toBe(100);
-    expect(simulation.progress.learning.conservationScore).toBe(7);
-
-    simulation.progress.populations.reedfin = 15;
-    expect(resolveCatch(simulation, "reedfin")).toBe(false);
     expect(simulation.cargo).toHaveLength(0);
-    expect(simulation.events.some((event) => event.type === "population-protected")).toBe(true);
+    expect(resolveCatch(simulation, "reedfin")).toBe(true);
+    expect(simulation.cargo).toHaveLength(1);
   });
 
   test("makes route estimates explicit and keeps surface crossings unobstructed", () => {
@@ -504,21 +489,4 @@ describe("FSHING side-on simulation", () => {
     expect(simulation.events.some((event) => event.type === "season-complete")).toBe(true);
   });
 
-  test("withholds protected contracts and restores a viable stock through harbor recovery", () => {
-    const populations = defaultPopulations();
-    for (const species of Object.keys(populations) as Array<keyof typeof populations>) {
-      populations[species] = 0;
-    }
-    const simulation = createSimulation(3, { populations });
-    expect(simulation.availableContract).toBeNull();
-
-    for (let visit = 0; visit < 2; visit += 1) {
-      undock(simulation);
-      moveBoatForTesting(simulation, harborById("brindle"));
-      interact(simulation);
-    }
-
-    expect(simulation.progress.populations.reedfin).toBe(16);
-    expect(simulation.availableContract?.species).toBe("reedfin");
-  });
 });

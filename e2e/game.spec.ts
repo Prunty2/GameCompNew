@@ -632,7 +632,7 @@ test("how to play instructions advance one card at a time", async ({ page }) => 
     await page.getByRole("button", { name: "Next" }).click();
   }
   await expect(page.getByText("Step 4 of 4")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Fish sustainably" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Manage your cargo" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Next" })).toBeDisabled();
 
   await page.getByRole("button", { name: "Back", exact: true }).click();

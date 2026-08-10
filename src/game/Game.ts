@@ -61,10 +61,6 @@ import {
   type Simulation,
   type SimulationEvent,
 } from "./simulation";
-import {
-  averagePopulation,
-  populationLabel,
-} from "./stem";
 
 const FIXED_STEP = 1 / 120;
 const MAX_FRAME = 0.05;
@@ -368,12 +364,8 @@ export class Game {
           ? "Boost temporarily unlocked. Hold Shift while sailing."
           : "Boost unlocked. Hold Shift while sailing.");
         break;
-      case "population-protected":
-        this.feedback.cue("deny");
-        this.showToast(`${FISH[event.species].name} is protected while its population recovers.`);
-        break;
       case "released":
-        this.showToast(`${FISH[event.species].name} released · population +${event.restored}`);
+        this.showToast(`${FISH[event.species].name} released.`);
         break;
       case "season-complete":
         this.seasonReportQueued = true;
@@ -564,7 +556,7 @@ export class Game {
               ? `<button class="primary-button mission-button" type="button" data-action="deliver" ${deliverable ? "" : "disabled"}>${deliverable ? "<span><strong>Complete delivery</strong></span><b aria-hidden=\"true\">→</b>" : "Catch is missing or no longer fresh enough"}</button>`
               : `<p class="next-step"><span class="ui-icon icon-objective" aria-hidden="true"></span><span><strong>Next</strong> Leave the harbor and follow the marker to ${harborById(contract.destination).name}.</span></p>`}
           </div>`
-        : `<div class="contract-card empty-job"><span class="card-kicker">Ecological recovery</span><h3>No catch contract is safe yet</h3><p>Every unlocked contract stock is protected. Each return to harbor restores the lake; leave and dock again to continue recovery.</p></div>`;
+        : `<div class="contract-card empty-job"><h3>No delivery job available</h3><p>Return to the lake and dock again to refresh the job board.</p></div>`;
 
     const availableCargoSlots = cargoCapacity(this.simulation);
     const cargoMarkup = Array.from({ length: BALANCE.maxCargoSlots }, (_, index) => {
@@ -753,8 +745,8 @@ export class Game {
         body: "Drop the line, then steer the hook with the movement keys or touch pad. The requested fish is marked in the water.",
       },
       {
-        title: "Fish sustainably",
-        body: "Release unneeded catches, avoid protected species, and give depleted populations time to recover. A healthy ecosystem earns a delivery bonus.",
+        title: "Manage your cargo",
+        body: "Release unneeded catches at a harbor to make room for the fish requested by your current delivery job.",
       },
     ];
     const step = steps[this.helpStep] ?? steps[0];
@@ -802,7 +794,7 @@ export class Game {
             <div><small>Actual freshness</small><strong>${result.actualFreshness}%</strong></div>
           </div>
           <p class="result-explanation">The ${result.route === "fast" ? "express" : "survey"} route took ${result.travelSeconds} in-game seconds. The result was ${Math.abs(difference)} percentage points ${difference >= 0 ? "above" : "below"} the estimate.</p>
-          <div class="payment-summary"><span>Delivery payment</span><strong>${result.payment} shells</strong>${result.populationBonus > 0 ? `<small>Includes ${result.populationBonus}-shell healthy-ecosystem bonus</small>` : `<small>Keep at least five populations healthy to earn an ecosystem bonus.</small>`}</div>
+          <div class="payment-summary"><span>Delivery payment</span><strong>${result.payment} shells</strong><small>Payment reflects the catch's arrival freshness.</small></div>
           <button class="primary-button" type="button" data-action="continue-after-delivery">Continue at harbor</button>
         </div>
       </section>`;
@@ -810,7 +802,6 @@ export class Game {
 
   private seasonReportScreen(): string {
     const learning = this.simulation.progress.learning;
-    const average = averagePopulation(this.simulation.progress.populations);
     return `
       <section class="screen-overlay sheet-overlay science-overlay" role="dialog" aria-labelledby="season-title">
         <div class="art-panel science-panel result-panel side-sheet">
@@ -819,10 +810,10 @@ export class Game {
           <div class="report-grid">
             <div><small>Species discovered</small><strong>${this.simulation.progress.discovered.length} / ${Object.keys(FISH).length}</strong><span>recorded this season</span></div>
             <div><small>Crossings started</small><strong>${learning.routePlans}</strong><span>contract catches secured</span></div>
-            <div><small>Lake health</small><strong>${average}%</strong><span>${populationLabel(average)}</span></div>
-            <div><small>Conservation</small><strong>${learning.conservationScore}</strong><span>population points restored</span></div>
+            <div><small>Surveys completed</small><strong>${learning.surveysCompleted}</strong><span>habitats evaluated</span></div>
+            <div><small>Correct predictions</small><strong>${learning.correctPredictions}</strong><span>species identified</span></div>
           </div>
-          <p class="reflection-prompt"><strong>Reflect:</strong> Which fishing ground was most productive? How did engine speed affect freshness? What would you change to protect a vulnerable species?</p>
+          <p class="reflection-prompt"><strong>Reflect:</strong> Which fishing ground was most productive? How did engine speed affect freshness? Which habitat clues helped identify each species?</p>
           <button class="primary-button" type="button" data-action="continue-season">Continue researching</button>
         </div>
       </section>`;
@@ -954,7 +945,6 @@ export class Game {
       outerUnlocked: this.simulation.progress.outerUnlocked,
       boostUnlocked: this.simulation.progress.boostUnlocked,
       completedContracts: this.simulation.progress.completedContracts,
-      populations: { ...this.simulation.progress.populations },
       discovered: [...this.simulation.progress.discovered],
       learning: { ...this.simulation.progress.learning },
       seasonCompleted: this.simulation.progress.seasonCompleted,

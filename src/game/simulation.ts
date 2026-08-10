@@ -18,7 +18,6 @@ import {
   type WorldPoint,
 } from "./balance";
 import {
-  defaultPopulations,
   estimateRoute,
   evaluateSurvey,
   type SurveyResult,
@@ -59,7 +58,6 @@ export interface LearningProgress {
   surveysCompleted: number;
   correctPredictions: number;
   routePlans: number;
-  conservationScore: number;
 }
 
 export interface ProgressState {
@@ -68,7 +66,6 @@ export interface ProgressState {
   outerUnlocked: boolean;
   boostUnlocked: boolean;
   completedContracts: number;
-  populations: Record<FishSpecies, number>;
   discovered: FishSpecies[];
   learning: LearningProgress;
   seasonCompleted: boolean;
@@ -103,7 +100,6 @@ export interface DeliveryResult {
   predictedFreshness: number;
   actualFreshness: number;
   travelSeconds: number;
-  populationBonus: number;
 }
 
 export type SimulationEvent =
@@ -117,8 +113,7 @@ export type SimulationEvent =
   | { type: "upgrade"; upgrade: UpgradeId }
   | { type: "permit" }
   | { type: "boost-unlocked"; temporary: boolean }
-  | { type: "population-protected"; species: FishSpecies }
-  | { type: "released"; species: FishSpecies; restored: number }
+  | { type: "released"; species: FishSpecies }
   | { type: "season-complete" };
 
 export interface Simulation {
@@ -156,21 +151,15 @@ export interface InteractionPrompt {
 export interface NavigationGuidance {
   point: WorldPoint;
   label: string;
-  kicker: "JOB AT" | "FISH AT" | "DELIVER TO" | "MANAGE CARGO" | "RECOVER AT" | "UPGRADE AT";
+  kicker: "JOB AT" | "FISH AT" | "DELIVER TO" | "MANAGE CARGO" | "UPGRADE AT";
   instruction: string;
 }
 
 const FISHING_HOOK_SPEED = 0.48;
 const FISHING_CATCH_RADIUS = 0.058;
-const PROTECTED_POPULATION = 15;
 const SEASON_DELIVERIES = 8;
 
 export function createSimulation(seed = 1, progress?: Partial<ProgressState>): Simulation {
-  const populations = defaultPopulations();
-  for (const species of Object.keys(FISH) as FishSpecies[]) {
-    populations[species] = clampInteger(progress?.populations?.[species], 0, 100);
-    if (progress?.populations?.[species] === undefined) populations[species] = 100;
-  }
   const discovered = Array.isArray(progress?.discovered)
     ? progress.discovered.filter((species): species is FishSpecies => species in FISH)
     : [];
@@ -185,13 +174,11 @@ export function createSimulation(seed = 1, progress?: Partial<ProgressState>): S
     outerUnlocked: progress?.outerUnlocked === true,
     boostUnlocked: progress?.boostUnlocked === true,
     completedContracts: clampInteger(progress?.completedContracts, 0, 99_999),
-    populations,
     discovered: [...new Set(discovered)],
     learning: {
       surveysCompleted: clampInteger(progress?.learning?.surveysCompleted, 0, 99_999),
       correctPredictions: clampInteger(progress?.learning?.correctPredictions, 0, 99_999),
       routePlans: clampInteger(progress?.learning?.routePlans, 0, 99_999),
-      conservationScore: clampInteger(progress?.learning?.conservationScore, 0, 99_999),
     },
     seasonCompleted: progress?.seasonCompleted === true,
   };
@@ -276,14 +263,7 @@ export function interact(simulation: Simulation): InteractionPrompt | null {
     simulation.boat.speed = 0;
     simulation.dockedAt = prompt.harbor;
     if (!simulation.activeContract && !simulation.availableContract) {
-      regeneratePopulations(simulation, 8);
       simulation.availableContract = createAvailableContract(simulation, prompt.harbor);
-    } else if (
-      simulation.activeContract
-      && simulation.progress.populations[simulation.activeContract.species] <= PROTECTED_POPULATION
-      && !hasDeliverableCatch(simulation, simulation.activeContract)
-    ) {
-      regeneratePopulations(simulation, 8);
     }
     simulation.events.push({ type: "docked", harbor: prompt.harbor });
   } else if (prompt.kind === "fishing" && prompt.spot) {
@@ -387,14 +367,7 @@ export function resolveCatch(simulation: Simulation, species: FishSpecies): bool
     pushEventOnce(simulation, { type: "full-cargo" });
     return false;
   }
-  if (simulation.progress.populations[species] <= PROTECTED_POPULATION) {
-    pushEventOnce(simulation, { type: "population-protected", species });
-    leaveFishing(simulation);
-    return false;
-  }
   simulation.cargo.push({ species, freshness: 100 });
-  const depletion = 7 + FISH[species].depthTier * 2;
-  simulation.progress.populations[species] = Math.max(0, simulation.progress.populations[species] - depletion);
   discoverSpecies(simulation, species);
   simulation.events.push({ type: "caught", species });
   leaveFishing(simulation);
@@ -427,22 +400,18 @@ export function deliverContract(simulation: Simulation): number | null {
   const freshnessRange = Math.max(1, 100 - contract.minimumFreshness);
   const freshnessFactor = clamp((item.freshness - contract.minimumFreshness) / freshnessRange, 0, 1);
   const basePayment = Math.floor(contract.reward * (0.45 + freshnessFactor * 0.55));
-  const healthySpecies = Object.values(simulation.progress.populations).filter((population) => population >= 55).length;
-  const populationBonus = healthySpecies >= 7 ? 12 : healthySpecies >= 5 ? 6 : 0;
-  const payment = basePayment + populationBonus;
+  const payment = basePayment;
   const travelSeconds = Math.max(0, simulation.elapsed - (simulation.deliveryStartedAt ?? simulation.elapsed));
   const predictedFreshness = predictedFreshnessForRoute(simulation.routeChoice ?? "safe", contract, simulation.progress.upgrades.engine);
   simulation.cargo.splice(cargoIndex, 1);
   simulation.progress.money += payment;
   simulation.progress.completedContracts += 1;
-  regeneratePopulations(simulation, 2);
   simulation.lastDeliveryResult = {
     payment,
     route: simulation.routeChoice ?? "safe",
     predictedFreshness,
     actualFreshness: Math.round(item.freshness),
     travelSeconds: Math.round(travelSeconds),
-    populationBonus,
   };
   simulation.activeContract = null;
   simulation.routeChoice = null;
@@ -538,14 +507,11 @@ export function releaseCargo(simulation: Simulation, index: number): boolean {
   const item = simulation.cargo[index];
   if (!item) return false;
   simulation.cargo.splice(index, 1);
-  const restored = 7 + FISH[item.species].depthTier * 2;
-  simulation.progress.populations[item.species] = Math.min(100, simulation.progress.populations[item.species] + restored);
-  simulation.progress.learning.conservationScore += restored;
-  simulation.events.push({ type: "released", species: item.species, restored });
+  simulation.events.push({ type: "released", species: item.species });
   return true;
 }
 
-/** @deprecated Use releaseCargo so removing a catch has an ecological outcome. */
+/** @deprecated Use releaseCargo for the harbor cargo action. */
 export const discardCargo = releaseCargo;
 
 export function damageBoat(simulation: Simulation, amount: number): void {
@@ -629,8 +595,8 @@ export function navigationGuidance(simulation: Simulation): NavigationGuidance {
     return {
       point: harbor,
       label: harbor.name,
-      kicker: "RECOVER AT",
-      instruction: harborInstruction(simulation, harbor, "help protected fish stocks recover"),
+      kicker: "JOB AT",
+      instruction: harborInstruction(simulation, harbor, "take the next delivery job"),
     };
   }
 
@@ -652,16 +618,6 @@ export function navigationGuidance(simulation: Simulation): NavigationGuidance {
       label: harbor.name,
       kicker: "MANAGE CARGO",
       instruction: harborInstruction(simulation, harbor, `release a catch to make room for ${fish.name}`),
-    };
-  }
-
-  if (simulation.progress.populations[contract.species] <= PROTECTED_POPULATION) {
-    const harbor = closestHarbor(simulation);
-    return {
-      point: harbor,
-      label: harbor.name,
-      kicker: "RECOVER AT",
-      instruction: harborInstruction(simulation, harbor, `help the protected ${fish.name} stock recover`),
     };
   }
 
@@ -760,10 +716,6 @@ function updateFishing(simulation: Simulation, input: InputState, dt: number): v
     }
     const reachable = FISH[target.species].depthTier <= simulation.progress.upgrades.line;
     if (reachable && distance(fishing.hook, target) <= FISHING_CATCH_RADIUS) {
-      if (simulation.progress.populations[target.species] <= PROTECTED_POPULATION) {
-        resolveCatch(simulation, target.species);
-        return;
-      }
       fishing.reeling = {
         species: target.species,
         targetIndex,
@@ -778,13 +730,6 @@ function updateFishing(simulation: Simulation, input: InputState, dt: number): v
 function ageCargo(simulation: Simulation, dt: number): void {
   const freshnessLoss = (100 / BALANCE.freshnessLifetime) * dt;
   for (const item of simulation.cargo) item.freshness = Math.max(0, item.freshness - freshnessLoss);
-}
-
-function regeneratePopulations(simulation: Simulation, amount: number): void {
-  for (const species of Object.keys(FISH) as FishSpecies[]) {
-    const depthPenalty = Math.floor(FISH[species].depthTier / 2);
-    simulation.progress.populations[species] = Math.min(100, simulation.progress.populations[species] + Math.max(1, amount - depthPenalty));
-  }
 }
 
 function discoverSpecies(simulation: Simulation, species: FishSpecies): void {
@@ -817,7 +762,6 @@ function rescue(simulation: Simulation): void {
 
 function createAvailableContract(simulation: Simulation, origin: HarborId): Contract | null {
   if (simulation.progress.completedContracts === 0) {
-    if (simulation.progress.populations.reedfin <= PROTECTED_POPULATION) return null;
     return {
       id: "morning-order",
       title: "The Morning Order",
@@ -845,8 +789,7 @@ function createAvailableContract(simulation: Simulation, origin: HarborId): Cont
     const fish = FISH[candidate];
     const spot = spotById(spotForSpecies[candidate]);
     return fish.depthTier <= simulation.progress.upgrades.line
-      && (!spot.requiresPermit || simulation.progress.outerUnlocked)
-      && simulation.progress.populations[candidate] > PROTECTED_POPULATION;
+      && (!spot.requiresPermit || simulation.progress.outerUnlocked);
   });
   if (availableSpecies.length === 0) return null;
   const species = availableSpecies[simulation.progress.completedContracts % availableSpecies.length];
