@@ -1,4 +1,4 @@
-import { FISH, type FishSpecies, type HarborId, type SpotId } from "./balance";
+import { BALANCE, FISH, type FishSpecies, type HarborId, type SpotId } from "./balance";
 
 export interface QuestAccessGrant {
   label: string;
@@ -112,11 +112,15 @@ export const FIRST_SEASON_QUESTS: readonly QuestDefinition[] = [
   },
 ];
 
-export function firstSeasonQuest(completedContracts: number, cargoCapacity: number): ResolvedQuestDefinition | null {
+export function firstSeasonQuest(
+  completedContracts: number,
+  cargoCapacity: number,
+  engineTier = 0,
+): ResolvedQuestDefinition | null {
   const quest = FIRST_SEASON_QUESTS[completedContracts];
   if (!quest) return null;
   const quantity = Math.max(1, Math.min(quest.maxQuantity, Math.floor(cargoCapacity)));
-  const minimumFreshness = contractFreshnessTarget(quantity);
+  const minimumFreshness = contractFreshnessTarget(quantity, engineTier);
   return {
     ...quest,
     quantity,
@@ -126,8 +130,11 @@ export function firstSeasonQuest(completedContracts: number, cargoCapacity: numb
   };
 }
 
-export function contractFreshnessTarget(quantity: number): number {
-  return Math.max(50, 90 - (Math.max(1, Math.floor(quantity)) - 1) * 5);
+export function contractFreshnessTarget(quantity: number, engineTier = 0): number {
+  const quantityTarget = Math.max(50, 90 - (Math.max(1, Math.floor(quantity)) - 1) * 5);
+  const upgradeCap = BALANCE.baseQuestFreshnessCap
+    + Math.max(0, Math.floor(engineTier)) * BALANCE.questFreshnessCapPerEngineTier;
+  return Math.min(quantityTarget, upgradeCap);
 }
 
 export function contractReward(species: FishSpecies, quantity: number, minimumFreshness: number): number {

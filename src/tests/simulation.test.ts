@@ -116,7 +116,7 @@ describe("FSHING side-on simulation", () => {
     simulation.boat.speed = 0;
     expect(resolveCatch(simulation, "reedfin")).toBe(true);
     expect(navigationGuidance(simulation)).toMatchObject({ kicker: "DELIVER TO", label: "Beacon Point" });
-    expect(tutorialPrompt(simulation)).toContain("Keep the Reedfin above 90% freshness");
+    expect(tutorialPrompt(simulation)).toContain("Keep the Reedfin above 80% freshness");
 
     moveBoatForTesting(simulation, harborById("gloam"));
     expect(tutorialPrompt(simulation)).toBe("Dock at Beacon Point and deliver the Reedfin.");
@@ -126,7 +126,7 @@ describe("FSHING side-on simulation", () => {
     const spoiled = createSimulation();
     acceptAvailableContract(spoiled);
     undock(spoiled);
-    spoiled.cargo = [{ species: "reedfin", freshness: 89 }];
+    spoiled.cargo = [{ species: "reedfin", freshness: 79 }];
     expect(navigationGuidance(spoiled)).toMatchObject({ kicker: "FISH AT", label: "Sunward Shoal" });
     expect(navigationGuidance(spoiled).instruction).toContain("catch 1 fresher Reedfin");
 
@@ -297,14 +297,14 @@ describe("FSHING side-on simulation", () => {
     moveBoatForTesting(simulation, harborById("gloam"));
     expect(getInteractionPrompt(simulation)?.label).toContain("Beacon Point");
     interact(simulation);
-    expect(deliverContract(simulation)).toBe(100);
+    expect(deliverContract(simulation)).toBe(90);
     expect(simulation.progress.completedContracts).toBe(1);
-    expect(simulation.progress.money).toBe(100);
+    expect(simulation.progress.money).toBe(90);
     expect(simulation.progress.upgrades.line).toBe(0);
     expect(simulation.lastDeliveryResult?.accessGrantLabel).toBeNull();
     expect(buyUpgrade(simulation, "cargo")).toBe(true);
     expect(cargoCapacity(simulation)).toBe(4);
-    expect(simulation.progress.money).toBe(40);
+    expect(simulation.progress.money).toBe(30);
   });
 
   test("offers the first season in a fixed teaching order and grants access before it is required", () => {
@@ -434,16 +434,26 @@ describe("FSHING side-on simulation", () => {
   });
 
   test("derives quantity, freshness, and reward from cargo capacity and difficulty", () => {
-    expect(contractFreshnessTarget(1)).toBe(90);
+    expect(contractFreshnessTarget(1)).toBe(80);
+    expect(contractFreshnessTarget(1, 1)).toBe(85);
+    expect(contractFreshnessTarget(1, 2)).toBe(90);
+    expect(contractFreshnessTarget(2)).toBe(80);
+    expect(contractFreshnessTarget(2, 1)).toBe(85);
     expect(contractFreshnessTarget(10)).toBe(50);
-    expect(contractReward("reedfin", 1, 90)).toBe(100);
-    expect(contractReward("reedfin", 2, 85)).toBeGreaterThan(contractReward("reedfin", 1, 90));
+    expect(contractReward("reedfin", 1, 80)).toBe(90);
+    expect(contractReward("reedfin", 2, 80)).toBeGreaterThan(contractReward("reedfin", 1, 80));
 
     const baseHoldQuest = firstSeasonQuest(7, 3);
     const maximumHoldQuest = firstSeasonQuest(7, 10);
     expect(baseHoldQuest).toMatchObject({ quantity: 3, minimumFreshness: 80 });
     expect(maximumHoldQuest).toMatchObject({ quantity: 10, minimumFreshness: 50 });
     expect(maximumHoldQuest!.reward).toBeGreaterThan(baseHoldQuest!.reward);
+  });
+
+  test("only posts freshness targets above 80% after engine upgrades", () => {
+    expect(createSimulation().availableContract?.minimumFreshness).toBe(80);
+    expect(createSimulation(1, { upgrades: { cargo: 0, engine: 1, lamp: 0, line: 0 } }).availableContract?.minimumFreshness).toBe(85);
+    expect(createSimulation(1, { upgrades: { cargo: 0, engine: 2, lamp: 0, line: 0 } }).availableContract?.minimumFreshness).toBe(90);
   });
 
   test("catches a fish when the steered hook reaches its side-view silhouette", () => {

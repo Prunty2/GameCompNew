@@ -842,7 +842,11 @@ function rescue(simulation: Simulation): void {
 
 function createAvailableContract(simulation: Simulation): Contract | null {
   const capacity = cargoCapacity(simulation);
-  const authoredQuest = firstSeasonQuest(simulation.progress.completedContracts, capacity);
+  const authoredQuest = firstSeasonQuest(
+    simulation.progress.completedContracts,
+    capacity,
+    simulation.progress.upgrades.engine,
+  );
   if (authoredQuest) return authoredQuest;
   const spotForSpecies: Record<FishSpecies, SpotId> = {
     reedfin: "sunwardShoal",
@@ -865,7 +869,7 @@ function createAvailableContract(simulation: Simulation): Contract | null {
   const species = availableSpecies[simulation.progress.completedContracts % availableSpecies.length];
   if (!species) return null;
   const quantity = Math.min(capacity, 1 + (simulation.progress.completedContracts % BALANCE.maxCargoSlots));
-  const minimumFreshness = contractFreshnessTarget(quantity);
+  const minimumFreshness = contractFreshnessTarget(quantity, simulation.progress.upgrades.engine);
   return {
     id: `route-${simulation.progress.completedContracts + 1}`,
     title: FISH[species].depthTier >= 3 ? "A Light in Deep Water" : "Harbor Trade",
