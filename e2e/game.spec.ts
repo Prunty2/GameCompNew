@@ -559,45 +559,6 @@ test("delivers a matching catch that was aboard before accepting the contract", 
   await expect(page.getByRole("heading", { name: "Harbor Trade" })).toBeVisible();
 });
 
-test("builds into research level two with a new palette, fish, and upgrade prices", async ({ page }) => {
-  await page.addInitScript(() => {
-    window.localStorage.setItem("gamecomp-new.save", JSON.stringify({
-      version: 8,
-      progress: {
-        money: 1_000,
-        upgrades: { cargo: 0, engine: 0, lamp: 0, line: 0 },
-        outerUnlocked: false,
-        boostUnlocked: false,
-        completedContracts: 1,
-        discovered: [],
-        learning: { surveysCompleted: 0, correctPredictions: 0, routePlans: 0 },
-        seasonCompleted: false,
-      },
-      settings: {},
-    }));
-  });
-  await page.goto("/?e2e=1");
-  await page.getByRole("button", { name: "Play", exact: true }).click();
-  await expect(page.getByText("Research level 1 · Brindle Coast")).toBeVisible();
-
-  await page.getByRole("button", { name: "Services", exact: true }).click();
-  const lineService = page.locator(".service-card").filter({ hasText: "Next depth tier" });
-  await expect(lineService).toContainText("Build 1 of 6");
-  await lineService.getByRole("button", { name: "Upgrade Line depth for 55 shells" }).click();
-
-  await expect(page.locator(".harbor-screen")).toHaveClass(/is-research-level-2/);
-  await expect(page.getByText("Research level 2 · Mosswater Reach")).toBeVisible();
-  await expect(page.locator(".harbor-panel")).toHaveCSS("background-color", "rgba(13, 38, 34, 0.95)");
-  await expect(lineService).toContainText("Build 2 of 6");
-  await expect(lineService.getByRole("button", { name: "Upgrade Line depth for 135 shells" })).toContainText("135");
-
-  await page.getByRole("button", { name: "Delivery", exact: true }).click();
-  const nextCatchStage = page.locator(".job-route > li").first();
-  await expect(nextCatchStage).toContainText("Catch");
-  await expect(nextCatchStage).toContainText("Mosswater Pool");
-  await expect(nextCatchStage).toContainText("Needle Pike");
-});
-
 test("settings, keyboard pause, and local SDK fallback remain usable", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("button", { name: "Settings" })).toBeVisible();

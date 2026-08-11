@@ -51,7 +51,6 @@ import {
   navigationGuidance,
   nightVisualIntensity,
   releaseCargo,
-  researchLevel,
   resolveCatch,
   shouldShowNightIndicator,
   startFishing,
@@ -532,8 +531,6 @@ export class Game {
     const deliverable = contract?.destination === harborId
       && freshCatch;
     const isFirstJobOffer = this.simulation.progress.completedContracts === 0 && available?.id === "morning-order";
-    const level = researchLevel(this.simulation);
-    const levelName = level === 1 ? "Brindle Coast" : level === 2 ? "Mosswater Reach" : "Violet Gloam";
     const showCargo = !isFirstJobOffer;
     const showServices = !isFirstJobOffer;
     const availableSections: HarborSection[] = ["delivery", ...(showCargo ? ["cargo" as const] : []), ...(showServices ? ["services" as const] : [])];
@@ -545,7 +542,7 @@ export class Game {
             <span class="reward-stamp" aria-label="Reward: ${available.reward} shells"><span class="reward-label">Reward</span><span class="reward-value"><span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${available.reward}</strong></span></span>
           </div>
           <ol class="job-route" aria-label="Job steps">
-            <li><span class="job-route-number" aria-hidden="true">01</span><div class="job-route-copy"><small>Catch</small><span class="ui-icon icon-freshness job-route-icon" aria-hidden="true"></span><strong>${FISH[available.species].name}</strong><span class="job-route-detail">${spotById(available.spot).name}</span></div></li>
+            <li><span class="job-route-number" aria-hidden="true">01</span><div class="job-route-copy"><small>Catch</small><span class="ui-icon icon-freshness job-route-icon" aria-hidden="true"></span><strong>${FISH[available.species].name}</strong><span class="job-route-detail">1 required</span></div></li>
             <li><span class="job-route-number" aria-hidden="true">02</span><div class="job-route-copy"><small>Freshness</small><span class="ui-icon icon-time job-route-icon" aria-hidden="true"></span><strong>Every fish</strong><span class="job-route-detail">${available.minimumFreshness}%+</span></div></li>
             <li><span class="job-route-number" aria-hidden="true">03</span><div class="job-route-copy"><small>Deliver</small><span class="ui-icon icon-objective job-route-icon" aria-hidden="true"></span><strong>${harborById(available.destination).name}</strong></div></li>
           </ol>
@@ -558,7 +555,7 @@ export class Game {
             <span class="card-kicker">${deliverable ? "Ready to hand in" : "Job in progress"}</span>
             <h3>${contract.title}</h3>
             <ol class="job-route" aria-label="Job steps">
-              <li class="${matchingCatch ? "is-complete" : "is-current"}"><span class="job-route-number" aria-hidden="true">${matchingCatch ? "✓" : "01"}</span><div class="job-route-copy"><small>Catch</small><span class="ui-icon icon-freshness job-route-icon" aria-hidden="true"></span><strong>${FISH[contract.species].name}</strong><span class="job-route-detail">${spotById(contract.spot).name}</span></div></li>
+              <li class="${matchingCatch ? "is-complete" : "is-current"}"><span class="job-route-number" aria-hidden="true">${matchingCatch ? "✓" : "01"}</span><div class="job-route-copy"><small>Catch</small><span class="ui-icon icon-freshness job-route-icon" aria-hidden="true"></span><strong>${FISH[contract.species].name}</strong><span class="job-route-detail">1 required</span></div></li>
               <li class="${freshCatch ? "is-complete" : matchingCatch ? "is-current" : ""}"><span class="job-route-number" aria-hidden="true">${freshCatch ? "✓" : "02"}</span><div class="job-route-copy"><small>Freshness</small><span class="ui-icon icon-time job-route-icon" aria-hidden="true"></span><strong>Every fish</strong><span class="job-route-detail">${contract.minimumFreshness}%+</span></div></li>
               <li class="${deliverable ? "is-current" : ""}"><span class="job-route-number" aria-hidden="true">03</span><div class="job-route-copy"><small>Deliver</small><span class="ui-icon icon-objective job-route-icon" aria-hidden="true"></span><strong>${harborById(contract.destination).name}</strong></div></li>
             </ol>
@@ -606,10 +603,10 @@ export class Game {
         : `<section class="mission-section" aria-label="Delivery job">${contractMarkup}</section>`;
 
     return `
-      <section class="screen-overlay harbor-screen is-first-voyage${isFirstJobOffer ? " is-first-job-offer" : " is-expanded-harbor"} is-harbor-${activeSection} is-dock-${harborId} is-research-level-${level}" ${this.dockBackdropAttributes(harborId)} role="dialog" aria-labelledby="harbor-title">
+      <section class="screen-overlay harbor-screen is-first-voyage${isFirstJobOffer ? " is-first-job-offer" : " is-expanded-harbor"} is-harbor-${activeSection} is-dock-${harborId}" ${this.dockBackdropAttributes(harborId)} role="dialog" aria-labelledby="harbor-title">
         <div class="art-panel harbor-panel side-sheet">
           <header class="panel-heading harbor-header">
-            <div class="harbor-title-block"><img class="wordmark harbor-wordmark" src="${wordmarkUrl}" alt="FSHING" /><span class="harbor-title-divider" aria-hidden="true"></span><div><h2 id="harbor-title">${harbor.name}</h2><span class="harbor-research-level">Research level ${level} · ${levelName}</span></div></div>
+            <div class="harbor-title-block"><img class="wordmark harbor-wordmark" src="${wordmarkUrl}" alt="FSHING" /><span class="harbor-title-divider" aria-hidden="true"></span><div><h2 id="harbor-title">${harbor.name}</h2></div></div>
             <span class="shell-balance" aria-label="${this.simulation.progress.money} shells"><span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${this.simulation.progress.money}</strong></span>
           </header>
           ${harborTabs}
@@ -632,7 +629,7 @@ export class Game {
     const maximum = tier >= tierCap;
     const cost = upgradeCost(upgrade, tier);
     const displayLevel = Math.min(tier + 1, tierCap);
-    return `<article class="service-card"><span class="ui-icon icon-${upgrade}" aria-hidden="true"></span><div class="service-copy"><h4>${title}</h4><p>${maximum ? "Maximum tier" : detail}<small>${maximum ? "Fully built" : `Build ${tier + 1} of ${tierCap}`}</small></p></div>${this.upgradeMeter(title, displayLevel, tierCap)}<button class="service-purchase" type="button" data-action="buy-upgrade" data-upgrade="${upgrade}" aria-label="${maximum ? `${title} at maximum tier` : `Upgrade ${title} for ${cost} shells`}" ${maximum || this.simulation.progress.money < cost ? "disabled" : ""}>${maximum ? "<strong>MAX</strong>" : `<span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${cost}</strong>`}</button></article>`;
+    return `<article class="service-card"><span class="ui-icon icon-${upgrade}" aria-hidden="true"></span><div class="service-copy"><h4>${title}</h4><p>${maximum ? "Maximum tier" : detail}</p></div>${this.upgradeMeter(title, displayLevel, tierCap)}<button class="service-purchase" type="button" data-action="buy-upgrade" data-upgrade="${upgrade}" aria-label="${maximum ? `${title} at maximum tier` : `Upgrade ${title} for ${cost} shells`}" ${maximum || this.simulation.progress.money < cost ? "disabled" : ""}>${maximum ? "<strong>MAX</strong>" : `<span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${cost}</strong>`}</button></article>`;
   }
 
   private permitCard(): string {
