@@ -4,6 +4,7 @@ import {
   FISHING_SPOTS,
   SPOT_RESIDENTS,
   boatClassAt,
+  engineSpeedMultiplier,
   harborById,
   regionSurfaceTintAt,
   spotById,
@@ -245,7 +246,22 @@ describe("FSHING side-on simulation", () => {
     expect(simulation.boat.speed).toBe(BALANCE.maxSurfaceSpeed);
   });
 
-  test("unlocks boost for 300 shells and applies a temporary 33% speed increase", () => {
+  test("gives only the maximum engine tier a stronger speed increase", () => {
+    expect(engineSpeedMultiplier(BALANCE.maxUpgradeTier - 1)).toBeCloseTo(1.55);
+    expect(engineSpeedMultiplier(BALANCE.maxUpgradeTier)).toBeCloseTo(1.75);
+
+    const simulation = createSimulation();
+    simulation.progress.upgrades.engine = BALANCE.maxUpgradeTier;
+    undock(simulation);
+    for (let index = 0; index < 600; index += 1) {
+      updateSimulation(simulation, { ...idle, travel: 1 }, 1 / 120);
+    }
+    expect(simulation.boat.speed).toBeCloseTo(
+      BALANCE.maxSurfaceSpeed * BALANCE.maxEngineSpeedMultiplier,
+    );
+  });
+
+  test("unlocks boost for 300 shells and applies a temporary 35% speed increase", () => {
     const simulation = createSimulation(1, { money: 300 });
     expect(buyBoost(simulation)).toBe(true);
     expect(simulation.progress.money).toBe(0);

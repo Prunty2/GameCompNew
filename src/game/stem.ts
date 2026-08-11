@@ -2,6 +2,7 @@ import {
   BALANCE,
   FISH,
   SPOT_RESIDENTS,
+  engineSpeedMultiplier,
   harborById,
   spotById,
   type FishSpecies,
@@ -171,7 +172,7 @@ export function estimateRoute(contract: Contract, engineTier: number): RouteEsti
   const distanceKm = Math.round(
     Math.abs(destination.x - origin.x) * BALANCE.routeDistanceScaleKm * 10,
   ) / 10;
-  const engineFactor = 1 + Math.max(0, engineTier) * 0.11;
+  const engineFactor = engineSpeedMultiplier(engineTier);
   const safeSpeedKmPerMinute = BALANCE.maxSurfaceSpeed
     * BALANCE.safeRouteSpeedMultiplier
     * engineFactor

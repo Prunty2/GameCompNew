@@ -13,6 +13,7 @@ import { saveGame, type SaveData } from "../services/saveGame";
 import {
   BALANCE,
   FISH,
+  engineSpeedMultiplier,
   harborById,
   spotById,
   upgradeTierCap,
@@ -212,7 +213,7 @@ export class Game {
       this.input.consumeAction();
     }
 
-    const engineMaximum = BALANCE.maxSurfaceSpeed * (1 + this.simulation.progress.upgrades.engine * 0.11);
+    const engineMaximum = BALANCE.maxSurfaceSpeed * engineSpeedMultiplier(this.simulation.progress.upgrades.engine);
     this.feedback.updateEngine(
       Math.abs(this.simulation.boat.speed) / engineMaximum,
       this.started && this.overlay === null && !this.sceneTransitioning && this.simulation.mode === "cruising",
@@ -586,7 +587,7 @@ export class Game {
         ? `<section class="services" aria-label="Dock services">
             <div class="service-grid">
               ${this.upgradeCard("cargo", "Cargo", "+1 cargo slot")}
-              ${this.upgradeCard("engine", "Engine", "+11% speed")}
+              ${this.upgradeCard("engine", "Engine", "+11% speed · stronger final tier")}
               ${this.upgradeCard("lamp", "Lamp", "Wider night view")}
               ${this.upgradeCard("line", "Line depth", "Next depth tier")}
               ${this.boostCard()}
@@ -632,7 +633,7 @@ export class Game {
 
   private boostCard(): string {
     const unlocked = this.simulation.progress.boostUnlocked;
-    return `<article class="service-card"><span class="ui-icon icon-engine" aria-hidden="true"></span><div class="service-copy"><h4>Engine boost</h4><p>${unlocked ? "Hold Shift to overclock" : "+33% speed until heat builds"}</p></div><span class="service-owned" aria-label="${unlocked ? "Engine boost owned" : "One-time unlock"}">${unlocked ? "OWNED" : "ABILITY"}</span><button class="service-purchase" type="button" data-action="buy-boost" aria-label="${unlocked ? "Engine boost owned" : `Unlock Engine boost for ${BALANCE.boostUnlockCost} shells`}" ${unlocked || this.simulation.progress.money < BALANCE.boostUnlockCost ? "disabled" : ""}>${unlocked ? "<strong>OWNED</strong>" : `<span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${BALANCE.boostUnlockCost}</strong>`}</button></article>`;
+    return `<article class="service-card"><span class="ui-icon icon-engine" aria-hidden="true"></span><div class="service-copy"><h4>Engine boost</h4><p>${unlocked ? "Hold Shift to overclock" : "+35% speed until heat builds"}</p></div><span class="service-owned" aria-label="${unlocked ? "Engine boost owned" : "One-time unlock"}">${unlocked ? "OWNED" : "ABILITY"}</span><button class="service-purchase" type="button" data-action="buy-boost" aria-label="${unlocked ? "Engine boost owned" : `Unlock Engine boost for ${BALANCE.boostUnlockCost} shells`}" ${unlocked || this.simulation.progress.money < BALANCE.boostUnlockCost ? "disabled" : ""}>${unlocked ? "<strong>OWNED</strong>" : `<span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${BALANCE.boostUnlockCost}</strong>`}</button></article>`;
   }
 
   private upgradeMeter(label: string, level: number, tierCap: number): string {

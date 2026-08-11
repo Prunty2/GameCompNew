@@ -8,6 +8,7 @@ import {
   HARBORS,
   SPOT_RESIDENTS,
   SURFACE_Y,
+  engineSpeedMultiplier,
   harborById,
   spotById,
   upgradeTierCap,
@@ -239,7 +240,7 @@ export function updateSimulation(simulation: Simulation, input: InputState, dt: 
     boat.speed *= Math.max(0, 1 - BALANCE.waterDrag * safeDt);
   }
 
-  const engineMultiplier = 1 + simulation.progress.upgrades.engine * 0.11;
+  const engineMultiplier = engineSpeedMultiplier(simulation.progress.upgrades.engine);
   const routeMultiplier = simulation.routeChoice === "fast"
     ? BALANCE.fastRouteSpeedMultiplier
     : simulation.routeChoice === "safe"
