@@ -55,7 +55,7 @@ FSHING is not intended to reproduce Dredge in 2D. Its distinct focus is a repeat
 4. Store the catch; freshness begins to fall.
 5. Begin the express crossing automatically when the contract catch is secured.
 6. Cross the open lake through darkness and fog without fixed collision obstacles while freshness falls with time.
-7. Deliver the fish and compare the catch-to-harbor freshness estimate with the actual result.
+7. Deliver the fish and receive an immediate, non-blocking success confirmation.
 8. Release unneeded catches and purchase boat, engine, lamp, or line upgrades.
 9. Review season discoveries, surveys, and route results, then repeat.
 
@@ -72,7 +72,7 @@ After a complete research season, the target player should be able to:
 3. Observe how travel time and engine speed affect catch freshness.
 4. Explain why a faster journey can preserve more freshness.
 5. Use habitat evidence to predict which species belongs at each fishing ground.
-6. Use estimated-versus-actual freshness feedback to revise a travel decision.
+6. Use freshness and payment outcomes to revise a travel decision.
 
 Fishing begins immediately when the player activates an available ground; there is no blocking species quiz. The requested specimen note and target marker guide the catch, while habitat-specific resident sets and water readings keep the environmental-science context inside play. The season report retains discoveries, surveys, and crossings so progress is visible over time.
 
@@ -87,8 +87,8 @@ flowchart LR
   F --> G["Freshness starts"]
   G --> H["Begin catch-to-harbor crossing"]
   H --> I["Cross the open lake"]
-  I --> J["Compare predicted and actual freshness"]
-  J --> K["Deliver or release"]
+  I --> J["Complete the delivery"]
+  J --> K["Confirm success or release cargo"]
   K --> L["Upgrade and review progress"]
   L --> A
 ```
@@ -96,7 +96,7 @@ flowchart LR
 Feedback uses three levels:
 
 - **Immediate:** requested-species marker, catch feedback, and objective guidance.
-- **After a crossing:** predicted versus actual freshness and payment.
+- **After a crossing:** a delivery-success notification confirms completion without interrupting harbor play.
 - **Across the season:** species discoveries, survey results, completed crossings, and a reflection prompt.
 
 ### Computational thinking
@@ -105,7 +105,7 @@ Feedback uses three levels:
 - **Pattern recognition:** each fishing ground has a stable resident set, allowing players to learn species silhouettes, movement patterns, and depth bands through repeated play.
 - **Abstraction:** normalized horizontal position represents an 18 km lake; six line tiers represent depth bands.
 - **Algorithms:** fixed-step movement, seeded target movement, clamped save migration, route estimation, freshness loss, and contract selection are deterministic.
-- **Evaluation:** automated tests compare expected states; in-game freshness estimates and delivery results let the player evaluate their travel model.
+- **Evaluation:** automated tests compare expected states; freshness and payment outcomes let the player evaluate their travel model.
 
 ### Core pseudocode
 
@@ -128,7 +128,7 @@ START_CROSSING(contract, engineTier)
 ```text
 DELIVER(catch)
   payment ← baseReward × freshnessFactor
-  show predictedFreshness versus actualFreshness
+  show deliverySuccess notification for 4 seconds
 ```
 
 ## World structure
@@ -363,7 +363,7 @@ The first playable minutes should teach systems through one short delivery:
 3. Follow a marked route to a fishing area.
 4. Drop the line and steer the hook into the requested fish.
 5. Begin the crossing automatically as freshness starts.
-6. Return, compare predicted with actual freshness, deliver, and buy the first upgrade.
+6. Return, deliver, confirm success, and buy the first upgrade.
 
 Tutorial prompts should disappear after the action is successfully performed and remain available from a help menu. The title screen uses a zoomed-out, full-bleed lake view with no panel behind its controls. A large wordmark sits slightly above center, followed by one unmistakable Play action and a quieter Settings action; no other content appears on the title screen. The pause menu echoes that simple title composition over the current lake view with a distinctly smaller wordmark, one dominant Resume action, and compact secondary buttons for settings, help, and the title screen. Settings follows the same centered, panel-free composition over the blurred lake: a compact wordmark and heading sit above a two-column instrument grid, while Controls and the amber Done action span the full width. Narrow portrait screens collapse the grid to one column. Opening Settings from the title preserves the title's zoomed-out lake framing while the dimming blur eases in and the controls settle into place; closing lifts the Settings controls away before the title actions settle back into the cleared lake. Returning from Settings to pause preserves the blurred backdrop and uses the same restrained handoff instead of replaying Pause's full off-screen drop. Its Controls submenu keeps that same camera and backdrop. Opening pause quickly blurs the gameplay lake before the menu drops in from above; resuming reverses that sequence before simulation restarts. Only starting from the title and returning to the title use the reusable 280 ms waterline wipe; pause, resume, harbor, and subordinate overlay changes use their own restrained treatments or switch directly. The wipe's translucent deep-teal halves have softly faded moving edges and blur the lake behind them before a thin amber sonar line reveals the destination. It blocks input and simulation while active. Reduced-motion mode removes the wipe, staged movement, and delay. How to play remains available from the harbor and pause menus. The first harbor visit reveals systems in three stages: the player first sees only a guided delivery ticket and must accept it before leaving; accepting the job reveals cargo and freshness information; completing that first delivery reveals upgrades and repairs. Later harbor visits present the current delivery as a three-step job route before cargo or upgrades, with plain-language guidance about the immediate next action. Navigation has no permanent status bar: world markers, a directional arrow, contextual actions, and short messages carry the active objective. Directional objective markers use phase-specific verbs such as Job at, Fish at, Deliver to, Manage cargo, and Upgrade at; the marker, tutorial callout, nearby action, and screen-reader status all derive from the same guidance state. Guidance responds to actual travel direction and proximity, switches from travel to the available action on arrival, rejects spoiled catches as deliverable, and routes a full hold to cargo management. Markers stay fully visible until the final approach, then fade smoothly and clear only when the destination enters interaction range. Cargo details, freshness, damage, money, and upgrades are reviewed in the harbor. Keyboard players can pause with Escape or their configured pause key; the navigation view has no permanent pause button.
 
@@ -570,7 +570,7 @@ The two-month schedule requires an eight-week plan. The minimum viable game take
 - Enter fishing directly without a blocking quiz
 - Catch the requested fish and continue directly into the catch-to-harbor crossing
 - Catch and deliver a fish
-- View freshness estimate-versus-result feedback and the season report
+- View the timed delivery-success notification and the season report
 - Purchase and retain an upgrade after reload
 - Recover from critical boat damage
 - Navigate menus with keyboard and pointer
@@ -598,7 +598,7 @@ The release is successful when:
 
 - A new player can complete the tutorial delivery without verbal help.
 - A player can identify the requested fish without relying on colour alone.
-- Travel-time and freshness feedback are visible within the delivery loop.
+- Delivery success and its resulting shell balance are visible within the delivery loop.
 - The delivery loop remains understandable after returning to the game later.
 - Boat handling is responsive on keyboard and touch.
 - Night changes player behavior and creates tension without unavoidable failure.
@@ -617,7 +617,7 @@ This slice proves the complete accept–fish–deliver–upgrade loop through a 
 3. Drop the line without a blocking quiz, enter the underwater cutaway, and catch the marked Reedfin.
 4. As freshness begins, start the crossing from Sunward Shoal to Gloam Ferry automatically without a blocking route-choice screen.
 5. Watch freshness change while crossing the open lake.
-6. Dock at Gloam Ferry, compare predicted with actual freshness, collect the payment, and buy a boat, engine, lamp, or line-depth upgrade.
+6. Dock at Gloam Ferry, confirm delivery success, collect the payment, and buy a boat, engine, lamp, or line-depth upgrade.
 7. Continue with seeded contracts, grow the boat through seven classes, and unlock Outer Gloam.
 
 The tutorial is action-based and a new player should complete the first delivery in roughly two to four minutes.
