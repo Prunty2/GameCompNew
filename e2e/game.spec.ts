@@ -395,7 +395,12 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await expect(page.locator(".harbor-screen")).toHaveClass(/is-first-voyage/);
   await expect(page.locator(".harbor-wordmark")).toBeVisible();
   await expectHorizontallyCentered(page, ".harbor-panel");
-  expect((await page.locator(".harbor-panel").boundingBox())?.height).toBeLessThan(500);
+  expect((await page.locator(".harbor-panel").boundingBox())?.height).toBeGreaterThanOrEqual(580);
+  await expect(page.locator(".job-route > li")).toHaveCount(3);
+  await expect(page.locator(".job-route-icon")).toHaveCount(3);
+  await expect(page.locator(".job-route")).toContainText("Catch");
+  await expect(page.locator(".job-route")).toContainText("Freshness");
+  await expect(page.locator(".job-route")).toContainText("Deliver");
   const firstHeaderBounds = await page.locator(".harbor-header").boundingBox();
   const firstTicketBounds = await page.locator(".job-ticket").boundingBox();
   const firstFooterBounds = await page.locator(".panel-actions").boundingBox();
@@ -410,7 +415,7 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await expect(reward).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
   await expect(reward).toHaveCSS("box-shadow", "none");
   await expect(reward).toHaveCSS("border-top-width", "0px");
-  await expect(reward.locator(".reward-label")).toHaveCSS("font-size", "11.52px");
+  await expect(reward.locator(".reward-label")).toHaveCSS("font-size", "9.92px");
   await expect(reward.locator("strong")).toHaveCSS("font-size", "20px");
   await expect(page.getByRole("button", { name: "Accept contract" })).toContainText("Begin the First Voyage");
   await expect(page.getByRole("heading", { name: "Your cargo" })).toHaveCount(0);
@@ -453,6 +458,10 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   const deliveryTabsBounds = await page.locator(".harbor-tabs").boundingBox();
   const deliveryCardBounds = await page.locator(".job-ticket").boundingBox();
   const deliveryFooterBounds = await page.locator(".panel-actions").boundingBox();
+  const deliveryStageBounds = await page.locator(".job-route > li").first().boundingBox();
+  expect(deliveryStageBounds?.height).toBeGreaterThanOrEqual(160);
+  await expect(page.locator(".job-route-number")).toHaveCount(3);
+  await expect(page.locator(".job-route-icon")).toHaveCount(3);
   expect(Math.abs((deliveryTabsBounds?.x ?? 0) - (deliveryCardBounds?.x ?? 0))).toBeLessThanOrEqual(1);
   expect(Math.abs((deliveryTabsBounds?.width ?? 0) - (deliveryCardBounds?.width ?? 0))).toBeLessThanOrEqual(1);
   expect(Math.abs((deliveryTabsBounds?.x ?? 0) - (deliveryFooterBounds?.x ?? 0))).toBeLessThanOrEqual(1);
