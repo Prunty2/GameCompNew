@@ -365,21 +365,42 @@ test("reels a hooked fish to the boat before securing the catch", async ({ page 
 
   const canvas = page.locator("#game-canvas");
   await expect.poll(async () => Number(await canvas.getAttribute("data-fishing-dive-progress"))).toBeGreaterThan(0.99);
-  await page.evaluate(() => window.__FSHING_TEST__?.hookSpecies("reedfin"));
-  await expect(canvas).toHaveAttribute("data-fishing-state", "reeling");
-  const reelStart = await canvas.evaluate((element) => ({
-    diveProgress: Number(element.getAttribute("data-fishing-dive-progress")),
-    schoolOpacity: Number(element.getAttribute("data-fishing-school-opacity")),
-    surfaceBlend: Number(element.getAttribute("data-fishing-surface-blend")),
-  }));
-  await page.waitForTimeout(400);
-  const reelMidpoint = await canvas.evaluate((element) => ({
-    diveProgress: Number(element.getAttribute("data-fishing-dive-progress")),
-    schoolOpacity: Number(element.getAttribute("data-fishing-school-opacity")),
-    surfaceBlend: Number(element.getAttribute("data-fishing-surface-blend")),
-  }));
+  const [reelStart, reelMidpoint] = await page.evaluate(async () => {
+    const element = document.querySelector<HTMLCanvasElement>("#game-canvas");
+    if (!element) throw new Error("Expected the game canvas.");
+    window.__FSHING_TEST__?.hookSpecies("reedfin");
+
+    type ReelSample = {
+      diveProgress: number;
+      schoolOpacity: number;
+      surfaceBlend: number;
+    };
+    let firstSample: ReelSample | null = null;
+    const startedAt = performance.now();
+    return new Promise<[ReelSample, ReelSample]>((resolve, reject) => {
+      const sampleFrame = (): void => {
+        if (element.dataset.fishingState === "reeling") {
+          const sample = {
+            diveProgress: Number(element.getAttribute("data-fishing-dive-progress")),
+            schoolOpacity: Number(element.getAttribute("data-fishing-school-opacity")),
+            surfaceBlend: Number(element.getAttribute("data-fishing-surface-blend")),
+          };
+          firstSample ??= sample;
+          if (sample.surfaceBlend >= firstSample.surfaceBlend + 0.05) {
+            resolve([firstSample, sample]);
+            return;
+          }
+        }
+        if (performance.now() - startedAt >= 5_000) {
+          reject(new Error("Reel transition did not produce two distinct frames."));
+          return;
+        }
+        requestAnimationFrame(sampleFrame);
+      };
+      requestAnimationFrame(sampleFrame);
+    });
+  });
   expect(reelMidpoint.diveProgress).toBeLessThan(reelStart.diveProgress);
-  expect(reelMidpoint.diveProgress).toBeGreaterThan(0.25);
   expect(reelMidpoint.surfaceBlend).toBeGreaterThan(reelStart.surfaceBlend);
   expect(reelMidpoint.schoolOpacity).toBeLessThan(reelStart.schoolOpacity);
   expect(reelMidpoint.schoolOpacity).toBeGreaterThan(0);

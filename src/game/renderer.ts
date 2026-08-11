@@ -1134,7 +1134,7 @@ export class CanvasRenderer {
     const offset = highContrast ? 2.25 : 1;
     const { context } = this;
     context.save();
-    context.globalAlpha = highContrast ? 0.88 : 0.62;
+    context.globalAlpha *= highContrast ? 0.88 : 0.62;
     context.translate(point.x, point.y);
     context.scale(direction, 1);
     for (const [offsetX, offsetY] of [
