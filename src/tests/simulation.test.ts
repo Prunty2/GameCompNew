@@ -334,7 +334,7 @@ describe("FSHING side-on simulation", () => {
     expect(simulation.cargo).toEqual([{ species: "reedfin", freshness: 100 }]);
   });
 
-  test("moves the fishing hook at the slower balanced steering speed", () => {
+  test("moves the fishing hook faster upward than horizontally or downward", () => {
     const simulation = createSimulation(9);
     expect(startFishing(simulation, "sunwardShoal")).toBe(true);
     const startingHook = simulation.fishing?.hook;
@@ -342,11 +342,23 @@ describe("FSHING side-on simulation", () => {
     const startX = startingHook.x;
     const startY = startingHook.y;
 
-    updateSimulation(simulation, { ...idle, hookX: 1, hookY: 1 }, 0.1);
+    updateSimulation(simulation, { ...idle, hookX: 1 }, 0.1);
 
-    expect(simulation.fishing?.hook.x).toBeCloseTo(startX + BALANCE.fishingHookSpeed * 0.1);
-    expect(simulation.fishing?.hook.y).toBeCloseTo(startY + BALANCE.fishingHookSpeed * 0.1);
-    expect(BALANCE.fishingHookSpeed).toBe(0.25);
+    expect(simulation.fishing?.hook.x).toBeCloseTo(startX + BALANCE.fishingHookHorizontalSpeed * 0.1);
+    expect(simulation.fishing?.hook.y).toBeCloseTo(startY);
+
+    updateSimulation(simulation, { ...idle, hookY: 1 }, 0.1);
+
+    expect(simulation.fishing?.hook.y).toBeCloseTo(startY + BALANCE.fishingHookDownSpeed * 0.1);
+
+    updateSimulation(simulation, { ...idle, hookY: -1 }, 0.1);
+
+    expect(simulation.fishing?.hook.y).toBeCloseTo(
+      startY + BALANCE.fishingHookDownSpeed * 0.1 - BALANCE.fishingHookUpSpeed * 0.1,
+    );
+    expect(BALANCE.fishingHookHorizontalSpeed).toBe(0.25);
+    expect(BALANCE.fishingHookUpSpeed).toBe(0.35);
+    expect(BALANCE.fishingHookDownSpeed).toBe(0.25);
   });
 
   test("ages cargo and rejects a spoiled tutorial delivery", () => {
