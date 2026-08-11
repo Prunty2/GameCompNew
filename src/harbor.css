@@ -1,6 +1,11 @@
 /* Compact harbor layout keeps every dock service visible without scrolling. */
 .harbor-screen.is-first-voyage,
 .harbor-screen.is-first-voyage.is-expanded-harbor {
+  --dock-panel-background: rgb(4 23 31 / 94%);
+  --dock-icon-background: #071b29;
+  --dock-level-accent: #ffc46d;
+  --dock-level-fill-start: #f7b252;
+  --dock-level-fill-end: #e59131;
   box-sizing: border-box;
   align-items: center;
   justify-content: center;
@@ -10,6 +15,26 @@
     linear-gradient(rgb(3 12 18 / 52%), rgb(3 12 18 / 52%)),
     var(--dock-day-background) center / cover no-repeat;
   backdrop-filter: saturate(0.88);
+}
+
+.harbor-screen.is-first-voyage.is-research-level-2 {
+  --menu-signal: #9bd5ad;
+  --menu-fog: #c1d8cc;
+  --dock-panel-background: rgb(13 38 34 / 95%);
+  --dock-icon-background: #102f2b;
+  --dock-level-accent: #a9ddb7;
+  --dock-level-fill-start: #85c49d;
+  --dock-level-fill-end: #4f9b78;
+}
+
+.harbor-screen.is-first-voyage.is-research-level-3 {
+  --menu-signal: #d3b3ec;
+  --menu-fog: #d5cce0;
+  --dock-panel-background: rgb(29 24 48 / 95%);
+  --dock-icon-background: #27213f;
+  --dock-level-accent: #d7b6ee;
+  --dock-level-fill-start: #b68bd4;
+  --dock-level-fill-end: #77599e;
 }
 
 .harbor-screen.is-first-voyage::before {
@@ -47,7 +72,7 @@
   border: 1px solid rgb(145 169 176 / 34%);
   border-radius: 20px;
   overflow: hidden;
-  background: rgb(4 23 31 / 94%);
+  background: var(--dock-panel-background);
   color: var(--menu-paper);
   box-shadow: 0 28px 80px rgb(1 10 16 / 42%);
   backdrop-filter: blur(4px);
@@ -76,6 +101,17 @@
   min-width: 0;
   align-items: center;
   gap: 22px;
+}
+
+.harbor-research-level {
+  display: block;
+  margin-top: 4px;
+  color: var(--dock-level-accent);
+  font-size: 0.7rem;
+  font-weight: 850;
+  letter-spacing: 0.1em;
+  line-height: 1;
+  text-transform: uppercase;
 }
 
 .harbor-screen.is-first-voyage .harbor-wordmark,
@@ -783,7 +819,7 @@
   height: 50px;
   border: 1px solid rgb(145 169 176 / 30%);
   border-radius: 10px;
-  background-color: #071b29;
+  background-color: var(--dock-icon-background);
   box-shadow: inset 0 1px 0 rgb(247 241 227 / 3%);
 }
 
@@ -810,6 +846,16 @@
   line-height: 1;
 }
 
+.harbor-screen.is-first-voyage .service-copy p small {
+  display: inline;
+  margin-left: 0.35rem;
+  color: var(--dock-level-accent);
+  font-size: 0.66rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .upgrade-meter {
   display: grid;
   box-sizing: border-box;
@@ -834,8 +880,8 @@
 }
 
 .upgrade-meter i.is-filled {
-  border-color: #ffc46d;
-  background: linear-gradient(#f7b252, #e59131);
+  border-color: var(--dock-level-accent);
+  background: linear-gradient(var(--dock-level-fill-start), var(--dock-level-fill-end));
   box-shadow: inset 0 1px 0 rgb(255 244 209 / 60%), 0 0 7px rgb(240 158 61 / 22%);
 }
 

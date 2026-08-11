@@ -79,15 +79,22 @@ export const BALANCE = {
   fishingHookHorizontalSpeed: 0.25,
   fishingHookUpSpeed: 0.35,
   fishingHookDownSpeed: 0.25,
-  upgradeCosts: { cargo: 60, engine: 70, lamp: 70, line: 55 },
+  upgradeCosts: {
+    cargo: [60, 125, 210, 315, 440, 585, 750],
+    engine: [70, 150, 250, 370, 510, 670],
+    lamp: [70, 145, 240, 355, 490, 645],
+    line: [55, 135, 235, 355, 495, 655],
+  },
   permitCost: 85,
   boostUnlockCost: 300,
-  boostSpeedMultiplier: 1.33,
+  boostSpeedMultiplier: 1.35,
   boostThrustMultiplier: 1.75,
   boostHeatSeconds: 8,
   boostCoolingSeconds: 10,
   boostRecoveryThreshold: 0.25,
   maxUpgradeTier: 6,
+  engineSpeedPerTier: 0.11,
+  maxEngineSpeedMultiplier: 1.95,
   maxCargoTier: 7,
   baseCargoSlots: 3,
   maxCargoSlots: 10,
@@ -187,4 +194,10 @@ export function boatClassAt(tier: number): string {
 
 export function upgradeTierCap(upgrade: UpgradeId): number {
   return upgrade === "cargo" ? BALANCE.maxCargoTier : BALANCE.maxUpgradeTier;
+}
+
+export function engineSpeedMultiplier(tier: number): number {
+  const clampedTier = Math.max(0, Math.min(BALANCE.maxUpgradeTier, Math.floor(tier)));
+  if (clampedTier === BALANCE.maxUpgradeTier) return BALANCE.maxEngineSpeedMultiplier;
+  return 1 + clampedTier * BALANCE.engineSpeedPerTier;
 }
