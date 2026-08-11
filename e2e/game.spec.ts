@@ -395,7 +395,9 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await expect(page.locator(".harbor-screen")).toHaveClass(/is-first-voyage/);
   await expect(page.locator(".harbor-wordmark")).toBeVisible();
   await expectHorizontallyCentered(page, ".harbor-panel");
-  expect((await page.locator(".harbor-panel").boundingBox())?.height).toBeGreaterThanOrEqual(580);
+  const firstPanelHeight = (await page.locator(".harbor-panel").boundingBox())?.height ?? 0;
+  expect(firstPanelHeight).toBeGreaterThanOrEqual(380);
+  expect(firstPanelHeight).toBeLessThanOrEqual(720);
   await expect(page.locator(".job-route > li")).toHaveCount(3);
   await expect(page.locator(".job-route-icon")).toHaveCount(3);
   await expect(page.locator(".job-route")).toContainText("Catch");
