@@ -74,6 +74,8 @@ const PAUSE_EXIT_DURATION = 340;
 const SETTINGS_EXIT_DURATION = 340;
 const SCENE_COVER_DURATION = 120;
 const SCENE_REVEAL_DURATION = 160;
+const DELIVERY_SUCCESS_DURATION = 4_000;
+const DELIVERY_SUCCESS_EXIT_DURATION = 280;
 
 const DOCK_BACKGROUND_URL: Record<HarborId, { day: string; night: string }> = {
   brindle: { day: brindleDockDayUrl, night: brindleDockNightUrl },
@@ -87,7 +89,6 @@ type OverlayScreen =
   | "settings"
   | "controls"
   | "help"
-  | "deliveryResult"
   | "seasonReport"
   | null;
 
@@ -132,6 +133,8 @@ export class Game {
   private harborSection: HarborSection = "delivery";
   private helpStep = 0;
   private toastTimer: number | undefined;
+  private deliverySuccessTimer: number | undefined;
+  private deliverySuccessExitTimer: number | undefined;
   private tutorialDismissTimer: number | undefined;
   private pauseTransitionTimer: number | undefined;
   private settingsTransitionTimer: number | undefined;
@@ -255,6 +258,13 @@ export class Game {
           <span class="tutorial-message" aria-live="polite"></span>
         </button>
         <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+        <section class="delivery-success" id="delivery-success" role="status" aria-live="polite" aria-atomic="true" hidden>
+          <span class="delivery-success-seal" aria-hidden="true">✓</span>
+          <strong>Delivery Success</strong>
+          <button class="delivery-success-close" type="button" data-action="dismiss-delivery-success" aria-label="Close delivery success notification">
+            <span aria-hidden="true">×</span>
+          </button>
+        </section>
         <div class="feedback-flash" id="feedback-flash" aria-hidden="true"></div>
 
         <button class="context-action" id="context-action" type="button" data-action="interact" data-control="action" hidden>Interact</button>
@@ -312,6 +322,10 @@ export class Game {
       this.syncSave();
       this.refreshHud();
     }
+    if (events.some((event) => event.type === "delivered") && this.seasonReportQueued) {
+      this.seasonReportQueued = false;
+      this.setOverlay("seasonReport");
+    }
   }
 
   private handleEvent(event: SimulationEvent): void {
@@ -330,8 +344,9 @@ export class Game {
       case "delivered":
         this.feedback.cue("delivery");
         this.pulseFeedback("delivery");
-        this.showToast(`Delivery complete · +${event.payment} shells`);
-        this.setOverlay("deliveryResult");
+        this.harborSection = "delivery";
+        this.setOverlay("harbor");
+        this.showDeliverySuccess();
         break;
       case "docked":
         this.feedback.cue("dock");
@@ -496,9 +511,6 @@ export class Game {
         break;
       case "help":
         host.innerHTML = this.helpScreen();
-        break;
-      case "deliveryResult":
-        host.innerHTML = this.deliveryResultScreen();
         break;
       case "seasonReport":
         host.innerHTML = this.seasonReportScreen();
@@ -786,28 +798,6 @@ export class Game {
       </section>`;
   }
 
-  private deliveryResultScreen(): string {
-    const result = this.simulation.lastDeliveryResult;
-    if (!result) return this.messageScreen("No delivery result", "Complete a delivery to compare your estimate with the result.", "continue-after-delivery", "Back to harbor");
-    const difference = result.actualFreshness - result.predictedFreshness;
-    return `
-      <section class="screen-overlay sheet-overlay science-overlay" role="dialog" aria-labelledby="delivery-result-title">
-        <div class="art-panel science-panel result-panel side-sheet">
-          <span class="completion-seal" aria-hidden="true">✓</span>
-          <span class="panel-eyebrow">Prediction versus result</span>
-          <h2 id="delivery-result-title">Delivery analysed</h2>
-          <div class="result-comparison">
-            <div><small>Predicted freshness</small><strong>${result.predictedFreshness}%</strong></div>
-            <span aria-hidden="true">→</span>
-            <div><small>Actual freshness</small><strong>${result.actualFreshness}%</strong></div>
-          </div>
-          <p class="result-explanation">The ${result.route === "fast" ? "express" : "survey"} route took ${result.travelSeconds} in-game seconds. The result was ${Math.abs(difference)} percentage points ${difference >= 0 ? "above" : "below"} the estimate.</p>
-          <div class="payment-summary"><span>Delivery payment</span><strong>${result.payment} shells</strong><small>Payment reflects the catch's arrival freshness.</small></div>
-          <button class="primary-button" type="button" data-action="continue-after-delivery">Continue at harbor</button>
-        </div>
-      </section>`;
-  }
-
   private seasonReportScreen(): string {
     const learning = this.simulation.progress.learning;
     return `
@@ -825,10 +815,6 @@ export class Game {
           <button class="primary-button" type="button" data-action="continue-season">Continue researching</button>
         </div>
       </section>`;
-  }
-
-  private messageScreen(title: string, body: string, action: string, label: string): string {
-    return `<section class="screen-overlay sheet-overlay" role="dialog"><div class="art-panel compact-panel side-sheet"><h2>${title}</h2><p>${body}</p><button class="primary-button" type="button" data-action="${action}">${label}</button></div></section>`;
   }
 
   private setOverlay(next: OverlayScreen, useSceneTransition = false): void {
@@ -1040,12 +1026,43 @@ export class Game {
     this.cargoReleaseTimer = window.setTimeout(finishRelease, 180);
   }
 
+  private showDeliverySuccess(): void {
+    const notification = this.uiRoot.querySelector<HTMLElement>("#delivery-success");
+    if (!notification) return;
+    window.clearTimeout(this.deliverySuccessTimer);
+    window.clearTimeout(this.deliverySuccessExitTimer);
+    notification.hidden = false;
+    notification.classList.remove("is-visible", "is-dismissing");
+    void notification.offsetWidth;
+    notification.classList.add("is-visible");
+    this.deliverySuccessTimer = window.setTimeout(
+      () => this.dismissDeliverySuccess(),
+      DELIVERY_SUCCESS_DURATION,
+    );
+  }
+
+  private dismissDeliverySuccess(): void {
+    const notification = this.uiRoot.querySelector<HTMLElement>("#delivery-success");
+    if (!notification || notification.hidden) return;
+    window.clearTimeout(this.deliverySuccessTimer);
+    window.clearTimeout(this.deliverySuccessExitTimer);
+    notification.classList.remove("is-visible");
+    notification.classList.add("is-dismissing");
+    this.deliverySuccessExitTimer = window.setTimeout(() => {
+      notification.hidden = true;
+      notification.classList.remove("is-dismissing");
+    }, this.save.settings.reducedMotion ? 0 : DELIVERY_SUCCESS_EXIT_DURATION);
+  }
+
   private readonly onClick = (event: MouseEvent): void => {
     const target = (event.target as HTMLElement).closest<HTMLElement>("[data-action]");
     if (!target || target instanceof HTMLButtonElement && target.disabled) return;
     const action = target.dataset.action;
     this.feedback.cue("ui");
     switch (action) {
+      case "dismiss-delivery-success":
+        this.dismissDeliverySuccess();
+        break;
       case "dismiss-tutorial": {
         const tutorial = this.uiRoot.querySelector<HTMLButtonElement>("#tutorial-callout");
         const message = tutorial?.querySelector<HTMLElement>(".tutorial-message")?.textContent;
@@ -1162,15 +1179,6 @@ export class Game {
         if (deliverContract(this.simulation) !== null) {
           this.handleSimulationEvents();
           this.renderOverlay();
-        }
-        break;
-      case "continue-after-delivery":
-        if (this.seasonReportQueued) {
-          this.seasonReportQueued = false;
-          this.setOverlay("seasonReport");
-        } else {
-          this.harborSection = "delivery";
-          this.setOverlay("harbor");
         }
         break;
       case "continue-season": this.harborSection = "delivery"; this.setOverlay("harbor"); break;
