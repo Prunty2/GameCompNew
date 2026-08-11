@@ -346,7 +346,7 @@ describe("FSHING side-on simulation", () => {
 
     expect(simulation.fishing?.hook.x).toBeCloseTo(startX + BALANCE.fishingHookSpeed * 0.1);
     expect(simulation.fishing?.hook.y).toBeCloseTo(startY + BALANCE.fishingHookSpeed * 0.1);
-    expect(BALANCE.fishingHookSpeed).toBe(0.17);
+    expect(BALANCE.fishingHookSpeed).toBe(0.25);
   });
 
   test("ages cargo and rejects a spoiled tutorial delivery", () => {
