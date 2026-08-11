@@ -248,7 +248,7 @@ describe("FSHING side-on simulation", () => {
 
   test("gives only the maximum engine tier a stronger speed increase", () => {
     expect(engineSpeedMultiplier(BALANCE.maxUpgradeTier - 1)).toBeCloseTo(1.55);
-    expect(engineSpeedMultiplier(BALANCE.maxUpgradeTier)).toBeCloseTo(1.75);
+    expect(engineSpeedMultiplier(BALANCE.maxUpgradeTier)).toBeCloseTo(1.95);
 
     const simulation = createSimulation();
     simulation.progress.upgrades.engine = BALANCE.maxUpgradeTier;
