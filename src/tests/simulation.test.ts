@@ -28,6 +28,7 @@ import {
   nightVisualIntensity,
   recordSurvey,
   releaseCargo,
+  restoreCargo,
   resolveCatch,
   shouldShowNightIndicator,
   startFishing,
@@ -482,6 +483,17 @@ describe("FSHING side-on simulation", () => {
     expect(simulation.cargo).toHaveLength(0);
     expect(resolveCatch(simulation, "reedfin")).toBe(true);
     expect(simulation.cargo).toHaveLength(1);
+  });
+
+  test("restores a released catch to its original cargo position", () => {
+    const simulation = createSimulation();
+    expect(resolveCatch(simulation, "reedfin")).toBe(true);
+    expect(resolveCatch(simulation, "sunPerch")).toBe(true);
+    const released = { ...simulation.cargo[0]! };
+
+    expect(releaseCargo(simulation, 0)).toBe(true);
+    expect(restoreCargo(simulation, released, 0)).toBe(true);
+    expect(simulation.cargo.map((item) => item.species)).toEqual(["reedfin", "sunPerch"]);
   });
 
   test("makes route estimates explicit and keeps surface crossings unobstructed", () => {

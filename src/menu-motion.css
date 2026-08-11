@@ -13,13 +13,13 @@
 
 @media (hover: hover) and (pointer: fine) {
   :is(.title-screen, .settings-overlay, .controls-overlay, .pause-screen, .harbor-screen)
-    button:hover:not(:disabled):not(.tutorial-callout) {
+    button:hover:not(:disabled):not(.tutorial-callout):not(.cargo-release) {
     animation: menu-button-hover-wobble 240ms ease-out;
     transform-origin: 50% 70%;
   }
 
   :is(.title-screen, .settings-overlay, .controls-overlay, .pause-screen, .harbor-screen)
-    button:active:not(:disabled):not(.tutorial-callout) {
+    button:active:not(:disabled):not(.tutorial-callout):not(.cargo-release) {
     animation: menu-button-click-wobble 140ms ease-out;
   }
 }
