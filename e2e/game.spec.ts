@@ -418,6 +418,9 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   const targetFishIcon = page.getByRole("img", { name: "Reedfin target fish" });
   await expect(targetFishIcon).toBeVisible();
   await expect(targetFishIcon).toHaveCSS("background-image", /fish-atlas-ui/);
+  await expect(page.locator(".job-catch-step")).toContainText("Reedfin");
+  await expect(page.locator(".job-target-requirement")).toHaveText("×1required");
+  await expect(page.locator(".job-route-step").nth(1)).toContainText("Every fish 80%+");
   await expect(page.getByRole("button", { name: "Accept contract" })).toContainText("Begin the First Voyage");
   await expect(page.getByRole("heading", { name: "Your cargo" })).toHaveCount(0);
   await expect(page.getByRole("region", { name: "Dock services" })).toHaveCount(0);

@@ -564,9 +564,9 @@ export class Game {
             </span>
           </div>
           <ol class="job-route" aria-label="Job steps">
-            <li><span>1</span><div><small>Catch</small><span class="job-target">${this.targetFishIcon(available.species)}<strong>${available.quantity} × ${FISH[available.species].name}</strong></span></div></li>
-            <li><span>2</span><div><small>Keep all</small><strong>${available.minimumFreshness}%+ fresh</strong></div></li>
-            <li><span>3</span><div><small>Deliver to</small><strong>${harborById(available.destination).name}</strong></div></li>
+            <li class="job-route-step job-catch-step"><span class="job-step-index">01</span><div><small>Catch</small>${this.jobTarget(available.species, `×${available.quantity}`, "required")}</div></li>
+            <li class="job-route-step"><span class="job-step-index">02</span><div><small>Freshness</small><strong>Every fish ${available.minimumFreshness}%+</strong></div></li>
+            <li class="job-route-step"><span class="job-step-index">03</span><div><small>Deliver</small><strong>${harborById(available.destination).name}</strong></div></li>
           </ol>
           <button class="primary-button mission-button" type="button" data-action="accept-contract" aria-label="Accept contract">
             <span><strong>${isFirstJobOffer ? "Begin the First Voyage" : "Take this job"}</strong></span><b aria-hidden="true">→</b>
@@ -577,9 +577,9 @@ export class Game {
             <span class="card-kicker">${deliverable ? "Ready to hand in" : "Job in progress"}</span>
             <h3>${contract.title}</h3>
             <ol class="job-route" aria-label="Job steps">
-              <li class="is-complete"><span>✓</span><div><small>Job</small><strong>Accepted</strong></div></li>
-              <li class="${caughtQuantity >= contract.quantity ? "is-complete" : "is-current"}"><span>2</span><div><small>Catch</small><span class="job-target">${this.targetFishIcon(contract.species)}<strong>${caughtQuantity} / ${contract.quantity} ${FISH[contract.species].name}</strong></span></div></li>
-              <li class="${deliverable ? "is-current" : ""}"><span>3</span><div><small>Deliver to</small><strong>${harborById(contract.destination).name}</strong></div></li>
+              <li class="job-route-step is-complete"><span class="job-step-index">✓</span><div><small>Job</small><strong>Accepted</strong></div></li>
+              <li class="job-route-step job-catch-step ${caughtQuantity >= contract.quantity ? "is-complete" : "is-current"}"><span class="job-step-index">02</span><div><small>Catch</small>${this.jobTarget(contract.species, `${caughtQuantity}/${contract.quantity}`, "caught")}</div></li>
+              <li class="job-route-step ${deliverable ? "is-current" : ""}"><span class="job-step-index">03</span><div><small>Deliver</small><strong>${harborById(contract.destination).name}</strong></div></li>
             </ol>
             ${contract.destination === harborId
               ? `<button class="primary-button mission-button" type="button" data-action="deliver" ${deliverable ? "" : "disabled"}>${deliverable ? "<span><strong>Complete delivery</strong></span><b aria-hidden=\"true\">→</b>" : "Catch is missing or no longer fresh enough"}</button>`
@@ -653,6 +653,10 @@ export class Game {
   private targetFishIcon(species: FishSpecies): string {
     const [column, row] = FISH[species].atlasCell;
     return `<span class="job-target-fish" data-species="${species}" role="img" aria-label="${FISH[species].name} target fish" style="--fish-atlas-url: url(&quot;${fishAtlasUiUrl}&quot;); --fish-atlas-x: ${column * 50}%; --fish-atlas-y: ${row * 50}%"></span>`;
+  }
+
+  private jobTarget(species: FishSpecies, amount: string, amountLabel: string): string {
+    return `<span class="job-target">${this.targetFishIcon(species)}<span class="job-target-copy"><strong>${FISH[species].name}</strong><span class="job-target-requirement"><b>${amount}</b><span>${amountLabel}</span></span></span></span>`;
   }
 
   private upgradeCard(upgrade: UpgradeId, title: string, detail: string): string {
