@@ -22,6 +22,7 @@ export interface WorldPoint {
 export interface HarborDefinition extends WorldPoint {
   id: HarborId;
   name: string;
+  signLabel: string;
   subtitle: string;
 }
 
@@ -96,8 +97,8 @@ export const BALANCE = {
 export const SURFACE_Y = 0.61;
 
 export const HARBORS: readonly HarborDefinition[] = [
-  { id: "brindle", name: "Brindle Harbor", subtitle: "First light. Straight work.", x: 0.055, y: SURFACE_Y },
-  { id: "gloam", name: "Gloam Ferry", subtitle: "Last light before the outer water.", x: 0.945, y: SURFACE_Y },
+  { id: "brindle", name: "Reedbank Harbor", signLabel: "REEDBANK", subtitle: "The working harbor among the reeds.", x: 0.055, y: SURFACE_Y },
+  { id: "gloam", name: "Beacon Point", signLabel: "BEACON POINT", subtitle: "The red beacon before the outer water.", x: 0.945, y: SURFACE_Y },
 ];
 
 export const FISH: Record<FishSpecies, FishDefinition> = {

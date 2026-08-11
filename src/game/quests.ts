@@ -1,4 +1,4 @@
-import type { FishSpecies, HarborId, SpotId } from "./balance";
+import { FISH, type FishSpecies, type HarborId, type SpotId } from "./balance";
 
 export interface QuestAccessGrant {
   label: string;
@@ -13,15 +13,20 @@ export interface QuestDefinition {
   origin: HarborId;
   destination: HarborId;
   spot: SpotId;
+  maxQuantity: number;
+  accessGrant?: QuestAccessGrant;
+}
+
+export interface ResolvedQuestDefinition extends QuestDefinition {
+  quantity: number;
   reward: number;
   minimumFreshness: number;
-  accessGrant?: QuestAccessGrant;
 }
 
 /**
  * The first season is deliberately authored rather than generated. Each grant
- * arrives before a later quest needs it, so discretionary spending cannot
- * strand the player outside the next ecosystem.
+ * arrives before a later quest needs it, while cargo capacity determines the
+ * size of the order that can actually be posted.
  */
 export const FIRST_SEASON_QUESTS: readonly QuestDefinition[] = [
   {
@@ -31,9 +36,7 @@ export const FIRST_SEASON_QUESTS: readonly QuestDefinition[] = [
     origin: "brindle",
     destination: "gloam",
     spot: "sunwardShoal",
-    reward: 90,
-    minimumFreshness: 35,
-    accessGrant: { label: "Mosswater line kit · tier 1", lineTier: 1 },
+    maxQuantity: 1,
   },
   {
     id: "sunward-signatures",
@@ -42,8 +45,7 @@ export const FIRST_SEASON_QUESTS: readonly QuestDefinition[] = [
     origin: "brindle",
     destination: "gloam",
     spot: "sunwardShoal",
-    reward: 105,
-    minimumFreshness: 40,
+    maxQuantity: 1,
   },
   {
     id: "shoal-in-motion",
@@ -52,9 +54,8 @@ export const FIRST_SEASON_QUESTS: readonly QuestDefinition[] = [
     origin: "brindle",
     destination: "gloam",
     spot: "sunwardShoal",
-    reward: 120,
-    minimumFreshness: 44,
-    accessGrant: { label: "Mosswater line kit · tier 2", lineTier: 2 },
+    maxQuantity: 2,
+    accessGrant: { label: "Mosswater line kit · tier 1", lineTier: 1 },
   },
   {
     id: "mosswater-sounding",
@@ -63,8 +64,8 @@ export const FIRST_SEASON_QUESTS: readonly QuestDefinition[] = [
     origin: "brindle",
     destination: "gloam",
     spot: "mosswaterPool",
-    reward: 150,
-    minimumFreshness: 42,
+    maxQuantity: 3,
+    accessGrant: { label: "Mosswater line kit · tier 2", lineTier: 2 },
   },
   {
     id: "silt-and-shadow",
@@ -73,8 +74,7 @@ export const FIRST_SEASON_QUESTS: readonly QuestDefinition[] = [
     origin: "brindle",
     destination: "gloam",
     spot: "mosswaterPool",
-    reward: 190,
-    minimumFreshness: 46,
+    maxQuantity: 4,
   },
   {
     id: "lantern-survey",
@@ -83,8 +83,7 @@ export const FIRST_SEASON_QUESTS: readonly QuestDefinition[] = [
     origin: "brindle",
     destination: "gloam",
     spot: "mosswaterPool",
-    reward: 220,
-    minimumFreshness: 48,
+    maxQuantity: 6,
     accessGrant: {
       label: "Outer Gloam permit + line tier 3",
       lineTier: 3,
@@ -92,14 +91,13 @@ export const FIRST_SEASON_QUESTS: readonly QuestDefinition[] = [
     },
   },
   {
-    id: "beyond-the-ferry",
-    title: "Beyond the Ferry",
+    id: "beyond-the-beacon",
+    title: "Beyond the Beacon",
     species: "gloamGill",
     origin: "brindle",
     destination: "gloam",
     spot: "outerGloam",
-    reward: 280,
-    minimumFreshness: 50,
+    maxQuantity: 8,
     accessGrant: { label: "Deep-water line kit · tier 4", lineTier: 4 },
   },
   {
@@ -109,15 +107,33 @@ export const FIRST_SEASON_QUESTS: readonly QuestDefinition[] = [
     origin: "brindle",
     destination: "gloam",
     spot: "outerGloam",
-    reward: 360,
-    minimumFreshness: 54,
+    maxQuantity: 10,
     accessGrant: { label: "Abyssal line kit · tier 5", lineTier: 5 },
   },
 ];
 
-export function firstSeasonQuest(completedContracts: number): QuestDefinition | null {
+export function firstSeasonQuest(completedContracts: number, cargoCapacity: number): ResolvedQuestDefinition | null {
   const quest = FIRST_SEASON_QUESTS[completedContracts];
-  return quest ? { ...quest, accessGrant: quest.accessGrant ? { ...quest.accessGrant } : undefined } : null;
+  if (!quest) return null;
+  const quantity = Math.max(1, Math.min(quest.maxQuantity, Math.floor(cargoCapacity)));
+  const minimumFreshness = contractFreshnessTarget(quantity);
+  return {
+    ...quest,
+    quantity,
+    reward: contractReward(quest.species, quantity, minimumFreshness),
+    minimumFreshness,
+    accessGrant: quest.accessGrant ? { ...quest.accessGrant } : undefined,
+  };
+}
+
+export function contractFreshnessTarget(quantity: number): number {
+  return Math.max(50, 90 - (Math.max(1, Math.floor(quantity)) - 1) * 5);
+}
+
+export function contractReward(species: FishSpecies, quantity: number, minimumFreshness: number): number {
+  const totalSpecimenValue = FISH[species].value * Math.max(1, Math.floor(quantity));
+  const freshnessPremium = 1 + Math.max(0, minimumFreshness - 50) / 100;
+  return Math.max(5, Math.round(((34 + totalSpecimenValue * 2) * freshnessPremium) / 5) * 5);
 }
 
 export function earnedFirstSeasonAccess(completedContracts: number): { lineTier: number; outerPermit: boolean } {

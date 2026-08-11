@@ -56,7 +56,7 @@ test("the waterline transition carries title, dock, and lake scene changes", asy
 
   await page.getByRole("button", { name: "Play", exact: true }).click();
   await expect(transition).toHaveClass(/is-(covering|revealing)/);
-  await expect(page.getByRole("heading", { name: "Brindle Harbor" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Reedbank Harbor" })).toBeVisible();
   await expect(page.locator(".harbor-screen")).toHaveAttribute("data-dock", "brindle");
   await expect(page.locator(".harbor-screen")).toHaveAttribute("data-time-of-day", "day");
   await expect(page.locator(".harbor-screen")).toHaveCSS("background-image", /dock-brindle-day/);
@@ -66,9 +66,10 @@ test("the waterline transition carries title, dock, and lake scene changes", asy
   await expect(transition).toHaveClass(/is-(covering|revealing)/);
   await expect(page.locator(".screen-overlay")).toHaveCount(0);
   await expect(transition).not.toHaveClass(/is-(covering|revealing)/);
+  await expect(page.locator("#game-canvas")).toHaveAttribute("data-harbor-signs", "Reedbank Harbor | Beacon Point");
 
   await page.evaluate(() => window.__FSHING_TEST__?.sailToHarbor("gloam"));
-  await page.getByRole("button", { name: "Dock · Gloam Ferry" }).click();
+  await page.getByRole("button", { name: "Dock · Beacon Point" }).click();
   await expect(transition).toHaveClass(/is-(covering|revealing)/);
   await expect(page.locator(".harbor-screen")).toHaveAttribute("data-dock", "gloam");
   await expect(page.locator(".harbor-screen")).toHaveAttribute("data-time-of-day", "day");
@@ -82,14 +83,14 @@ test("the waterline transition carries title, dock, and lake scene changes", asy
 
   await page.evaluate(() => window.__FSHING_TEST__?.setElapsed(165));
   await page.evaluate(() => window.__FSHING_TEST__?.sailToHarbor("brindle"));
-  await page.getByRole("button", { name: "Dock · Brindle Harbor" }).click();
+  await page.getByRole("button", { name: "Dock · Reedbank Harbor" }).click();
   await expect(page.locator(".harbor-screen")).toHaveAttribute("data-time-of-day", "night");
   expect(await page.locator(".harbor-screen").evaluate((element) => getComputedStyle(element, "::before").backgroundImage)).toContain("dock-brindle-night");
   await page.getByRole("button", { name: "Back to lake →" }).click();
   await expect(transition).not.toHaveClass(/is-(covering|revealing)/);
 
   await page.evaluate(() => window.__FSHING_TEST__?.sailToHarbor("gloam"));
-  await page.getByRole("button", { name: "Dock · Gloam Ferry" }).click();
+  await page.getByRole("button", { name: "Dock · Beacon Point" }).click();
   await expect(page.locator(".harbor-screen")).toHaveAttribute("data-time-of-day", "night");
   expect(await page.locator(".harbor-screen").evaluate((element) => getComputedStyle(element, "::before").backgroundImage)).toContain("dock-gloam-night");
   await page.getByRole("button", { name: "Back to lake →" }).click();
@@ -387,7 +388,7 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await page.goto("/?e2e=1");
   await expect(page.getByRole("img", { name: "FSHING" })).toBeVisible();
   await page.getByRole("button", { name: "Play", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Brindle Harbor" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Reedbank Harbor" })).toBeVisible();
   await expect(page.locator(".harbor-intro")).toHaveCount(0);
   await expect(page.getByText("Welcome aboard")).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "First Assignment" })).toBeVisible();
@@ -404,10 +405,10 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await expect(page.locator(".harbor-panel")).toHaveCSS("background-color", "rgba(4, 23, 31, 0.94)");
   await expect(page.locator(".mission-button")).toHaveCSS("border-radius", "14px");
   await expect(page.locator(".job-ticket")).toHaveClass(/is-guided/);
-  const reward = page.getByLabel("Reward: 90 shells. Access grant: Mosswater line kit · tier 1");
+  const reward = page.getByLabel("Reward: 100 shells");
   await expect(reward).toBeVisible();
   await expect(reward).toContainText("Reward");
-  await expect(reward).toContainText("Mosswater line kit · tier 1");
+  await expect(reward).not.toContainText("Plus access");
   await expect(reward).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
   await expect(reward).toHaveCSS("box-shadow", "none");
   await expect(reward).toHaveCSS("border-top-width", "0px");
@@ -440,13 +441,13 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await page.evaluate(() => window.__FSHING_TEST__?.catchSpecies("reedfin"));
   await expect(page.getByRole("heading", { name: "Plan your crossing" })).toHaveCount(0);
   await expect(page.getByText("Applied mathematics")).toHaveCount(0);
-  await expect(page.locator("#tutorial-callout")).toContainText("Gloam Ferry");
-  await expect(page.locator(".navigation-status")).toContainText("DELIVER TO Gloam Ferry");
+  await expect(page.locator("#tutorial-callout")).toContainText("Beacon Point");
+  await expect(page.locator(".navigation-status")).toContainText("DELIVER TO Beacon Point");
 
   await page.evaluate(() => window.__FSHING_TEST__?.sailToHarbor("gloam"));
-  await expect(page.locator("#tutorial-callout")).toContainText("Dock at Gloam Ferry");
-  await page.getByRole("button", { name: "Dock · Gloam Ferry" }).click();
-  await expect(page.getByRole("heading", { name: "Gloam Ferry" })).toBeVisible();
+  await expect(page.locator("#tutorial-callout")).toContainText("Dock at Beacon Point");
+  await page.getByRole("button", { name: "Dock · Beacon Point" }).click();
+  await expect(page.getByRole("heading", { name: "Beacon Point" })).toBeVisible();
   await expect(page.locator(".harbor-screen")).toHaveAttribute("data-dock", "gloam");
   await expect(page.locator(".harbor-screen")).toHaveAttribute("data-time-of-day", "day");
   await expect(page.locator(".harbor-screen")).toHaveCSS("background-image", /dock-gloam-day/);
@@ -466,7 +467,7 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await expect(page.getByRole("button", { name: "Market", exact: true })).toBeFocused();
   await expect(page.locator(".harbor-content")).toHaveCSS("animation-name", "harbor-page-enter-forward");
   await expect(page.locator(".harbor-tab .ui-icon")).toHaveCount(3);
-  await expect(page.getByRole("heading", { name: "Gloam fish market" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Beacon Market" })).toBeVisible();
   await expect(page.getByText("Lower cash price · jobs pay more")).toBeVisible();
   await expect(page.getByRole("button", { name: "Reedfin reserved for active delivery" })).toBeDisabled();
   await expect(page.locator(".harbor-intro")).toHaveCount(0);
@@ -489,7 +490,7 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await page.getByRole("button", { name: "Complete delivery" }).click();
   await expect(page.getByRole("heading", { name: "Delivery analysed" })).toBeVisible();
   await expect(page.getByText("Prediction versus result")).toBeVisible();
-  await expect(page.getByText("Mosswater line kit · tier 1")).toBeVisible();
+  await expect(page.getByText("1 fish delivered. Payment reflects its arrival freshness.")).toBeVisible();
   await page.getByRole("button", { name: "Continue at harbor" }).click();
   await expect(page.getByRole("region", { name: "Dock services" })).toHaveCount(0);
   const deliveryHubBounds = await page.locator(".harbor-panel").boundingBox();
@@ -546,7 +547,7 @@ test("delivers a matching catch that was aboard before accepting the contract", 
   await page.getByRole("button", { name: "Accept contract" }).click();
 
   await page.evaluate(() => window.__FSHING_TEST__?.sailToHarbor("gloam"));
-  await page.getByRole("button", { name: "Dock · Gloam Ferry" }).click();
+  await page.getByRole("button", { name: "Dock · Beacon Point" }).click();
   const completeDelivery = page.getByRole("button", { name: "Complete delivery" });
   await expect(completeDelivery).toBeEnabled();
   await completeDelivery.click();
@@ -554,12 +555,12 @@ test("delivers a matching catch that was aboard before accepting the contract", 
   await expect(page.getByRole("heading", { name: "Delivery analysed" })).toBeVisible();
   await page.getByRole("button", { name: "Continue at harbor" }).click();
   await expect(page.locator(".shell-balance strong")).toHaveText(/^[1-9]\d*$/);
-  await expect(page.getByRole("heading", { name: "Gloam fish market" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Beacon Market" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Accept contract" })).toHaveCount(0);
   const balanceBeforeSale = Number(await page.locator(".shell-balance strong").textContent());
   await page.getByRole("button", { name: /Sell Sun Perch for \d+ shells/ }).click();
   await expect(page.locator(".shell-balance strong")).not.toHaveText(String(balanceBeforeSale));
-  await expect(page.getByText(/Sun Perch sold at Gloam market/)).toBeVisible();
+  await expect(page.getByText(/Sun Perch sold at Beacon Market/)).toBeVisible();
 });
 
 test("settings, keyboard pause, and local SDK fallback remain usable", async ({ page }) => {
@@ -650,7 +651,7 @@ test("how to play instructions advance one card at a time", async ({ page }) => 
   await expect(page.getByRole("button", { name: "Next" })).toBeDisabled();
 
   await page.getByRole("button", { name: "Back", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Brindle Harbor" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Reedbank Harbor" })).toBeVisible();
 });
 
 test("touch controls are available at a mobile landscape viewport", async ({ page }) => {
@@ -682,10 +683,10 @@ test("dock interaction starts on pointer press", async ({ page }) => {
   await expect(page.locator("#scene-transition")).not.toHaveClass(/is-(covering|revealing)/);
   await page.evaluate(() => window.__FSHING_TEST__?.sailToHarbor("brindle"));
 
-  const dockButton = page.getByRole("button", { name: "Dock · Brindle Harbor" });
+  const dockButton = page.getByRole("button", { name: "Dock · Reedbank Harbor" });
   await dockButton.hover();
   await page.mouse.down();
-  await expect(page.getByRole("heading", { name: "Brindle Harbor" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Reedbank Harbor" })).toBeVisible();
   await page.mouse.up();
 });
 

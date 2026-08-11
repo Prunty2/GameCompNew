@@ -99,14 +99,14 @@ flowchart LR
 
 ### First-player journey
 
-1. Press **Play** and arrive at Brindle Harbor.
-2. Accept **The Morning Order**, which requests a Reedfin for Gloam Ferry.
+1. Press **Play** and arrive at Reedbank Harbor.
+2. Accept **The Morning Order**, which requests a Reedfin for Beacon Point.
 3. Follow the faint Sunward Shoal fish activity until the polarized-water lens strengthens and the hook appears above the fishing ground.
 4. Read: 4 m, 21°C, 8.4 mg/L dissolved oxygen, low turbidity, sunlit reeds.
 5. Predict the Reedfin from three species descriptions.
 6. Read why broad fins help it manoeuvre in reeds, then lower the hook.
 7. Catch the Reedfin. Its freshness begins at 100%.
-8. Compare two routes from the catch site to Gloam Ferry. The screen displays distance, estimated minutes, predicted freshness, and hazard multiplier.
+8. Compare two routes from the catch site to Beacon Point. The screen displays distance, estimated minutes, predicted freshness, and hazard multiplier.
 9. Select a route and cross the lake, using visible yellow hazard signs and braking when needed.
 10. Dock, deliver, and compare the catch-to-harbor prediction with actual freshness.
 11. Spend the reward on a larger boat, engine, lamp, or line depth.

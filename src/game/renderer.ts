@@ -22,6 +22,7 @@ import {
   regionSurfaceTintAt,
   type FishRarity,
   type FishSpecies,
+  type HarborDefinition,
   type SpotId,
   type WorldPoint,
 } from "./balance";
@@ -260,11 +261,13 @@ export class CanvasRenderer {
 
     if (settings.cinematic) return;
     const surfaceLayer = captureSurfaceLayer(this.canvas, this.surfaceLayer);
+    this.canvas.dataset.harborSigns = HARBORS.map((harbor) => harbor.name).join(" | ");
 
     for (const harbor of HARBORS) {
       const x = worldToScreenX(harbor.x, camera, width);
       if (!isNearScreen(x, width, 540)) continue;
       this.drawHarborPier(
+        harbor,
         x,
         waterline,
         harbor.id === "gloam",
@@ -320,6 +323,7 @@ export class CanvasRenderer {
   }
 
   private drawHarborPier(
+    harbor: HarborDefinition,
     x: number,
     waterline: number,
     fromRightShore: boolean,
@@ -349,6 +353,26 @@ export class CanvasRenderer {
     } else {
       this.context.drawImage(art.pier, x + outboardOverlap - pierWidth, drawY, pierWidth, pierHeight);
     }
+    this.context.restore();
+
+    const signWidth = clamp(viewportHeight * 0.18, 112, 172);
+    const signHeight = clamp(signWidth * 0.28, 32, 46);
+    const signCenterX = x + (fromRightShore ? 0.3 : -0.3) * pierWidth;
+    const signTop = deckTop - signHeight - clamp(viewportHeight * 0.025, 12, 22);
+    const signLeft = signCenterX - signWidth / 2;
+    this.context.save();
+    this.context.fillStyle = settings.highContrast ? "#090f12" : "#26352f";
+    this.context.strokeStyle = settings.highContrast ? "#fff4d2" : "#d5b778";
+    this.context.lineWidth = settings.highContrast ? 3 : 2;
+    this.context.fillRect(signCenterX - signWidth * 0.36, signTop + signHeight, 5, deckTop - signTop);
+    this.context.fillRect(signCenterX + signWidth * 0.36 - 5, signTop + signHeight, 5, deckTop - signTop);
+    this.context.fillRect(signLeft, signTop, signWidth, signHeight);
+    this.context.strokeRect(signLeft, signTop, signWidth, signHeight);
+    this.context.fillStyle = settings.highContrast ? "#ffffff" : "#f4e6c5";
+    this.context.font = `800 ${clamp(signWidth / (harbor.signLabel.length * 0.72), 11, 16)}px "Avenir Next Condensed", "Arial Narrow", sans-serif`;
+    this.context.textAlign = "center";
+    this.context.textBaseline = "middle";
+    this.context.fillText(harbor.signLabel, signCenterX, signTop + signHeight / 2 + 1);
     this.context.restore();
 
     drawWaterContact(this.context, surfaceLayer, {

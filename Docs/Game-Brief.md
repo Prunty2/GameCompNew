@@ -2,7 +2,7 @@
 
 ## Project summary
 
-**FSHING** is a single-player, side-on environmental-science fishing and delivery game for web browsers. The player pilots a research boat along a horizontally scrolling lake, targets requested fish in distinct ecosystems, fishes at the appropriate depth, and completes deliveries shaped by speed, time, and freshness.
+**FSHING** is a single-player, side-on environmental-science fishing and delivery game for web browsers. The player pilots a research boat along a horizontally scrolling lake, targets requested fish in distinct ecosystems, fishes at the appropriate depth, and completes deliveries shaped by catch quantity, cargo capacity, speed, time, and freshness.
 
 The lake is inviting during the day but becomes difficult after dark. Darkness and fog reduce visibility without placing fixed obstacles in the boat's path. Successful deliveries fund larger boat classes, greater speed, stronger lights, deeper sampling lines, and access to three visually and scientifically distinct regions.
 
@@ -49,7 +49,7 @@ FSHING is not intended to reproduce Dredge in 2D. Its distinct focus is a repeat
 
 ## Core gameplay loop
 
-1. Visit Brindle Harbor and accept the next requested fish delivery.
+1. Visit Reedbank Harbor and accept the next requested fish delivery.
 2. Pilot toward one of three fishing grounds, first discovered through faint shoal movement beneath the surface.
 3. Drop the line directly and steer the hook toward the requested resident species.
 4. Store the catch; freshness begins to fall.
@@ -121,7 +121,8 @@ START_CROSSING(contract, engineTier)
   engineFactor ← 1 + (engineTier × 0.11)
   travelSpeed ← 0.05 × 1.12 × engineFactor × 18
   travelTime ← distanceKm ÷ travelSpeed
-  predictedFreshness ← 100 - (travelTime × 0.667)
+  startingFreshness ← AVERAGE(freshness of reserved contract fish)
+  predictedFreshness ← startingFreshness - (travelTime × 0.667)
 ```
 
 ```text
@@ -144,7 +145,7 @@ The connected surface route remains navigable, but each region has a distinct co
 
 ### Harbors
 
-Each harbor acts as a compact service point with a distinct economic role. Brindle Harbor is the only job-giving port. Gloam Ferry receives deliveries but never posts a new job; instead, its market buys unreserved inventory at a deliberately lower return than authored quest rewards. A harbor may provide:
+Each harbor acts as a compact service point with a distinct economic role. Reedbank Harbor is the only job-giving port. Beacon Point receives deliveries but never posts a new job; instead, its market buys unreserved inventory at a deliberately lower return than authored quest rewards. Both ports display their names on large world-space dock signs, reinforcing the location names before the player opens either harbor menu. A harbor may provide:
 
 - Available delivery contracts
 - Fish delivery and payment
@@ -152,11 +153,11 @@ Each harbor acts as a compact service point with a distinct economic role. Brind
 - Region permits
 - Brief NPC dialogue
 
-Gloam market prices are 55% of a fish's base specimen value at full freshness and fall further as freshness declines. A fish reserved for the active delivery cannot be sold accidentally. The market is a recovery valve for spare catches, not a replacement for following research assignments.
+Beacon Market prices are 55% of a fish's base specimen value at full freshness and fall further as freshness declines. Only the quantity reserved for the active delivery is protected from accidental sale; surplus fish of the same species may still be sold. The market is a recovery valve for spare catches, not a replacement for following research assignments.
 
-The first release should reuse a consistent harbor interface rather than build fully explorable towns. Docking changes the full-screen setting behind that interface: Brindle Harbor uses a practical working-pier painting, while Gloam Ferry uses a sparse outer-lake landing. These settings are expanded views of the exact landmarks painted at the panorama's edges, not alternate interpretations of the locations. Brindle must preserve the large dark boathouse with its warm doorway and roof mast, the tall open A-frame working crane, the low red-roof shed, the reed-lined pilings, and their left-to-right order. Gloam must preserve the sloped railed ferry ramp, small square flat-roof ferry hut, tall red beacon mast, rocky bank, bare deciduous tree, and two dark conifers in their panorama arrangement. Both settings use a medium-wide environmental scale consistent with the sailing panorama: the pier stays low in the frame, its construction uses narrow boat-scale planks, and small harbor structures remain in the outer quarters around a quiet menu-safe center. Brindle's shoreline and buildings occupy the left edge while its pier extends rightward to a free terminal end; Gloam's shoreline and landing occupy the right edge while its pier extends leftward to a free terminal end, matching the player's approach from the left. Each dock has matched daytime and nighttime plates, blended from the same night intensity as the sailing panorama so the harbor never contradicts the lake's current time of day. The same waterline transition used for major scene changes covers both entering and leaving a dock, so the lake and dock paintings never snap directly between one another. Reduced-motion mode still swaps the setting immediately.
+The first release should reuse a consistent harbor interface rather than build fully explorable towns. Docking changes the full-screen setting behind that interface: Reedbank Harbor uses a practical working-pier painting, while Beacon Point uses a sparse outer-lake landing. These settings are expanded views of the exact landmarks painted at the panorama's edges, not alternate interpretations of the locations. Reedbank must preserve the large dark boathouse with its warm doorway and roof mast, the tall open A-frame working crane, the low red-roof shed, the reed-lined pilings, and their left-to-right order. Beacon Point must preserve the sloped railed ferry ramp, small square flat-roof ferry hut, tall red beacon mast, rocky bank, bare deciduous tree, and two dark conifers in their panorama arrangement. Both settings use a medium-wide environmental scale consistent with the sailing panorama: the pier stays low in the frame, its construction uses narrow boat-scale planks, and small harbor structures remain in the outer quarters around a quiet menu-safe center. Reedbank's shoreline and buildings occupy the left edge while its pier extends rightward to a free terminal end; Beacon Point's shoreline and landing occupy the right edge while its pier extends leftward to a free terminal end, matching the player's approach from the left. Each dock has matched daytime and nighttime plates, blended from the same night intensity as the sailing panorama so the harbor never contradicts the lake's current time of day. The same waterline transition used for major scene changes covers both entering and leaving a dock, so the lake and dock paintings never snap directly between one another. Reduced-motion mode still swaps the setting immediately.
 
-The Brindle interface opens on Delivery and separates Cargo and Dock services into focused submenus. Gloam opens on Market unless the player has a delivery ready to hand in, in which case Delivery remains the immediate focus. One compact dark translucent dock panel creates a clear hierarchy of location and shells, category tabs, selected content, and secondary navigation. These sections share the same left and right edges. On a fresh save, a compact Survey → Catch → Deliver primer precedes the first guided assignment; this introduces the complete game loop without exposing later dock systems. After onboarding, every submenu omits the repeated objective panel and harbor subtitle so its functional content begins directly below the tabs. Delivery makes the job ticket the immediate visual focus: its job name is centred, its three sequential route steps are large enough to use the available space, the target fish sprite appears beside the Catch step, and the shell payment plus any permanent access grant share one Reward summary. Active travel guidance uses the same dark panel language rather than a light legacy callout. Cargo and Market use the ten-slot game inventory: three slots are unlocked on a fresh save, caught fish occupy slots with freshness and release or sale controls, and the other seven use a dedicated transparent cream-and-orange padlock pictogram. Selecting a locked slot gives it the shared restrained mechanical wobble, then opens Dock Services and focuses its tab; neutral borders and focus rings keep amber reserved for primary state. The same roughly half-degree hover/click response applies consistently to enabled buttons across the harbor, main, settings, controls, and pause menus, while reduced-motion settings suppress it. Dock Services presents one clearly separated full-width row per cargo, engine, lamp, line-depth, and permit option without an additional heading panel. Each row uses an icon plate, concise effect copy, a live level meter, and a shell-price purchase control calculated from the real balance model; Repair hull is not offered. Only one harbor function is visible at a time, the selected submenu keeps keyboard focus, and each submenu must fit supported desktop, portrait, and short-landscape viewports without page scrolling. Switching submenus leaves the title block, tab bar, and footer fixed while only the inner content changes. The new page uses a quick directional fade-and-slide that follows the tab order; reduced-motion settings make the swap immediate. Tabs, service types, shell costs, and help actions use the shared transparent pictogram atlas with short visible labels; each pictogram is centred within an equal sprite cell. Repeated explanatory sentences are removed when the icon and local heading already communicate the action. The background remains recognisable beneath a darker overlay and light blur.
+The Reedbank interface opens on Delivery and separates Cargo and Dock services into focused submenus. Beacon Point opens on Market unless the player has a delivery ready to hand in, in which case Delivery remains the immediate focus. One compact dark translucent dock panel creates a clear hierarchy of location and shells, category tabs, selected content, and secondary navigation. These sections share the same left and right edges. On a fresh save, a compact Survey → Catch → Deliver primer precedes the first guided assignment; this introduces the complete game loop without exposing later dock systems. After onboarding, every submenu omits the repeated objective panel and harbor subtitle so its functional content begins directly below the tabs. Delivery makes the job ticket the immediate visual focus: its job name is centred, its three sequential route steps are large enough to use the available space, the target fish sprite and required quantity appear beside the Catch step, and the shell payment plus any permanent access grant share one Reward summary. Active travel guidance uses the same dark panel language rather than a light legacy callout. Cargo and Market use the ten-slot game inventory: three slots are unlocked on a fresh save, caught fish occupy slots with freshness and release or sale controls, and the other seven use a dedicated transparent cream-and-orange padlock pictogram. Selecting a locked slot gives it the shared restrained mechanical wobble, then opens Dock Services and focuses its tab; neutral borders and focus rings keep amber reserved for primary state. The same roughly half-degree hover/click response applies consistently to enabled buttons across the harbor, main, settings, controls, and pause menus, while reduced-motion settings suppress it. Dock Services presents one clearly separated full-width row per cargo, engine, lamp, line-depth, and permit option without an additional heading panel. Each row uses an icon plate, concise effect copy, a live level meter, and a shell-price purchase control calculated from the real balance model; Repair hull is not offered. Only one harbor function is visible at a time, the selected submenu keeps keyboard focus, and each submenu must fit supported desktop, portrait, and short-landscape viewports without page scrolling. Switching submenus leaves the title block, tab bar, and footer fixed while only the inner content changes. The new page uses a quick directional fade-and-slide that follows the tab order; reduced-motion settings make the swap immediate. Tabs, service types, shell costs, and help actions use the shared transparent pictogram atlas with short visible labels; each pictogram is centred within an equal sprite cell. Repeated explanatory sentences are removed when the icon and local heading already communicate the action. The background remains recognisable beneath a darker overlay and light blur.
 
 ## Delivery system
 
@@ -173,22 +174,26 @@ Each contract defines:
 - Optional bonus conditions
 - Recommended region or fishing ground
 
-The contract screen must show enough information for the player to judge the destination and freshness requirement before travelling. The first season uses a fixed eight-assignment teaching order. Jobs are accepted only at Brindle and delivered to Gloam, reinforcing the outward research voyage and making the return to Brindle an intentional reset between assignments.
+The contract screen must show enough information for the player to judge the quantity, destination, freshness requirement, and reward before travelling. The first season uses a fixed eight-assignment teaching order. Jobs are accepted only at Reedbank and delivered to Beacon Point, reinforcing the outward research voyage and making the return to Reedbank an intentional reset between assignments.
 
-| Order | Assignment focus | Species and site | Access grant on completion |
-| --- | --- | --- | --- |
-| 1 | Basic catch, freshness, and delivery | Reedfin · Sunward Shoal | Line tier 1 |
-| 2 | Recognising a second silhouette | Sun Perch · Sunward Shoal | — |
-| 3 | Completing the familiar habitat set | Silver Dart · Sunward Shoal | Line tier 2 |
-| 4 | Entering a new ecosystem | Needle Pike · Mosswater Pool | — |
-| 5 | Deeper Mosswater sampling | Mossback · Mosswater Pool | — |
-| 6 | Completing the middle habitat set | Lantern Eel · Mosswater Pool | Line tier 3 and Outer Gloam permit |
-| 7 | First permitted outer-water sample | Gloam Gill · Outer Gloam | Line tier 4 |
-| 8 | Rare deep-water season finale | Violet Ray · Outer Gloam | Line tier 5 |
+| Order | Assignment focus | Species and site | Maximum order | Freshness at that maximum | Access grant on completion |
+| --- | --- | --- | ---: | ---: | --- |
+| 1 | Precise first crossing | Reedfin · Sunward Shoal | 1 | 90% | — |
+| 2 | A second high-freshness silhouette | Sun Perch · Sunward Shoal | 1 | 90% | — |
+| 3 | First grouped sample | Silver Dart · Sunward Shoal | 2 | 85% | Line tier 1 |
+| 4 | Entering a new ecosystem | Needle Pike · Mosswater Pool | 3 | 80% | Line tier 2 |
+| 5 | Deeper Mosswater sampling | Mossback · Mosswater Pool | 4 | 75% | — |
+| 6 | Sustained middle-habitat collection | Lantern Eel · Mosswater Pool | 6 | 65% | Line tier 3 and Outer Gloam permit |
+| 7 | Outer-water collection run | Gloam Gill · Outer Gloam | 8 | 55% | Line tier 4 |
+| 8 | Large rare-species season finale | Violet Ray · Outer Gloam | 10 | 50% | Line tier 5 |
 
-These access grants cannot be spent on an unrelated upgrade, so a player who follows the assignments can always reach the next taught ecosystem. The final grant opens the Abyss Crown depth for post-season mastery and leaves room for future worlds to build on the same ordered progression. Shell rewards still fund discretionary cargo, engine, lamp, line, and boost purchases. After the authored season, repeatable jobs continue from Brindle using only reachable species.
+An order is capped at the player's unlocked cargo capacity when it is posted, so it can never require more fish than the hold can carry. Cargo investment therefore opens larger, better-paying versions of later assignments without blocking a player who chose other upgrades. The freshness target is derived from actual quantity: 90% for one fish, then five percentage points less for each additional fish down to a 50% floor. This keeps one-fish work demanding and gives large collection runs enough time for repeated catches.
 
-Fresh deliveries pay the full reward. Lower freshness reduces the payment. Fully spoiled fish cannot complete a contract. Any unneeded catch can be released at harbor to free cargo space. Exact freshness rates and rewards are centralized in balance data and covered by deterministic tests.
+Quest rewards use one documented calculation instead of unrelated authored amounts: a 34-shell delivery fee plus twice the total specimen value, multiplied by a freshness premium of 1% for each required percentage point above 50%, then rounded to the nearest five shells. A stricter freshness target or a larger order therefore pays more for a clear reason.
+
+Access grants begin only after the first three assignments. They cannot be spent on an unrelated upgrade, so a player who follows the assignments can always reach the next taught ecosystem without making the opening jobs feel like automatic upgrade handouts. The final grant opens the Abyss Crown depth for post-season mastery and leaves room for future worlds to build on the same ordered progression. Shell rewards still fund discretionary cargo, engine, lamp, line, and boost purchases. After the authored season, repeatable jobs continue from Reedbank using only reachable species, with quantity capped by the current hold and the same quantity, freshness, and reward rules.
+
+Fresh deliveries pay the full reward. Lower average freshness reduces the payment, but every fish in the reserved batch must individually meet the contract threshold. The route prediction begins from that batch's real average freshness when the final required fish is secured. Fully spoiled fish cannot complete a contract. Any unneeded catch can be released at harbor to free cargo space. Exact freshness rates and rewards are centralized in balance data and covered by deterministic tests.
 
 To keep the repeating game playable after all authored contract tiers are complete, the game may generate contracts from validated combinations of unlocked fish, regions, quantities, and destinations.
 
@@ -377,7 +382,7 @@ The first playable minutes should teach systems through one short delivery:
 3. Follow a marked route to a fishing area.
 4. Drop the line and steer the hook into the requested fish.
 5. Begin the crossing automatically as freshness starts.
-6. Reach Gloam Ferry, compare predicted with actual freshness, deliver, and review the first access grant.
+6. Reach Beacon Point, compare predicted with actual freshness, and deliver the order above its strict 90% freshness target.
 
 Tutorial prompts should disappear after the action is successfully performed and remain available from a help menu. The title screen uses a zoomed-out, full-bleed lake view with no panel behind its controls. A large wordmark sits slightly above center, followed by one unmistakable Play action and a quieter Settings action; no other content appears on the title screen. The pause menu echoes that simple title composition over the current lake view with a distinctly smaller wordmark, one dominant Resume action, and compact secondary buttons for settings, help, and the title screen. Settings follows the same centered, panel-free composition over the blurred lake: a compact wordmark and heading sit above a two-column instrument grid, while Controls and the amber Done action span the full width. Narrow portrait screens collapse the grid to one column. Opening Settings from the title preserves the title's zoomed-out lake framing while the dimming blur eases in and the controls settle into place; closing lifts the Settings controls away before the title actions settle back into the cleared lake. Returning from Settings to pause preserves the blurred backdrop and uses the same restrained handoff instead of replaying Pause's full off-screen drop. Its Controls submenu keeps that same camera and backdrop. Opening pause quickly blurs the gameplay lake before the menu drops in from above; resuming reverses that sequence before simulation restarts. Only starting from the title and returning to the title use the reusable 280 ms waterline wipe; pause, resume, harbor, and subordinate overlay changes use their own restrained treatments or switch directly. The wipe's translucent deep-teal halves have softly faded moving edges and blur the lake behind them before a thin amber sonar line reveals the destination. It blocks input and simulation while active. Reduced-motion mode removes the wipe, staged movement, and delay. How to play remains available from the harbor and pause menus. The first harbor visit reveals systems in three stages: the player first sees only a guided delivery ticket and must accept it before leaving; accepting the job reveals cargo and freshness information; completing that first delivery reveals upgrades and repairs. Later harbor visits present the current delivery as a three-step job route before cargo or upgrades, with plain-language guidance about the immediate next action. Navigation has no permanent status bar: world markers, a directional arrow, contextual actions, and short messages carry the active objective. Directional objective markers use phase-specific verbs such as Job at, Fish at, Deliver to, Manage cargo, and Upgrade at; the marker, tutorial callout, nearby action, and screen-reader status all derive from the same guidance state. Guidance responds to actual travel direction and proximity, switches from travel to the available action on arrival, rejects spoiled catches as deliverable, and routes a full hold to cargo management. Markers stay fully visible until the final approach, then fade smoothly and clear only when the destination enters interaction range. Cargo details, freshness, damage, money, and upgrades are reviewed in the harbor. Keyboard players can pause with Escape or their configured pause key; the navigation view has no permanent pause button.
 
@@ -626,19 +631,19 @@ This slice proves the complete accept–fish–deliver–upgrade loop through a 
 
 ### Player journey
 
-1. Start at **Brindle Harbor** and accept **The Morning Order**, requesting one Reedfin for **Gloam Ferry**.
+1. Start at **Reedbank Harbor** and accept **The Morning Order**, requesting one Reedfin for **Beacon Point**.
 2. Follow the faint Sunward Shoal fish activity and slow when the polarized-water lens reveals the school.
 3. Drop the line without a blocking quiz, enter the underwater cutaway, and catch the marked Reedfin.
-4. As freshness begins, start the crossing from Sunward Shoal to Gloam Ferry automatically without a blocking route-choice screen.
+4. As freshness begins, start the crossing from Sunward Shoal to Beacon Point automatically without a blocking route-choice screen.
 5. Watch freshness change while crossing the open lake.
-6. Dock at Gloam Ferry, compare predicted with actual freshness, collect the payment, and buy a boat, engine, lamp, or line-depth upgrade.
+6. Dock at Beacon Point, compare predicted with actual freshness, collect the payment, and buy a boat, engine, lamp, or cargo upgrade.
 7. Continue with seeded contracts, grow the boat through seven classes, and unlock Outer Gloam.
 
 The tutorial is action-based and a new player should complete the first delivery in roughly two to four minutes.
 
 ### Slice content
 
-- One continuous horizontal lake route with Brindle Harbor at the left edge and Gloam Ferry at the right edge.
+- One continuous horizontal lake route with Reedbank Harbor at the left edge and Beacon Point at the right edge.
 - A side-follow camera with generated panoramic scenery, layered parallax, a readable waterline, and underwater cutaway fishing.
 - Three widely separated, water-connected fishing grounds and nine silhouette-and-color-distinct fish across the Brindle Coast, Mosswater Reach, and Violet Gloam.
 - Authored tutorial contract followed by seeded repeatable contracts selected from unlocked fish.
@@ -658,9 +663,9 @@ All durations use simulation seconds; horizontal positions use normalized world 
 | Camera view width | 0.30 world units |
 | Critical rescue threshold | 100 damage |
 | Freshness lifetime | 150 seconds |
-| Tutorial minimum freshness | 35% |
-| Tutorial reward | 90 shells |
-| Cargo capacity | 1 fish, then +1 per boat tier up to 7 |
+| Tutorial minimum freshness | 90% |
+| Tutorial reward | 100 shells, derived from the shared quantity-and-freshness formula |
+| Cargo capacity | 3 fish, then +1 per cargo tier up to 10 |
 | Boat and cargo upgrade | 60 shells base; six tiers |
 | Engine upgrade | 70 shells base; +11% maximum speed per tier; six tiers |
 | Engine boost unlock | 300 shells; +33% maximum speed while held |

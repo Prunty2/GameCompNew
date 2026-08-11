@@ -40,6 +40,7 @@ import {
   buyUpgrade,
   cargoCapacity,
   chooseRoute,
+  contractCatchCount,
   consumeEvents,
   createSimulation,
   damageBoat,
@@ -47,6 +48,7 @@ import {
   deliverContract,
   getInteractionPrompt,
   interact,
+  isCargoReservedForContract,
   moveBoatForTesting,
   navigationGuidance,
   nightVisualIntensity,
@@ -321,7 +323,13 @@ export class Game {
         ) {
           chooseRoute(this.simulation, "fast");
         }
-        this.showToast(`${FISH[event.species].name} secured. Freshness is falling.`);
+        if (this.simulation.activeContract?.species === event.species) {
+          const caught = contractCatchCount(this.simulation, this.simulation.activeContract);
+          const required = this.simulation.activeContract.quantity;
+          this.showToast(`${FISH[event.species].name} secured · ${Math.min(caught, required)} of ${required}. Freshness is falling.`);
+        } else {
+          this.showToast(`${FISH[event.species].name} secured. Freshness is falling.`);
+        }
         break;
       case "delivered":
         this.feedback.cue("delivery");
@@ -343,7 +351,7 @@ export class Game {
         break;
       case "locked-region":
         this.feedback.cue("deny");
-        this.showToast("Outer Gloam is permit water. Turn back or buy access at Gloam Ferry.");
+        this.showToast("Outer Gloam is permit water. Turn back or buy access at Beacon Point.");
         break;
       case "depth-locked":
         this.feedback.cue("deny");
@@ -376,7 +384,7 @@ export class Game {
         break;
       case "sold":
         this.feedback.cue("delivery");
-        this.showToast(`${FISH[event.species].name} sold at Gloam market · +${event.payment} shells`);
+        this.showToast(`${FISH[event.species].name} sold at Beacon Market · +${event.payment} shells`);
         break;
       case "access-granted":
         this.feedback.cue("upgrade");
@@ -536,8 +544,8 @@ export class Game {
     const harbor = harborById(harborId);
     const contract = this.simulation.activeContract;
     const available = this.simulation.availableContract?.origin === harborId ? this.simulation.availableContract : null;
-    const deliverable = contract?.destination === harborId
-      && this.simulation.cargo.some((item) => item.species === contract.species && item.freshness >= contract.minimumFreshness);
+    const caughtQuantity = contract ? contractCatchCount(this.simulation, contract) : 0;
+    const deliverable = contract?.destination === harborId && caughtQuantity >= contract.quantity;
     const isFirstJobOffer = this.simulation.progress.completedContracts === 0 && available?.id === "morning-order";
     const showCargo = !isFirstJobOffer;
     const showServices = !isFirstJobOffer;
@@ -556,8 +564,8 @@ export class Game {
             </span>
           </div>
           <ol class="job-route" aria-label="Job steps">
-            <li><span>1</span><div><small>Catch</small><span class="job-target">${this.targetFishIcon(available.species)}<strong>${FISH[available.species].name}</strong></span></div></li>
-            <li><span>2</span><div><small>Keep it</small><strong>${available.minimumFreshness}% fresh</strong></div></li>
+            <li><span>1</span><div><small>Catch</small><span class="job-target">${this.targetFishIcon(available.species)}<strong>${available.quantity} × ${FISH[available.species].name}</strong></span></div></li>
+            <li><span>2</span><div><small>Keep all</small><strong>${available.minimumFreshness}%+ fresh</strong></div></li>
             <li><span>3</span><div><small>Deliver to</small><strong>${harborById(available.destination).name}</strong></div></li>
           </ol>
           <button class="primary-button mission-button" type="button" data-action="accept-contract" aria-label="Accept contract">
@@ -570,7 +578,7 @@ export class Game {
             <h3>${contract.title}</h3>
             <ol class="job-route" aria-label="Job steps">
               <li class="is-complete"><span>✓</span><div><small>Job</small><strong>Accepted</strong></div></li>
-              <li class="${this.simulation.cargo.some((item) => item.species === contract.species) ? "is-complete" : ""}"><span>2</span><div><small>Catch</small><span class="job-target">${this.targetFishIcon(contract.species)}<strong>${FISH[contract.species].name}</strong></span></div></li>
+              <li class="${caughtQuantity >= contract.quantity ? "is-complete" : "is-current"}"><span>2</span><div><small>Catch</small><span class="job-target">${this.targetFishIcon(contract.species)}<strong>${caughtQuantity} / ${contract.quantity} ${FISH[contract.species].name}</strong></span></div></li>
               <li class="${deliverable ? "is-current" : ""}"><span>3</span><div><small>Deliver to</small><strong>${harborById(contract.destination).name}</strong></div></li>
             </ol>
             ${contract.destination === harborId
@@ -584,7 +592,7 @@ export class Game {
       const item = this.simulation.cargo[index];
       const slotNumber = String(index + 1).padStart(2, "0");
       if (item) {
-        const reserved = activeSection === "market" && this.simulation.activeContract?.species === item.species;
+        const reserved = activeSection === "market" && isCargoReservedForContract(this.simulation, index);
         const marketPrice = gloamMarketSalePrice(item);
         const inventoryAction = activeSection === "market"
           ? `<button class="cargo-release" type="button" data-action="sell-cargo" data-index="${index}" aria-label="${reserved ? `${FISH[item.species].name} reserved for active delivery` : `Sell ${FISH[item.species].name} for ${marketPrice} shells`}" ${reserved ? "disabled" : ""}>${reserved ? "Reserved" : `Sell · ${marketPrice}`}</button>`
@@ -605,7 +613,7 @@ export class Game {
 
     const activeContent = activeSection === "cargo" || activeSection === "market"
       ? `<aside class="cargo-section" aria-labelledby="cargo-heading">
-          <div class="cargo-inventory-heading"><h3 id="cargo-heading">${activeSection === "market" ? "Gloam fish market" : "Fish inventory"}</h3><span>${activeSection === "market" ? "Lower cash price · jobs pay more" : `${this.simulation.cargo.length} carried · ${availableCargoSlots} unlocked`}</span></div>
+          <div class="cargo-inventory-heading"><h3 id="cargo-heading">${activeSection === "market" ? "Beacon Market" : "Fish inventory"}</h3><span>${activeSection === "market" ? "Lower cash price · jobs pay more" : `${this.simulation.cargo.length} carried · ${availableCargoSlots} unlocked`}</span></div>
           <div class="cargo-slot-grid" aria-label="Cargo inventory">${cargoMarkup}</div>
         </aside>`
       : activeSection === "services"
@@ -765,7 +773,7 @@ export class Game {
     const steps = [
       {
         title: "Take a job",
-        body: "Brindle Harbor posts assignments in a fixed research order. Gloam Ferry receives deliveries and buys spare catches for less than a job pays.",
+        body: "Reedbank Harbor posts assignments in a fixed research order. Beacon Point receives deliveries and buys spare catches for less than a job pays.",
       },
       {
         title: "Follow the shoal",
@@ -825,7 +833,7 @@ export class Game {
             <div><small>Actual freshness</small><strong>${result.actualFreshness}%</strong></div>
           </div>
           <p class="result-explanation">The ${result.route === "fast" ? "express" : "survey"} route took ${result.travelSeconds} in-game seconds. The result was ${Math.abs(difference)} percentage points ${difference >= 0 ? "above" : "below"} the estimate.</p>
-          <div class="payment-summary"><span>Delivery payment</span><strong>${result.payment} shells</strong><small>Payment reflects the catch's arrival freshness.</small></div>
+          <div class="payment-summary"><span>Delivery payment</span><strong>${result.payment} shells</strong><small>${result.quantity} fish delivered. Payment reflects ${result.quantity === 1 ? "its" : "their average"} arrival freshness.</small></div>
           ${result.accessGrantLabel ? `<div class="payment-summary"><span>Research access granted</span><strong>${result.accessGrantLabel}</strong><small>This access is permanent and prepares the next ecosystem.</small></div>` : ""}
           <button class="primary-button" type="button" data-action="continue-after-delivery">Continue at harbor</button>
         </div>
