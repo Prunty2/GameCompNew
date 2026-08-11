@@ -119,7 +119,7 @@ CATCH(species)
 START_CROSSING(contract, engineTier)
   distanceKm ← ABS(destinationHarborX - catchSiteX) × 18
   engineFactor ← 1 + (engineTier × 0.11)
-  IF engineTier = 6 THEN engineFactor ← 1.75
+  IF engineTier = 6 THEN engineFactor ← 1.95
   travelSpeed ← 0.05 × 1.12 × engineFactor × 18
   travelTime ← distanceKm ÷ travelSpeed
   predictedFreshness ← 100 - (travelTime × 0.667)
@@ -648,7 +648,7 @@ All durations use simulation seconds; horizontal positions use normalized world 
 | Tutorial reward | 90 shells |
 | Cargo capacity | 1 fish, then +1 per boat tier up to 7 |
 | Boat and cargo upgrade | 60 shells base; six tiers |
-| Engine upgrade | 70 shells base; +11% maximum speed per tier through tier 5; tier 6 reaches 175% of base speed |
+| Engine upgrade | 70 shells base; +11% maximum speed per tier through tier 5; tier 6 reaches 195% of base speed |
 | Engine boost unlock | 300 shells; +35% maximum speed while held |
 | Boost heat and recovery | 8 seconds to full heat; 10 seconds to cool from full; recovers from lockout at 25% heat |
 | Lamp upgrade | 70 shells base; six tiers |

@@ -89,7 +89,7 @@ export const BALANCE = {
   boostRecoveryThreshold: 0.25,
   maxUpgradeTier: 6,
   engineSpeedPerTier: 0.11,
-  maxEngineSpeedMultiplier: 1.75,
+  maxEngineSpeedMultiplier: 1.95,
   maxCargoTier: 7,
   baseCargoSlots: 3,
   maxCargoSlots: 10,
