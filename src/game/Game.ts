@@ -2,8 +2,9 @@ import brindleDockDayUrl from "../assets/dock-brindle-day.jpg";
 import brindleDockNightUrl from "../assets/dock-brindle-night.jpg";
 import gloamDockDayUrl from "../assets/dock-gloam-day.jpg";
 import gloamDockNightUrl from "../assets/dock-gloam-night.jpg";
+import fishAtlasUiUrl from "../assets/fish-atlas-ui.png";
 import wordmarkUrl from "../assets/fshing-wordmark.png";
-import lighthouseIconUrl from "../assets/job-lighthouse-icon.svg";
+import deliverBeaconIconUrl from "../assets/job-deliver-beacon.png";
 import shieldIconUrl from "../assets/job-shield-icon.svg";
 import padlockIconUrl from "../assets/padlock-icon.png";
 import uiButtonUrl from "../assets/ui-button.png";
@@ -544,9 +545,9 @@ export class Game {
             <span class="reward-stamp" aria-label="Reward: ${available.reward} shells"><span class="reward-label">Reward</span><span class="reward-value"><span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${available.reward}</strong></span></span>
           </div>
           <ol class="job-route" aria-label="Job steps">
-            <li><span class="job-route-number" aria-hidden="true">01</span><div class="job-route-copy"><small>Catch</small><span class="ui-icon icon-freshness job-route-icon" aria-hidden="true"></span><strong>${FISH[available.species].name}</strong><span class="job-route-detail">1 required</span></div></li>
+            <li><span class="job-route-number" aria-hidden="true">01</span><div class="job-route-copy"><small>Catch</small>${this.targetFishIcon(available.species)}<strong>${FISH[available.species].name}</strong><span class="job-route-detail">1 required</span></div></li>
             <li><span class="job-route-number" aria-hidden="true">02</span><div class="job-route-copy"><small>Freshness</small><img class="job-route-icon" src="${shieldIconUrl}" alt="" aria-hidden="true" /><strong>Every fish</strong><span class="job-route-detail">${available.minimumFreshness}%+</span></div></li>
-            <li><span class="job-route-number" aria-hidden="true">03</span><div class="job-route-copy"><small>Deliver</small><img class="job-route-icon" src="${lighthouseIconUrl}" alt="" aria-hidden="true" /><strong>${harborById(available.destination).name}</strong></div></li>
+            <li><span class="job-route-number" aria-hidden="true">03</span><div class="job-route-copy"><small>Deliver</small><img class="job-route-icon job-route-deliver-icon" src="${deliverBeaconIconUrl}" alt="" aria-hidden="true" /><strong>${harborById(available.destination).name}</strong></div></li>
           </ol>
           <button class="primary-button mission-button" type="button" data-action="accept-contract" aria-label="Accept contract">
             <span><strong>${isFirstJobOffer ? "Begin the First Voyage" : "Take this job"}</strong></span><b aria-hidden="true">→</b>
@@ -557,9 +558,9 @@ export class Game {
             <span class="card-kicker">${deliverable ? "Ready to hand in" : "Job in progress"}</span>
             <h3>${contract.title}</h3>
             <ol class="job-route" aria-label="Job steps">
-              <li class="${matchingCatch ? "is-complete" : "is-current"}"><span class="job-route-number" aria-hidden="true">${matchingCatch ? "✓" : "01"}</span><div class="job-route-copy"><small>Catch</small><span class="ui-icon icon-freshness job-route-icon" aria-hidden="true"></span><strong>${FISH[contract.species].name}</strong><span class="job-route-detail">1 required</span></div></li>
+              <li class="${matchingCatch ? "is-complete" : "is-current"}"><span class="job-route-number" aria-hidden="true">${matchingCatch ? "✓" : "01"}</span><div class="job-route-copy"><small>Catch</small>${this.targetFishIcon(contract.species)}<strong>${FISH[contract.species].name}</strong><span class="job-route-detail">1 required</span></div></li>
               <li class="${freshCatch ? "is-complete" : matchingCatch ? "is-current" : ""}"><span class="job-route-number" aria-hidden="true">${freshCatch ? "✓" : "02"}</span><div class="job-route-copy"><small>Freshness</small><img class="job-route-icon" src="${shieldIconUrl}" alt="" aria-hidden="true" /><strong>Every fish</strong><span class="job-route-detail">${contract.minimumFreshness}%+</span></div></li>
-              <li class="${deliverable ? "is-current" : ""}"><span class="job-route-number" aria-hidden="true">03</span><div class="job-route-copy"><small>Deliver</small><img class="job-route-icon" src="${lighthouseIconUrl}" alt="" aria-hidden="true" /><strong>${harborById(contract.destination).name}</strong></div></li>
+              <li class="${deliverable ? "is-current" : ""}"><span class="job-route-number" aria-hidden="true">03</span><div class="job-route-copy"><small>Deliver</small><img class="job-route-icon job-route-deliver-icon" src="${deliverBeaconIconUrl}" alt="" aria-hidden="true" /><strong>${harborById(contract.destination).name}</strong></div></li>
             </ol>
             ${contract.destination === harborId
               ? `<button class="primary-button mission-button" type="button" data-action="deliver" ${deliverable ? "" : "disabled"}>${deliverable ? "<span><strong>Complete delivery</strong></span><b aria-hidden=\"true\">→</b>" : "Catch is missing or no longer fresh enough"}</button>`
@@ -623,6 +624,11 @@ export class Game {
     const timeOfDay = nightOpacity >= 0.5 ? "night" : "day";
     const background = DOCK_BACKGROUND_URL[harborId];
     return `data-dock="${harborId}" data-time-of-day="${timeOfDay}" style="--dock-day-background: url(&quot;${background.day}&quot;); --dock-night-background: url(&quot;${background.night}&quot;); --dock-night-opacity: ${nightOpacity}"`;
+  }
+
+  private targetFishIcon(species: FishSpecies): string {
+    const [column, row] = FISH[species].atlasCell;
+    return `<span class="job-route-icon job-route-fish" role="img" aria-label="${FISH[species].name} target fish" style="--fish-atlas-url: url(&quot;${fishAtlasUiUrl}&quot;); --fish-atlas-x: ${column * 50}%; --fish-atlas-y: ${row * 50}%"></span>`;
   }
 
   private upgradeCard(upgrade: UpgradeId, title: string, detail: string): string {

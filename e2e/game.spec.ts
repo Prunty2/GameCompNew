@@ -400,6 +400,7 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   expect(firstPanelHeight).toBeLessThanOrEqual(720);
   await expect(page.locator(".job-route > li")).toHaveCount(3);
   await expect(page.locator(".job-route-icon")).toHaveCount(3);
+  await expect(page.getByRole("img", { name: "Reedfin target fish" })).toBeVisible();
   await expect(page.locator(".job-route")).toContainText("Catch");
   await expect(page.locator(".job-route")).toContainText("Freshness");
   await expect(page.locator(".job-route")).toContainText("Deliver");

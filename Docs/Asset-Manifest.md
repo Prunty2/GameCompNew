@@ -53,6 +53,12 @@ The boat, harbor pier, fish atlas, and world atlas were requested on a uniform `
 - Prompt: “Create one original strict 3 × 3 sprite atlas for FSHING. Use the supplied fish atlas only for the restrained editorial gouache/screen-print treatment and the lake image only for its desaturated teal, cream, ink-navy and sparse amber palette. Put exactly one complete fish in each equal cell with generous padding, strict orthographic side profile facing right, no overlap, and a uniform full-bleed chroma-magenta matte. Row 1: round Reedfin with fan fins; tall Sun Perch with crest; slim Silver Dart with split tail. Row 2: long Needle Pike with pointed snout; heavy Mossback with leaf-like fins; snake-like Lantern Eel with a small lure. Row 3: Gloam Gill with fork tail and eye marking; wide Violet Ray with ribbon tail; armoured Abyss Crown with crowned head and pale sensory eye. Make all nine silhouettes immediately different at gameplay size. No text, labels, borders, grid lines, hook, water, bubbles, plants, scenery, shadows, extra objects, copied characters, or designs from another fishing game.”
 - Originality note: species names, silhouettes, arrangement, palette direction, and prompt were authored specifically for FSHING. The output does not reproduce assets from *Cat Goes Fishing* or another commercial game.
 
+### `fish-atlas-ui.png`
+
+- Runtime role: transparent 3 × 3 derivative of `fish-atlas-v2.png` for species-specific target-fish art in the harbor job route
+- Runtime size: 768 × 768 with authored alpha
+- Processing: the existing atlas's uniform chroma-magenta matte was mechanically removed with a soft chroma key and the result was uniformly downscaled with Lanczos filtering. Fish artwork, cell order, proportions, and colours were not redrawn or rearranged.
+
 ### Animated habitat fish sheets
 
 - Runtime files: `fish-sunward-swim.png`, `fish-mosswater-swim.png`, and `fish-gloam-swim.png`
@@ -172,10 +178,14 @@ The boat, harbor pier, fish atlas, and world atlas were requested on a uniform `
 
 ### Job route icons
 
-- Runtime files: `job-shield-icon.svg` and `job-lighthouse-icon.svg`
+- Runtime files: `job-shield-icon.svg` and `job-deliver-beacon.png`
 - Runtime role: the Freshness and Deliver pictograms in the three-stage harbor job route
-- Source: Phosphor Icons regular `shield-check` and `lighthouse` assets, used under the MIT License and recolored to the menu's amber signal color
-- Presentation: imported as external image assets so the job route uses real icon artwork rather than procedural CSS shapes
+- Freshness source: Phosphor Icons regular `shield-check`, used under the MIT License and recolored to the menu's amber signal color
+- Deliver source size: 1254 × 1254; optimized runtime size: 256 × 256 with authored alpha
+- Deliver generation mode: OpenAI built-in GPT Image 2.0 generation followed by local chroma-key removal and Lanczos downscaling
+- Deliver prompt: “Use case: stylized-concept. Asset type: standalone game UI pictogram for the FSHING browser game. Create one original freshwater harbor delivery beacon: a compact wooden navigation tower with a small roof, warm lantern window, short platform rails, and two restrained water strokes at its base. Bold hand-painted screen-print treatment matching the supplied FSHING menu: warm cream body, safety-orange light and accents, limited deep ink-navy outline, slightly irregular crafted edges, crisp silhouette readable at 50–90 pixels. Front-facing with a very slight three-quarter angle, centered with generous equal padding on a perfectly flat solid #FF00FF chroma-key background. No tile, circle, medallion, label, text, extra objects, boat, fish, shadow, reflection, border, frame, watermark, or checkerboard.”
+- Processing: the flat chroma key was removed with a soft matte and despill. The full generated source is retained as `output/imagegen/job-deliver-beacon-source.png`.
+- Presentation: imported as external image assets so the job route uses real artwork rather than procedural CSS shapes
 
 ## Procedural audio assets
 
