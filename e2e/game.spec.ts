@@ -466,6 +466,10 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await expect(page.locator(".cargo-slot")).toHaveCount(10);
   await expect(page.locator(".cargo-slot:not(.is-locked)")).toHaveCount(3);
   await expect(page.locator(".cargo-slot.is-locked")).toHaveCount(7);
+  const cargoBin = page.getByRole("button", { name: "Remove Reedfin from cargo" });
+  await expect(cargoBin).toBeVisible();
+  await expect(cargoBin.locator("img")).toHaveAttribute("src", /bin-icon/);
+  await expect(cargoBin.locator("img")).toHaveJSProperty("complete", true);
   const cargoPanelBounds = await page.locator(".harbor-panel").boundingBox();
   expect(Math.abs((cargoPanelBounds?.y ?? 0) - (deliveryPanelBounds?.y ?? 0))).toBeLessThanOrEqual(1);
   expect(Math.abs((cargoPanelBounds?.height ?? 0) - (deliveryPanelBounds?.height ?? 0))).toBeLessThanOrEqual(1);
@@ -484,6 +488,11 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await expect(page.getByText("Prediction versus result")).toBeVisible();
   await page.getByRole("button", { name: "Continue at harbor" }).click();
   await expect(page.getByRole("region", { name: "Dock services" })).toHaveCount(0);
+  await page.evaluate(() => window.__FSHING_TEST__?.catchSpecies("sunPerch"));
+  await page.getByRole("button", { name: "Cargo", exact: true }).click();
+  await page.getByRole("button", { name: "Remove Sun Perch from cargo" }).click();
+  await expect(page.locator(".cargo-slot.is-occupied")).toHaveCount(0);
+  await expect(page.locator("#toast")).toContainText("Sun Perch released.");
   const deliveryHubBounds = await page.locator(".harbor-panel").boundingBox();
   await page.getByRole("button", { name: "Services", exact: true }).click();
   await expect(page.getByRole("button", { name: "Services", exact: true })).toBeFocused();

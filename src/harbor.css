@@ -612,22 +612,37 @@
 }
 
 .cargo-release {
-  min-height: 27px;
-  padding: 4px 10px;
+  display: grid;
+  width: 38px;
+  min-width: 38px;
+  height: 38px;
+  padding: 5px;
+  place-items: center;
   border: 1px solid rgb(145 169 176 / 38%);
-  border-radius: 8px;
+  border-radius: 10px;
   background: rgb(4 20 29 / 78%);
   color: var(--menu-paper);
   cursor: pointer;
-  font: inherit;
-  font-size: 0.66rem;
-  font-weight: 800;
+}
+
+.cargo-release img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
 }
 
 .cargo-release:hover,
 .cargo-release:focus-visible {
   border-color: var(--menu-signal);
   outline: none;
+  background: rgb(12 34 43 / 92%);
+}
+
+.cargo-release:focus-visible {
+  outline: 2px solid var(--menu-paper);
+  outline-offset: 2px;
 }
 
 .cargo-slot.is-locked {
@@ -1198,9 +1213,14 @@
     gap: 3px;
   }
 
-  .cargo-slot small,
-  .cargo-release {
+  .cargo-slot small {
     font-size: 0.55rem;
+  }
+
+  .cargo-release {
+    width: 36px;
+    min-width: 36px;
+    height: 36px;
   }
 
   .cargo-slot-copy strong {

@@ -170,6 +170,14 @@ The boat, harbor pier, fish atlas, and world atlas were requested on a uniform `
 - Prompt: “Use case: stylized-concept. Asset type: game UI padlock icon for the FSHING browser game. Create one original closed padlock pictogram for locked cargo inventory slots: front-facing and symmetrical, with a thick rounded shackle, compact rectangular lock body, and one small keyhole. Restrained bold hand-painted screen-print treatment; warm cream main shape, sparse safety-orange keyhole, very limited ink-navy contour detail; crisp silhouette readable at 30–50 pixels. Exactly one centered icon with generous equal padding on a perfectly flat solid #00FF00 chroma-key background. No navy tile, circle, medallion, border, frame, label, text, extra object, shadow, reflection, or watermark.”
 - Processing: The flat chroma key was removed with a soft matte and despill. The full generated source is retained as `output/imagegen/padlock-icon-source.png`; the runtime alpha PNG was reduced to 256 × 256 to avoid shipping unused resolution.
 
+### `bin-icon.png`
+
+- Runtime role: remove/release action on occupied Cargo inventory slots
+- Generated source size: 1254 × 1254; optimized runtime size: 256 × 256 with authored alpha
+- Generation mode: OpenAI built-in GPT Image generation followed by local chroma-key removal and runtime downscaling
+- Prompt: “Use case: stylized-concept. Asset type: game UI bin / trash icon for an occupied cargo-slot removal button in the FSHING browser game. Create one original front-facing rubbish bin pictogram that clearly communicates remove/release cargo: a compact lidded waste bin with two subtle vertical ribs and a small handle, in a restrained bold hand-painted screen-print style. Use a warm cream main shape, sparse safety-orange detail on the lid/handle, and very limited ink-navy contour detail; keep it crisp and readable at 24–40 pixels. Exactly one centered icon with generous equal padding on a perfectly flat solid #00FF00 chroma-key background. Do not use #00FF00 in the icon. No cast shadow, contact shadow, reflection, watermark, text, navy tile, circle, medallion, border, frame, label, extra object, recycling symbol, fish, or checkerboard.”
+- Processing: The border-sampled green matte was removed with a soft alpha ramp and despill. The full generated source is retained as `output/imagegen/bin-icon-source.png`; the runtime alpha PNG was reduced to 256 × 256 to avoid shipping unused resolution.
+
 ## Procedural audio assets
 
 FSHING bundles no external audio files. `src/services/feedbackService.ts` creates the implemented sound and haptic feedback at runtime:
