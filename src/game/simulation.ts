@@ -465,9 +465,6 @@ export function buyUpgrade(simulation: Simulation, upgrade: UpgradeId): boolean 
   if (tier >= upgradeTierCap(upgrade) || simulation.progress.money < cost || !simulation.dockedAt) return false;
   simulation.progress.money -= cost;
   simulation.progress.upgrades[upgrade] += 1;
-  if (upgrade === "line" && !simulation.activeContract && simulation.availableContract) {
-    simulation.availableContract = createAvailableContract(simulation, simulation.dockedAt);
-  }
   simulation.events.push({ type: "upgrade", upgrade });
   return true;
 }
@@ -476,9 +473,6 @@ export function buyPermit(simulation: Simulation): boolean {
   if (!simulation.dockedAt || simulation.progress.outerUnlocked || simulation.progress.money < BALANCE.permitCost) return false;
   simulation.progress.money -= BALANCE.permitCost;
   simulation.progress.outerUnlocked = true;
-  if (!simulation.activeContract && simulation.availableContract) {
-    simulation.availableContract = createAvailableContract(simulation, simulation.dockedAt);
-  }
   simulation.events.push({ type: "permit" });
   return true;
 }
@@ -539,15 +533,7 @@ export function maxFishingDepth(simulation: Simulation): number {
 }
 
 export function upgradeCost(upgrade: UpgradeId, tier: number): number {
-  const costs = BALANCE.upgradeCosts[upgrade];
-  const index = clampInteger(tier, 0, costs.length - 1);
-  return costs[index] ?? costs[0];
-}
-
-export function researchLevel(simulation: Simulation): 1 | 2 | 3 {
-  if (simulation.progress.outerUnlocked && simulation.progress.upgrades.line >= 3) return 3;
-  if (simulation.progress.upgrades.line >= 1) return 2;
-  return 1;
+  return BALANCE.upgradeCosts[upgrade] + Math.max(0, tier) * 55;
 }
 
 export function repairCost(simulation: Simulation): number {
@@ -807,9 +793,7 @@ function createAvailableContract(simulation: Simulation, origin: HarborId): Cont
       && (!spot.requiresPermit || simulation.progress.outerUnlocked);
   });
   if (availableSpecies.length === 0) return null;
-  const frontierDepth = Math.max(...availableSpecies.map((candidate) => FISH[candidate].depthTier));
-  const frontierSpecies = availableSpecies.filter((candidate) => FISH[candidate].depthTier === frontierDepth);
-  const species = frontierSpecies[simulation.progress.completedContracts % frontierSpecies.length];
+  const species = availableSpecies[simulation.progress.completedContracts % availableSpecies.length];
   if (!species) return null;
   return {
     id: `route-${simulation.progress.completedContracts + 1}`,
