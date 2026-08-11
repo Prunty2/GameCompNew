@@ -176,18 +176,18 @@ Each contract defines:
 
 The contract screen must show enough information for the player to judge the quantity, destination, freshness requirement, and reward before travelling. The first season uses a fixed eight-assignment teaching order. Jobs are accepted only at Reedbank and delivered to Beacon Point, reinforcing the outward research voyage and making the return to Reedbank an intentional reset between assignments.
 
-| Order | Assignment focus | Species and site | Maximum order | Freshness at that maximum | Access grant on completion |
+| Order | Assignment focus | Species and site | Maximum order | Freshness at that maximum (engine tier 0) | Access grant on completion |
 | --- | --- | --- | ---: | ---: | --- |
-| 1 | Precise first crossing | Reedfin · Sunward Shoal | 1 | 90% | — |
-| 2 | A second high-freshness silhouette | Sun Perch · Sunward Shoal | 1 | 90% | — |
-| 3 | First grouped sample | Silver Dart · Sunward Shoal | 2 | 85% | Line tier 1 |
+| 1 | Precise first crossing | Reedfin · Sunward Shoal | 1 | 80% | — |
+| 2 | A second high-freshness silhouette | Sun Perch · Sunward Shoal | 1 | 80% | — |
+| 3 | First grouped sample | Silver Dart · Sunward Shoal | 2 | 80% | Line tier 1 |
 | 4 | Entering a new ecosystem | Needle Pike · Mosswater Pool | 3 | 80% | Line tier 2 |
 | 5 | Deeper Mosswater sampling | Mossback · Mosswater Pool | 4 | 75% | — |
 | 6 | Sustained middle-habitat collection | Lantern Eel · Mosswater Pool | 6 | 65% | Line tier 3 and Outer Gloam permit |
 | 7 | Outer-water collection run | Gloam Gill · Outer Gloam | 8 | 55% | Line tier 4 |
 | 8 | Large rare-species season finale | Violet Ray · Outer Gloam | 10 | 50% | Line tier 5 |
 
-An order is capped at the player's unlocked cargo capacity when it is posted, so it can never require more fish than the hold can carry. Cargo investment therefore opens larger, better-paying versions of later assignments without blocking a player who chose other upgrades. The freshness target is derived from actual quantity: 90% for one fish, then five percentage points less for each additional fish down to a 50% floor. This keeps one-fish work demanding and gives large collection runs enough time for repeated catches.
+An order is capped at the player's unlocked cargo capacity when it is posted, so it can never require more fish than the hold can carry. Cargo investment therefore opens larger, better-paying versions of later assignments without blocking a player who chose other upgrades. The freshness target is derived from actual quantity: 90% for one fish, then five percentage points less for each additional fish down to a 50% floor. Until the player improves the engine, that target is capped at 80%; each engine tier raises the cap by five percentage points, reaching the existing 90% maximum at tier 2. This prevents early quests from demanding freshness the starting boat struggles to preserve while allowing upgraded boats to receive stricter, better-paying work.
 
 Quest rewards use one documented calculation instead of unrelated authored amounts: a 34-shell delivery fee plus twice the total specimen value, multiplied by a freshness premium of 1% for each required percentage point above 50%, then rounded to the nearest five shells. A stricter freshness target or a larger order therefore pays more for a clear reason.
 
@@ -382,7 +382,7 @@ The first playable minutes should teach systems through one short delivery:
 3. Follow a marked route to a fishing area.
 4. Drop the line and steer the hook into the requested fish.
 5. Begin the crossing automatically as freshness starts.
-6. Reach Beacon Point, compare predicted with actual freshness, and deliver the order above its strict 90% freshness target.
+6. Reach Beacon Point, compare predicted with actual freshness, and deliver the order above its 80% starting freshness target.
 
 Tutorial prompts should disappear after the action is successfully performed and remain available from a help menu. The title screen uses a zoomed-out, full-bleed lake view with no panel behind its controls. A large wordmark sits slightly above center, followed by one unmistakable Play action and a quieter Settings action; no other content appears on the title screen. The pause menu echoes that simple title composition over the current lake view with a distinctly smaller wordmark, one dominant Resume action, and compact secondary buttons for settings, help, and the title screen. Settings follows the same centered, panel-free composition over the blurred lake: a compact wordmark and heading sit above a two-column instrument grid, while Controls and the amber Done action span the full width. Narrow portrait screens collapse the grid to one column. Opening Settings from the title preserves the title's zoomed-out lake framing while the dimming blur eases in and the controls settle into place; closing lifts the Settings controls away before the title actions settle back into the cleared lake. Returning from Settings to pause preserves the blurred backdrop and uses the same restrained handoff instead of replaying Pause's full off-screen drop. Its Controls submenu keeps that same camera and backdrop. Opening pause quickly blurs the gameplay lake before the menu drops in from above; resuming reverses that sequence before simulation restarts. Only starting from the title and returning to the title use the reusable 280 ms waterline wipe; pause, resume, harbor, and subordinate overlay changes use their own restrained treatments or switch directly. The wipe's translucent deep-teal halves have softly faded moving edges and blur the lake behind them before a thin amber sonar line reveals the destination. It blocks input and simulation while active. Reduced-motion mode removes the wipe, staged movement, and delay. How to play remains available from the harbor and pause menus. The first harbor visit reveals systems in three stages: the player first sees only a guided delivery ticket and must accept it before leaving; accepting the job reveals cargo and freshness information; completing that first delivery reveals upgrades and repairs. Later harbor visits present the current delivery as a three-step job route before cargo or upgrades, with plain-language guidance about the immediate next action. Navigation has no permanent status bar: world markers, a directional arrow, contextual actions, and short messages carry the active objective. Directional objective markers use phase-specific verbs such as Job at, Fish at, Deliver to, Manage cargo, and Upgrade at; the marker, tutorial callout, nearby action, and screen-reader status all derive from the same guidance state. Guidance responds to actual travel direction and proximity, switches from travel to the available action on arrival, rejects spoiled catches as deliverable, and routes a full hold to cargo management. Markers stay fully visible until the final approach, then fade smoothly and clear only when the destination enters interaction range. Cargo details, freshness, damage, money, and upgrades are reviewed in the harbor. Keyboard players can pause with Escape or their configured pause key; the navigation view has no permanent pause button.
 
@@ -663,8 +663,8 @@ All durations use simulation seconds; horizontal positions use normalized world 
 | Camera view width | 0.30 world units |
 | Critical rescue threshold | 100 damage |
 | Freshness lifetime | 150 seconds |
-| Tutorial minimum freshness | 90% |
-| Tutorial reward | 100 shells, derived from the shared quantity-and-freshness formula |
+| Tutorial minimum freshness | 80% before engine upgrades |
+| Tutorial reward | 90 shells, derived from the shared quantity-and-freshness formula |
 | Cargo capacity | 3 fish, then +1 per cargo tier up to 10 |
 | Boat and cargo upgrade | 60 shells base; six tiers |
 | Engine upgrade | 70 shells base; +11% maximum speed per tier; six tiers |

@@ -63,6 +63,8 @@ export const BALANCE = {
   maxSurfaceSpeed: 0.05,
   waterDrag: 0.62,
   freshnessLifetime: 150,
+  baseQuestFreshnessCap: 80,
+  questFreshnessCapPerEngineTier: 5,
   routeDistanceScaleKm: 18,
   routeFreshnessLossPerMinute: 2 / 3,
   safeRouteSpeedMultiplier: 0.92,

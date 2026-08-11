@@ -405,7 +405,7 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await expect(page.locator(".harbor-panel")).toHaveCSS("background-color", "rgba(4, 23, 31, 0.94)");
   await expect(page.locator(".mission-button")).toHaveCSS("border-radius", "14px");
   await expect(page.locator(".job-ticket")).toHaveClass(/is-guided/);
-  const reward = page.getByLabel("Reward: 100 shells");
+  const reward = page.getByLabel("Reward: 90 shells");
   await expect(reward).toBeVisible();
   await expect(reward).toContainText("Reward");
   await expect(reward).not.toContainText("Plus access");
