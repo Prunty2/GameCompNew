@@ -170,6 +170,13 @@ The boat, harbor pier, fish atlas, and world atlas were requested on a uniform `
 - Prompt: “Use case: stylized-concept. Asset type: game UI padlock icon for the FSHING browser game. Create one original closed padlock pictogram for locked cargo inventory slots: front-facing and symmetrical, with a thick rounded shackle, compact rectangular lock body, and one small keyhole. Restrained bold hand-painted screen-print treatment; warm cream main shape, sparse safety-orange keyhole, very limited ink-navy contour detail; crisp silhouette readable at 30–50 pixels. Exactly one centered icon with generous equal padding on a perfectly flat solid #00FF00 chroma-key background. No navy tile, circle, medallion, border, frame, label, text, extra object, shadow, reflection, or watermark.”
 - Processing: The flat chroma key was removed with a soft matte and despill. The full generated source is retained as `output/imagegen/padlock-icon-source.png`; the runtime alpha PNG was reduced to 256 × 256 to avoid shipping unused resolution.
 
+### Job route icons
+
+- Runtime files: `job-shield-icon.svg` and `job-lighthouse-icon.svg`
+- Runtime role: the Freshness and Deliver pictograms in the three-stage harbor job route
+- Source: Phosphor Icons regular `shield-check` and `lighthouse` assets, used under the MIT License and recolored to the menu's amber signal color
+- Presentation: imported as external image assets so the job route uses real icon artwork rather than procedural CSS shapes
+
 ## Procedural audio assets
 
 FSHING bundles no external audio files. `src/services/feedbackService.ts` creates the implemented sound and haptic feedback at runtime:

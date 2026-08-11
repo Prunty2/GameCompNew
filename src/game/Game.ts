@@ -3,6 +3,8 @@ import brindleDockNightUrl from "../assets/dock-brindle-night.jpg";
 import gloamDockDayUrl from "../assets/dock-gloam-day.jpg";
 import gloamDockNightUrl from "../assets/dock-gloam-night.jpg";
 import wordmarkUrl from "../assets/fshing-wordmark.png";
+import lighthouseIconUrl from "../assets/job-lighthouse-icon.svg";
+import shieldIconUrl from "../assets/job-shield-icon.svg";
 import padlockIconUrl from "../assets/padlock-icon.png";
 import uiButtonUrl from "../assets/ui-button.png";
 import uiIconsUrl from "../assets/ui-icons.png";
@@ -543,8 +545,8 @@ export class Game {
           </div>
           <ol class="job-route" aria-label="Job steps">
             <li><span class="job-route-number" aria-hidden="true">01</span><div class="job-route-copy"><small>Catch</small><span class="ui-icon icon-freshness job-route-icon" aria-hidden="true"></span><strong>${FISH[available.species].name}</strong><span class="job-route-detail">1 required</span></div></li>
-            <li><span class="job-route-number" aria-hidden="true">02</span><div class="job-route-copy"><small>Freshness</small><span class="ui-icon icon-time job-route-icon" aria-hidden="true"></span><strong>Every fish</strong><span class="job-route-detail">${available.minimumFreshness}%+</span></div></li>
-            <li><span class="job-route-number" aria-hidden="true">03</span><div class="job-route-copy"><small>Deliver</small><span class="ui-icon icon-objective job-route-icon" aria-hidden="true"></span><strong>${harborById(available.destination).name}</strong></div></li>
+            <li><span class="job-route-number" aria-hidden="true">02</span><div class="job-route-copy"><small>Freshness</small><img class="job-route-icon" src="${shieldIconUrl}" alt="" aria-hidden="true" /><strong>Every fish</strong><span class="job-route-detail">${available.minimumFreshness}%+</span></div></li>
+            <li><span class="job-route-number" aria-hidden="true">03</span><div class="job-route-copy"><small>Deliver</small><img class="job-route-icon" src="${lighthouseIconUrl}" alt="" aria-hidden="true" /><strong>${harborById(available.destination).name}</strong></div></li>
           </ol>
           <button class="primary-button mission-button" type="button" data-action="accept-contract" aria-label="Accept contract">
             <span><strong>${isFirstJobOffer ? "Begin the First Voyage" : "Take this job"}</strong></span><b aria-hidden="true">→</b>
@@ -556,8 +558,8 @@ export class Game {
             <h3>${contract.title}</h3>
             <ol class="job-route" aria-label="Job steps">
               <li class="${matchingCatch ? "is-complete" : "is-current"}"><span class="job-route-number" aria-hidden="true">${matchingCatch ? "✓" : "01"}</span><div class="job-route-copy"><small>Catch</small><span class="ui-icon icon-freshness job-route-icon" aria-hidden="true"></span><strong>${FISH[contract.species].name}</strong><span class="job-route-detail">1 required</span></div></li>
-              <li class="${freshCatch ? "is-complete" : matchingCatch ? "is-current" : ""}"><span class="job-route-number" aria-hidden="true">${freshCatch ? "✓" : "02"}</span><div class="job-route-copy"><small>Freshness</small><span class="ui-icon icon-time job-route-icon" aria-hidden="true"></span><strong>Every fish</strong><span class="job-route-detail">${contract.minimumFreshness}%+</span></div></li>
-              <li class="${deliverable ? "is-current" : ""}"><span class="job-route-number" aria-hidden="true">03</span><div class="job-route-copy"><small>Deliver</small><span class="ui-icon icon-objective job-route-icon" aria-hidden="true"></span><strong>${harborById(contract.destination).name}</strong></div></li>
+              <li class="${freshCatch ? "is-complete" : matchingCatch ? "is-current" : ""}"><span class="job-route-number" aria-hidden="true">${freshCatch ? "✓" : "02"}</span><div class="job-route-copy"><small>Freshness</small><img class="job-route-icon" src="${shieldIconUrl}" alt="" aria-hidden="true" /><strong>Every fish</strong><span class="job-route-detail">${contract.minimumFreshness}%+</span></div></li>
+              <li class="${deliverable ? "is-current" : ""}"><span class="job-route-number" aria-hidden="true">03</span><div class="job-route-copy"><small>Deliver</small><img class="job-route-icon" src="${lighthouseIconUrl}" alt="" aria-hidden="true" /><strong>${harborById(contract.destination).name}</strong></div></li>
             </ol>
             ${contract.destination === harborId
               ? `<button class="primary-button mission-button" type="button" data-action="deliver" ${deliverable ? "" : "disabled"}>${deliverable ? "<span><strong>Complete delivery</strong></span><b aria-hidden=\"true\">→</b>" : "Catch is missing or no longer fresh enough"}</button>`

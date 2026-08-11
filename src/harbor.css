@@ -512,9 +512,11 @@
 }
 
 .harbor-screen.is-first-voyage.is-harbor-delivery .job-route-icon {
+  display: block;
   width: 58px;
   height: 58px;
   margin: 9px 0 4px;
+  object-fit: contain;
 }
 
 .harbor-screen.is-first-voyage.is-harbor-delivery .job-route strong {

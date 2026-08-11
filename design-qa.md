@@ -74,3 +74,27 @@ Each species uses a deterministic movement profile that changes real horizontal 
 ## Final result
 
 passed
+
+---
+
+# Harbor Menu Target — Design QA
+
+## Visual truth and state
+
+- Source visual truth: `/var/folders/hz/w64bxygn6737j0hwh56pl0cw0000gn/T/codex-clipboard-77426b12-21bb-4d8b-a807-a89af80ea928.png`.
+- Intended comparison viewport: 1536 × 804 CSS pixels, matching the visible game area in the supplied 1628 × 966 browser capture.
+- Intended state: Reedbank Harbor Delivery tab with a three-stage available job route.
+
+## Verification evidence
+
+- The focused tutorial delivery browser test passes with the compact panel, three route stages, three route icons, delivery, upgrade purchase, and persistence assertions.
+- The complete browser interaction suite passes: 20 of 20 tests.
+- Type checking, all 72 model tests, and the production build pass.
+
+## Blocker
+
+The Codex in-app browser refused both `localhost` and `127.0.0.1` because its admin-enforced security policy could not be verified. A rendered implementation screenshot therefore could not be captured in the required browser, and the source and implementation could not be placed into a combined comparison image.
+
+## Final result
+
+blocked — implementation and interaction checks pass, but screenshot-to-screenshot fidelity remains unverified.
