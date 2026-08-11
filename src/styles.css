@@ -470,25 +470,24 @@ input:focus-visible {
   left: 50%;
   bottom: max(24px, calc(env(safe-area-inset-bottom) + 12px));
   display: flex;
-  width: min(360px, calc(100% - 48px));
+  width: min(300px, calc(100% - 40px));
   min-width: 0;
-  min-height: 60px;
+  min-height: 52px;
   align-items: center;
   justify-content: center;
-  padding: 12px 58px;
+  padding: 10px 48px;
   border: 0;
   border-radius: 14px;
-  background: var(--menu-signal, var(--orange));
+  background: #ff6a1f;
   color: var(--menu-ink, var(--ink));
   font-family: var(--display-face);
-  font-size: clamp(1rem, 2.3vw, 1.2rem);
+  font-size: clamp(0.92rem, 2.1vw, 1.05rem);
   font-weight: 850;
   letter-spacing: 0.02em;
   line-height: 1;
   box-shadow:
-    0 5px 0 var(--menu-signal-dark, var(--orange-dark)),
-    0 14px 30px rgb(2 15 21 / 30%);
-  backdrop-filter: blur(5px);
+    0 4px 0 #9d3514,
+    0 12px 24px rgb(2 15 21 / 28%);
   transform: translateX(-50%);
   transition: filter 140ms ease, transform 120ms ease, box-shadow 120ms ease;
   pointer-events: auto;
@@ -496,16 +495,16 @@ input:focus-visible {
 
 .context-action:not(.is-fishing-cue)::before {
   position: absolute;
-  left: 17px;
+  left: 14px;
   display: grid;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   place-items: center;
   border-radius: 50%;
   background: rgb(11 38 48 / 13%);
   content: "\2193";
   font-family: system-ui, sans-serif;
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   font-weight: 850;
   line-height: 1;
 }
@@ -557,7 +556,7 @@ input:focus-visible {
 .context-action:active:not(:disabled) {
   transform: translateX(-50%) translateY(3px) scale(0.99);
   box-shadow:
-    0 2px 0 var(--menu-signal-dark, var(--orange-dark)),
+    0 2px 0 #9d3514,
     0 8px 20px rgb(2 15 21 / 24%);
 }
 

@@ -707,7 +707,9 @@ test("dock interaction starts on pointer press", async ({ page }) => {
 
   const dockButton = page.getByRole("button", { name: "Dock · Brindle Harbor" });
   await expect(dockButton).toHaveCSS("background-image", "none");
+  await expect(dockButton).toHaveCSS("background-color", "rgb(255, 106, 31)");
   await expect(dockButton).toHaveCSS("border-radius", "14px");
+  await expect(dockButton).toHaveCSS("width", "300px");
   await dockButton.hover();
   await page.mouse.down();
   await expect(page.getByRole("heading", { name: "Brindle Harbor" })).toBeVisible();
