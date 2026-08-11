@@ -469,9 +469,50 @@ input:focus-visible {
   z-index: 5;
   left: 50%;
   bottom: max(24px, calc(env(safe-area-inset-bottom) + 12px));
-  min-width: 230px;
+  display: flex;
+  width: min(300px, calc(100% - 40px));
+  min-width: 0;
+  min-height: 52px;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 48px;
+  border: 0;
+  border-radius: 14px;
+  background: #ff6a1f;
+  color: var(--menu-ink, var(--ink));
+  font-family: var(--display-face);
+  font-size: clamp(0.92rem, 2.1vw, 1.05rem);
+  font-weight: 850;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  box-shadow:
+    0 4px 0 #9d3514,
+    0 12px 24px rgb(2 15 21 / 28%);
   transform: translateX(-50%);
+  transition: filter 140ms ease, transform 120ms ease, box-shadow 120ms ease;
   pointer-events: auto;
+}
+
+.context-action:not(.is-fishing-cue)::before {
+  position: absolute;
+  left: 14px;
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 50%;
+  background: rgb(11 38 48 / 13%);
+  content: "\2193";
+  font-family: system-ui, sans-serif;
+  font-size: 0.95rem;
+  font-weight: 850;
+  line-height: 1;
+}
+
+.context-action:hover:not(:disabled, .is-fishing-cue),
+.context-action:focus-visible:not(:disabled, .is-fishing-cue) {
+  filter: brightness(1.06) saturate(1.03);
+  transform: translate(-50%, -1px);
 }
 
 .context-action.is-fishing-cue {
@@ -514,6 +555,18 @@ input:focus-visible {
 
 .context-action:active:not(:disabled) {
   transform: translateX(-50%) translateY(3px) scale(0.99);
+  box-shadow:
+    0 2px 0 #9d3514,
+    0 8px 20px rgb(2 15 21 / 24%);
+}
+
+.high-contrast .context-action:not(.is-fishing-cue) {
+  outline: 2px solid #fff;
+  outline-offset: 0;
+}
+
+.reduced-motion .context-action:not(.is-fishing-cue) {
+  transition: none;
 }
 
 .touch-controls {
