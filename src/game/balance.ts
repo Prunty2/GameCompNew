@@ -79,12 +79,7 @@ export const BALANCE = {
   fishingHookHorizontalSpeed: 0.25,
   fishingHookUpSpeed: 0.35,
   fishingHookDownSpeed: 0.25,
-  upgradeCosts: {
-    cargo: [60, 125, 210, 315, 440, 585, 750],
-    engine: [70, 150, 250, 370, 510, 670],
-    lamp: [70, 145, 240, 355, 490, 645],
-    line: [55, 135, 235, 355, 495, 655],
-  },
+  upgradeCosts: { cargo: 60, engine: 70, lamp: 70, line: 55 },
   permitCost: 85,
   boostUnlockCost: 300,
   boostSpeedMultiplier: 1.35,
