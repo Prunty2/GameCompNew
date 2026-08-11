@@ -42,7 +42,11 @@ import {
   fishingViewLayout,
   type FishingViewLayout,
 } from "./fishingPresentation";
-import { fishingReelProgress, fishingReelWriggle } from "./fishingReeling";
+import {
+  fishingReelProgress,
+  fishingReelSchoolOpacity,
+  fishingReelWriggle,
+} from "./fishingReeling";
 import { surfaceFishingCue, surfaceFishPose, type SurfaceFishingCue } from "./fishingSpotEffects";
 import { calculatePanoramaLayout } from "./panorama";
 import {
@@ -226,6 +230,7 @@ export class CanvasRenderer {
       this.renderFishing(simulation, settings, width, height);
     } else {
       delete this.canvas.dataset.fishingDiveProgress;
+      delete this.canvas.dataset.fishingSchoolOpacity;
       delete this.canvas.dataset.fishingSurfaceBlend;
       delete this.canvas.dataset.fishingSpot;
       delete this.canvas.dataset.fishingState;
@@ -464,11 +469,13 @@ export class CanvasRenderer {
     const reelProgress = fishing.reeling
       ? fishingReelProgress(simulation.elapsed, fishing.reeling.hookedAt)
       : 0;
+    const schoolOpacity = fishing.reeling ? fishingReelSchoolOpacity(reelProgress) : 1;
     const diveProgress = fishing.reeling
       ? fishingReelCameraProgress(entryDiveProgress, reelProgress, settings.reducedMotion)
       : entryDiveProgress;
     const layout = fishingViewLayout(height, simulation.progress.upgrades.line, diveProgress);
     this.canvas.dataset.fishingDiveProgress = diveProgress.toFixed(3);
+    this.canvas.dataset.fishingSchoolOpacity = schoolOpacity.toFixed(3);
     this.canvas.dataset.fishingSurfaceBlend = fishing.reeling ? reelProgress.toFixed(3) : "0.000";
     this.canvas.dataset.fishingSpot = spot.id;
     this.canvas.dataset.targetRarity = FISH[targetSpecies].rarity;
@@ -509,7 +516,7 @@ export class CanvasRenderer {
       };
       const reachable = FISH[target.species].depthTier <= simulation.progress.upgrades.line;
       context.save();
-      context.globalAlpha = reachable ? 1 : 0.3;
+      context.globalAlpha = (reachable ? 1 : 0.3) * schoolOpacity;
       context.translate(animatedPoint.x, animatedPoint.y);
       context.rotate(pose.rotation * target.direction);
       context.scale(pose.scaleX, pose.scaleY);
@@ -519,7 +526,10 @@ export class CanvasRenderer {
       this.drawFish(target.species, pose.animationFrame, { x: 0, y: 0 }, target.direction, width, height, settings.highContrast);
       context.restore();
       if (target.species === targetSpecies) {
+        context.save();
+        context.globalAlpha = schoolOpacity;
         this.drawFishingTargetChevron(animatedPoint, target.species, width, height, settings.highContrast);
+        context.restore();
       }
     }
 
@@ -545,6 +555,7 @@ export class CanvasRenderer {
       );
       const fishOffset = fishing.reeling.direction * hookSize * 0.24;
       context.save();
+      context.globalAlpha = 1;
       context.translate(hook.x - fishOffset, hook.y + hookSize * 0.08);
       context.rotate(wriggle * 0.18);
       context.scale(1, 1 + Math.abs(wriggle) * 0.06);

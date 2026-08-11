@@ -367,19 +367,28 @@ test("reels a hooked fish to the boat before securing the catch", async ({ page 
   await expect.poll(async () => Number(await canvas.getAttribute("data-fishing-dive-progress"))).toBeGreaterThan(0.99);
   await page.evaluate(() => window.__FSHING_TEST__?.hookSpecies("reedfin"));
   await expect(canvas).toHaveAttribute("data-fishing-state", "reeling");
-  const reelStartProgress = Number(await canvas.getAttribute("data-fishing-dive-progress"));
-  const surfaceBlendStart = Number(await canvas.getAttribute("data-fishing-surface-blend"));
+  const reelStart = await canvas.evaluate((element) => ({
+    diveProgress: Number(element.getAttribute("data-fishing-dive-progress")),
+    schoolOpacity: Number(element.getAttribute("data-fishing-school-opacity")),
+    surfaceBlend: Number(element.getAttribute("data-fishing-surface-blend")),
+  }));
   await page.waitForTimeout(400);
-  const reelMidpointProgress = Number(await canvas.getAttribute("data-fishing-dive-progress"));
-  const surfaceBlendMidpoint = Number(await canvas.getAttribute("data-fishing-surface-blend"));
-  expect(reelStartProgress).toBeGreaterThan(0.95);
-  expect(reelMidpointProgress).toBeLessThan(reelStartProgress);
-  expect(reelMidpointProgress).toBeGreaterThan(0.25);
-  expect(surfaceBlendStart).toBeLessThan(0.05);
-  expect(surfaceBlendMidpoint).toBeGreaterThan(surfaceBlendStart);
+  const reelMidpoint = await canvas.evaluate((element) => ({
+    diveProgress: Number(element.getAttribute("data-fishing-dive-progress")),
+    schoolOpacity: Number(element.getAttribute("data-fishing-school-opacity")),
+    surfaceBlend: Number(element.getAttribute("data-fishing-surface-blend")),
+  }));
+  expect(reelMidpoint.diveProgress).toBeLessThan(reelStart.diveProgress);
+  expect(reelMidpoint.diveProgress).toBeGreaterThan(0.25);
+  expect(reelMidpoint.surfaceBlend).toBeGreaterThan(reelStart.surfaceBlend);
+  expect(reelMidpoint.schoolOpacity).toBeLessThan(reelStart.schoolOpacity);
+  expect(reelMidpoint.schoolOpacity).toBeGreaterThan(0);
+  expect(reelStart.schoolOpacity + reelStart.surfaceBlend).toBeCloseTo(1, 2);
+  expect(reelMidpoint.schoolOpacity + reelMidpoint.surfaceBlend).toBeCloseTo(1, 2);
   await expect(page.locator(".fishing-controls")).toBeHidden();
   await expect.poll(async () => page.evaluate(() => window.__FSHING_TEST__?.mode())).toBe("cruising");
   await expect(canvas).not.toHaveAttribute("data-fishing-state");
+  await expect(canvas).not.toHaveAttribute("data-fishing-school-opacity");
 });
 
 test("completes the tutorial delivery, buys an upgrade, and persists it", async ({ page }) => {
