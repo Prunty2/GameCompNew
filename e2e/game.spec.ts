@@ -480,9 +480,13 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await page.getByRole("button", { name: "Delivery", exact: true }).click();
   await expect(page.locator(".harbor-content")).toHaveCSS("animation-name", "harbor-page-enter-backward");
   await page.getByRole("button", { name: "Complete delivery" }).click();
-  await expect(page.getByRole("heading", { name: "Delivery analysed" })).toBeVisible();
-  await expect(page.getByText("Prediction versus result")).toBeVisible();
-  await page.getByRole("button", { name: "Continue at harbor" }).click();
+  const deliverySuccess = page.locator("#delivery-success");
+  await expect(deliverySuccess).toBeVisible();
+  await expect(deliverySuccess).toContainText("Delivery Success");
+  await expect(deliverySuccess).toHaveCSS("animation-name", "delivery-success-enter");
+  await expect(page.getByRole("heading", { name: "Gloam Ferry" })).toBeVisible();
+  await page.getByRole("button", { name: "Close delivery success notification" }).click();
+  await expect(deliverySuccess).toBeHidden();
   await expect(page.getByRole("region", { name: "Dock services" })).toHaveCount(0);
   const deliveryHubBounds = await page.locator(".harbor-panel").boundingBox();
   await page.getByRole("button", { name: "Services", exact: true }).click();
@@ -542,8 +546,9 @@ test("delivers a matching catch that was aboard before accepting the contract", 
   await expect(completeDelivery).toBeEnabled();
   await completeDelivery.click();
 
-  await expect(page.getByRole("heading", { name: "Delivery analysed" })).toBeVisible();
-  await page.getByRole("button", { name: "Continue at harbor" }).click();
+  const deliverySuccess = page.locator("#delivery-success");
+  await expect(deliverySuccess).toBeVisible();
+  await expect(deliverySuccess).toBeHidden({ timeout: 5_000 });
   await expect(page.locator(".shell-balance strong")).toHaveText(/^[1-9]\d*$/);
   await expect(page.getByRole("heading", { name: "Harbor Trade" })).toBeVisible();
 });
