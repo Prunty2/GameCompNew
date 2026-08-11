@@ -239,8 +239,8 @@
   display: flex;
   min-width: 0;
   align-items: center;
-  gap: 8px;
-  margin-top: 3px;
+  gap: 10px;
+  margin-top: 6px;
 }
 
 .harbor-screen.is-first-voyage .job-target-fish {
@@ -256,6 +256,111 @@
 
 .harbor-screen.is-first-voyage .job-target strong {
   margin-top: 0;
+}
+
+.harbor-screen.is-first-voyage .job-route {
+  gap: 12px;
+  margin: 22px 0 18px;
+}
+
+.harbor-screen.is-first-voyage .job-route li {
+  min-height: 100px;
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-items: start;
+  gap: 11px;
+  padding: 13px 12px;
+  border: 1px solid rgb(145 169 176 / 24%);
+  border-radius: 8px;
+  background:
+    linear-gradient(90deg, rgb(145 169 176 / 8%), transparent 45%),
+    rgb(247 241 227 / 3%);
+}
+
+.harbor-screen.is-first-voyage .job-route li > .job-step-index {
+  width: 28px;
+  height: 24px;
+  border: 1px solid rgb(145 169 176 / 46%);
+  border-radius: 4px;
+  background: rgb(4 23 31 / 72%);
+  color: var(--menu-fog);
+  font-family: var(--display-face);
+  font-size: 0.62rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.harbor-screen.is-first-voyage .job-route li > div {
+  align-content: start;
+}
+
+.harbor-screen.is-first-voyage .job-route small {
+  color: var(--menu-fog);
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.harbor-screen.is-first-voyage .job-route strong {
+  margin-top: 12px;
+  color: var(--menu-paper);
+  font-size: 1rem;
+  line-height: 1.15;
+  white-space: normal;
+}
+
+.harbor-screen.is-first-voyage .job-target-copy {
+  display: grid;
+  min-width: 0;
+  align-content: center;
+  justify-items: start;
+  gap: 6px;
+}
+
+.harbor-screen.is-first-voyage .job-target-copy strong {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.harbor-screen.is-first-voyage .job-target-requirement {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 4px 7px;
+  border: 1px solid rgb(145 169 176 / 34%);
+  border-radius: 4px;
+  background: rgb(4 23 31 / 68%);
+  color: var(--menu-fog);
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.harbor-screen.is-first-voyage .job-target-requirement b {
+  color: var(--menu-paper);
+  font-family: var(--display-face);
+  font-size: 0.82rem;
+  letter-spacing: 0;
+}
+
+.harbor-screen.is-first-voyage .job-route .is-current {
+  border-color: rgb(238 158 65 / 62%);
+  background:
+    linear-gradient(90deg, rgb(238 158 65 / 10%), transparent 48%),
+    rgb(247 241 227 / 3%);
+}
+
+.harbor-screen.is-first-voyage .job-route .is-current > .job-step-index {
+  border-color: var(--menu-signal);
+  color: var(--menu-signal);
+}
+
+.harbor-screen.is-first-voyage .job-route .is-complete > .job-step-index {
+  border-color: rgb(145 169 176 / 56%);
+  background: rgb(145 169 176 / 18%);
+  color: var(--menu-paper);
 }
 
 .harbor-screen.is-first-voyage.is-first-job-offer .mission-button strong {
@@ -511,45 +616,48 @@
 }
 
 .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-route {
-  gap: 18px;
-  margin: 30px 0 24px;
+  gap: 12px;
+  margin: 24px 0 20px;
 }
 
 .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .harbor-content .job-route li {
-  min-height: 136px;
-  grid-template-columns: 42px minmax(0, 1fr);
-  gap: 14px;
-  padding: 18px 14px;
-  border: 1px solid rgb(145 169 176 / 22%);
-  border-radius: 12px;
-  background: rgb(247 241 227 / 3%);
+  min-height: 104px;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 11px;
+  padding: 13px 12px;
+  border-radius: 8px;
 }
 
 .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-route li:not(:last-child)::after {
-  right: -15px;
-  font-size: 1.15rem;
+  right: -11px;
+  font-size: 0.9rem;
 }
 
 .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .harbor-content .job-route li > span {
-  width: 42px;
-  height: 42px;
-  font-size: 0.8rem;
+  width: 28px;
+  height: 24px;
+  font-size: 0.62rem;
 }
 
 .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-route small {
-  font-size: 0.72rem;
-  letter-spacing: 0.06em;
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
 }
 
 .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-route strong {
-  margin-top: 7px;
-  font-size: 1.08rem;
+  margin-top: 12px;
+  font-size: 1rem;
   white-space: normal;
 }
 
 .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-target-fish {
-  width: 58px;
-  height: 58px;
+  width: 50px;
+  height: 50px;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-target-copy strong {
+  margin: 0;
+  font-size: 1.05rem;
 }
 
 .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .next-step {
@@ -1040,6 +1148,27 @@
     min-height: 48px;
   }
 
+  .harbor-screen.is-first-voyage .job-route,
+  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-route {
+    margin-block: 16px 12px;
+  }
+
+  .harbor-screen.is-first-voyage .job-route li,
+  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .harbor-content .job-route li {
+    min-height: 82px;
+    padding-block: 9px;
+  }
+
+  .harbor-screen.is-first-voyage .job-target-fish,
+  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-target-fish {
+    width: 40px;
+    height: 40px;
+  }
+
+  .harbor-screen.is-first-voyage .job-target {
+    margin-top: 4px;
+  }
+
   .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .service-card {
     min-height: 58px;
     grid-template-columns: 50px minmax(180px, 1fr) 170px 96px;
@@ -1231,17 +1360,19 @@
     margin: 18px 0 14px;
   }
 
+  .harbor-screen.is-first-voyage .job-route li,
   .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .harbor-content .job-route li {
     min-height: 72px;
-    grid-template-columns: 30px minmax(0, 1fr);
+    grid-template-columns: 26px minmax(0, 1fr);
     gap: 8px;
     padding: 9px 8px;
   }
 
+  .harbor-screen.is-first-voyage .job-route li > .job-step-index,
   .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .harbor-content .job-route li > span {
-    width: 30px;
-    height: 30px;
-    font-size: 0.65rem;
+    width: 26px;
+    height: 22px;
+    font-size: 0.58rem;
   }
 
   .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-route li:not(:last-child)::after {
@@ -1253,13 +1384,39 @@
   }
 
   .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-route strong {
-    margin-top: 3px;
+    margin-top: 7px;
     font-size: 0.8rem;
   }
 
+  .harbor-screen.is-first-voyage .job-target-fish,
   .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-target-fish {
-    width: 34px;
-    height: 34px;
+    width: 38px;
+    height: 38px;
+  }
+
+  .harbor-screen.is-first-voyage .job-target {
+    gap: 7px;
+    margin-top: 3px;
+  }
+
+  .harbor-screen.is-first-voyage .job-target-copy {
+    gap: 4px;
+  }
+
+  .harbor-screen.is-first-voyage .job-target-copy strong,
+  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-target-copy strong {
+    margin: 0;
+    font-size: 0.82rem;
+  }
+
+  .harbor-screen.is-first-voyage .job-target-requirement {
+    gap: 4px;
+    padding: 3px 5px;
+    font-size: 0.5rem;
+  }
+
+  .harbor-screen.is-first-voyage .job-target-requirement b {
+    font-size: 0.68rem;
   }
 
   .cargo-inventory-heading {
