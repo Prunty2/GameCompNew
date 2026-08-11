@@ -374,6 +374,7 @@ test("reels a hooked fish to the boat before securing the catch", async ({ page 
       diveProgress: number;
       schoolOpacity: number;
       surfaceBlend: number;
+      surfaceSpriteOpacity: number;
     };
     let firstSample: ReelSample | null = null;
     const startedAt = performance.now();
@@ -384,6 +385,7 @@ test("reels a hooked fish to the boat before securing the catch", async ({ page 
             diveProgress: Number(element.getAttribute("data-fishing-dive-progress")),
             schoolOpacity: Number(element.getAttribute("data-fishing-school-opacity")),
             surfaceBlend: Number(element.getAttribute("data-fishing-surface-blend")),
+            surfaceSpriteOpacity: Number(element.getAttribute("data-fishing-surface-sprite-opacity")),
           };
           firstSample ??= sample;
           if (sample.surfaceBlend >= firstSample.surfaceBlend + 0.05) {
@@ -404,12 +406,16 @@ test("reels a hooked fish to the boat before securing the catch", async ({ page 
   expect(reelMidpoint.surfaceBlend).toBeGreaterThan(reelStart.surfaceBlend);
   expect(reelMidpoint.schoolOpacity).toBeLessThan(reelStart.schoolOpacity);
   expect(reelMidpoint.schoolOpacity).toBeGreaterThan(0);
+  expect(reelMidpoint.surfaceSpriteOpacity).toBeGreaterThan(reelStart.surfaceSpriteOpacity);
   expect(reelStart.schoolOpacity + reelStart.surfaceBlend).toBeCloseTo(1, 2);
   expect(reelMidpoint.schoolOpacity + reelMidpoint.surfaceBlend).toBeCloseTo(1, 2);
+  expect(reelStart.surfaceSpriteOpacity).toBeCloseTo(reelStart.surfaceBlend, 2);
+  expect(reelMidpoint.surfaceSpriteOpacity).toBeCloseTo(reelMidpoint.surfaceBlend, 2);
   await expect(page.locator(".fishing-controls")).toBeHidden();
   await expect.poll(async () => page.evaluate(() => window.__FSHING_TEST__?.mode())).toBe("cruising");
   await expect(canvas).not.toHaveAttribute("data-fishing-state");
   await expect(canvas).not.toHaveAttribute("data-fishing-school-opacity");
+  await expect(canvas).not.toHaveAttribute("data-fishing-surface-sprite-opacity");
 });
 
 test("completes the tutorial delivery, buys an upgrade, and persists it", async ({ page }) => {

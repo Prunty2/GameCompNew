@@ -231,6 +231,7 @@ export class CanvasRenderer {
     } else {
       delete this.canvas.dataset.fishingDiveProgress;
       delete this.canvas.dataset.fishingSchoolOpacity;
+      delete this.canvas.dataset.fishingSurfaceSpriteOpacity;
       delete this.canvas.dataset.fishingSurfaceBlend;
       delete this.canvas.dataset.fishingSpot;
       delete this.canvas.dataset.fishingState;
@@ -278,6 +279,7 @@ export class CanvasRenderer {
         height,
         simulation.elapsed,
         settings,
+        1,
       );
     }
 
@@ -301,6 +303,7 @@ export class CanvasRenderer {
         elapsed: simulation.elapsed,
         reducedMotion: settings.reducedMotion,
         highContrast: settings.highContrast,
+        opacity: 1,
       });
       if (cue.hookVisibility > 0) {
         activeFishingCue = { cue, x };
@@ -315,11 +318,12 @@ export class CanvasRenderer {
         activeFishingCue.cue.hookVisibility,
         simulation.elapsed,
         settings,
+        1,
       );
       this.interactionAnchor = { x: activeFishingCue.x, y: hookY };
     }
 
-    this.drawObjective(simulation, camera, width, height, settings);
+    this.drawObjective(simulation, camera, width, height, settings, 1);
     this.drawWeather(simulation, camera, width, height, settings);
 
   }
@@ -333,6 +337,7 @@ export class CanvasRenderer {
     viewportHeight: number,
     elapsed: number,
     settings: RenderSettings,
+    opacity: number,
   ): void {
     const art = this.art;
     if (!art) return;
@@ -347,6 +352,7 @@ export class CanvasRenderer {
       : x + outboardOverlap - pierWidth / 2;
 
     this.context.save();
+    this.context.globalAlpha *= opacity;
     if (fromRightShore) {
       this.context.translate(x - outboardOverlap, 0);
       this.context.scale(-1, 1);
@@ -366,6 +372,7 @@ export class CanvasRenderer {
       reducedMotion: settings.reducedMotion,
       highContrast: settings.highContrast,
       seed: fromRightShore ? 2.4 : 0.7,
+      opacity,
     });
   }
 
@@ -380,6 +387,7 @@ export class CanvasRenderer {
     elapsed: number;
     reducedMotion: boolean;
     highContrast: boolean;
+    opacity: number;
   }): void {
     const { context } = this;
     const shoalWidth = clamp(options.height * 0.55, 250, 480);
@@ -393,7 +401,7 @@ export class CanvasRenderer {
       const lensHeight = Math.min(options.height - options.waterline + 28, shoalDepth * 1.32);
       context.save();
       context.globalCompositeOperation = "screen";
-      context.globalAlpha = lensStrength * (options.highContrast ? 0.96 : 0.84);
+      context.globalAlpha = lensStrength * (options.highContrast ? 0.96 : 0.84) * options.opacity;
       context.drawImage(
         art.polarizedLens,
         options.x - lensWidth / 2,
@@ -415,7 +423,8 @@ export class CanvasRenderer {
       context.save();
       context.globalAlpha = options.cue.fishVisibility
         * (options.locked ? 0.58 : 1)
-        * (options.highContrast ? 1.28 : 1);
+        * (options.highContrast ? 1.28 : 1)
+        * options.opacity;
       context.translate(fishX, fishY);
       context.scale(pose.direction, 1);
       this.drawSurfaceFishingCueCell(column, row, 0, 0, cellWidth, cellHeight);
@@ -429,6 +438,7 @@ export class CanvasRenderer {
     visibility: number,
     elapsed: number,
     settings: RenderSettings,
+    opacity: number,
   ): void {
     const { context } = this;
     const pulse = settings.reducedMotion ? 0 : Math.sin(elapsed * 4) * 2;
@@ -436,7 +446,7 @@ export class CanvasRenderer {
     const cueWidth = radius * 2.3;
 
     context.save();
-    context.globalAlpha = visibility;
+    context.globalAlpha = visibility * opacity;
     context.shadowColor = settings.highContrast ? "rgba(255, 255, 255, 0.72)" : "rgba(232, 164, 77, 0.58)";
     context.shadowBlur = settings.highContrast ? 14 : 18;
     const cueHeight = cueWidth * 4 / 3;
@@ -476,6 +486,7 @@ export class CanvasRenderer {
     const layout = fishingViewLayout(height, simulation.progress.upgrades.line, diveProgress);
     this.canvas.dataset.fishingDiveProgress = diveProgress.toFixed(3);
     this.canvas.dataset.fishingSchoolOpacity = schoolOpacity.toFixed(3);
+    this.canvas.dataset.fishingSurfaceSpriteOpacity = reelProgress.toFixed(3);
     this.canvas.dataset.fishingSurfaceBlend = fishing.reeling ? reelProgress.toFixed(3) : "0.000";
     this.canvas.dataset.fishingSpot = spot.id;
     this.canvas.dataset.targetRarity = FISH[targetSpecies].rarity;
@@ -704,7 +715,76 @@ export class CanvasRenderer {
     context.restore();
 
     const surfaceLayer = captureSurfaceLayer(this.canvas, this.surfaceLayer);
+    if (surfaceBlend > 0) {
+      for (const harbor of HARBORS) {
+        const x = worldToScreenX(harbor.x, camera, width);
+        if (!isNearScreen(x, width, 540)) continue;
+        this.drawHarborPier(
+          x,
+          surfaceY,
+          harbor.id === "gloam",
+          surfaceLayer,
+          width,
+          height,
+          simulation.elapsed,
+          settings,
+          surfaceBlend,
+        );
+      }
+    }
+
     this.drawBoat(simulation, camera, width, height, surfaceY, surfaceLayer, settings, motionDelta);
+
+    let activeFishingCue: { cue: SurfaceFishingCue; x: number } | null = null;
+    if (surfaceBlend > 0) {
+      for (const [spotIndex, spot] of FISHING_SPOTS.entries()) {
+        const x = worldToScreenX(spot.x, camera, width);
+        if (!isNearScreen(x, width, 260)) continue;
+        const permitLocked = spot.requiresPermit && !simulation.progress.outerUnlocked;
+        const depthLocked = spot.requiredDepthTier > simulation.progress.upgrades.line;
+        const cue = surfaceFishingCue(simulation.boat.x, spot.x, BALANCE.fishingRadius);
+        this.drawSurfaceFishingGround({
+          spotIndex,
+          cue,
+          locked: permitLocked || depthLocked,
+          x,
+          waterline: surfaceY,
+          width,
+          height,
+          elapsed: simulation.elapsed,
+          reducedMotion: settings.reducedMotion,
+          highContrast: settings.highContrast,
+          opacity: surfaceBlend,
+        });
+        if (cue.hookVisibility > 0) activeFishingCue = { cue, x };
+      }
+
+      if (activeFishingCue) {
+        const hookY = surfaceY - clamp(height * 0.22, 118, 220) - SURFACE_HOOK_RAISE_PX;
+        this.drawSurfaceHookCue(
+          activeFishingCue.x,
+          hookY,
+          activeFishingCue.cue.hookVisibility,
+          simulation.elapsed,
+          settings,
+          surfaceBlend,
+        );
+      }
+
+      const surfaceSimulation: Simulation = simulation.fishing?.reeling
+        ? {
+            ...simulation,
+            cargo: [
+              ...simulation.cargo,
+              { species: simulation.fishing.reeling.species, freshness: 100 },
+            ],
+            mode: "cruising",
+            fishing: null,
+          }
+        : simulation;
+      this.drawObjective(surfaceSimulation, camera, width, height, settings, surfaceBlend);
+    }
+
     context.save();
     context.strokeStyle = settings.highContrast ? "rgba(255, 255, 255, 0.88)" : "rgba(244, 230, 197, 0.72)";
     context.lineWidth = settings.highContrast ? 3 : 2;
@@ -974,7 +1054,9 @@ export class CanvasRenderer {
     width: number,
     height: number,
     settings: RenderSettings,
+    opacityMultiplier: number,
   ): void {
+    if (opacityMultiplier <= 0) return;
     const goal = navigationGuidance(simulation);
     const distance = Math.abs(goal.point.x - simulation.boat.x);
     const opacity = objectiveIndicatorOpacity(distance, BALANCE.fishingRadius);
@@ -982,7 +1064,7 @@ export class CanvasRenderer {
     const x = worldToScreenX(goal.point.x, camera, width);
     const { context } = this;
     context.save();
-    context.globalAlpha = opacity;
+    context.globalAlpha = opacity * opacityMultiplier;
     context.font = '700 16px "Avenir Next Condensed", "Arial Narrow", sans-serif';
     const layout = objectiveIndicatorLayout(x, width, height, context.measureText(goal.label.toUpperCase()).width);
     const pulse = settings.reducedMotion ? 0 : (Math.sin(simulation.elapsed * 3.2) + 1) / 2;
@@ -999,13 +1081,13 @@ export class CanvasRenderer {
     context.stroke();
 
     context.shadowColor = "transparent";
-    context.globalAlpha = opacity * (0.18 + pulse * 0.18);
+    context.globalAlpha = opacity * opacityMultiplier * (0.18 + pulse * 0.18);
     context.strokeStyle = "#ffd67d";
     context.lineWidth = 3;
     context.beginPath();
     context.arc(layout.markerX, layout.markerY, 28 + pulse * 3, 0, Math.PI * 2);
     context.stroke();
-    context.globalAlpha = opacity;
+    context.globalAlpha = opacity * opacityMultiplier;
 
     context.fillStyle = settings.highContrast ? "#f6a83f" : "#d77f2f";
     context.strokeStyle = "#fff1c7";
