@@ -119,6 +119,7 @@ CATCH(species)
 START_CROSSING(contract, engineTier)
   distanceKm ← ABS(destinationHarborX - catchSiteX) × 18
   engineFactor ← 1 + (engineTier × 0.11)
+  IF engineTier = 6 THEN engineFactor ← 1.75
   travelSpeed ← 0.05 × 1.12 × engineFactor × 18
   travelTime ← distanceKm ÷ travelSpeed
   predictedFreshness ← 100 - (travelTime × 0.667)
@@ -216,7 +217,7 @@ The boat uses direct horizontal side-scrolling movement:
 - Hold left or right to apply thrust in that direction
 - Releasing thrust allows short, readable momentum before water drag slows the boat
 - Brake reduces speed quickly without instantly snapping the boat to a stop
-- Once purchased, holding boost overclocks the engine to 133% of its current maximum speed while filling an eight-second heat meter. Releasing boost cools the meter over ten seconds. Reaching full heat safely locks boost until the meter cools to 25%, preserving DREDGE's readable risk-and-recovery cadence without copying its engine-damage or panic penalties. While boost is active, the surface camera eases from a 0.30 to 0.354 world-unit view width over a clearly visible pull rather than snapping, so more of the route enters frame and the speed change reads beyond the wake effect. The boat, its steam, wake, and boost trail scale continuously with the live view width, reaching roughly 85% of their normal screen size at the widest view. The camera and boat ease back together after release; reduced-motion mode keeps the normal fixed view width and size.
+- Once purchased, holding boost overclocks the engine to 135% of its current maximum speed while filling an eight-second heat meter. Releasing boost cools the meter over ten seconds. Reaching full heat safely locks boost until the meter cools to 25%, preserving DREDGE's readable risk-and-recovery cadence without copying its engine-damage or panic penalties. While boost is active, the surface camera eases from a 0.30 to 0.354 world-unit view width over a clearly visible pull rather than snapping, so more of the route enters frame and the speed change reads beyond the wake effect. The boat, its steam, wake, and boost trail scale continuously with the live view width, reaching roughly 85% of their normal screen size at the widest view. The camera and boat ease back together after release; reduced-motion mode keeps the normal fixed view width and size.
 - The boat faces its current travel direction and uses restrained bob and tilt so motion remains calm and readable
 - Boat movement stays on the open horizontal surface without fixed collision obstacles
 
@@ -286,7 +287,7 @@ Money is earned primarily from completed deliveries and spent on permanent impro
 
 - **Boat and cargo:** The hold starts with 3 slots. Seven cargo tiers unlock one slot each to a maximum of 10; the vessel grows through named classes, from the starter skiff to a lakebreaker.
 - **Engine speed:** Reach fishing areas and destinations before fish spoil.
-- **Engine boost:** A one-time 300-shell overclock unlock adds a temporary 33% speed increase governed by heat and passive cooling.
+- **Engine boost:** A one-time 300-shell overclock unlock adds a temporary 35% speed increase governed by heat and passive cooling.
 - **Lights:** See landmarks and resist nighttime visibility penalties.
 - **Line depth:** Reach progressively deeper fish and new underwater color zones.
 - **Region access:** Purchase permits or equipment needed to enter new waters.
@@ -647,8 +648,8 @@ All durations use simulation seconds; horizontal positions use normalized world 
 | Tutorial reward | 90 shells |
 | Cargo capacity | 1 fish, then +1 per boat tier up to 7 |
 | Boat and cargo upgrade | 60 shells base; six tiers |
-| Engine upgrade | 70 shells base; +11% maximum speed per tier; six tiers |
-| Engine boost unlock | 300 shells; +33% maximum speed while held |
+| Engine upgrade | 70 shells base; +11% maximum speed per tier through tier 5; tier 6 reaches 175% of base speed |
+| Engine boost unlock | 300 shells; +35% maximum speed while held |
 | Boost heat and recovery | 8 seconds to full heat; 10 seconds to cool from full; recovers from lockout at 25% heat |
 | Lamp upgrade | 70 shells base; six tiers |
 | Line-depth upgrade | 55 shells base; six tiers unlock progressively deeper water |
