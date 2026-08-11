@@ -703,8 +703,9 @@ function updateFishing(simulation: Simulation, input: InputState, dt: number): v
     }
     return;
   }
-  fishing.hook.x = clamp(fishing.hook.x + input.hookX * BALANCE.fishingHookSpeed * dt, 0.07, 0.93);
-  fishing.hook.y = clamp(fishing.hook.y + input.hookY * BALANCE.fishingHookSpeed * dt, 0.07, maxFishingDepth(simulation));
+  const verticalSpeed = input.hookY < 0 ? BALANCE.fishingHookUpSpeed : BALANCE.fishingHookDownSpeed;
+  fishing.hook.x = clamp(fishing.hook.x + input.hookX * BALANCE.fishingHookHorizontalSpeed * dt, 0.07, 0.93);
+  fishing.hook.y = clamp(fishing.hook.y + input.hookY * verticalSpeed * dt, 0.07, maxFishingDepth(simulation));
   for (const [targetIndex, target] of fishing.targets.entries()) {
     const motion = fishingSpeciesMotion(target.species, simulation.elapsed, target.phase);
     target.x += target.speed * motion.horizontalMultiplier * target.direction * dt;
