@@ -76,7 +76,7 @@ export const BALANCE = {
   dockRadius: 0.027,
   fishingRadius: 0.027,
   interactionMaxSpeed: 0.026,
-  fishingHookSpeed: 0.34,
+  fishingHookSpeed: 0.17,
   upgradeCosts: { cargo: 60, engine: 70, lamp: 70, line: 55 },
   permitCost: 85,
   boostUnlockCost: 300,
