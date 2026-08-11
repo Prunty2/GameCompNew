@@ -28,6 +28,7 @@ import {
   nightVisualIntensity,
   recordSurvey,
   releaseCargo,
+  researchLevel,
   resolveCatch,
   shouldShowNightIndicator,
   startFishing,
@@ -35,6 +36,7 @@ import {
   undock,
   unlockBoostForTesting,
   updateSimulation,
+  upgradeCost,
   type InputState,
 } from "../game/simulation";
 import { estimateRoute } from "../game/stem";
@@ -441,6 +443,23 @@ describe("FSHING side-on simulation", () => {
     expect(boatClassAt(simulation.progress.upgrades.cargo)).toBe("Lakebreaker");
     expect(buyUpgrade(simulation, "cargo")).toBe(false);
     expect(FISHING_SPOTS).toHaveLength(3);
+  });
+
+  test("opens a distinct second research level with frontier fish and steeper build costs", () => {
+    const simulation = createSimulation(1, { money: 1_000, completedContracts: 1 });
+    expect(researchLevel(simulation)).toBe(1);
+    expect(simulation.availableContract?.species).toBe("sunPerch");
+
+    expect(buyUpgrade(simulation, "line")).toBe(true);
+    expect(researchLevel(simulation)).toBe(2);
+    expect(simulation.availableContract).toMatchObject({
+      species: "needlePike",
+      spot: "mosswaterPool",
+    });
+    expect(upgradeCost("line", 0)).toBe(55);
+    expect(upgradeCost("line", 1)).toBe(135);
+    expect(upgradeCost("engine", 4)).toBe(510);
+    expect(upgradeCost("cargo", 6)).toBe(750);
   });
 
   test("rescues at critical damage without making progress unrecoverable", () => {
