@@ -365,21 +365,57 @@ test("reels a hooked fish to the boat before securing the catch", async ({ page 
 
   const canvas = page.locator("#game-canvas");
   await expect.poll(async () => Number(await canvas.getAttribute("data-fishing-dive-progress"))).toBeGreaterThan(0.99);
-  await page.evaluate(() => window.__FSHING_TEST__?.hookSpecies("reedfin"));
-  await expect(canvas).toHaveAttribute("data-fishing-state", "reeling");
-  const reelStartProgress = Number(await canvas.getAttribute("data-fishing-dive-progress"));
-  const surfaceBlendStart = Number(await canvas.getAttribute("data-fishing-surface-blend"));
-  await page.waitForTimeout(400);
-  const reelMidpointProgress = Number(await canvas.getAttribute("data-fishing-dive-progress"));
-  const surfaceBlendMidpoint = Number(await canvas.getAttribute("data-fishing-surface-blend"));
-  expect(reelStartProgress).toBeGreaterThan(0.95);
-  expect(reelMidpointProgress).toBeLessThan(reelStartProgress);
-  expect(reelMidpointProgress).toBeGreaterThan(0.25);
-  expect(surfaceBlendStart).toBeLessThan(0.05);
-  expect(surfaceBlendMidpoint).toBeGreaterThan(surfaceBlendStart);
+  const [reelStart, reelMidpoint] = await page.evaluate(async () => {
+    const element = document.querySelector<HTMLCanvasElement>("#game-canvas");
+    if (!element) throw new Error("Expected the game canvas.");
+    window.__FSHING_TEST__?.hookSpecies("reedfin");
+
+    type ReelSample = {
+      diveProgress: number;
+      schoolOpacity: number;
+      surfaceBlend: number;
+      surfaceSpriteOpacity: number;
+    };
+    let firstSample: ReelSample | null = null;
+    const startedAt = performance.now();
+    return new Promise<[ReelSample, ReelSample]>((resolve, reject) => {
+      const sampleFrame = (): void => {
+        if (element.dataset.fishingState === "reeling") {
+          const sample = {
+            diveProgress: Number(element.getAttribute("data-fishing-dive-progress")),
+            schoolOpacity: Number(element.getAttribute("data-fishing-school-opacity")),
+            surfaceBlend: Number(element.getAttribute("data-fishing-surface-blend")),
+            surfaceSpriteOpacity: Number(element.getAttribute("data-fishing-surface-sprite-opacity")),
+          };
+          firstSample ??= sample;
+          if (sample.surfaceBlend >= firstSample.surfaceBlend + 0.05) {
+            resolve([firstSample, sample]);
+            return;
+          }
+        }
+        if (performance.now() - startedAt >= 5_000) {
+          reject(new Error("Reel transition did not produce two distinct frames."));
+          return;
+        }
+        requestAnimationFrame(sampleFrame);
+      };
+      requestAnimationFrame(sampleFrame);
+    });
+  });
+  expect(reelMidpoint.diveProgress).toBeLessThan(reelStart.diveProgress);
+  expect(reelMidpoint.surfaceBlend).toBeGreaterThan(reelStart.surfaceBlend);
+  expect(reelMidpoint.schoolOpacity).toBeLessThan(reelStart.schoolOpacity);
+  expect(reelMidpoint.schoolOpacity).toBeGreaterThan(0);
+  expect(reelMidpoint.surfaceSpriteOpacity).toBeGreaterThan(reelStart.surfaceSpriteOpacity);
+  expect(reelStart.schoolOpacity + reelStart.surfaceBlend).toBeCloseTo(1, 2);
+  expect(reelMidpoint.schoolOpacity + reelMidpoint.surfaceBlend).toBeCloseTo(1, 2);
+  expect(reelStart.surfaceSpriteOpacity).toBeCloseTo(reelStart.surfaceBlend, 2);
+  expect(reelMidpoint.surfaceSpriteOpacity).toBeCloseTo(reelMidpoint.surfaceBlend, 2);
   await expect(page.locator(".fishing-controls")).toBeHidden();
   await expect.poll(async () => page.evaluate(() => window.__FSHING_TEST__?.mode())).toBe("cruising");
   await expect(canvas).not.toHaveAttribute("data-fishing-state");
+  await expect(canvas).not.toHaveAttribute("data-fishing-school-opacity");
+  await expect(canvas).not.toHaveAttribute("data-fishing-surface-sprite-opacity");
 });
 
 test("completes the tutorial delivery, buys an upgrade, and persists it", async ({ page }) => {

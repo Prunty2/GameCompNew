@@ -5,6 +5,10 @@ export function fishingReelProgress(elapsed: number, hookedAt: number): number {
   return linear * linear * (3 - 2 * linear);
 }
 
+export function fishingReelSchoolOpacity(reelProgress: number): number {
+  return 1 - clamp(reelProgress, 0, 1);
+}
+
 export function fishingReelWriggle(
   elapsed: number,
   hookedAt: number,
