@@ -1,5 +1,6 @@
 import brindleDockDayUrl from "../assets/dock-brindle-day.jpg";
 import brindleDockNightUrl from "../assets/dock-brindle-night.jpg";
+import binIconUrl from "../assets/bin-icon.png";
 import gloamDockDayUrl from "../assets/dock-gloam-day.jpg";
 import gloamDockNightUrl from "../assets/dock-gloam-night.jpg";
 import wordmarkUrl from "../assets/fshing-wordmark.png";
@@ -51,6 +52,7 @@ import {
   navigationGuidance,
   nightVisualIntensity,
   releaseCargo,
+  restoreCargo,
   resolveCatch,
   shouldShowNightIndicator,
   startFishing,
@@ -59,6 +61,7 @@ import {
   unlockBoostForTesting,
   updateSimulation,
   upgradeCost,
+  type CargoItem,
   type Simulation,
   type SimulationEvent,
 } from "./simulation";
@@ -136,6 +139,8 @@ export class Game {
   private pauseTransitionTimer: number | undefined;
   private settingsTransitionTimer: number | undefined;
   private cargoUpgradeTransitionTimer: number | undefined;
+  private cargoReleaseTimer: number | undefined;
+  private pendingCargoRelease: { item: CargoItem; index: number } | null = null;
   private sceneTransitioning = false;
   private sceneTransitionTarget: OverlayScreen | undefined;
   private queuedOverlay: { next: OverlayScreen; useSceneTransition: boolean } | null = null;
@@ -149,6 +154,8 @@ export class Game {
     preloadImage(brindleDockNightUrl),
     preloadImage(gloamDockDayUrl),
     preloadImage(gloamDockNightUrl),
+    preloadImage(binIconUrl),
+    preloadImage(padlockIconUrl),
     preloadImage(wordmarkUrl),
     preloadImage(uiButtonUrl),
     preloadImage(uiIconsUrl),
@@ -250,7 +257,7 @@ export class Game {
           <span class="tutorial-label" aria-hidden="true">Next</span>
           <span class="tutorial-message" aria-live="polite"></span>
         </button>
-        <output class="toast" id="toast" aria-live="polite"></output>
+        <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
         <section class="delivery-success" id="delivery-success" role="status" aria-live="polite" aria-atomic="true" hidden>
           <span class="delivery-success-seal" aria-hidden="true">✓</span>
           <strong>Delivery Success</strong>
@@ -381,7 +388,7 @@ export class Game {
           : "Boost unlocked. Hold Shift while sailing.");
         break;
       case "released":
-        this.showToast(`${FISH[event.species].name} released.`);
+        this.feedback.cue("cast");
         break;
       case "season-complete":
         this.seasonReportQueued = true;
@@ -576,7 +583,7 @@ export class Game {
       const item = this.simulation.cargo[index];
       const slotNumber = String(index + 1).padStart(2, "0");
       if (item) {
-        return `<article class="cargo-slot is-occupied" aria-label="Cargo slot ${index + 1}: ${FISH[item.species].name}, ${Math.ceil(item.freshness)}% fresh"><span class="cargo-slot-number">${slotNumber}</span><span class="ui-icon icon-freshness cargo-fish-icon" aria-hidden="true"></span><div class="cargo-slot-copy"><strong>${FISH[item.species].name}</strong><small>${Math.ceil(item.freshness)}% fresh</small></div><button class="cargo-release" type="button" data-action="release" data-index="${index}" aria-label="Release ${FISH[item.species].name}">Release</button></article>`;
+        return `<article class="cargo-slot is-occupied" aria-label="Cargo slot ${index + 1}: ${FISH[item.species].name}, ${Math.ceil(item.freshness)}% fresh"><span class="cargo-slot-number">${slotNumber}</span><span class="ui-icon icon-freshness cargo-fish-icon" aria-hidden="true"></span><div class="cargo-slot-copy"><strong>${FISH[item.species].name}</strong><small>${Math.ceil(item.freshness)}% fresh</small></div><button class="cargo-release" type="button" data-action="release" data-index="${index}" aria-label="Release ${FISH[item.species].name} from cargo"><span class="cargo-release-tooltip" aria-hidden="true">Release</span><span class="cargo-release-art" aria-hidden="true"><img class="cargo-bin-body" src="${binIconUrl}" alt="" /><img class="cargo-bin-lid" src="${binIconUrl}" alt="" /></span></button></article>`;
       }
       if (index < availableCargoSlots) {
         return `<div class="cargo-slot is-empty" aria-label="Cargo slot ${index + 1}: empty"><span class="cargo-slot-number">${slotNumber}</span><span class="ui-icon icon-cargo" aria-hidden="true"></span><small>Empty</small></div>`;
@@ -954,12 +961,69 @@ export class Game {
   }
 
   private showToast(message: string): void {
-    const toast = this.uiRoot.querySelector<HTMLOutputElement>("#toast");
+    const toast = this.uiRoot.querySelector<HTMLElement>("#toast");
     if (!toast) return;
     window.clearTimeout(this.toastTimer);
+    this.pendingCargoRelease = null;
+    toast.classList.remove("has-action");
     toast.textContent = message;
     toast.classList.add("is-visible");
     this.toastTimer = window.setTimeout(() => toast.classList.remove("is-visible"), this.save.settings.reducedMotion ? 4_500 : 3_200);
+  }
+
+  private showCargoReleaseToast(species: FishSpecies, focusUndo: boolean): void {
+    const toast = this.uiRoot.querySelector<HTMLElement>("#toast");
+    if (!toast) return;
+    window.clearTimeout(this.toastTimer);
+    const message = document.createElement("span");
+    message.textContent = `${FISH[species].name} released to the lake.`;
+    const undo = document.createElement("button");
+    undo.className = "toast-undo";
+    undo.type = "button";
+    undo.dataset.action = "undo-release";
+    undo.textContent = "Undo";
+    toast.replaceChildren(message, undo);
+    toast.classList.add("is-visible", "has-action");
+    const dismiss = (): void => {
+      if (document.activeElement === undo) {
+        this.toastTimer = window.setTimeout(dismiss, 1_000);
+        return;
+      }
+      this.pendingCargoRelease = null;
+      toast.classList.remove("is-visible", "has-action");
+      toast.replaceChildren();
+    };
+    this.toastTimer = window.setTimeout(dismiss, 5_000);
+    if (focusUndo) requestAnimationFrame(() => undo.focus({ preventScroll: true }));
+  }
+
+  private dismissCargoReleaseToast(): void {
+    if (!this.pendingCargoRelease) return;
+    window.clearTimeout(this.toastTimer);
+    this.pendingCargoRelease = null;
+    const toast = this.uiRoot.querySelector<HTMLElement>("#toast");
+    toast?.classList.remove("is-visible", "has-action");
+    toast?.replaceChildren();
+  }
+
+  private releaseCargoWithFeedback(target: HTMLElement, index: number, focusUndo: boolean): void {
+    const item = this.simulation.cargo[index];
+    if (!item) return;
+    const finishRelease = (): void => {
+      if (!releaseCargo(this.simulation, index)) return;
+      this.handleSimulationEvents();
+      this.pendingCargoRelease = { item: { ...item }, index };
+      this.renderOverlay();
+      this.showCargoReleaseToast(item.species, focusUndo);
+    };
+    window.clearTimeout(this.cargoReleaseTimer);
+    if (this.save.settings.reducedMotion) {
+      finishRelease();
+      return;
+    }
+    target.closest<HTMLElement>(".cargo-slot")?.classList.add("is-releasing");
+    if (target instanceof HTMLButtonElement) target.disabled = true;
+    this.cargoReleaseTimer = window.setTimeout(finishRelease, 180);
   }
 
   private showDeliverySuccess(): void {
@@ -1087,6 +1151,7 @@ export class Game {
         break;
       }
       case "undock":
+        this.dismissCargoReleaseToast();
         if (this.simulation.activeContract
           && this.simulation.cargo.some((item) => item.species === this.simulation.activeContract?.species)
           && !this.simulation.routeChoice) {
@@ -1139,10 +1204,19 @@ export class Game {
         break;
       case "release": {
         const index = Number(target.dataset.index);
-        if (releaseCargo(this.simulation, index)) {
-          this.handleSimulationEvents();
-          this.renderOverlay();
-        }
+        this.releaseCargoWithFeedback(target, index, event.detail === 0);
+        break;
+      }
+      case "undo-release": {
+        const released = this.pendingCargoRelease;
+        if (!released || !restoreCargo(this.simulation, released.item, released.index)) break;
+        window.clearTimeout(this.toastTimer);
+        this.pendingCargoRelease = null;
+        this.renderOverlay();
+        this.showToast(`${FISH[released.item.species].name} returned to cargo.`);
+        requestAnimationFrame(() => {
+          this.uiRoot.querySelector<HTMLButtonElement>(`.cargo-release[data-index="${released.index}"]`)?.focus({ preventScroll: true });
+        });
         break;
       }
       case "leave-fishing":

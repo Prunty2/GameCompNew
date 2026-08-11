@@ -511,6 +511,13 @@ export function releaseCargo(simulation: Simulation, index: number): boolean {
   return true;
 }
 
+export function restoreCargo(simulation: Simulation, item: CargoItem, index: number): boolean {
+  if (!simulation.dockedAt || simulation.cargo.length >= cargoCapacity(simulation)) return false;
+  const restoredIndex = Math.max(0, Math.min(Math.trunc(index), simulation.cargo.length));
+  simulation.cargo.splice(restoredIndex, 0, { ...item });
+  return true;
+}
+
 /** @deprecated Use releaseCargo for the harbor cargo action. */
 export const discardCargo = releaseCargo;
 
