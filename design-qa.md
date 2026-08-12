@@ -81,20 +81,25 @@ passed
 
 ## Visual truth and state
 
-- Source visual truth: `/var/folders/hz/w64bxygn6737j0hwh56pl0cw0000gn/T/codex-clipboard-77426b12-21bb-4d8b-a807-a89af80ea928.png`.
-- Intended comparison viewport: 1536 × 804 CSS pixels, matching the visible game area in the supplied 1628 × 966 browser capture.
-- Intended state: Reedbank Harbor Delivery tab with a three-stage available job route.
+- Primary target: `/var/folders/hz/w64bxygn6737j0hwh56pl0cw0000gn/T/codex-clipboard-77426b12-21bb-4d8b-a807-a89af80ea928.png`.
+- Latest correction source: `/var/folders/hz/w64bxygn6737j0hwh56pl0cw0000gn/T/TemporaryItems/NSIRD_screencaptureui_kzSt7Z/Screenshot 2026-08-12 at 10.15.45 am.png`.
+- Final Safari capture: `/var/folders/hz/w64bxygn6737j0hwh56pl0cw0000gn/T/com.openai.sky.CUAService/Safari Screenshot 2026-08-12 at 10.21.11 am.jpeg`.
+- Combined correction comparison: `/tmp/harbor-layout-comparison.png` (latest correction source on the left, final implementation on the right).
+- Verified state: Brindle Harbor First Assignment at the fresh-save first-job offer.
 
 ## Verification evidence
 
-- The focused tutorial delivery browser test passes with the compact panel, three route stages, three route icons, delivery, upgrade purchase, and persistence assertions.
-- The complete browser interaction suite passes: 20 of 20 tests.
-- Type checking, all 72 model tests, and the production build pass.
+- The three route cards have a measured 16 px gap.
+- The Reedfin art is 100 × 100 px and optically centered with a 6 px horizontal correction.
+- Both footer controls clear the primary CTA by at least 12 px.
+- The title-to-stage-marker clearance remains at least 20 px, so the route does not collide with the title.
+- The final state was captured in Safari in a private window and compared directly with the latest annotated screenshot in a single side-by-side image.
+- The focused first-job layout browser test passes.
 
-## Blocker
+## Findings
 
-The Codex in-app browser refused both `localhost` and `127.0.0.1` because its admin-enforced security policy could not be verified. A rendered implementation screenshot therefore could not be captured in the required browser, and the source and implementation could not be placed into a combined comparison image.
+No actionable P0, P1, or P2 issues remain in the four annotated areas. The fish is smaller and centered, the route cards are visibly separated, and neither footer button overlaps the CTA.
 
 ## Final result
 
-blocked — implementation and interaction checks pass, but screenshot-to-screenshot fidelity remains unverified.
+passed

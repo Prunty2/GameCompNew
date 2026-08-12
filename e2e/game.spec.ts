@@ -393,16 +393,25 @@ test("first harbor job keeps full-size route art clear of the title", async ({ p
   const fish = page.getByRole("img", { name: "Reedfin target fish" });
   const deliver = page.locator(".job-route-deliver-icon");
   const reward = page.getByLabel("Reward: 90 shells");
+  const missionButton = page.getByRole("button", { name: "Accept contract" });
+  const helpButton = page.getByRole("button", { name: "How to play" });
+  const menuButton = page.getByRole("button", { name: "Back to main menu" });
   const titleBounds = await title.boundingBox();
   const markerBounds = await firstMarker.boundingBox();
   const stageBounds = await firstStage.boundingBox();
   const secondStageBounds = await secondStage.boundingBox();
+  const missionBounds = await missionButton.boundingBox();
+  const helpBounds = await helpButton.boundingBox();
+  const menuBounds = await menuButton.boundingBox();
 
   expect((markerBounds?.y ?? 0) - ((titleBounds?.y ?? 0) + (titleBounds?.height ?? 0))).toBeGreaterThanOrEqual(20);
   expect(stageBounds?.height).toBeGreaterThanOrEqual(160);
-  expect(Math.abs((secondStageBounds?.x ?? 0) - ((stageBounds?.x ?? 0) + (stageBounds?.width ?? 0)))).toBeLessThanOrEqual(1);
-  await expect(fish).toHaveCSS("width", "128px");
-  await expect(fish).toHaveCSS("height", "128px");
+  expect(Math.abs((secondStageBounds?.x ?? 0) - ((stageBounds?.x ?? 0) + (stageBounds?.width ?? 0)) - 16)).toBeLessThanOrEqual(1);
+  expect((helpBounds?.y ?? 0) - ((missionBounds?.y ?? 0) + (missionBounds?.height ?? 0))).toBeGreaterThanOrEqual(12);
+  expect((menuBounds?.y ?? 0) - ((missionBounds?.y ?? 0) + (missionBounds?.height ?? 0))).toBeGreaterThanOrEqual(12);
+  await expect(fish).toHaveCSS("width", "100px");
+  await expect(fish).toHaveCSS("height", "100px");
+  await expect(fish).toHaveCSS("transform", "matrix(1, 0, 0, 1, -6, 0)");
   await expect(fish).toHaveCSS("background-image", /fish-atlas-ui/);
   await expect(deliver).toHaveCSS("width", "96px");
   await expect(deliver).toHaveCSS("height", "96px");
