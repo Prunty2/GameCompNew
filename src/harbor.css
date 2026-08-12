@@ -55,7 +55,7 @@
 }
 
 .harbor-screen.is-first-voyage.is-first-job-offer .harbor-panel {
-  height: auto;
+  height: min(620px, calc(100dvh - 32px));
 }
 
 .harbor-screen.is-first-voyage .harbor-panel .harbor-header {
@@ -367,36 +367,44 @@
   margin-top: 16px;
 }
 
-.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .harbor-content .mission-section {
+.harbor-screen.is-first-voyage.is-harbor-delivery .harbor-content .mission-section {
   display: flex;
   align-items: flex-start;
   padding-top: 12px;
 }
 
-.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .harbor-content .job-ticket {
+.harbor-screen.is-first-voyage.is-harbor-delivery .harbor-content .job-ticket {
+  position: relative;
+  display: flex;
   box-sizing: border-box;
   width: 100%;
-  min-height: 390px;
+  min-height: 410px;
+  flex-direction: column;
   padding: 26px 22px 22px;
 }
 
-.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-ticket-heading {
+.harbor-screen.is-first-voyage.is-harbor-delivery .job-ticket-heading {
   display: block;
   padding-inline: 118px;
   text-align: center;
 }
 
-.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-ticket-heading > div {
+.harbor-screen.is-first-voyage.is-harbor-delivery .job-ticket-heading > div {
   min-width: 0;
 }
 
-.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .harbor-content .job-ticket h3 {
+.harbor-screen.is-first-voyage.is-harbor-delivery .harbor-content .job-ticket h3 {
   margin: 5px 0 0;
   font-size: 1.7rem;
   text-align: center;
 }
 
-.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .reward-stamp {
+.harbor-screen.is-first-voyage.is-harbor-delivery .job-ticket > .card-kicker {
+  color: var(--menu-fog);
+  text-align: center;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery .reward-stamp {
   position: absolute;
   top: 20px;
   right: 20px;
@@ -406,12 +414,12 @@
   gap: 4px;
   padding: 6px 0 6px 14px;
   border: 0;
-  border-left: 1px solid rgb(145 169 176 / 48%);
+  border-left: 2px solid var(--menu-signal);
   background: transparent;
   box-shadow: none;
 }
 
-.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .reward-stamp .reward-label {
+.harbor-screen.is-first-voyage.is-harbor-delivery .reward-stamp .reward-label {
   display: block;
   color: var(--menu-fog);
   font-size: 0.62rem;
@@ -421,7 +429,7 @@
   text-transform: uppercase;
 }
 
-.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .reward-value {
+.harbor-screen.is-first-voyage.is-harbor-delivery .reward-value {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -429,41 +437,132 @@
   line-height: 1;
 }
 
-.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-route {
-  gap: 18px;
-  margin: 30px 0 24px;
+.harbor-screen.is-first-voyage.is-harbor-delivery .harbor-content .job-route {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 68px 0 20px;
 }
 
-.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .harbor-content .job-route li {
-  min-height: 136px;
-  grid-template-columns: 42px minmax(0, 1fr);
-  gap: 14px;
-  padding: 18px 14px;
-  border: 1px solid rgb(145 169 176 / 22%);
+.harbor-screen.is-first-voyage.is-harbor-delivery .harbor-content .job-route li {
+  position: relative;
+  display: flex;
+  min-height: 174px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: 30px 16px 18px;
+  border: 1px solid rgb(145 169 176 / 32%);
   border-radius: 12px;
   background: rgb(247 241 227 / 3%);
+  text-align: center;
 }
 
-.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-route li:not(:last-child)::after {
-  right: -15px;
-  font-size: 1.15rem;
+.harbor-screen.is-first-voyage.is-harbor-delivery .harbor-content .job-route li + li {
+  margin-left: 0;
 }
 
-.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .harbor-content .job-route li > span {
-  width: 42px;
-  height: 42px;
-  font-size: 0.8rem;
+.harbor-screen.is-first-voyage.is-harbor-delivery .job-route li:not(:last-child)::after {
+  display: none;
+  content: none;
 }
 
-.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-route small {
-  font-size: 0.72rem;
-  letter-spacing: 0.06em;
+.harbor-screen.is-first-voyage.is-harbor-delivery .harbor-content .job-route li > .job-route-number {
+  position: absolute;
+  top: -26px;
+  left: 50%;
+  display: grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  border: 2px solid var(--menu-signal);
+  border-radius: 50%;
+  background: #071b26;
+  color: var(--menu-signal);
+  font-size: 0.9rem;
+  font-weight: 950;
+  letter-spacing: 0.05em;
+  transform: translateX(-50%);
 }
 
-.harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-route strong {
-  margin-top: 7px;
-  font-size: 1.08rem;
+.harbor-screen.is-first-voyage.is-harbor-delivery .job-route-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery .job-route small {
+  color: var(--menu-fog);
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: none;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery .job-route-icon {
+  display: block;
+  width: 58px;
+  height: 58px;
+  margin: 9px 0 4px;
+  object-fit: contain;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery .job-route-fish {
+  width: 100px;
+  height: 100px;
+  margin-block: 2px 1px;
+  transform: translate(-6px, -8px);
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery .job-route-icon.job-route-freshness-icon {
+  width: 88px;
+  height: 88px;
+  margin-block: -1px -3px;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery .job-route-deliver-icon {
+  width: 96px;
+  height: 96px;
+  margin-block: 0 -1px;
+}
+
+.harbor-screen.is-first-voyage.is-first-job-offer .harbor-content .job-route {
+  margin-top: 60px;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery .job-route strong {
+  margin-top: 2px;
+  font-size: 1.12rem;
+  line-height: 1.1;
   white-space: normal;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery .job-route-detail {
+  margin-top: 5px;
+  color: var(--menu-fog);
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery .job-route .is-complete {
+  border-color: rgb(135 186 176 / 52%);
+  background: rgb(135 186 176 / 7%);
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery .job-route .is-complete > .job-route-number {
+  border-color: #87bab0;
+  color: #d9f4ec;
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery .job-route .is-current {
+  border-color: rgb(240 158 61 / 58%);
+  background: rgb(240 158 61 / 6%);
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery .harbor-content .job-ticket .mission-button {
+  margin-top: auto;
 }
 
 .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .next-step {
@@ -1179,24 +1278,30 @@
     margin-top: 10px;
   }
 
-  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .harbor-content .mission-section {
+  .harbor-screen.is-first-voyage.is-harbor-delivery .harbor-content .mission-section {
     padding-top: 6px;
   }
 
-  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .harbor-content .job-ticket {
+  .harbor-screen.is-first-voyage.is-harbor-delivery .harbor-content .job-ticket {
     min-height: 0;
     padding: 16px 12px 14px;
   }
 
-  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-ticket-heading {
-    padding-inline: 66px;
+  .harbor-screen.is-first-voyage.is-harbor-delivery .job-ticket-heading {
+    padding: 0 96px 0 0;
+    text-align: left;
   }
 
-  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .harbor-content .job-ticket h3 {
+  .harbor-screen.is-first-voyage.is-harbor-delivery .harbor-content .job-ticket-heading h3 {
+    font-size: 1.05rem;
+    text-align: left;
+  }
+
+  .harbor-screen.is-first-voyage.is-harbor-delivery .job-ticket > h3 {
     font-size: 1.15rem;
   }
 
-  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .reward-stamp {
+  .harbor-screen.is-first-voyage.is-harbor-delivery .reward-stamp {
     top: 11px;
     right: 10px;
     min-width: 92px;
@@ -1205,39 +1310,60 @@
     padding: 5px 0 5px 12px;
   }
 
-  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .reward-stamp .reward-label {
+  .harbor-screen.is-first-voyage.is-harbor-delivery .reward-stamp .reward-label {
     font-size: 0.58rem;
   }
 
-  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-route {
-    gap: 6px;
-    margin: 18px 0 14px;
-  }
-
-  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .harbor-content .job-route li {
-    min-height: 72px;
-    grid-template-columns: 30px minmax(0, 1fr);
+  .harbor-screen.is-first-voyage.is-harbor-delivery .harbor-content .job-route {
     gap: 8px;
-    padding: 9px 8px;
+    margin: 38px 0 12px;
   }
 
-  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .harbor-content .job-route li > span {
-    width: 30px;
-    height: 30px;
-    font-size: 0.65rem;
+  .harbor-screen.is-first-voyage.is-harbor-delivery .harbor-content .job-route li + li {
+    margin-left: 0;
   }
 
-  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-route li:not(:last-child)::after {
-    display: none;
+  .harbor-screen.is-first-voyage.is-harbor-delivery .job-route-fish {
+    transform: translate(-2px, -4px);
   }
 
-  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-route small {
+  .harbor-screen.is-first-voyage.is-harbor-delivery .job-route-icon.job-route-freshness-icon {
+    width: 48px;
+    height: 48px;
+    margin-block: 1px -1px;
+  }
+
+  .harbor-screen.is-first-voyage.is-harbor-delivery .harbor-content .job-route li {
+    min-height: 126px;
+    padding: 22px 5px 10px;
+    border-radius: 9px;
+  }
+
+  .harbor-screen.is-first-voyage.is-harbor-delivery .harbor-content .job-route li > .job-route-number {
+    top: -20px;
+    width: 40px;
+    height: 40px;
+    font-size: 0.67rem;
+  }
+
+  .harbor-screen.is-first-voyage.is-harbor-delivery .job-route small {
     font-size: 0.58rem;
   }
 
-  .harbor-screen.is-first-voyage.is-harbor-delivery.is-expanded-harbor .job-route strong {
+  .harbor-screen.is-first-voyage.is-harbor-delivery .job-route-icon {
+    width: 40px;
+    height: 40px;
+    margin-block: 5px 2px;
+  }
+
+  .harbor-screen.is-first-voyage.is-harbor-delivery .job-route strong {
+    margin-top: 2px;
+    font-size: 0.72rem;
+  }
+
+  .harbor-screen.is-first-voyage.is-harbor-delivery .job-route-detail {
     margin-top: 3px;
-    font-size: 0.8rem;
+    font-size: 0.6rem;
   }
 
   .cargo-inventory-heading {

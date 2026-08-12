@@ -6208,6 +6208,14 @@ kbd {
   color: var(--menu-signal);
 }
 
+.harbor-screen.is-first-voyage .job-ticket-heading .reward-stamp {
+  padding-left: 18px;
+  border: 0;
+  border-left: 2px solid var(--menu-signal);
+  border-radius: 0;
+  background: transparent;
+}
+
 .harbor-screen.is-first-voyage .reward-stamp .ui-icon {
   width: 23px;
   height: 23px;
@@ -6222,7 +6230,7 @@ kbd {
 .harbor-screen.is-first-voyage .job-route,
 .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .job-route {
   gap: 24px;
-  margin: 0 0 16px;
+  margin: 34px 0 16px;
 }
 
 .harbor-screen.is-first-voyage .job-route li,
@@ -6268,6 +6276,26 @@ kbd {
   color: var(--menu-paper);
   font-size: 0.86rem;
   line-height: 1.15;
+}
+
+.harbor-screen.is-first-voyage .job-route-fish {
+  display: block;
+  width: 88px;
+  height: 88px;
+  flex: 0 0 auto;
+  margin: 2px auto -2px;
+  background-image: var(--fish-atlas-url);
+  background-position: var(--fish-atlas-x) var(--fish-atlas-y);
+  background-repeat: no-repeat;
+  background-size: 300% 300%;
+  filter: drop-shadow(0 3px 4px rgb(1 10 18 / 55%));
+}
+
+.harbor-screen.is-first-voyage .job-route-deliver-icon {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  filter: drop-shadow(0 3px 4px rgb(1 10 18 / 48%));
 }
 
 .harbor-screen.is-first-voyage .mission-button,
@@ -6522,13 +6550,19 @@ kbd {
 
   .harbor-screen.is-first-voyage .job-route,
   .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .job-route {
-    margin-bottom: 7px;
+    margin: 18px 0 7px;
   }
 
   .harbor-screen.is-first-voyage .job-route li,
   .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .job-route li {
     min-height: 42px;
     padding-block: 4px;
+  }
+
+  .harbor-screen.is-first-voyage .job-route-fish,
+  .harbor-screen.is-first-voyage .job-route-deliver-icon {
+    width: 52px;
+    height: 52px;
   }
 
   .harbor-screen.is-first-voyage .mission-button,
@@ -6658,6 +6692,7 @@ kbd {
   .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .job-route {
     grid-template-columns: 1fr;
     gap: 4px;
+    margin: 18px 0 10px;
   }
 
   .harbor-screen.is-first-voyage .job-route li,
@@ -6673,6 +6708,12 @@ kbd {
     left: 8px;
     content: "↓";
     transform: none;
+  }
+
+  .harbor-screen.is-first-voyage .job-route-fish,
+  .harbor-screen.is-first-voyage .job-route-deliver-icon {
+    width: 54px;
+    height: 54px;
   }
 
   .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .service-grid {

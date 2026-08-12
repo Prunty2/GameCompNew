@@ -418,6 +418,49 @@ test("reels a hooked fish to the boat before securing the catch", async ({ page 
   await expect(canvas).not.toHaveAttribute("data-fishing-surface-sprite-opacity");
 });
 
+test("first harbor job keeps full-size route art clear of the title", async ({ page }) => {
+  await page.goto("/?e2e=1");
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+
+  const title = page.getByRole("heading", { name: "First Assignment" });
+  const firstMarker = page.locator(".job-route-number").first();
+  const firstStage = page.locator(".job-route > li").first();
+  const secondStage = page.locator(".job-route > li").nth(1);
+  const fish = page.getByRole("img", { name: "Reedfin target fish" });
+  const freshness = page.locator(".job-route-freshness-icon");
+  const deliver = page.locator(".job-route-deliver-icon");
+  const reward = page.getByLabel("Reward: 90 shells");
+  const missionButton = page.getByRole("button", { name: "Accept contract" });
+  const helpButton = page.getByRole("button", { name: "How to play" });
+  const menuButton = page.getByRole("button", { name: "Back to main menu" });
+  const titleBounds = await title.boundingBox();
+  const markerBounds = await firstMarker.boundingBox();
+  const stageBounds = await firstStage.boundingBox();
+  const secondStageBounds = await secondStage.boundingBox();
+  const missionBounds = await missionButton.boundingBox();
+  const helpBounds = await helpButton.boundingBox();
+  const menuBounds = await menuButton.boundingBox();
+
+  expect((markerBounds?.y ?? 0) - ((titleBounds?.y ?? 0) + (titleBounds?.height ?? 0))).toBeGreaterThanOrEqual(20);
+  expect(stageBounds?.height).toBeGreaterThanOrEqual(160);
+  expect(Math.abs((secondStageBounds?.x ?? 0) - ((stageBounds?.x ?? 0) + (stageBounds?.width ?? 0)) - 16)).toBeLessThanOrEqual(1);
+  expect((helpBounds?.y ?? 0) - ((missionBounds?.y ?? 0) + (missionBounds?.height ?? 0))).toBeGreaterThanOrEqual(12);
+  expect((menuBounds?.y ?? 0) - ((missionBounds?.y ?? 0) + (missionBounds?.height ?? 0))).toBeGreaterThanOrEqual(12);
+  await expect(fish).toHaveCSS("width", "100px");
+  await expect(fish).toHaveCSS("height", "100px");
+  await expect(fish).toHaveCSS("transform", "matrix(1, 0, 0, 1, -6, -8)");
+  await expect(fish).toHaveCSS("background-image", /fish-atlas-ui/);
+  await expect(freshness).toHaveCSS("width", "88px");
+  await expect(freshness).toHaveCSS("height", "88px");
+  await expect(freshness).toHaveAttribute("src", /job-freshness-fish/);
+  await expect(deliver).toHaveCSS("width", "96px");
+  await expect(deliver).toHaveCSS("height", "96px");
+  await expect(reward).toHaveCSS("border-left-width", "2px");
+  await expect(reward).toHaveCSS("border-left-style", "solid");
+  expect(await firstStage.evaluate((element) => getComputedStyle(element, "::after").display)).toBe("none");
+  expect(await firstStage.evaluate((element) => getComputedStyle(element, "::after").content)).toBe("none");
+});
+
 test("completes the tutorial delivery, buys an upgrade, and persists it", async ({ page }) => {
   test.setTimeout(60_000);
   await page.goto("/?e2e=1");
@@ -431,7 +474,15 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await expect(page.locator(".harbor-screen")).toHaveClass(/is-first-voyage/);
   await expect(page.locator(".harbor-wordmark")).toBeVisible();
   await expectHorizontallyCentered(page, ".harbor-panel");
-  expect((await page.locator(".harbor-panel").boundingBox())?.height).toBeLessThan(500);
+  const firstPanelHeight = (await page.locator(".harbor-panel").boundingBox())?.height ?? 0;
+  expect(firstPanelHeight).toBeGreaterThanOrEqual(380);
+  expect(firstPanelHeight).toBeLessThanOrEqual(720);
+  await expect(page.locator(".job-route > li")).toHaveCount(3);
+  await expect(page.locator(".job-route-icon")).toHaveCount(3);
+  await expect(page.getByRole("img", { name: "Reedfin target fish" })).toBeVisible();
+  await expect(page.locator(".job-route")).toContainText("Catch");
+  await expect(page.locator(".job-route")).toContainText("Freshness");
+  await expect(page.locator(".job-route")).toContainText("Deliver");
   const firstHeaderBounds = await page.locator(".harbor-header").boundingBox();
   const firstTicketBounds = await page.locator(".job-ticket").boundingBox();
   const firstFooterBounds = await page.locator(".panel-actions").boundingBox();
@@ -446,7 +497,7 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await expect(reward).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
   await expect(reward).toHaveCSS("box-shadow", "none");
   await expect(reward).toHaveCSS("border-top-width", "0px");
-  await expect(reward.locator(".reward-label")).toHaveCSS("font-size", "11.52px");
+  await expect(reward.locator(".reward-label")).toHaveCSS("font-size", "9.92px");
   await expect(reward.locator("strong")).toHaveCSS("font-size", "20px");
   await expect(page.getByRole("button", { name: "Accept contract" })).toContainText("Begin the First Voyage");
   await expect(page.getByRole("heading", { name: "Your cargo" })).toHaveCount(0);
@@ -489,6 +540,10 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   const deliveryTabsBounds = await page.locator(".harbor-tabs").boundingBox();
   const deliveryCardBounds = await page.locator(".job-ticket").boundingBox();
   const deliveryFooterBounds = await page.locator(".panel-actions").boundingBox();
+  const deliveryStageBounds = await page.locator(".job-route > li").first().boundingBox();
+  expect(deliveryStageBounds?.height).toBeGreaterThanOrEqual(160);
+  await expect(page.locator(".job-route-number")).toHaveCount(3);
+  await expect(page.locator(".job-route-icon")).toHaveCount(3);
   expect(Math.abs((deliveryTabsBounds?.x ?? 0) - (deliveryCardBounds?.x ?? 0))).toBeLessThanOrEqual(1);
   expect(Math.abs((deliveryTabsBounds?.width ?? 0) - (deliveryCardBounds?.width ?? 0))).toBeLessThanOrEqual(1);
   expect(Math.abs((deliveryTabsBounds?.x ?? 0) - (deliveryFooterBounds?.x ?? 0))).toBeLessThanOrEqual(1);

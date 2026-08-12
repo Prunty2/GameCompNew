@@ -74,3 +74,36 @@ Each species uses a deterministic movement profile that changes real horizontal 
 ## Final result
 
 passed
+
+---
+
+# Harbor Menu Target — Design QA
+
+## Visual truth and state
+
+- Primary target: `/var/folders/hz/w64bxygn6737j0hwh56pl0cw0000gn/T/codex-clipboard-77426b12-21bb-4d8b-a807-a89af80ea928.png`.
+- Latest correction source: `/var/folders/hz/w64bxygn6737j0hwh56pl0cw0000gn/T/TemporaryItems/NSIRD_screencaptureui_kzSt7Z/Screenshot 2026-08-12 at 10.15.45 am.png`.
+- Safari correction capture: `/var/folders/hz/w64bxygn6737j0hwh56pl0cw0000gn/T/com.openai.sky.CUAService/Safari Screenshot 2026-08-12 at 10.21.11 am.jpeg`.
+- Combined correction comparison: `/tmp/harbor-layout-comparison.png` (latest correction source on the left, final implementation on the right).
+- Verified state: Brindle Harbor First Assignment at the fresh-save first-job offer.
+
+## Verification evidence
+
+- The three route cards have a measured 16 px gap.
+- The Reedfin art is 100 × 100 px and optically centered with a 6 px horizontal correction.
+- Both footer controls clear the primary CTA by at least 12 px.
+- The title-to-stage-marker clearance remains at least 20 px, so the route does not collide with the title.
+- The corrected state was captured in Safari in a private window and compared directly with the latest annotated screenshot in a single side-by-side image.
+- The focused first-job layout browser test passes.
+- After the comparison, the panel gained a final 10 px height allowance for short desktop viewports; the full browser suite verifies the resulting ticket-to-footer and CTA-to-button clearances.
+- The latest in-app preview confirms that the two route connector arrows are absent while the 16 px card gaps remain intact.
+- The Reedfin target art is raised 8 px within the desktop route card, correcting the top-heavy transparent spacing called out in the browser annotation.
+- The generic shield/check is replaced by an original generated fish-and-leaf pictogram with authored alpha; the final in-app capture shows the freshness meaning clearly at runtime size.
+
+## Findings
+
+No actionable P0, P1, or P2 issues remain in the annotated areas. The Reedfin is vertically balanced, Freshness uses a specific fish-and-leaf symbol, the route cards are visibly separated without connector arrows, and neither footer button overlaps the CTA.
+
+## Final result
+
+passed
