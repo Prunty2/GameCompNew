@@ -513,7 +513,13 @@
   width: 100px;
   height: 100px;
   margin-block: 2px 1px;
-  transform: translateX(-6px);
+  transform: translate(-6px, -8px);
+}
+
+.harbor-screen.is-first-voyage.is-harbor-delivery .job-route-icon.job-route-freshness-icon {
+  width: 88px;
+  height: 88px;
+  margin-block: -1px -3px;
 }
 
 .harbor-screen.is-first-voyage.is-harbor-delivery .job-route-deliver-icon {
@@ -1232,7 +1238,13 @@
   }
 
   .harbor-screen.is-first-voyage.is-harbor-delivery .job-route-fish {
-    transform: translateX(-2px);
+    transform: translate(-2px, -4px);
+  }
+
+  .harbor-screen.is-first-voyage.is-harbor-delivery .job-route-icon.job-route-freshness-icon {
+    width: 48px;
+    height: 48px;
+    margin-block: 1px -1px;
   }
 
   .harbor-screen.is-first-voyage.is-harbor-delivery .harbor-content .job-route li {

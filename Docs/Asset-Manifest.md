@@ -178,9 +178,11 @@ The boat, harbor pier, fish atlas, and world atlas were requested on a uniform `
 
 ### Job route icons
 
-- Runtime files: `job-shield-icon.svg` and `job-deliver-beacon.png`
+- Runtime files: `job-freshness-fish.png` and `job-deliver-beacon.png`
 - Runtime role: the Freshness and Deliver pictograms in the three-stage harbor job route
-- Freshness source: Phosphor Icons regular `shield-check`, used under the MIT License and recolored to the menu's amber signal color
+- Freshness source size: 1254 × 1254; optimized runtime size: 256 × 256 with authored alpha
+- Freshness generation mode: OpenAI built-in GPT Image 2.0 generation followed by local chroma-key removal and Lanczos downscaling
+- Freshness prompt: “Create one unmistakable freshness pictogram: a lively side-profile fish paired with a crisp fresh leaf and two tiny sparkle accents, reading instantly as fresh fish rather than protection, approval, or a shield. Use a restrained bold screen-printed nautical game UI treatment matching FSHING: warm cream fish, safety-orange leaf and accents, dark navy internal linework, subtle printed texture, and a strong silhouette at 64–96 px. Center it with generous equal padding on a flat solid green chroma-key background. No shield, check mark, thermometer, clock, text, tile, badge, frame, shadow, reflection, or watermark.”
 - Deliver source size: 1254 × 1254; optimized runtime size: 256 × 256 with authored alpha
 - Deliver generation mode: OpenAI built-in GPT Image 2.0 generation followed by local chroma-key removal and Lanczos downscaling
 - Deliver prompt: “Use case: stylized-concept. Asset type: standalone game UI pictogram for the FSHING browser game. Create one original freshwater harbor delivery beacon: a compact wooden navigation tower with a small roof, warm lantern window, short platform rails, and two restrained water strokes at its base. Bold hand-painted screen-print treatment matching the supplied FSHING menu: warm cream body, safety-orange light and accents, limited deep ink-navy outline, slightly irregular crafted edges, crisp silhouette readable at 50–90 pixels. Front-facing with a very slight three-quarter angle, centered with generous equal padding on a perfectly flat solid #FF00FF chroma-key background. No tile, circle, medallion, label, text, extra objects, boat, fish, shadow, reflection, border, frame, watermark, or checkerboard.”

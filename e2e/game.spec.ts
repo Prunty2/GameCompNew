@@ -391,6 +391,7 @@ test("first harbor job keeps full-size route art clear of the title", async ({ p
   const firstStage = page.locator(".job-route > li").first();
   const secondStage = page.locator(".job-route > li").nth(1);
   const fish = page.getByRole("img", { name: "Reedfin target fish" });
+  const freshness = page.locator(".job-route-freshness-icon");
   const deliver = page.locator(".job-route-deliver-icon");
   const reward = page.getByLabel("Reward: 90 shells");
   const missionButton = page.getByRole("button", { name: "Accept contract" });
@@ -411,8 +412,11 @@ test("first harbor job keeps full-size route art clear of the title", async ({ p
   expect((menuBounds?.y ?? 0) - ((missionBounds?.y ?? 0) + (missionBounds?.height ?? 0))).toBeGreaterThanOrEqual(12);
   await expect(fish).toHaveCSS("width", "100px");
   await expect(fish).toHaveCSS("height", "100px");
-  await expect(fish).toHaveCSS("transform", "matrix(1, 0, 0, 1, -6, 0)");
+  await expect(fish).toHaveCSS("transform", "matrix(1, 0, 0, 1, -6, -8)");
   await expect(fish).toHaveCSS("background-image", /fish-atlas-ui/);
+  await expect(freshness).toHaveCSS("width", "88px");
+  await expect(freshness).toHaveCSS("height", "88px");
+  await expect(freshness).toHaveAttribute("src", /job-freshness-fish/);
   await expect(deliver).toHaveCSS("width", "96px");
   await expect(deliver).toHaveCSS("height", "96px");
   await expect(reward).toHaveCSS("border-left-width", "2px");

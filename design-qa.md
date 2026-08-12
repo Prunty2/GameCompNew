@@ -97,10 +97,12 @@ passed
 - The focused first-job layout browser test passes.
 - After the comparison, the panel gained a final 10 px height allowance for short desktop viewports; the full browser suite verifies the resulting ticket-to-footer and CTA-to-button clearances.
 - The latest in-app preview confirms that the two route connector arrows are absent while the 16 px card gaps remain intact.
+- The Reedfin target art is raised 8 px within the desktop route card, correcting the top-heavy transparent spacing called out in the browser annotation.
+- The generic shield/check is replaced by an original generated fish-and-leaf pictogram with authored alpha; the final in-app capture shows the freshness meaning clearly at runtime size.
 
 ## Findings
 
-No actionable P0, P1, or P2 issues remain in the annotated areas. The fish is smaller and centered, the route cards are visibly separated without connector arrows, and neither footer button overlaps the CTA.
+No actionable P0, P1, or P2 issues remain in the annotated areas. The Reedfin is vertically balanced, Freshness uses a specific fish-and-leaf symbol, the route cards are visibly separated without connector arrows, and neither footer button overlaps the CTA.
 
 ## Final result
 
