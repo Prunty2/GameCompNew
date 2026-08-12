@@ -96,10 +96,11 @@ passed
 - The corrected state was captured in Safari in a private window and compared directly with the latest annotated screenshot in a single side-by-side image.
 - The focused first-job layout browser test passes.
 - After the comparison, the panel gained a final 10 px height allowance for short desktop viewports; the full browser suite verifies the resulting ticket-to-footer and CTA-to-button clearances.
+- The latest in-app preview confirms that the two route connector arrows are absent while the 16 px card gaps remain intact.
 
 ## Findings
 
-No actionable P0, P1, or P2 issues remain in the four annotated areas. The fish is smaller and centered, the route cards are visibly separated, and neither footer button overlaps the CTA.
+No actionable P0, P1, or P2 issues remain in the annotated areas. The fish is smaller and centered, the route cards are visibly separated without connector arrows, and neither footer button overlaps the CTA.
 
 ## Final result
 

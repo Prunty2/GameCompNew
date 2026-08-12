@@ -464,21 +464,8 @@
 }
 
 .harbor-screen.is-first-voyage.is-harbor-delivery .job-route li:not(:last-child)::after {
-  z-index: 2;
-  top: 50%;
-  right: -18px;
-  display: grid;
-  width: 34px;
-  height: 34px;
-  place-items: center;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-  color: rgb(247 241 227 / 58%);
-  content: "⟶";
-  font-size: 1.8rem;
-  transform: translateY(-50%);
+  display: none;
+  content: none;
 }
 
 .harbor-screen.is-first-voyage.is-harbor-delivery .harbor-content .job-route li > .job-route-number {
@@ -1259,10 +1246,6 @@
     width: 40px;
     height: 40px;
     font-size: 0.67rem;
-  }
-
-  .harbor-screen.is-first-voyage.is-harbor-delivery .job-route li:not(:last-child)::after {
-    display: none;
   }
 
   .harbor-screen.is-first-voyage.is-harbor-delivery .job-route small {

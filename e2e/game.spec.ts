@@ -417,8 +417,8 @@ test("first harbor job keeps full-size route art clear of the title", async ({ p
   await expect(deliver).toHaveCSS("height", "96px");
   await expect(reward).toHaveCSS("border-left-width", "2px");
   await expect(reward).toHaveCSS("border-left-style", "solid");
-  expect(await firstStage.evaluate((element) => getComputedStyle(element, "::after").backgroundColor)).toBe("rgba(0, 0, 0, 0)");
-  expect(await firstStage.evaluate((element) => getComputedStyle(element, "::after").fontSize)).toBe("28.8px");
+  expect(await firstStage.evaluate((element) => getComputedStyle(element, "::after").display)).toBe("none");
+  expect(await firstStage.evaluate((element) => getComputedStyle(element, "::after").content)).toBe("none");
 });
 
 test("completes the tutorial delivery, buys an upgrade, and persists it", async ({ page }) => {
