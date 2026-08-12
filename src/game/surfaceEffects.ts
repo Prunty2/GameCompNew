@@ -8,6 +8,7 @@ export interface SurfaceContactOptions {
   reducedMotion: boolean;
   highContrast: boolean;
   seed?: number;
+  opacity?: number;
 }
 
 export function captureSurfaceLayer(source: HTMLCanvasElement, snapshot: HTMLCanvasElement): HTMLCanvasElement {
@@ -46,6 +47,7 @@ export function drawWaterContact(
     options.viewportWidth,
     options.viewportHeight,
   );
+  context.globalAlpha *= options.opacity ?? 1;
 
   const shadowDepth = clamp(options.width * 0.04, 7, 18);
   const shadow = context.createRadialGradient(
@@ -74,6 +76,7 @@ export function drawWaterContact(
   context.restore();
 
   context.save();
+  context.globalAlpha *= options.opacity ?? 1;
   context.lineCap = "round";
   context.strokeStyle = options.highContrast ? "rgba(255, 250, 240, 0.82)" : "rgba(205, 232, 224, 0.62)";
   context.lineWidth = options.highContrast ? 2.1 : 1.35;

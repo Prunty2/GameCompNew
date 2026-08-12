@@ -1,5 +1,6 @@
 import brindleDockDayUrl from "../assets/dock-brindle-day.jpg";
 import brindleDockNightUrl from "../assets/dock-brindle-night.jpg";
+import binIconUrl from "../assets/bin-icon.png";
 import gloamDockDayUrl from "../assets/dock-gloam-day.jpg";
 import gloamDockNightUrl from "../assets/dock-gloam-night.jpg";
 import fishAtlasUiUrl from "../assets/fish-atlas-ui.png";
@@ -54,6 +55,7 @@ import {
   navigationGuidance,
   nightVisualIntensity,
   releaseCargo,
+  restoreCargo,
   resolveCatch,
   shouldShowNightIndicator,
   startFishing,
@@ -62,6 +64,7 @@ import {
   unlockBoostForTesting,
   updateSimulation,
   upgradeCost,
+  type CargoItem,
   type Simulation,
   type SimulationEvent,
 } from "./simulation";
@@ -74,6 +77,8 @@ const PAUSE_EXIT_DURATION = 340;
 const SETTINGS_EXIT_DURATION = 340;
 const SCENE_COVER_DURATION = 120;
 const SCENE_REVEAL_DURATION = 160;
+const DELIVERY_SUCCESS_DURATION = 4_000;
+const DELIVERY_SUCCESS_EXIT_DURATION = 280;
 
 const DOCK_BACKGROUND_URL: Record<HarborId, { day: string; night: string }> = {
   brindle: { day: brindleDockDayUrl, night: brindleDockNightUrl },
@@ -87,7 +92,6 @@ type OverlayScreen =
   | "settings"
   | "controls"
   | "help"
-  | "deliveryResult"
   | "seasonReport"
   | null;
 
@@ -132,10 +136,14 @@ export class Game {
   private harborSection: HarborSection = "delivery";
   private helpStep = 0;
   private toastTimer: number | undefined;
+  private deliverySuccessTimer: number | undefined;
+  private deliverySuccessExitTimer: number | undefined;
   private tutorialDismissTimer: number | undefined;
   private pauseTransitionTimer: number | undefined;
   private settingsTransitionTimer: number | undefined;
   private cargoUpgradeTransitionTimer: number | undefined;
+  private cargoReleaseTimer: number | undefined;
+  private pendingCargoRelease: { item: CargoItem; index: number } | null = null;
   private sceneTransitioning = false;
   private sceneTransitionTarget: OverlayScreen | undefined;
   private queuedOverlay: { next: OverlayScreen; useSceneTransition: boolean } | null = null;
@@ -149,6 +157,8 @@ export class Game {
     preloadImage(brindleDockNightUrl),
     preloadImage(gloamDockDayUrl),
     preloadImage(gloamDockNightUrl),
+    preloadImage(binIconUrl),
+    preloadImage(padlockIconUrl),
     preloadImage(wordmarkUrl),
     preloadImage(uiButtonUrl),
     preloadImage(uiIconsUrl),
@@ -250,7 +260,14 @@ export class Game {
           <span class="tutorial-label" aria-hidden="true">Next</span>
           <span class="tutorial-message" aria-live="polite"></span>
         </button>
-        <output class="toast" id="toast" aria-live="polite"></output>
+        <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+        <section class="delivery-success" id="delivery-success" role="status" aria-live="polite" aria-atomic="true" hidden>
+          <span class="delivery-success-seal" aria-hidden="true">✓</span>
+          <strong>Delivery Success</strong>
+          <button class="delivery-success-close" type="button" data-action="dismiss-delivery-success" aria-label="Close delivery success notification">
+            <span aria-hidden="true">×</span>
+          </button>
+        </section>
         <div class="feedback-flash" id="feedback-flash" aria-hidden="true"></div>
 
         <button class="context-action" id="context-action" type="button" data-action="interact" data-control="action" hidden>Interact</button>
@@ -308,6 +325,10 @@ export class Game {
       this.syncSave();
       this.refreshHud();
     }
+    if (events.some((event) => event.type === "delivered") && this.seasonReportQueued) {
+      this.seasonReportQueued = false;
+      this.setOverlay("seasonReport");
+    }
   }
 
   private handleEvent(event: SimulationEvent): void {
@@ -326,8 +347,9 @@ export class Game {
       case "delivered":
         this.feedback.cue("delivery");
         this.pulseFeedback("delivery");
-        this.showToast(`Delivery complete · +${event.payment} shells`);
-        this.setOverlay("deliveryResult");
+        this.harborSection = "delivery";
+        this.setOverlay("harbor");
+        this.showDeliverySuccess();
         break;
       case "docked":
         this.feedback.cue("dock");
@@ -369,7 +391,7 @@ export class Game {
           : "Boost unlocked. Hold Shift while sailing.");
         break;
       case "released":
-        this.showToast(`${FISH[event.species].name} released.`);
+        this.feedback.cue("cast");
         break;
       case "season-complete":
         this.seasonReportQueued = true;
@@ -493,9 +515,6 @@ export class Game {
       case "help":
         host.innerHTML = this.helpScreen();
         break;
-      case "deliveryResult":
-        host.innerHTML = this.deliveryResultScreen();
-        break;
       case "seasonReport":
         host.innerHTML = this.seasonReportScreen();
         break;
@@ -573,7 +592,7 @@ export class Game {
       const item = this.simulation.cargo[index];
       const slotNumber = String(index + 1).padStart(2, "0");
       if (item) {
-        return `<article class="cargo-slot is-occupied" aria-label="Cargo slot ${index + 1}: ${FISH[item.species].name}, ${Math.ceil(item.freshness)}% fresh"><span class="cargo-slot-number">${slotNumber}</span><span class="ui-icon icon-freshness cargo-fish-icon" aria-hidden="true"></span><div class="cargo-slot-copy"><strong>${FISH[item.species].name}</strong><small>${Math.ceil(item.freshness)}% fresh</small></div><button class="cargo-release" type="button" data-action="release" data-index="${index}" aria-label="Release ${FISH[item.species].name}">Release</button></article>`;
+        return `<article class="cargo-slot is-occupied" aria-label="Cargo slot ${index + 1}: ${FISH[item.species].name}, ${Math.ceil(item.freshness)}% fresh"><span class="cargo-slot-number">${slotNumber}</span><span class="ui-icon icon-freshness cargo-fish-icon" aria-hidden="true"></span><div class="cargo-slot-copy"><strong>${FISH[item.species].name}</strong><small>${Math.ceil(item.freshness)}% fresh</small></div><button class="cargo-release" type="button" data-action="release" data-index="${index}" aria-label="Release ${FISH[item.species].name} from cargo"><span class="cargo-release-tooltip" aria-hidden="true">Release</span><span class="cargo-release-art" aria-hidden="true"><img class="cargo-bin-body" src="${binIconUrl}" alt="" /><img class="cargo-bin-lid" src="${binIconUrl}" alt="" /></span></button></article>`;
       }
       if (index < availableCargoSlots) {
         return `<div class="cargo-slot is-empty" aria-label="Cargo slot ${index + 1}: empty"><span class="cargo-slot-number">${slotNumber}</span><span class="ui-icon icon-cargo" aria-hidden="true"></span><small>Empty</small></div>`;
@@ -793,28 +812,6 @@ export class Game {
       </section>`;
   }
 
-  private deliveryResultScreen(): string {
-    const result = this.simulation.lastDeliveryResult;
-    if (!result) return this.messageScreen("No delivery result", "Complete a delivery to compare your estimate with the result.", "continue-after-delivery", "Back to harbor");
-    const difference = result.actualFreshness - result.predictedFreshness;
-    return `
-      <section class="screen-overlay sheet-overlay science-overlay" role="dialog" aria-labelledby="delivery-result-title">
-        <div class="art-panel science-panel result-panel side-sheet">
-          <span class="completion-seal" aria-hidden="true">✓</span>
-          <span class="panel-eyebrow">Prediction versus result</span>
-          <h2 id="delivery-result-title">Delivery analysed</h2>
-          <div class="result-comparison">
-            <div><small>Predicted freshness</small><strong>${result.predictedFreshness}%</strong></div>
-            <span aria-hidden="true">→</span>
-            <div><small>Actual freshness</small><strong>${result.actualFreshness}%</strong></div>
-          </div>
-          <p class="result-explanation">The ${result.route === "fast" ? "express" : "survey"} route took ${result.travelSeconds} in-game seconds. The result was ${Math.abs(difference)} percentage points ${difference >= 0 ? "above" : "below"} the estimate.</p>
-          <div class="payment-summary"><span>Delivery payment</span><strong>${result.payment} shells</strong><small>Payment reflects the catch's arrival freshness.</small></div>
-          <button class="primary-button" type="button" data-action="continue-after-delivery">Continue at harbor</button>
-        </div>
-      </section>`;
-  }
-
   private seasonReportScreen(): string {
     const learning = this.simulation.progress.learning;
     return `
@@ -832,10 +829,6 @@ export class Game {
           <button class="primary-button" type="button" data-action="continue-season">Continue researching</button>
         </div>
       </section>`;
-  }
-
-  private messageScreen(title: string, body: string, action: string, label: string): string {
-    return `<section class="screen-overlay sheet-overlay" role="dialog"><div class="art-panel compact-panel side-sheet"><h2>${title}</h2><p>${body}</p><button class="primary-button" type="button" data-action="${action}">${label}</button></div></section>`;
   }
 
   private setOverlay(next: OverlayScreen, useSceneTransition = false): void {
@@ -982,12 +975,97 @@ export class Game {
   }
 
   private showToast(message: string): void {
-    const toast = this.uiRoot.querySelector<HTMLOutputElement>("#toast");
+    const toast = this.uiRoot.querySelector<HTMLElement>("#toast");
     if (!toast) return;
     window.clearTimeout(this.toastTimer);
+    this.pendingCargoRelease = null;
+    toast.classList.remove("has-action");
     toast.textContent = message;
     toast.classList.add("is-visible");
     this.toastTimer = window.setTimeout(() => toast.classList.remove("is-visible"), this.save.settings.reducedMotion ? 4_500 : 3_200);
+  }
+
+  private showCargoReleaseToast(species: FishSpecies, focusUndo: boolean): void {
+    const toast = this.uiRoot.querySelector<HTMLElement>("#toast");
+    if (!toast) return;
+    window.clearTimeout(this.toastTimer);
+    const message = document.createElement("span");
+    message.textContent = `${FISH[species].name} released to the lake.`;
+    const undo = document.createElement("button");
+    undo.className = "toast-undo";
+    undo.type = "button";
+    undo.dataset.action = "undo-release";
+    undo.textContent = "Undo";
+    toast.replaceChildren(message, undo);
+    toast.classList.add("is-visible", "has-action");
+    const dismiss = (): void => {
+      if (document.activeElement === undo) {
+        this.toastTimer = window.setTimeout(dismiss, 1_000);
+        return;
+      }
+      this.pendingCargoRelease = null;
+      toast.classList.remove("is-visible", "has-action");
+      toast.replaceChildren();
+    };
+    this.toastTimer = window.setTimeout(dismiss, 5_000);
+    if (focusUndo) requestAnimationFrame(() => undo.focus({ preventScroll: true }));
+  }
+
+  private dismissCargoReleaseToast(): void {
+    if (!this.pendingCargoRelease) return;
+    window.clearTimeout(this.toastTimer);
+    this.pendingCargoRelease = null;
+    const toast = this.uiRoot.querySelector<HTMLElement>("#toast");
+    toast?.classList.remove("is-visible", "has-action");
+    toast?.replaceChildren();
+  }
+
+  private releaseCargoWithFeedback(target: HTMLElement, index: number, focusUndo: boolean): void {
+    const item = this.simulation.cargo[index];
+    if (!item) return;
+    const finishRelease = (): void => {
+      if (!releaseCargo(this.simulation, index)) return;
+      this.handleSimulationEvents();
+      this.pendingCargoRelease = { item: { ...item }, index };
+      this.renderOverlay();
+      this.showCargoReleaseToast(item.species, focusUndo);
+    };
+    window.clearTimeout(this.cargoReleaseTimer);
+    if (this.save.settings.reducedMotion) {
+      finishRelease();
+      return;
+    }
+    target.closest<HTMLElement>(".cargo-slot")?.classList.add("is-releasing");
+    if (target instanceof HTMLButtonElement) target.disabled = true;
+    this.cargoReleaseTimer = window.setTimeout(finishRelease, 180);
+  }
+
+  private showDeliverySuccess(): void {
+    const notification = this.uiRoot.querySelector<HTMLElement>("#delivery-success");
+    if (!notification) return;
+    window.clearTimeout(this.deliverySuccessTimer);
+    window.clearTimeout(this.deliverySuccessExitTimer);
+    notification.hidden = false;
+    notification.classList.remove("is-visible", "is-dismissing");
+    void notification.offsetWidth;
+    notification.classList.add("is-visible");
+    this.deliverySuccessTimer = window.setTimeout(
+      () => this.dismissDeliverySuccess(),
+      DELIVERY_SUCCESS_DURATION,
+    );
+  }
+
+  private dismissDeliverySuccess(): void {
+    const notification = this.uiRoot.querySelector<HTMLElement>("#delivery-success");
+    if (!notification || notification.hidden) return;
+    window.clearTimeout(this.deliverySuccessTimer);
+    window.clearTimeout(this.deliverySuccessExitTimer);
+    notification.classList.remove("is-visible");
+    notification.classList.add("is-dismissing");
+    this.deliverySuccessExitTimer = window.setTimeout(() => {
+      notification.hidden = true;
+      notification.classList.remove("is-dismissing");
+    }, this.save.settings.reducedMotion ? 0 : DELIVERY_SUCCESS_EXIT_DURATION);
   }
 
   private readonly onClick = (event: MouseEvent): void => {
@@ -996,6 +1074,9 @@ export class Game {
     const action = target.dataset.action;
     this.feedback.cue("ui");
     switch (action) {
+      case "dismiss-delivery-success":
+        this.dismissDeliverySuccess();
+        break;
       case "dismiss-tutorial": {
         const tutorial = this.uiRoot.querySelector<HTMLButtonElement>("#tutorial-callout");
         const message = tutorial?.querySelector<HTMLElement>(".tutorial-message")?.textContent;
@@ -1084,6 +1165,7 @@ export class Game {
         break;
       }
       case "undock":
+        this.dismissCargoReleaseToast();
         if (this.simulation.activeContract
           && this.simulation.cargo.some((item) => item.species === this.simulation.activeContract?.species)
           && !this.simulation.routeChoice) {
@@ -1113,15 +1195,6 @@ export class Game {
           this.renderOverlay();
         }
         break;
-      case "continue-after-delivery":
-        if (this.seasonReportQueued) {
-          this.seasonReportQueued = false;
-          this.setOverlay("seasonReport");
-        } else {
-          this.harborSection = "delivery";
-          this.setOverlay("harbor");
-        }
-        break;
       case "continue-season": this.harborSection = "delivery"; this.setOverlay("harbor"); break;
       case "buy-upgrade": {
         const upgrade = target.dataset.upgrade as UpgradeId | undefined;
@@ -1145,10 +1218,19 @@ export class Game {
         break;
       case "release": {
         const index = Number(target.dataset.index);
-        if (releaseCargo(this.simulation, index)) {
-          this.handleSimulationEvents();
-          this.renderOverlay();
-        }
+        this.releaseCargoWithFeedback(target, index, event.detail === 0);
+        break;
+      }
+      case "undo-release": {
+        const released = this.pendingCargoRelease;
+        if (!released || !restoreCargo(this.simulation, released.item, released.index)) break;
+        window.clearTimeout(this.toastTimer);
+        this.pendingCargoRelease = null;
+        this.renderOverlay();
+        this.showToast(`${FISH[released.item.species].name} returned to cargo.`);
+        requestAnimationFrame(() => {
+          this.uiRoot.querySelector<HTMLButtonElement>(`.cargo-release[data-index="${released.index}"]`)?.focus({ preventScroll: true });
+        });
         break;
       }
       case "leave-fishing":

@@ -365,21 +365,57 @@ test("reels a hooked fish to the boat before securing the catch", async ({ page 
 
   const canvas = page.locator("#game-canvas");
   await expect.poll(async () => Number(await canvas.getAttribute("data-fishing-dive-progress"))).toBeGreaterThan(0.99);
-  await page.evaluate(() => window.__FSHING_TEST__?.hookSpecies("reedfin"));
-  await expect(canvas).toHaveAttribute("data-fishing-state", "reeling");
-  const reelStartProgress = Number(await canvas.getAttribute("data-fishing-dive-progress"));
-  const surfaceBlendStart = Number(await canvas.getAttribute("data-fishing-surface-blend"));
-  await page.waitForTimeout(400);
-  const reelMidpointProgress = Number(await canvas.getAttribute("data-fishing-dive-progress"));
-  const surfaceBlendMidpoint = Number(await canvas.getAttribute("data-fishing-surface-blend"));
-  expect(reelStartProgress).toBeGreaterThan(0.95);
-  expect(reelMidpointProgress).toBeLessThan(reelStartProgress);
-  expect(reelMidpointProgress).toBeGreaterThan(0.25);
-  expect(surfaceBlendStart).toBeLessThan(0.05);
-  expect(surfaceBlendMidpoint).toBeGreaterThan(surfaceBlendStart);
+  const [reelStart, reelMidpoint] = await page.evaluate(async () => {
+    const element = document.querySelector<HTMLCanvasElement>("#game-canvas");
+    if (!element) throw new Error("Expected the game canvas.");
+    window.__FSHING_TEST__?.hookSpecies("reedfin");
+
+    type ReelSample = {
+      diveProgress: number;
+      schoolOpacity: number;
+      surfaceBlend: number;
+      surfaceSpriteOpacity: number;
+    };
+    let firstSample: ReelSample | null = null;
+    const startedAt = performance.now();
+    return new Promise<[ReelSample, ReelSample]>((resolve, reject) => {
+      const sampleFrame = (): void => {
+        if (element.dataset.fishingState === "reeling") {
+          const sample = {
+            diveProgress: Number(element.getAttribute("data-fishing-dive-progress")),
+            schoolOpacity: Number(element.getAttribute("data-fishing-school-opacity")),
+            surfaceBlend: Number(element.getAttribute("data-fishing-surface-blend")),
+            surfaceSpriteOpacity: Number(element.getAttribute("data-fishing-surface-sprite-opacity")),
+          };
+          firstSample ??= sample;
+          if (sample.surfaceBlend >= firstSample.surfaceBlend + 0.05) {
+            resolve([firstSample, sample]);
+            return;
+          }
+        }
+        if (performance.now() - startedAt >= 5_000) {
+          reject(new Error("Reel transition did not produce two distinct frames."));
+          return;
+        }
+        requestAnimationFrame(sampleFrame);
+      };
+      requestAnimationFrame(sampleFrame);
+    });
+  });
+  expect(reelMidpoint.diveProgress).toBeLessThan(reelStart.diveProgress);
+  expect(reelMidpoint.surfaceBlend).toBeGreaterThan(reelStart.surfaceBlend);
+  expect(reelMidpoint.schoolOpacity).toBeLessThan(reelStart.schoolOpacity);
+  expect(reelMidpoint.schoolOpacity).toBeGreaterThan(0);
+  expect(reelMidpoint.surfaceSpriteOpacity).toBeGreaterThan(reelStart.surfaceSpriteOpacity);
+  expect(reelStart.schoolOpacity + reelStart.surfaceBlend).toBeCloseTo(1, 2);
+  expect(reelMidpoint.schoolOpacity + reelMidpoint.surfaceBlend).toBeCloseTo(1, 2);
+  expect(reelStart.surfaceSpriteOpacity).toBeCloseTo(reelStart.surfaceBlend, 2);
+  expect(reelMidpoint.surfaceSpriteOpacity).toBeCloseTo(reelMidpoint.surfaceBlend, 2);
   await expect(page.locator(".fishing-controls")).toBeHidden();
   await expect.poll(async () => page.evaluate(() => window.__FSHING_TEST__?.mode())).toBe("cruising");
   await expect(canvas).not.toHaveAttribute("data-fishing-state");
+  await expect(canvas).not.toHaveAttribute("data-fishing-school-opacity");
+  await expect(canvas).not.toHaveAttribute("data-fishing-surface-sprite-opacity");
 });
 
 test("first harbor job keeps full-size route art clear of the title", async ({ page }) => {
@@ -521,6 +557,14 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await expect(page.locator(".cargo-slot")).toHaveCount(10);
   await expect(page.locator(".cargo-slot:not(.is-locked)")).toHaveCount(3);
   await expect(page.locator(".cargo-slot.is-locked")).toHaveCount(7);
+  const cargoBin = page.getByRole("button", { name: "Release Reedfin from cargo" });
+  await expect(cargoBin).toBeVisible();
+  await expect(cargoBin.locator("img")).toHaveCount(2);
+  await expect(cargoBin.locator("img").first()).toHaveAttribute("src", /bin-icon/);
+  await expect(cargoBin.locator("img").first()).toHaveJSProperty("complete", true);
+  const cargoBinBounds = await cargoBin.boundingBox();
+  expect(cargoBinBounds?.width).toBeGreaterThanOrEqual(44);
+  expect(cargoBinBounds?.height).toBeGreaterThanOrEqual(44);
   const cargoPanelBounds = await page.locator(".harbor-panel").boundingBox();
   expect(Math.abs((cargoPanelBounds?.y ?? 0) - (deliveryPanelBounds?.y ?? 0))).toBeLessThanOrEqual(1);
   expect(Math.abs((cargoPanelBounds?.height ?? 0) - (deliveryPanelBounds?.height ?? 0))).toBeLessThanOrEqual(1);
@@ -535,10 +579,25 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await page.getByRole("button", { name: "Delivery", exact: true }).click();
   await expect(page.locator(".harbor-content")).toHaveCSS("animation-name", "harbor-page-enter-backward");
   await page.getByRole("button", { name: "Complete delivery" }).click();
-  await expect(page.getByRole("heading", { name: "Delivery analysed" })).toBeVisible();
-  await expect(page.getByText("Prediction versus result")).toBeVisible();
-  await page.getByRole("button", { name: "Continue at harbor" }).click();
+  const deliverySuccess = page.locator("#delivery-success");
+  await expect(deliverySuccess).toBeVisible();
+  await expect(deliverySuccess).toContainText("Delivery Success");
+  await expect(deliverySuccess).toHaveCSS("animation-name", "delivery-success-enter");
+  await expect(page.getByRole("heading", { name: "Gloam Ferry" })).toBeVisible();
+  await page.getByRole("button", { name: "Close delivery success notification" }).click();
+  await expect(deliverySuccess).toBeHidden();
   await expect(page.getByRole("region", { name: "Dock services" })).toHaveCount(0);
+  await page.evaluate(() => window.__FSHING_TEST__?.catchSpecies("sunPerch"));
+  await page.getByRole("button", { name: "Cargo", exact: true }).click();
+  await page.getByRole("button", { name: "Release Sun Perch from cargo" }).click();
+  await expect(page.locator(".cargo-slot.is-occupied")).toHaveCount(0);
+  await expect(page.locator("#toast")).toContainText("Sun Perch released to the lake.");
+  const undoRelease = page.getByRole("button", { name: "Undo" });
+  await expect(undoRelease).toBeVisible();
+  await undoRelease.click();
+  await expect(page.locator(".cargo-slot.is-occupied")).toHaveCount(1);
+  await expect(page.getByRole("button", { name: "Release Sun Perch from cargo" })).toBeFocused();
+  await expect(page.locator("#toast")).toContainText("Sun Perch returned to cargo.");
   const deliveryHubBounds = await page.locator(".harbor-panel").boundingBox();
   await page.getByRole("button", { name: "Services", exact: true }).click();
   await expect(page.getByRole("button", { name: "Services", exact: true })).toBeFocused();
@@ -597,8 +656,9 @@ test("delivers a matching catch that was aboard before accepting the contract", 
   await expect(completeDelivery).toBeEnabled();
   await completeDelivery.click();
 
-  await expect(page.getByRole("heading", { name: "Delivery analysed" })).toBeVisible();
-  await page.getByRole("button", { name: "Continue at harbor" }).click();
+  const deliverySuccess = page.locator("#delivery-success");
+  await expect(deliverySuccess).toBeVisible();
+  await expect(deliverySuccess).toBeHidden({ timeout: 5_000 });
   await expect(page.locator(".shell-balance strong")).toHaveText(/^[1-9]\d*$/);
   await expect(page.getByRole("heading", { name: "Harbor Trade" })).toBeVisible();
 });
@@ -724,6 +784,10 @@ test("dock interaction starts on pointer press", async ({ page }) => {
   await page.evaluate(() => window.__FSHING_TEST__?.sailToHarbor("brindle"));
 
   const dockButton = page.getByRole("button", { name: "Dock · Brindle Harbor" });
+  await expect(dockButton).toHaveCSS("background-image", "none");
+  await expect(dockButton).toHaveCSS("background-color", "rgb(255, 106, 31)");
+  await expect(dockButton).toHaveCSS("border-radius", "14px");
+  await expect(dockButton).toHaveCSS("width", "300px");
   await dockButton.hover();
   await page.mouse.down();
   await expect(page.getByRole("heading", { name: "Brindle Harbor" })).toBeVisible();

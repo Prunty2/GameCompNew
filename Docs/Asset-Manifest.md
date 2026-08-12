@@ -189,6 +189,14 @@ The boat, harbor pier, fish atlas, and world atlas were requested on a uniform `
 - Processing: the flat chroma key was removed with a soft matte and despill. The full generated source is retained as `output/imagegen/job-deliver-beacon-source.png`.
 - Presentation: imported as external image assets so the job route uses real artwork rather than procedural CSS shapes
 
+### `bin-icon.png`
+
+- Runtime role: remove/release action on occupied Cargo inventory slots
+- Generated source size: 1254 × 1254; optimized runtime size: 256 × 256 with authored alpha
+- Generation mode: OpenAI built-in GPT Image generation followed by local chroma-key removal and runtime downscaling
+- Prompt: “Use case: stylized-concept. Asset type: tiny game UI bin icon for a cargo release control in the FSHING browser game. Create one original, minimal waste-bin pictogram that remains clean and unmistakable at 20 to 24 pixels. Use a front-facing tapered bin body drawn as a sparse warm-cream outline, with a short detached lid, a tiny safety-orange handle accent, and three simple vertical cream slots. Do not use a large filled cream area or heavy outer navy keyline. Keep the screen-printed treatment crisp, geometric, and minimally textured. Exactly one compact centered icon occupying about 58 percent of the canvas on a perfectly flat solid #00FF00 chroma-key background. No text, label, fish, recycling arrows, circle, tile, medallion, frame, border, extra object, reflection, shadow, watermark, checkerboard, photorealism, bevel, or glossy rendering.”
+- Processing: The border-sampled green matte was removed with a soft alpha ramp and despill. The result was center-cropped to tighten excess padding, then reduced to 256 × 256. The full generated source is retained as `output/imagegen/bin-icon-source.png`.
+
 ## Procedural audio assets
 
 FSHING bundles no external audio files. `src/services/feedbackService.ts` creates the implemented sound and haptic feedback at runtime:
