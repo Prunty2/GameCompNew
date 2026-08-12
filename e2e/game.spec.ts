@@ -389,15 +389,18 @@ test("first harbor job keeps full-size route art clear of the title", async ({ p
   const title = page.getByRole("heading", { name: "First Assignment" });
   const firstMarker = page.locator(".job-route-number").first();
   const firstStage = page.locator(".job-route > li").first();
+  const secondStage = page.locator(".job-route > li").nth(1);
   const fish = page.getByRole("img", { name: "Reedfin target fish" });
   const deliver = page.locator(".job-route-deliver-icon");
   const reward = page.getByLabel("Reward: 90 shells");
   const titleBounds = await title.boundingBox();
   const markerBounds = await firstMarker.boundingBox();
   const stageBounds = await firstStage.boundingBox();
+  const secondStageBounds = await secondStage.boundingBox();
 
   expect((markerBounds?.y ?? 0) - ((titleBounds?.y ?? 0) + (titleBounds?.height ?? 0))).toBeGreaterThanOrEqual(20);
   expect(stageBounds?.height).toBeGreaterThanOrEqual(160);
+  expect(Math.abs((secondStageBounds?.x ?? 0) - ((stageBounds?.x ?? 0) + (stageBounds?.width ?? 0)))).toBeLessThanOrEqual(1);
   await expect(fish).toHaveCSS("width", "128px");
   await expect(fish).toHaveCSS("height", "128px");
   await expect(fish).toHaveCSS("background-image", /fish-atlas-ui/);
@@ -406,6 +409,7 @@ test("first harbor job keeps full-size route art clear of the title", async ({ p
   await expect(reward).toHaveCSS("border-left-width", "2px");
   await expect(reward).toHaveCSS("border-left-style", "solid");
   expect(await firstStage.evaluate((element) => getComputedStyle(element, "::after").backgroundColor)).toBe("rgba(0, 0, 0, 0)");
+  expect(await firstStage.evaluate((element) => getComputedStyle(element, "::after").fontSize)).toBe("28.8px");
 });
 
 test("completes the tutorial delivery, buys an upgrade, and persists it", async ({ page }) => {

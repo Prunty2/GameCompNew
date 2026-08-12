@@ -437,11 +437,11 @@
   line-height: 1;
 }
 
-.harbor-screen.is-first-voyage.is-harbor-delivery .job-route {
+.harbor-screen.is-first-voyage.is-harbor-delivery .harbor-content .job-route {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0;
-  margin: 56px 0 20px;
+  margin: 68px 0 20px;
 }
 
 .harbor-screen.is-first-voyage.is-harbor-delivery .harbor-content .job-route li {
@@ -476,7 +476,8 @@
   background: transparent;
   box-shadow: none;
   color: rgb(247 241 227 / 58%);
-  font-size: 1.35rem;
+  content: "⟶";
+  font-size: 1.8rem;
   transform: translateY(-50%);
 }
 
@@ -1229,7 +1230,7 @@
     font-size: 0.58rem;
   }
 
-  .harbor-screen.is-first-voyage.is-harbor-delivery .job-route {
+  .harbor-screen.is-first-voyage.is-harbor-delivery .harbor-content .job-route {
     gap: 0;
     margin: 38px 0 12px;
   }
