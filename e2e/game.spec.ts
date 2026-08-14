@@ -433,6 +433,7 @@ test("first harbor job keeps full-size route art clear of the title", async ({ p
   const missionButton = page.getByRole("button", { name: "Accept contract" });
   const helpButton = page.getByRole("button", { name: "How to play" });
   const menuButton = page.getByRole("button", { name: "Back to main menu" });
+  const stageHeadings = page.locator(".job-route small");
   const titleBounds = await title.boundingBox();
   const markerBounds = await firstMarker.boundingBox();
   const stageBounds = await firstStage.boundingBox();
@@ -446,6 +447,10 @@ test("first harbor job keeps full-size route art clear of the title", async ({ p
   expect(Math.abs((secondStageBounds?.x ?? 0) - ((stageBounds?.x ?? 0) + (stageBounds?.width ?? 0)) - 16)).toBeLessThanOrEqual(1);
   expect((helpBounds?.y ?? 0) - ((missionBounds?.y ?? 0) + (missionBounds?.height ?? 0))).toBeGreaterThanOrEqual(12);
   expect((menuBounds?.y ?? 0) - ((missionBounds?.y ?? 0) + (missionBounds?.height ?? 0))).toBeGreaterThanOrEqual(12);
+  const headingPositions = await stageHeadings.evaluateAll((headings) => (
+    headings.map((heading) => heading.getBoundingClientRect().y)
+  ));
+  expect(Math.max(...headingPositions) - Math.min(...headingPositions)).toBeLessThanOrEqual(1);
   await expect(fish).toHaveCSS("width", "100px");
   await expect(fish).toHaveCSS("height", "100px");
   await expect(fish).toHaveCSS("transform", "matrix(1, 0, 0, 1, -6, -8)");
@@ -453,6 +458,7 @@ test("first harbor job keeps full-size route art clear of the title", async ({ p
   await expect(freshness).toHaveCSS("width", "88px");
   await expect(freshness).toHaveCSS("height", "88px");
   await expect(freshness).toHaveAttribute("src", /job-freshness-fish/);
+  await expect(secondStage.locator("strong")).toHaveText("Freshness 80%+");
   await expect(deliver).toHaveCSS("width", "96px");
   await expect(deliver).toHaveCSS("height", "96px");
   await expect(reward).toHaveCSS("border-left-width", "2px");
@@ -663,7 +669,7 @@ test("delivers a matching catch that was aboard before accepting the contract", 
   await expect(page.getByRole("heading", { name: "Harbor Trade" })).toBeVisible();
   await expect(page.locator(".job-route-detail").filter({ hasText: "2 required" })).toBeVisible();
   const freshnessStep = page.locator(".job-route li").filter({ hasText: "Freshness" });
-  await expect(freshnessStep.locator("strong")).toHaveText("85%+");
+  await expect(freshnessStep.locator("strong")).toHaveText("Freshness 85%+");
   await expect(freshnessStep).not.toContainText("if missed");
 });
 

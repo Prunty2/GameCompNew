@@ -568,7 +568,7 @@ export class Game {
           </div>
           <ol class="job-route" aria-label="Job steps">
             <li><span class="job-route-number" aria-hidden="true">01</span><div class="job-route-copy"><small>Catch</small>${this.targetFishIcon(available.species)}<strong>${FISH[available.species].name}</strong><span class="job-route-detail">${available.quantity} required</span></div></li>
-            <li><span class="job-route-number" aria-hidden="true">02</span><div class="job-route-copy"><small>Freshness</small><img class="job-route-icon job-route-freshness-icon" src="${freshnessFishIconUrl}" alt="" aria-hidden="true" /><strong>${available.minimumFreshness}%+</strong></div></li>
+            <li><span class="job-route-number" aria-hidden="true">02</span><div class="job-route-copy"><small>Freshness</small><img class="job-route-icon job-route-freshness-icon" src="${freshnessFishIconUrl}" alt="" aria-hidden="true" /><strong>Freshness ${available.minimumFreshness}%+</strong></div></li>
             <li><span class="job-route-number" aria-hidden="true">03</span><div class="job-route-copy"><small>Deliver</small><img class="job-route-icon job-route-deliver-icon" src="${deliverBeaconIconUrl}" alt="" aria-hidden="true" /><strong>${harborById(available.destination).name}</strong></div></li>
           </ol>
           <button class="primary-button mission-button" type="button" data-action="accept-contract" aria-label="Accept contract">
@@ -581,7 +581,7 @@ export class Game {
             <h3>${contract.title}</h3>
             <ol class="job-route" aria-label="Job steps">
               <li class="${matchingCatch ? "is-complete" : "is-current"}"><span class="job-route-number" aria-hidden="true">${matchingCatch ? "✓" : "01"}</span><div class="job-route-copy"><small>Catch</small>${this.targetFishIcon(contract.species)}<strong>${FISH[contract.species].name}</strong><span class="job-route-detail">${matchingCatchCount}/${contract.quantity} secured</span></div></li>
-              <li class="${freshCatch ? "is-complete" : matchingCatch ? "is-current" : ""}"><span class="job-route-number" aria-hidden="true">${freshCatch ? "✓" : "02"}</span><div class="job-route-copy"><small>Freshness</small><img class="job-route-icon job-route-freshness-icon" src="${freshnessFishIconUrl}" alt="" aria-hidden="true" /><strong>${contract.minimumFreshness}%+</strong></div></li>
+              <li class="${freshCatch ? "is-complete" : matchingCatch ? "is-current" : ""}"><span class="job-route-number" aria-hidden="true">${freshCatch ? "✓" : "02"}</span><div class="job-route-copy"><small>Freshness</small><img class="job-route-icon job-route-freshness-icon" src="${freshnessFishIconUrl}" alt="" aria-hidden="true" /><strong>Freshness ${contract.minimumFreshness}%+</strong></div></li>
               <li class="${deliverable ? "is-current" : ""}"><span class="job-route-number" aria-hidden="true">03</span><div class="job-route-copy"><small>Deliver</small><img class="job-route-icon job-route-deliver-icon" src="${deliverBeaconIconUrl}" alt="" aria-hidden="true" /><strong>${harborById(contract.destination).name}</strong></div></li>
             </ol>
             ${contract.destination === harborId
