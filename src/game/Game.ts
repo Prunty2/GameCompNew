@@ -59,7 +59,6 @@ import {
   resolveCatch,
   shouldShowNightIndicator,
   startFishing,
-  tutorialPrompt,
   undock,
   unlockBoostForTesting,
   updateSimulation,
@@ -138,7 +137,6 @@ export class Game {
   private toastTimer: number | undefined;
   private deliverySuccessTimer: number | undefined;
   private deliverySuccessExitTimer: number | undefined;
-  private tutorialDismissTimer: number | undefined;
   private pauseTransitionTimer: number | undefined;
   private settingsTransitionTimer: number | undefined;
   private cargoUpgradeTransitionTimer: number | undefined;
@@ -147,7 +145,6 @@ export class Game {
   private sceneTransitioning = false;
   private sceneTransitionTarget: OverlayScreen | undefined;
   private queuedOverlay: { next: OverlayScreen; useSceneTransition: boolean } | null = null;
-  private dismissedTutorialText: string | null = null;
   private seasonReportQueued = false;
   private readonly visualTestSpot = import.meta.env.DEV
     ? new URLSearchParams(window.location.search).get("e2eSpot") as SpotId | null
@@ -256,10 +253,6 @@ export class Game {
           <small>SHIFT</small>
         </div>
         <p class="visually-hidden navigation-status" role="status" aria-live="polite"></p>
-        <button class="tutorial-callout" id="tutorial-callout" type="button" data-action="dismiss-tutorial" title="Dismiss instruction" hidden>
-          <span class="tutorial-label" aria-hidden="true">Next</span>
-          <span class="tutorial-message" aria-live="polite"></span>
-        </button>
         <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
         <section class="delivery-success" id="delivery-success" role="status" aria-live="polite" aria-atomic="true" hidden>
           <span class="delivery-success-seal" aria-hidden="true">✓</span>
@@ -401,24 +394,6 @@ export class Game {
 
   private refreshHud(): void {
     const simulation = this.simulation;
-
-    const tutorial = this.uiRoot.querySelector<HTMLElement>("#tutorial-callout");
-    const tutorialText = tutorialPrompt(simulation);
-    if (tutorial) {
-      if (this.dismissedTutorialText && tutorialText !== this.dismissedTutorialText) {
-        this.dismissedTutorialText = null;
-      }
-      const tutorialMessage = tutorial.querySelector<HTMLElement>(".tutorial-message");
-      if (tutorialMessage) tutorialMessage.textContent = tutorialText ?? "";
-      const shouldShow = Boolean(tutorialText) && this.overlay === null && tutorialText !== this.dismissedTutorialText;
-      if (shouldShow) {
-        window.clearTimeout(this.tutorialDismissTimer);
-        tutorial.classList.remove("is-dismissing");
-        tutorial.hidden = false;
-      } else if (!tutorial.classList.contains("is-dismissing")) {
-        tutorial.hidden = true;
-      }
-    }
 
     const guidance = navigationGuidance(simulation);
     const navigationStatus = this.uiRoot.querySelector<HTMLElement>(".navigation-status");
@@ -1087,19 +1062,6 @@ export class Game {
       case "dismiss-delivery-success":
         this.dismissDeliverySuccess();
         break;
-      case "dismiss-tutorial": {
-        const tutorial = this.uiRoot.querySelector<HTMLButtonElement>("#tutorial-callout");
-        const message = tutorial?.querySelector<HTMLElement>(".tutorial-message")?.textContent;
-        if (!tutorial || !message) break;
-        window.clearTimeout(this.tutorialDismissTimer);
-        this.dismissedTutorialText = message;
-        tutorial.classList.add("is-dismissing");
-        this.tutorialDismissTimer = window.setTimeout(() => {
-          tutorial.hidden = true;
-          tutorial.classList.remove("is-dismissing");
-        }, this.save.settings.reducedMotion ? 0 : 280);
-        break;
-      }
       case "start": this.beginVoyage(); break;
       case "interact": this.handleInteract(); break;
       case "resume": this.setOverlay(null); break;
