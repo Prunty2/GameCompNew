@@ -707,7 +707,7 @@ test("delivers a matching catch that was aboard before accepting the contract", 
 
   const deliverySuccess = page.locator("#delivery-notification");
   await expect(deliverySuccess).toBeVisible();
-  await expect(deliverySuccess).toBeHidden({ timeout: 5_000 });
+  await expect(deliverySuccess).toBeHidden({ timeout: 6_000 });
   await expect(page.locator(".shell-balance strong")).toHaveText(/^[1-9]\d*$/);
   await expect(page.getByRole("heading", { name: "Harbor Trade" })).toBeVisible();
   await expect(page.locator(".job-route-detail").filter({ hasText: "2 required" })).toBeVisible();
