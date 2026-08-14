@@ -350,11 +350,31 @@ test("fishing descends through the sailing waterline into a site-specific scene"
   await expect(canvas).toHaveAttribute("data-target-rarity", "common");
   await expect(canvas).toHaveAttribute(
     "aria-label",
-    "Fishing at Sunward Shoal. Target Reedfin, common rarity.",
+    "Fishing at Sunward Shoal. Target Bluegill, common rarity.",
   );
   const initialDiveProgress = Number(await canvas.getAttribute("data-fishing-dive-progress"));
   expect(initialDiveProgress).toBeLessThan(1);
   await expect.poll(async () => Number(await canvas.getAttribute("data-fishing-dive-progress"))).toBeGreaterThan(0.99);
+});
+
+test("all three fishing spots render their habitat-specific real species", async ({ page }) => {
+  await page.goto("/?e2e=1");
+  const canvas = page.locator("#game-canvas");
+  const sites = [
+    { id: "sunwardShoal", name: "Sunward Shoal", species: "bluegill", label: "Bluegill", rarity: "common" },
+    { id: "mosswaterPool", name: "Mosswater Pool", species: "largemouthBass", label: "Largemouth Bass", rarity: "uncommon" },
+    { id: "outerGloam", name: "Outer Gloam", species: "lakeTrout", label: "Lake Trout", rarity: "rare" },
+  ] as const;
+
+  for (const site of sites) {
+    await page.evaluate(({ id, species }) => window.__FSHING_TEST__?.previewFishing(id, species), site);
+    await expect(canvas).toHaveAttribute("data-fishing-spot", site.id);
+    await expect(canvas).toHaveAttribute("data-target-rarity", site.rarity);
+    await expect(canvas).toHaveAttribute(
+      "aria-label",
+      `Fishing at ${site.name}. Target ${site.label}, ${site.rarity} rarity.`,
+    );
+  }
 });
 
 test("reels a hooked fish to the boat before securing the catch", async ({ page }) => {
@@ -368,7 +388,7 @@ test("reels a hooked fish to the boat before securing the catch", async ({ page 
   const [reelStart, reelMidpoint] = await page.evaluate(async () => {
     const element = document.querySelector<HTMLCanvasElement>("#game-canvas");
     if (!element) throw new Error("Expected the game canvas.");
-    window.__FSHING_TEST__?.hookSpecies("reedfin");
+    window.__FSHING_TEST__?.hookSpecies("bluegill");
 
     type ReelSample = {
       diveProgress: number;
@@ -426,7 +446,7 @@ test("first harbor job keeps full-size route art clear of the title", async ({ p
   const firstMarker = page.locator(".job-route-number").first();
   const firstStage = page.locator(".job-route > li").first();
   const secondStage = page.locator(".job-route > li").nth(1);
-  const fish = page.getByRole("img", { name: "Reedfin target fish" });
+  const fish = page.getByRole("img", { name: "Bluegill target fish" });
   const freshness = page.locator(".job-route-freshness-icon");
   const deliver = page.locator(".job-route-deliver-icon");
   const reward = page.getByLabel("Reward: 75 shells");
@@ -499,7 +519,7 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   expect(firstPanelHeight).toBeLessThanOrEqual(720);
   await expect(page.locator(".job-route > li")).toHaveCount(3);
   await expect(page.locator(".job-route-icon")).toHaveCount(3);
-  await expect(page.getByRole("img", { name: "Reedfin target fish" })).toBeVisible();
+  await expect(page.getByRole("img", { name: "Bluegill target fish" })).toBeVisible();
   await expect(page.locator(".job-route")).toContainText("Catch");
   await expect(page.locator(".job-route")).toContainText("Freshness");
   await expect(page.locator(".job-route")).toContainText("Deliver");
@@ -538,8 +558,8 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await expect(page.locator("#tutorial-callout")).toContainText("Drop the line at Sunward Shoal");
   await page.getByRole("button", { name: "Drop line · Sunward Shoal" }).click();
   await expect(page.getByRole("heading", { name: "Read the lake" })).toHaveCount(0);
-  await expect(page.getByText(/Guide the hook toward the Reedfin/)).toBeVisible();
-  await page.evaluate(() => window.__FSHING_TEST__?.catchSpecies("reedfin"));
+  await expect(page.getByText(/Guide the hook toward the Bluegill/)).toBeVisible();
+  await page.evaluate(() => window.__FSHING_TEST__?.catchSpecies("bluegill"));
   await expect(page.getByRole("heading", { name: "Plan your crossing" })).toHaveCount(0);
   await expect(page.getByText("Applied mathematics")).toHaveCount(0);
   await expect(page.locator("#tutorial-callout")).toContainText("Gloam Ferry");
@@ -577,7 +597,7 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await expect(page.locator(".cargo-slot")).toHaveCount(10);
   await expect(page.locator(".cargo-slot:not(.is-locked)")).toHaveCount(3);
   await expect(page.locator(".cargo-slot.is-locked")).toHaveCount(7);
-  const cargoBin = page.getByRole("button", { name: "Release Reedfin from cargo" });
+  const cargoBin = page.getByRole("button", { name: "Release Bluegill from cargo" });
   await expect(cargoBin).toBeVisible();
   await expect(cargoBin.locator("img")).toHaveCount(2);
   await expect(cargoBin.locator("img").first()).toHaveAttribute("src", /bin-icon/);
@@ -607,17 +627,17 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await page.getByRole("button", { name: "Close delivery success notification" }).click();
   await expect(deliverySuccess).toBeHidden();
   await expect(page.getByRole("region", { name: "Dock services" })).toHaveCount(0);
-  await page.evaluate(() => window.__FSHING_TEST__?.catchSpecies("sunPerch"));
+  await page.evaluate(() => window.__FSHING_TEST__?.catchSpecies("yellowPerch"));
   await page.getByRole("button", { name: "Cargo", exact: true }).click();
-  await page.getByRole("button", { name: "Release Sun Perch from cargo" }).click();
+  await page.getByRole("button", { name: "Release Yellow Perch from cargo" }).click();
   await expect(page.locator(".cargo-slot.is-occupied")).toHaveCount(0);
-  await expect(page.locator("#toast")).toContainText("Sun Perch released to the lake.");
+  await expect(page.locator("#toast")).toContainText("Yellow Perch released to the lake.");
   const undoRelease = page.getByRole("button", { name: "Undo" });
   await expect(undoRelease).toBeVisible();
   await undoRelease.click();
   await expect(page.locator(".cargo-slot.is-occupied")).toHaveCount(1);
-  await expect(page.getByRole("button", { name: "Release Sun Perch from cargo" })).toBeFocused();
-  await expect(page.locator("#toast")).toContainText("Sun Perch returned to cargo.");
+  await expect(page.getByRole("button", { name: "Release Yellow Perch from cargo" })).toBeFocused();
+  await expect(page.locator("#toast")).toContainText("Yellow Perch returned to cargo.");
   const deliveryHubBounds = await page.locator(".harbor-panel").boundingBox();
   await page.getByRole("button", { name: "Services", exact: true }).click();
   await expect(page.getByRole("button", { name: "Services", exact: true })).toBeFocused();
@@ -666,7 +686,7 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
 
 test("delivers a matching catch that was aboard before accepting the contract", async ({ page }) => {
   await page.goto("/?e2e=1");
-  await page.evaluate(() => window.__FSHING_TEST__?.catchSpecies("reedfin"));
+  await page.evaluate(() => window.__FSHING_TEST__?.catchSpecies("bluegill"));
   await page.getByRole("button", { name: "Play", exact: true }).click();
   await page.getByRole("button", { name: "Accept contract" }).click();
 

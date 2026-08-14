@@ -799,26 +799,26 @@ function createAvailableContract(simulation: Simulation, origin: HarborId): Cont
     return {
       id: "morning-order",
       title: "The Morning Order",
-      species: "reedfin",
+      species: "bluegill",
       origin: "brindle",
       destination: "gloam",
       spot: "sunwardShoal",
       quantity: 1,
-      ...calculateContractPayouts("reedfin", 1, minimumFreshness),
+      ...calculateContractPayouts("bluegill", 1, minimumFreshness),
       minimumFreshness,
     };
   }
   const destination: HarborId = origin === "brindle" ? "gloam" : "brindle";
   const spotForSpecies: Record<FishSpecies, SpotId> = {
-    reedfin: "sunwardShoal",
-    sunPerch: "sunwardShoal",
-    silverDart: "sunwardShoal",
-    needlePike: "mosswaterPool",
-    mossback: "mosswaterPool",
-    lanternEel: "mosswaterPool",
-    gloamGill: "outerGloam",
-    violetRay: "outerGloam",
-    abyssCrown: "outerGloam",
+    bluegill: "sunwardShoal",
+    yellowPerch: "sunwardShoal",
+    emeraldShiner: "sunwardShoal",
+    northernPike: "mosswaterPool",
+    largemouthBass: "mosswaterPool",
+    bowfin: "mosswaterPool",
+    lakeTrout: "outerGloam",
+    burbot: "outerGloam",
+    lakeSturgeon: "outerGloam",
   };
   const availableSpecies = (Object.keys(FISH) as FishSpecies[]).filter((candidate) => {
     const fish = FISH[candidate];

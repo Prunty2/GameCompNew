@@ -74,8 +74,11 @@ export function fishingFishPose(
   const profile = FISHING_MOVEMENT_PROFILES[species];
   const motion = fishingSpeciesMotion(species, elapsed, phase);
   const framePhase = ((elapsed * profile.bodyFrequency + phase * 0.8) / (Math.PI * 2)) % 1;
+  const animationFrame = motion.propulsion < 0.16
+    ? 0
+    : Math.floor((framePhase < 0 ? framePhase + 1 : framePhase) * 4) % 4;
   return {
-    animationFrame: Math.floor((framePhase < 0 ? framePhase + 1 : framePhase) * 4) % 4,
+    animationFrame,
     verticalOffsetRatio: motion.flex * profile.flexAmount * 0.08,
     rotation: motion.pitch,
     scaleX: 1 + motion.flex * profile.flexAmount,
