@@ -434,6 +434,8 @@ test("first harbor job keeps full-size route art clear of the title", async ({ p
   const helpButton = page.getByRole("button", { name: "How to play" });
   const menuButton = page.getByRole("button", { name: "Back to main menu" });
   const stageHeadings = page.locator(".job-route small");
+  const stageIcons = page.locator(".job-route-icon");
+  const stageValues = page.locator(".job-route-copy > strong");
   const titleBounds = await title.boundingBox();
   const markerBounds = await firstMarker.boundingBox();
   const stageBounds = await firstStage.boundingBox();
@@ -451,9 +453,21 @@ test("first harbor job keeps full-size route art clear of the title", async ({ p
     headings.map((heading) => heading.getBoundingClientRect().y)
   ));
   expect(Math.max(...headingPositions) - Math.min(...headingPositions)).toBeLessThanOrEqual(1);
+  expect(
+    headingPositions[0]! - ((markerBounds?.y ?? 0) + (markerBounds?.height ?? 0)),
+  ).toBeGreaterThanOrEqual(12);
+  const iconCenters = await stageIcons.evaluateAll((icons) => icons.map((icon) => {
+    const bounds = icon.getBoundingClientRect();
+    return bounds.y + bounds.height / 2;
+  }));
+  expect(Math.max(...iconCenters) - Math.min(...iconCenters)).toBeLessThanOrEqual(1);
+  const valuePositions = await stageValues.evaluateAll((values) => (
+    values.map((value) => value.getBoundingClientRect().y)
+  ));
+  expect(Math.max(...valuePositions) - Math.min(...valuePositions)).toBeLessThanOrEqual(1);
   await expect(fish).toHaveCSS("width", "100px");
   await expect(fish).toHaveCSS("height", "100px");
-  await expect(fish).toHaveCSS("transform", "matrix(1, 0, 0, 1, -6, -8)");
+  await expect(fish).toHaveCSS("transform", "matrix(1, 0, 0, 1, -6, 0)");
   await expect(fish).toHaveCSS("background-image", /fish-atlas-ui/);
   await expect(freshness).toHaveCSS("width", "88px");
   await expect(freshness).toHaveCSS("height", "88px");
