@@ -679,6 +679,7 @@ Every authored visual asset in this slice is generated with GPT Image 2.0. No pr
 
 | Asset | Runtime purpose |
 | --- | --- |
+| `fshing-logo.png` | Square fish-and-survey emblem for browser and app icons |
 | `fshing-wordmark.png` | Restrained title-screen identity |
 | `lake-chart.png` | Side-on panoramic sky, distant shore, waterline, and lake atmosphere |
 | `player-boat.png` | Player vessel in strict side profile on a chroma-key matte |
