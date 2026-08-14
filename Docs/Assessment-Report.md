@@ -100,12 +100,12 @@ flowchart LR
 ### First-player journey
 
 1. Press **Play** and arrive at Brindle Harbor.
-2. Accept **The Morning Order**, which requests a Reedfin for Gloam Ferry.
+2. Accept **The Morning Order**, which requests a Bluegill for Gloam Ferry.
 3. Follow the faint Sunward Shoal fish activity until the polarized-water lens strengthens and the hook appears above the fishing ground.
 4. Read: 4 m, 21°C, 8.4 mg/L dissolved oxygen, low turbidity, sunlit reeds.
-5. Predict the Reedfin from three species descriptions.
+5. Predict the Bluegill from three species descriptions.
 6. Read why broad fins help it manoeuvre in reeds, then lower the hook.
-7. Catch the Reedfin. Its freshness begins at 100%.
+7. Catch the Bluegill. Its freshness begins at 100%.
 8. Compare two routes from the catch site to Gloam Ferry. The screen displays distance, estimated minutes, predicted freshness, and hazard multiplier.
 9. Select a route and cross the lake, using visible yellow hazard signs and braking when needed.
 10. Dock, deliver, and compare the catch-to-harbor prediction with actual freshness.
@@ -116,12 +116,9 @@ flowchart LR
 
 | Site | Region | Readings | Habitat residents | Required line |
 | --- | --- | --- | --- | ---: |
-| Sunward Shoal | Brindle Coast | 4 m, 21°C, 8.4 mg/L, clear reeds | Reedfin, Sun Perch, Silver Dart | T0 |
-| Silver Bay | Brindle Coast | 7 m, 18°C, 8.0 mg/L, gravel shelf | Silver Dart, Sun Perch, Needle Pike | T0 |
-| Needle Run | Mosswater Reach | 13 m, 15°C, 7.2 mg/L, current channel | Needle Pike, Silver Dart, Mossback | T1 |
-| Mosswater Pool | Mosswater Reach | 20 m, 12°C, 6.4 mg/L, vegetation/debris | Mossback, Lantern Eel, Needle Pike | T2 |
-| Outer Gloam | Violet Gloam | 31 m, 8°C, 5.5 mg/L, rocky drop-off | Gloam Gill, Violet Ray, Lantern Eel | T3 + permit |
-| Blackwater Trench | Violet Gloam | 46 m, 5°C, 4.6 mg/L, lightless trench | Abyss Crown, Violet Ray, Gloam Gill | T5 + permit |
+| Sunward Shoal | Brindle Coast | 4 m, 21°C, 8.4 mg/L, clear reeds | Bluegill, Yellow Perch, Emerald Shiner | T0 |
+| Mosswater Pool | Mosswater Reach | 8 m, 19°C, 6.4 mg/L, vegetation/debris | Northern Pike, Largemouth Bass, Bowfin | T1 |
+| Outer Gloam | Violet Gloam | 31 m, 8°C, 5.5 mg/L, rocky drop-off | Lake Trout, Burbot, Lake Sturgeon | T3 + permit |
 
 Each fishing view contains two individuals from each of its three documented residents. A later contract can request any resident of its assigned site; the survey then evaluates that contract target instead of silently reverting to the site's primary species.
 
@@ -200,7 +197,7 @@ Gameplay uses a fixed `1/120`-second simulation step. Random target positions an
 
 ### Save validation
 
-Save version 8 treats stored data as untrusted. Money, upgrade tiers, learning counters, volume, and other numerical values are checked and clamped. Species identifiers are filtered against the real species list, duplicate discoveries are removed, obsolete population fields are ignored, and malformed JSON falls back to a valid new save.
+Save version 9 treats stored data as untrusted. Money, upgrade tiers, learning counters, volume, and other numerical values are checked and clamped. Species identifiers are filtered against the real species list, retired fantasy identifiers migrate one-to-one, duplicate discoveries are removed, obsolete population fields are ignored, and malformed JSON falls back to a valid new save.
 
 ## 6. Interface and accessibility design
 
@@ -373,7 +370,7 @@ Solution: define three scientifically plausible residents per site, spawn two of
 Solution: open planning after the catch and calculate catch-site-to-destination time with the same maximum-speed and freshness model used by the simulation.
 
 **Challenge: existing save files lacked new learning data.**  
-Solution: use versioned migration, validate every field, and supply safe defaults. Version 8 removes obsolete population and conservation fields without invalidating older saves.
+Solution: use versioned migration, validate every field, and supply safe defaults. Version 9 preserves discovery progress while mapping all retired fantasy fish ids to their real-species replacements.
 
 **Challenge: nine fish based on three atlas cells would not be genuinely distinct.**  
 Solution: produce a new original 3 × 3 atlas and map each typed species to one cell.

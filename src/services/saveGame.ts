@@ -19,14 +19,14 @@ export interface GameSettings {
 }
 
 export interface SaveData {
-  version: 8;
+  version: 9;
   progress: ProgressState;
   settings: GameSettings;
 }
 
 export function defaultSave(): SaveData {
   return {
-    version: 8,
+    version: 9,
     progress: {
       money: 0,
       upgrades: { cargo: 0, engine: 0, lamp: 0, line: 0 },
@@ -62,7 +62,7 @@ export function loadSave(storage: SaveStorage): SaveData {
     const learning = objectValue(progress.learning);
     const settings = objectValue(candidate.settings);
     return {
-      version: 8,
+      version: 9,
       progress: {
         money: finiteInteger(progress.money, 0, 999_999),
         upgrades: readUpgrades(upgrades),
@@ -131,7 +131,24 @@ function readUpgrades(candidate: Record<string, unknown>): Record<UpgradeId, num
 
 function readDiscovered(value: unknown): FishSpecies[] {
   if (!Array.isArray(value)) return [];
-  return [...new Set(value.filter((species): species is FishSpecies => typeof species === "string" && species in FISH))];
+  const renamedSpecies: Record<string, FishSpecies> = {
+    reedfin: "bluegill",
+    sunPerch: "yellowPerch",
+    silverDart: "emeraldShiner",
+    needlePike: "northernPike",
+    mossback: "largemouthBass",
+    lanternEel: "bowfin",
+    gloamGill: "lakeTrout",
+    violetRay: "burbot",
+    abyssCrown: "lakeSturgeon",
+  };
+  const discovered = value.flatMap((species): FishSpecies[] => {
+    if (typeof species !== "string") return [];
+    if (species in FISH) return [species as FishSpecies];
+    const migrated = renamedSpecies[species];
+    return migrated ? [migrated] : [];
+  });
+  return [...new Set(discovered)];
 }
 
 function objectValue(value: unknown): Record<string, unknown> {

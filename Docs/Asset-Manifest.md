@@ -1,6 +1,6 @@
 # FSHING asset manifest
 
-The initial authored visual set was generated with GPT Image 2.0 on 24 July 2026. The expanded nine-species fish atlas was generated with OpenAI's built-in image-generation tool on 31 July 2026. The surface-school cue atlas and polarized-water lens were generated with the built-in GPT Image tool on 5 August 2026. The tugboat steam atlas was generated with the built-in GPT Image tool on 6 August 2026. The square FSHING logo was generated with the built-in image-generation tool on 14 August 2026. No bitmap, SVG, icon, texture, panel, button, logo, scenery plate, or game sprite was created with drawing code.
+The initial authored visual set was generated with GPT Image 2.0 on 24 July 2026. The original fantasy-fish atlas was generated with OpenAI's built-in image-generation tool on 31 July 2026 and was superseded by the real-species sheets on 14 August 2026. The surface-school cue atlas and polarized-water lens were generated with the built-in GPT Image tool on 5 August 2026. The tugboat steam atlas was generated with the built-in GPT Image tool on 6 August 2026. The square FSHING logo was generated with the built-in image-generation tool on 14 August 2026. No bitmap, SVG, icon, texture, panel, button, logo, scenery plate, or game sprite was created with drawing code.
 
 Authoring originals are preserved outside the production bundle. Runtime copies live in `src/assets/` and are explicitly imported by TypeScript or CSS. HTML and CSS arrange and label the generated interface surfaces. Canvas draws the simulation, camera, line, wake, water movement, visibility, and accessibility indicators; it does not manufacture replacement UI art.
 
@@ -43,7 +43,7 @@ The boat, harbor pier, fish atlas, and world atlas were requested on a uniform `
 
 - Runtime role: original three-fish reference atlas; the hook cell remains in active use
 - Generated size: 1254 × 1254
-- Prompt: “Use GPT Image 2.0. Create a strict 2 by 2 sprite atlas for a side-on 2D fishing game. Every cell equal size and every object entirely inside its cell with generous padding. Top-left: round-bodied Reedfin with broad fan fins. Top-right: long needle-like pike with sharp pointed snout. Bottom-left: compact eerie Gloam Gill with forked tail and a single eye-like side marking. Bottom-right: simple J-shaped fishing hook with short swivel, no long line. All three fish in STRICT orthographic side profile facing right, with bold distinct silhouettes. Restrained editorial gouache/screen-print style, muted lake teal, cream, ink navy, and sparse orange accents. No labels, text, borders, cell dividers, bubbles, plants, scenery, water, shadows, or extra objects. Entire canvas behind all cells must be perfectly uniform full-bleed pure chroma-magenta #FF00FF with no texture, gradient, checkerboard, or variation.”
+- Prompt: “Use GPT Image 2.0. Create a strict 2 by 2 sprite atlas for a side-on 2D fishing game. Every cell equal size and every object entirely inside its cell with generous padding. Top-left: round-bodied Reedfin with broad fan fins. Top-right: long Needle Pike with sharp pointed snout. Bottom-left: compact eerie Gloam Gill with forked tail and a single eye-like side marking. Bottom-right: simple J-shaped fishing hook with short swivel, no long line. All three fish in STRICT orthographic side profile facing right, with bold distinct silhouettes. Restrained editorial gouache/screen-print style, muted lake teal, cream, ink navy, and sparse orange accents. No labels, text, borders, cell dividers, bubbles, plants, scenery, water, shadows, or extra objects. Entire canvas behind all cells must be perfectly uniform full-bleed pure chroma-magenta #FF00FF with no texture, gradient, checkerboard, or variation.”
 
 ### `fish-atlas-v2.png`
 
@@ -55,21 +55,22 @@ The boat, harbor pier, fish atlas, and world atlas were requested on a uniform `
 
 ### `fish-atlas-ui.png`
 
-- Runtime role: transparent 3 × 3 derivative of `fish-atlas-v2.png` for species-specific target-fish art in the harbor job route
+- Runtime role: transparent 3 × 3 neutral-pose derivative of the three real-species swim sheets for target-fish art in the harbor job route
 - Runtime size: 768 × 768 with authored alpha
-- Processing: the existing atlas's uniform chroma-magenta matte was mechanically removed with a soft chroma key and the result was uniformly downscaled with Lanczos filtering. Fish artwork, cell order, proportions, and colours were not redrawn or rearranged.
+- Processing: frame zero from each species row was mechanically cropped, chroma-keyed, proportionally resized with Lanczos filtering, and arranged in `SPOT_RESIDENTS` row-major order. Fish artwork and colours were not redrawn.
 
 ### Animated habitat fish sheets
 
 - Runtime files: `fish-sunward-swim.png`, `fish-mosswater-swim.png`, and `fish-gloam-swim.png`
 - Runtime role: four authored swim frames for every resident species, grouped by fishing site in strict 4-column × 3-row sheets. Columns are neutral glide, tail or fin flex, neutral return, and opposite flex. Rows follow each site's resident order from `SPOT_RESIDENTS`.
 - Authoring sources: `output/imagegen/fish-*-swim-source.png`
-- Generated on: 10 August 2026 with OpenAI's built-in image-generation tool
+- Generated on: 14 August 2026 with OpenAI's built-in image-generation tool
+- Authoring sizes: Sunward and Mosswater 1448 × 1086; Outer Gloam 1537 × 1023
 - Runtime processing: authoring sheets are proportionally downscaled to 768 px wide; the uniform magenta matte is keyed in memory. The deterministic presentation cycle selects one of four cells and reduced-motion mode holds frame zero. The renderer derives a thin, partially translucent rarity outline from the active frame only for the requested fish.
-- Shared prompt direction: “Create one strict 4 columns × 3 rows animation sprite sheet. Each row is one consistent fish individual shown through four sequential subtle swimming frames. Keep head, eye, body size, markings, lighting, and centre position identical across frames; move only the tail, rear body, and small fins. Strict orthographic side profile facing right; visually appealing semi-realistic natural-history gouache; anatomically plausible proportions; softly painted scales; controlled detail readable at 55–100 px. Exactly one complete fish per equal cell with generous safe padding on a uniform full-bleed `#FF00FF` matte. No pale sticker outline; only a thin soft habitat-dark keyline integrated into the painting. No text, labels, grid, borders, water, bubbles, scenery, shadows, extra objects, or watermark.”
-- Sunward rows: realistic rounded olive-teal Reedfin; compact amber barred Sun Perch; slim steel-blue Silver Dart.
-- Mosswater rows: long olive-silver Needle Pike; heavy mottled Mossback; charcoal-teal Lantern Eel with a restrained warm lure.
-- Outer Gloam rows: compact blue-violet Gloam Gill with a natural eye spot; dusky Violet Ray with subtly undulating wings; dark armored Abyss Crown with restrained raised head plates.
+- Shared prompt direction: “Use case: stylized-concept. Asset type: production animated freshwater fish sprite sheet for a side-on 2D browser game. Create one strict 4 columns × 3 rows atlas of the named real North American freshwater species. Columns are neutral glide, locomotor flex A, neutral return, and opposite flex B. Preserve real anatomy, proportions, fin placement, scales or scutes, markings, and natural coloration across frames. Restrained natural-history gouache and screen print; dry-brush texture; thin integrated dark keyline; readable at 60–100 px. Exactly twelve complete right-facing side-profile fish, one per equal cell, consistent within each row, generous padding. Perfectly uniform full-bleed `#FF00FF` matte. No text, labels, grid, borders, water, bubbles, scenery, hook, extra fish, fantasy anatomy, or watermark.”
+- Sunward prompt rows: Bluegill (*Lepomis macrochirus*) with pectoral-fin sculling; Yellow Perch (*Perca flavescens*) with moderate posterior flex; Emerald Shiner (*Notropis atherinoides*) with compact fast tail beats.
+- Mosswater prompt rows: Northern Pike (*Esox lucius*) nearly rigid except for subtle rear flex; Largemouth Bass (*Micropterus salmoides*) with compact burst-and-glide tail poses; Bowfin (*Amia calva*) with a mostly straight body and changing dorsal ribbon-fin wave.
+- Outer Gloam prompt rows: Lake Trout (*Salvelinus namaycush*) with restrained subcarangiform tail beats; Burbot (*Lota lota*) with gentle low-amplitude whole-body and long-fin waves; Lake Sturgeon (*Acipenser fulvescens*) with steady armored forebody, four barbels, bony scutes, heterocercal tail, and subtle broad rear sweeps.
 
 ### `surface-fishing-cues.png`
 

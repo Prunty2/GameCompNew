@@ -86,15 +86,15 @@ describe("FSHING side-on simulation", () => {
     const gaps = FISHING_SPOTS.slice(1).map((spot, index) => spot.x - FISHING_SPOTS[index]!.x);
     expect(Math.min(...gaps)).toBeGreaterThanOrEqual(BALANCE.cameraViewWidth);
     expect(new Set(Object.values(SPOT_RESIDENTS).flat())).toEqual(new Set([
-      "reedfin",
-      "sunPerch",
-      "silverDart",
-      "needlePike",
-      "mossback",
-      "lanternEel",
-      "gloamGill",
-      "violetRay",
-      "abyssCrown",
+      "bluegill",
+      "yellowPerch",
+      "emeraldShiner",
+      "northernPike",
+      "largemouthBass",
+      "bowfin",
+      "lakeTrout",
+      "burbot",
+      "lakeSturgeon",
     ]));
   });
 
@@ -108,35 +108,35 @@ describe("FSHING side-on simulation", () => {
     expect(tutorialPrompt(simulation)).toContain("Head right to Sunward Shoal");
 
     moveBoatForTesting(simulation, spotById("sunwardShoal"));
-    expect(tutorialPrompt(simulation)).toBe("Drop the line at Sunward Shoal and catch a Reedfin.");
+    expect(tutorialPrompt(simulation)).toBe("Drop the line at Sunward Shoal and catch a Bluegill.");
 
     simulation.boat.speed = BALANCE.interactionMaxSpeed + 0.001;
-    expect(tutorialPrompt(simulation)).toBe("Slow beneath Sunward Shoal, then drop the line to catch a Reedfin.");
+    expect(tutorialPrompt(simulation)).toBe("Slow beneath Sunward Shoal, then drop the line to catch a Bluegill.");
 
     simulation.boat.speed = 0;
-    expect(resolveCatch(simulation, "reedfin")).toBe(true);
+    expect(resolveCatch(simulation, "bluegill")).toBe(true);
     expect(navigationGuidance(simulation)).toMatchObject({ kicker: "DELIVER TO", label: "Gloam Ferry" });
-    expect(tutorialPrompt(simulation)).toContain("Keep every Reedfin above 80% freshness");
+    expect(tutorialPrompt(simulation)).toContain("Keep every Bluegill above 80% freshness");
 
     moveBoatForTesting(simulation, harborById("gloam"));
-    expect(tutorialPrompt(simulation)).toBe("Dock at Gloam Ferry and deliver the Reedfin.");
+    expect(tutorialPrompt(simulation)).toBe("Dock at Gloam Ferry and deliver the Bluegill.");
   });
 
   test("sends spoiled and full-cargo contracts to an actionable next step", () => {
     const spoiled = createSimulation();
     acceptAvailableContract(spoiled);
     undock(spoiled);
-    spoiled.cargo = [{ species: "reedfin", freshness: 0 }];
+    spoiled.cargo = [{ species: "bluegill", freshness: 0 }];
     expect(navigationGuidance(spoiled)).toMatchObject({ kicker: "FISH AT", label: "Sunward Shoal" });
-    expect(navigationGuidance(spoiled).instruction).toContain("replace the spoiled Reedfin");
+    expect(navigationGuidance(spoiled).instruction).toContain("replace the spoiled Bluegill");
 
     const full = createSimulation();
     acceptAvailableContract(full);
     undock(full);
     full.cargo = [
-      { species: "sunPerch", freshness: 100 },
-      { species: "silverDart", freshness: 100 },
-      { species: "needlePike", freshness: 100 },
+      { species: "yellowPerch", freshness: 100 },
+      { species: "emeraldShiner", freshness: 100 },
+      { species: "northernPike", freshness: 100 },
     ];
     expect(navigationGuidance(full)).toMatchObject({ kicker: "MANAGE CARGO", label: "Brindle Harbor" });
     expect(navigationGuidance(full).instruction).toContain("release a catch");
@@ -349,7 +349,7 @@ describe("FSHING side-on simulation", () => {
     moveBoatForTesting(simulation, spotById("sunwardShoal"));
     expect(getInteractionPrompt(simulation)?.label).toContain("Drop line");
     expect(startFishing(simulation, "sunwardShoal")).toBe(true);
-    expect(resolveCatch(simulation, "reedfin")).toBe(true);
+    expect(resolveCatch(simulation, "bluegill")).toBe(true);
     expect(simulation.cargo[0]?.freshness).toBe(100);
     expect(chooseRoute(simulation, "safe")).toBe(true);
 
@@ -366,7 +366,7 @@ describe("FSHING side-on simulation", () => {
 
   test("starts a delivery when accepting a contract for an existing catch", () => {
     const simulation = createSimulation();
-    expect(resolveCatch(simulation, "reedfin")).toBe(true);
+    expect(resolveCatch(simulation, "bluegill")).toBe(true);
     expect(acceptAvailableContract(simulation)).toBe(true);
     expect(simulation.routeChoice).toBe("fast");
 
@@ -388,12 +388,12 @@ describe("FSHING side-on simulation", () => {
     simulation.fishing.hook = { x: target.x, y: target.y };
     updateSimulation(simulation, idle, 0);
     expect(simulation.mode).toBe("fishing");
-    expect(simulation.fishing?.reeling).toMatchObject({ species: "reedfin" });
-    expect(tutorialPrompt(simulation)).toBe("Reeling the Reedfin to the boat.");
+    expect(simulation.fishing?.reeling).toMatchObject({ species: "bluegill" });
+    expect(tutorialPrompt(simulation)).toBe("Reeling the Bluegill to the boat.");
     expect(simulation.cargo).toEqual([]);
     for (let index = 0; index < 12; index += 1) updateSimulation(simulation, idle, 0.1);
     expect(simulation.mode).toBe("cruising");
-    expect(simulation.cargo).toEqual([{ species: "reedfin", freshness: 100 }]);
+    expect(simulation.cargo).toEqual([{ species: "bluegill", freshness: 100 }]);
   });
 
   test("moves the fishing hook faster upward than horizontally or downward", () => {
@@ -426,7 +426,7 @@ describe("FSHING side-on simulation", () => {
   test("pays the reduced amount below the freshness target but rejects fully spoiled fish", () => {
     const simulation = createSimulation();
     acceptAvailableContract(simulation);
-    resolveCatch(simulation, "reedfin");
+    resolveCatch(simulation, "bluegill");
     expect(chooseRoute(simulation, "fast")).toBe(true);
     undock(simulation);
     for (let index = 0; index < 1_100; index += 1) updateSimulation(simulation, idle, 0.1);
@@ -441,14 +441,14 @@ describe("FSHING side-on simulation", () => {
 
     const spoiled = createSimulation();
     acceptAvailableContract(spoiled);
-    spoiled.cargo = [{ species: "reedfin", freshness: 0 }];
+    spoiled.cargo = [{ species: "bluegill", freshness: 0 }];
     expect(chooseRoute(spoiled, "fast")).toBe(false);
   });
 
   test("scales contract payouts with fish quantity and freshness difficulty", () => {
-    const baseline = calculateContractPayouts("reedfin", 1, 80);
-    const moreFish = calculateContractPayouts("reedfin", 2, 80);
-    const fresherFish = calculateContractPayouts("reedfin", 1, 95);
+    const baseline = calculateContractPayouts("bluegill", 1, 80);
+    const moreFish = calculateContractPayouts("bluegill", 2, 80);
+    const fresherFish = calculateContractPayouts("bluegill", 1, 95);
 
     expect(moreFish.reward).toBeGreaterThan(baseline.reward);
     expect(moreFish.reducedReward).toBeGreaterThan(baseline.reducedReward);
@@ -491,10 +491,10 @@ describe("FSHING side-on simulation", () => {
 
   test("enforces cargo capacity and gates deep permit water", () => {
     const simulation = createSimulation();
-    expect(resolveCatch(simulation, "needlePike")).toBe(true);
-    expect(resolveCatch(simulation, "reedfin")).toBe(true);
-    expect(resolveCatch(simulation, "sunPerch")).toBe(true);
-    expect(resolveCatch(simulation, "silverDart")).toBe(false);
+    expect(resolveCatch(simulation, "northernPike")).toBe(true);
+    expect(resolveCatch(simulation, "bluegill")).toBe(true);
+    expect(resolveCatch(simulation, "yellowPerch")).toBe(true);
+    expect(resolveCatch(simulation, "emeraldShiner")).toBe(false);
     expect(startFishing(simulation, "outerGloam")).toBe(false);
 
     simulation.progress.money = BALANCE.permitCost;
@@ -524,7 +524,7 @@ describe("FSHING side-on simulation", () => {
     );
     expect(maxFishingDepth(simulation)).toBeCloseTo(0.425);
 
-    const deepTarget = simulation.fishing?.targets.find((target) => target.species === "mossback");
+    const deepTarget = simulation.fishing?.targets.find((target) => target.species === "largemouthBass");
     expect(deepTarget?.y).toBeGreaterThan(maxFishingDepth(simulation));
     simulation.progress.upgrades.line = 5;
     expect(maxFishingDepth(simulation)).toBeGreaterThanOrEqual(deepTarget?.y ?? 1);
@@ -546,7 +546,7 @@ describe("FSHING side-on simulation", () => {
   test("rescues at critical damage without making progress unrecoverable", () => {
     const simulation = createSimulation(1, { money: 12 });
     undock(simulation);
-    resolveCatch(simulation, "reedfin");
+    resolveCatch(simulation, "bluegill");
     damageBoat(simulation, 100);
     expect(simulation.dockedAt).not.toBeNull();
     expect(simulation.cargo).toEqual([]);
@@ -557,17 +557,17 @@ describe("FSHING side-on simulation", () => {
 
   test("records evidence-based survey predictions and discoveries", () => {
     const simulation = createSimulation();
-    const incorrect = recordSurvey(simulation, "mosswaterPool", "reedfin");
+    const incorrect = recordSurvey(simulation, "mosswaterPool", "bluegill");
     expect(incorrect.correct).toBe(false);
-    expect(incorrect.expected).toBe("mossback");
-    expect(incorrect.explanation).toContain("12°C");
-    expect(simulation.progress.discovered).toContain("mossback");
+    expect(incorrect.expected).toBe("largemouthBass");
+    expect(incorrect.explanation).toContain("19°C");
+    expect(simulation.progress.discovered).toContain("largemouthBass");
 
-    const correct = recordSurvey(simulation, "sunwardShoal", "reedfin");
+    const correct = recordSurvey(simulation, "sunwardShoal", "bluegill");
     expect(correct.correct).toBe(true);
-    const contractTarget = recordSurvey(simulation, "sunwardShoal", "sunPerch", "sunPerch");
+    const contractTarget = recordSurvey(simulation, "sunwardShoal", "yellowPerch", "yellowPerch");
     expect(contractTarget.correct).toBe(true);
-    expect(contractTarget.expected).toBe("sunPerch");
+    expect(contractTarget.expected).toBe("yellowPerch");
     expect(simulation.progress.learning.surveysCompleted).toBe(3);
     expect(simulation.progress.learning.correctPredictions).toBe(2);
     expect(learningAccuracy(simulation)).toBe(67);
@@ -575,24 +575,24 @@ describe("FSHING side-on simulation", () => {
 
   test("allows repeated catches and releases unneeded cargo", () => {
     const simulation = createSimulation();
-    expect(resolveCatch(simulation, "reedfin")).toBe(true);
-    expect(simulation.progress.discovered).toContain("reedfin");
+    expect(resolveCatch(simulation, "bluegill")).toBe(true);
+    expect(simulation.progress.discovered).toContain("bluegill");
 
     expect(releaseCargo(simulation, 0)).toBe(true);
     expect(simulation.cargo).toHaveLength(0);
-    expect(resolveCatch(simulation, "reedfin")).toBe(true);
+    expect(resolveCatch(simulation, "bluegill")).toBe(true);
     expect(simulation.cargo).toHaveLength(1);
   });
 
   test("restores a released catch to its original cargo position", () => {
     const simulation = createSimulation();
-    expect(resolveCatch(simulation, "reedfin")).toBe(true);
-    expect(resolveCatch(simulation, "sunPerch")).toBe(true);
+    expect(resolveCatch(simulation, "bluegill")).toBe(true);
+    expect(resolveCatch(simulation, "yellowPerch")).toBe(true);
     const released = { ...simulation.cargo[0]! };
 
     expect(releaseCargo(simulation, 0)).toBe(true);
     expect(restoreCargo(simulation, released, 0)).toBe(true);
-    expect(simulation.cargo.map((item) => item.species)).toEqual(["reedfin", "sunPerch"]);
+    expect(simulation.cargo.map((item) => item.species)).toEqual(["bluegill", "yellowPerch"]);
   });
 
   test("makes route estimates explicit and keeps surface crossings unobstructed", () => {
@@ -607,8 +607,8 @@ describe("FSHING side-on simulation", () => {
     acceptAvailableContract(safe);
     acceptAvailableContract(fast);
     expect(chooseRoute(safe, "safe")).toBe(false);
-    expect(resolveCatch(safe, "reedfin")).toBe(true);
-    expect(resolveCatch(fast, "reedfin")).toBe(true);
+    expect(resolveCatch(safe, "bluegill")).toBe(true);
+    expect(resolveCatch(fast, "bluegill")).toBe(true);
     expect(chooseRoute(safe, "safe")).toBe(true);
     expect(chooseRoute(fast, "fast")).toBe(true);
     undock(safe);
