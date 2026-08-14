@@ -76,8 +76,8 @@ const PAUSE_EXIT_DURATION = 340;
 const SETTINGS_EXIT_DURATION = 340;
 const SCENE_COVER_DURATION = 120;
 const SCENE_REVEAL_DURATION = 160;
-const DELIVERY_SUCCESS_DURATION = 4_000;
-const DELIVERY_SUCCESS_EXIT_DURATION = 280;
+const DELIVERY_NOTIFICATION_DURATION = 4_000;
+const DELIVERY_NOTIFICATION_EXIT_DURATION = 280;
 
 const DOCK_BACKGROUND_URL: Record<HarborId, { day: string; night: string }> = {
   brindle: { day: brindleDockDayUrl, night: brindleDockNightUrl },
@@ -135,8 +135,9 @@ export class Game {
   private harborSection: HarborSection = "delivery";
   private helpStep = 0;
   private toastTimer: number | undefined;
-  private deliverySuccessTimer: number | undefined;
-  private deliverySuccessExitTimer: number | undefined;
+  private deliveryNotificationTimer: number | undefined;
+  private deliveryNotificationExitTimer: number | undefined;
+  private deliveryAcceptedRevealTimer: number | undefined;
   private pauseTransitionTimer: number | undefined;
   private settingsTransitionTimer: number | undefined;
   private cargoUpgradeTransitionTimer: number | undefined;
@@ -254,10 +255,10 @@ export class Game {
         </div>
         <p class="visually-hidden navigation-status" role="status" aria-live="polite"></p>
         <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
-        <section class="delivery-success" id="delivery-success" role="status" aria-live="polite" aria-atomic="true" hidden>
+        <section class="delivery-success" id="delivery-notification" role="status" aria-live="polite" aria-atomic="true" hidden>
           <span class="delivery-success-seal" aria-hidden="true">✓</span>
-          <strong>Delivery Success</strong>
-          <button class="delivery-success-close" type="button" data-action="dismiss-delivery-success" aria-label="Close delivery success notification">
+          <strong></strong>
+          <button class="delivery-success-close" type="button" data-action="dismiss-delivery-notification">
             <span aria-hidden="true">×</span>
           </button>
         </section>
@@ -1019,38 +1020,62 @@ export class Game {
   }
 
   private showDeliverySuccess(): void {
-    const notification = this.uiRoot.querySelector<HTMLElement>("#delivery-success");
-    if (!notification) return;
+    window.clearTimeout(this.deliveryAcceptedRevealTimer);
     const result = this.simulation.lastDeliveryResult;
-    const message = notification.querySelector<HTMLElement>("strong");
-    if (message && result) {
-      message.textContent = result.metFreshnessRequirement
-        ? `Delivery Success · ${result.payment} shells`
-        : `Freshness missed · Reduced payout ${result.payment} shells`;
+    const message = result?.metFreshnessRequirement
+      ? `Delivery Success · ${result.payment} shells`
+      : result
+        ? `Freshness missed · Reduced payout ${result.payment} shells`
+        : "Delivery Success";
+    this.showDeliveryNotification(message, "Close delivery success notification");
+  }
+
+  private showDeliveryAccepted(): void {
+    window.clearTimeout(this.deliveryAcceptedRevealTimer);
+    const reveal = (): void => {
+      this.deliveryAcceptedRevealTimer = undefined;
+      this.showDeliveryNotification("Delivery Accepted", "Close delivery accepted notification");
+    };
+    if (this.save.settings.reducedMotion) {
+      reveal();
+      return;
     }
-    window.clearTimeout(this.deliverySuccessTimer);
-    window.clearTimeout(this.deliverySuccessExitTimer);
+    this.deliveryAcceptedRevealTimer = window.setTimeout(
+      reveal,
+      SCENE_COVER_DURATION + SCENE_REVEAL_DURATION,
+    );
+  }
+
+  private showDeliveryNotification(message: string, closeLabel: string): void {
+    const notification = this.uiRoot.querySelector<HTMLElement>("#delivery-notification");
+    if (!notification) return;
+    const notificationText = notification.querySelector<HTMLElement>("strong");
+    const closeButton = notification.querySelector<HTMLButtonElement>(".delivery-success-close");
+    if (notificationText) notificationText.textContent = message;
+    if (closeButton) closeButton.ariaLabel = closeLabel;
+    window.clearTimeout(this.deliveryNotificationTimer);
+    window.clearTimeout(this.deliveryNotificationExitTimer);
     notification.hidden = false;
     notification.classList.remove("is-visible", "is-dismissing");
     void notification.offsetWidth;
     notification.classList.add("is-visible");
-    this.deliverySuccessTimer = window.setTimeout(
-      () => this.dismissDeliverySuccess(),
-      DELIVERY_SUCCESS_DURATION,
+    this.deliveryNotificationTimer = window.setTimeout(
+      () => this.dismissDeliveryNotification(),
+      DELIVERY_NOTIFICATION_DURATION,
     );
   }
 
-  private dismissDeliverySuccess(): void {
-    const notification = this.uiRoot.querySelector<HTMLElement>("#delivery-success");
+  private dismissDeliveryNotification(): void {
+    const notification = this.uiRoot.querySelector<HTMLElement>("#delivery-notification");
     if (!notification || notification.hidden) return;
-    window.clearTimeout(this.deliverySuccessTimer);
-    window.clearTimeout(this.deliverySuccessExitTimer);
+    window.clearTimeout(this.deliveryNotificationTimer);
+    window.clearTimeout(this.deliveryNotificationExitTimer);
     notification.classList.remove("is-visible");
     notification.classList.add("is-dismissing");
-    this.deliverySuccessExitTimer = window.setTimeout(() => {
+    this.deliveryNotificationExitTimer = window.setTimeout(() => {
       notification.hidden = true;
       notification.classList.remove("is-dismissing");
-    }, this.save.settings.reducedMotion ? 0 : DELIVERY_SUCCESS_EXIT_DURATION);
+    }, this.save.settings.reducedMotion ? 0 : DELIVERY_NOTIFICATION_EXIT_DURATION);
   }
 
   private readonly onClick = (event: MouseEvent): void => {
@@ -1059,8 +1084,8 @@ export class Game {
     const action = target.dataset.action;
     this.feedback.cue("ui");
     switch (action) {
-      case "dismiss-delivery-success":
-        this.dismissDeliverySuccess();
+      case "dismiss-delivery-notification":
+        this.dismissDeliveryNotification();
         break;
       case "start": this.beginVoyage(); break;
       case "interact": this.handleInteract(); break;
@@ -1160,7 +1185,7 @@ export class Game {
             }
           }
           this.setOverlay(null, true);
-          this.showToast("Contract accepted. Follow the shoal and drop your line.");
+          this.showDeliveryAccepted();
         }
         break;
       case "deliver":

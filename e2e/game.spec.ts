@@ -50,6 +50,22 @@ test("main menu presents only centered play and settings actions", async ({ page
   expect(bounds.every(({ center }) => Math.abs(center - viewportCenter) <= 1)).toBe(true);
 });
 
+test("accepting a delivery drops the shared confirmation pill", async ({ page }) => {
+  await page.goto("/?e2e=1");
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.getByRole("button", { name: "Accept contract" }).click();
+
+  const notification = page.locator("#delivery-notification");
+  await expect(notification).toBeVisible();
+  await expect(notification).toContainText("Delivery Accepted");
+  await expect(notification).toHaveCSS("animation-name", "delivery-success-enter");
+  await expect(notification).toHaveCSS("border-radius", "999px");
+  await expect(page.locator("#toast")).not.toContainText("Contract accepted");
+
+  await page.getByRole("button", { name: "Close delivery accepted notification" }).click();
+  await expect(notification).toBeHidden();
+});
+
 test("the waterline transition carries title, dock, and lake scene changes", async ({ page }) => {
   await page.goto("/?e2e=1");
   const transition = page.locator("#scene-transition");
@@ -609,7 +625,7 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await page.getByRole("button", { name: "Delivery", exact: true }).click();
   await expect(page.locator(".harbor-content")).toHaveCSS("animation-name", "harbor-page-enter-backward");
   await page.getByRole("button", { name: "Complete delivery" }).click();
-  const deliverySuccess = page.locator("#delivery-success");
+  const deliverySuccess = page.locator("#delivery-notification");
   await expect(deliverySuccess).toBeVisible();
   await expect(deliverySuccess).toContainText("Delivery Success");
   await expect(deliverySuccess).toHaveCSS("animation-name", "delivery-success-enter");
@@ -686,7 +702,7 @@ test("delivers a matching catch that was aboard before accepting the contract", 
   await expect(completeDelivery).toBeEnabled();
   await completeDelivery.click();
 
-  const deliverySuccess = page.locator("#delivery-success");
+  const deliverySuccess = page.locator("#delivery-notification");
   await expect(deliverySuccess).toBeVisible();
   await expect(deliverySuccess).toBeHidden({ timeout: 5_000 });
   await expect(page.locator(".shell-balance strong")).toHaveText(/^[1-9]\d*$/);
