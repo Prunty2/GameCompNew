@@ -887,6 +887,8 @@ export class CanvasRenderer {
       viewportWidth: width,
       viewportHeight: height,
     });
+    this.canvas.dataset.panoramaSourceWidth = layout.sourceWidth.toFixed(2);
+    this.canvas.dataset.panoramaScale = (width / layout.sourceWidth).toFixed(3);
     this.context.drawImage(
       image,
       layout.sourceX,

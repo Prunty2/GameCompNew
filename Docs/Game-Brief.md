@@ -336,7 +336,7 @@ The visual design must communicate fish type, freshness, damage, navigation land
 
 ### Technical art constraints
 
-- Render the horizontally scrolling side-on lake, parallax layers, and moving game objects with Canvas 2D.
+- Render the horizontally scrolling side-on lake, parallax layers, and moving game objects with Canvas 2D. Treat the painted lake panorama as a resolution-aware distant plate: expand its source crop as the viewport grows and pan it more slowly than the gameplay camera, rather than enlarging a narrow camera crop across a large window.
 - Use HTML/CSS overlays for contracts, shops, dialogue, settings, tutorials, and touch controls.
 - Design around responsive landscape play, while retaining a functional mobile layout.
 - Explicitly import runtime assets so source and authoring files do not enter the production build.
