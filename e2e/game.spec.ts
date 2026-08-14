@@ -588,7 +588,10 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await expect(page.locator(".navigation-status")).toContainText("Drop the line at Sunward Shoal");
   await page.getByRole("button", { name: "Drop line · Sunward Shoal" }).click();
   await expect(page.getByRole("heading", { name: "Read the lake" })).toHaveCount(0);
-  await expect(page.getByText(/Guide the hook toward the Bluegill/)).toBeVisible();
+  await expect(page.locator("#game-canvas")).toHaveAttribute(
+    "aria-label",
+    "Fishing at Sunward Shoal. Target Bluegill, common rarity.",
+  );
   await page.evaluate(() => window.__FSHING_TEST__?.catchSpecies("bluegill"));
   await expect(page.getByRole("heading", { name: "Plan your crossing" })).toHaveCount(0);
   await expect(page.getByText("Applied mathematics")).toHaveCount(0);
