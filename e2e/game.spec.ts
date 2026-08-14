@@ -662,7 +662,9 @@ test("delivers a matching catch that was aboard before accepting the contract", 
   await expect(page.locator(".shell-balance strong")).toHaveText(/^[1-9]\d*$/);
   await expect(page.getByRole("heading", { name: "Harbor Trade" })).toBeVisible();
   await expect(page.locator(".job-route-detail").filter({ hasText: "2 required" })).toBeVisible();
-  await expect(page.locator(".job-route-detail").filter({ hasText: "85%+" })).toContainText("if missed");
+  const freshnessStep = page.locator(".job-route li").filter({ hasText: "Freshness" });
+  await expect(freshnessStep.locator("strong")).toHaveText("85%+");
+  await expect(freshnessStep).not.toContainText("if missed");
 });
 
 test("settings, keyboard pause, and local SDK fallback remain usable", async ({ page }) => {
