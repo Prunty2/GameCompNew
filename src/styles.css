@@ -312,91 +312,6 @@ input:focus-visible {
   }
 }
 
-.tutorial-callout {
-  position: absolute;
-  z-index: 4;
-  top: max(16px, env(safe-area-inset-top));
-  left: 50%;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  max-width: min(620px, calc(100% - 32px));
-  min-height: 42px;
-  padding: 7px 13px 7px 8px;
-  border: 1px solid rgb(244 230 197 / 24%);
-  border-radius: 999px;
-  transform: translateX(-50%);
-  background: rgb(6 26 42 / 92%);
-  color: var(--cream);
-  box-shadow: 0 8px 24px rgb(1 10 18 / 26%), inset 0 1px 0 rgb(255 255 255 / 6%);
-  cursor: pointer;
-  pointer-events: auto;
-  touch-action: manipulation;
-  font-size: 0.8rem;
-  font-weight: 800;
-  letter-spacing: 0.015em;
-  text-align: left;
-  animation: tutorial-slide-in 420ms cubic-bezier(0.2, 0.82, 0.2, 1) both;
-}
-
-.tutorial-callout::after {
-  content: "×";
-  flex: 0 0 auto;
-  margin-left: 2px;
-  color: rgb(244 230 197 / 52%);
-  font-size: 0.9rem;
-  line-height: 1;
-}
-
-.tutorial-callout:hover::after {
-  color: var(--cream);
-}
-
-.tutorial-label {
-  flex: 0 0 auto;
-  padding: 5px 9px;
-  border-radius: 999px;
-  background: var(--orange);
-  color: var(--ink);
-  font-size: 0.58rem;
-  font-weight: 1000;
-  line-height: 1;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.tutorial-message {
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.tutorial-callout.is-dismissing {
-  pointer-events: none;
-  animation: tutorial-slide-out 280ms cubic-bezier(0.4, 0, 0.8, 0.2) both;
-}
-
-@keyframes tutorial-slide-in {
-  from {
-    opacity: 0;
-    transform: translate(-50%, calc(-100% - 24px));
-  }
-  to {
-    opacity: 1;
-    transform: translate(-50%, 0);
-  }
-}
-
-@keyframes tutorial-slide-out {
-  from {
-    opacity: 1;
-    transform: translate(-50%, 0);
-  }
-  to {
-    opacity: 0;
-    transform: translate(-50%, calc(-100% - 24px));
-  }
-}
-
 .toast {
   position: absolute;
   z-index: 9;
@@ -554,10 +469,6 @@ input:focus-visible {
 .delivery-success-close:focus-visible {
   border-color: #9ad0b5;
   background: rgb(114 185 152 / 12%);
-}
-
-.tutorial-callout:not([hidden]) + .toast {
-  top: max(70px, calc(env(safe-area-inset-top) + 58px));
 }
 
 .game-ui:has(.boost-gauge:not([hidden])) .toast {
@@ -2153,7 +2064,6 @@ kbd {
 
 .high-contrast .side-sheet,
 .high-contrast .night-indicator,
-.high-contrast .tutorial-callout,
 .high-contrast .toast,
 .high-contrast .delivery-success {
   outline: 2px solid #fff;
@@ -2189,12 +2099,12 @@ kbd {
 }
 
 @media (hover: hover) and (pointer: fine) {
-  button:hover:not(:disabled):not(.tutorial-callout):not(.cargo-release) {
+  button:hover:not(:disabled):not(.cargo-release) {
     animation: button-hover-wobble 300ms ease-out;
     transform-origin: 50% 70%;
   }
 
-  button:active:not(:disabled):not(.tutorial-callout):not(.cargo-release) {
+  button:active:not(:disabled):not(.cargo-release) {
     animation: button-click-wobble 170ms ease-out;
   }
 
@@ -2225,12 +2135,6 @@ kbd {
 }
 
 @media (max-height: 620px) {
-  .tutorial-callout {
-    top: 8px;
-    min-height: 38px;
-    padding-block: 5px;
-  }
-
   .toast {
     top: 62px;
   }
@@ -3340,7 +3244,7 @@ kbd {
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .screen-overlay button:hover:not(:disabled):not(.tutorial-callout) {
+  .screen-overlay button:hover:not(:disabled) {
     animation: none;
   }
 

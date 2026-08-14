@@ -481,6 +481,19 @@ test("first harbor job keeps full-size route art clear of the title", async ({ p
   expect(await firstStage.evaluate((element) => getComputedStyle(element, "::after").content)).toBe("none");
 });
 
+test("navigation does not show a top tutorial callout", async ({ page }) => {
+  await page.goto("/?e2e=1");
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.getByRole("button", { name: "Accept contract" }).click();
+
+  await expect(page.locator("#tutorial-callout")).toHaveCount(0);
+  await expect(page.locator(".navigation-status")).toContainText("FISH AT Sunward Shoal");
+
+  await page.evaluate(() => window.__FSHING_TEST__?.sailToSpot("sunwardShoal"));
+  await expect(page.locator("#tutorial-callout")).toHaveCount(0);
+  await expect(page.locator(".navigation-status")).toContainText("Drop the line at Sunward Shoal");
+});
+
 test("completes the tutorial delivery, buys an upgrade, and persists it", async ({ page }) => {
   test.setTimeout(60_000);
   await page.goto("/?e2e=1");
@@ -529,24 +542,21 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await page.getByRole("button", { name: "Play", exact: true }).click();
   await expect(page.getByRole("heading", { name: "First Assignment" })).toBeVisible();
   await page.getByRole("button", { name: "Accept contract" }).click();
-  await expect(page.locator("#tutorial-callout")).toContainText("Sunward Shoal");
+  await expect(page.locator("#tutorial-callout")).toHaveCount(0);
   await expect(page.locator(".navigation-status")).toContainText("FISH AT Sunward Shoal");
-  await page.locator("#tutorial-callout").click();
-  await expect(page.locator("#tutorial-callout")).toBeHidden();
 
   await page.evaluate(() => window.__FSHING_TEST__?.sailToSpot("sunwardShoal"));
-  await expect(page.locator("#tutorial-callout")).toContainText("Drop the line at Sunward Shoal");
+  await expect(page.locator(".navigation-status")).toContainText("Drop the line at Sunward Shoal");
   await page.getByRole("button", { name: "Drop line · Sunward Shoal" }).click();
   await expect(page.getByRole("heading", { name: "Read the lake" })).toHaveCount(0);
   await expect(page.getByText(/Guide the hook toward the Reedfin/)).toBeVisible();
   await page.evaluate(() => window.__FSHING_TEST__?.catchSpecies("reedfin"));
   await expect(page.getByRole("heading", { name: "Plan your crossing" })).toHaveCount(0);
   await expect(page.getByText("Applied mathematics")).toHaveCount(0);
-  await expect(page.locator("#tutorial-callout")).toContainText("Gloam Ferry");
   await expect(page.locator(".navigation-status")).toContainText("DELIVER TO Gloam Ferry");
 
   await page.evaluate(() => window.__FSHING_TEST__?.sailToHarbor("gloam"));
-  await expect(page.locator("#tutorial-callout")).toContainText("Dock at Gloam Ferry");
+  await expect(page.locator(".navigation-status")).toContainText("Dock at Gloam Ferry");
   await page.getByRole("button", { name: "Dock · Gloam Ferry" }).click();
   await expect(page.getByRole("heading", { name: "Gloam Ferry" })).toBeVisible();
   await expect(page.locator(".harbor-screen")).toHaveAttribute("data-dock", "gloam");
