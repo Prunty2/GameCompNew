@@ -6817,7 +6817,7 @@ kbd {
 .credits-wordmark {
   display: block;
   width: min(220px, 52vw);
-  margin: -68px auto -36px;
+  margin: -68px auto -24px;
   filter:
     drop-shadow(0 3px 2px rgb(1 10 18 / 72%))
     drop-shadow(0 11px 18px rgb(1 10 18 / 38%));
@@ -7055,7 +7055,7 @@ kbd {
 @media (max-height: 620px) and (min-width: 601px) {
   .credits-wordmark {
     width: min(190px, 34vw);
-    margin-block: -62px -30px;
+    margin-block: -62px -18px;
   }
 
   .credits-heading {
