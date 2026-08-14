@@ -57,13 +57,39 @@ test("credits lists the team and returns to the main menu", async ({ page }) => 
   await page.getByRole("button", { name: "Credits" }).click();
 
   await expect(page.getByRole("heading", { name: "Credits" })).toBeVisible();
-  await expect(page.locator(".credits-list dt")).toHaveText(["Liam", "David", "Harrison", "Saxon"]);
-  await expect(page.getByText("Game Designer / Programmer / Tester")).toBeVisible();
-  await expect(page.getByText("Game Designer / Audio Designer / Tester")).toBeVisible();
-  await expect(page.getByText("Game Designer / Storyteller / Documentation / Tester")).toBeVisible();
-  await expect(page.getByText("Game Designer / Visual Designer / Tester")).toBeVisible();
+  await expect(page.locator(".credits-list dt")).toHaveText(["Liam", "Saxon", "Harrison", "David"]);
+  await expect(page.getByText("Game Designer / Programmer / Gameplay Tester")).toBeVisible();
+  await expect(page.getByText("Game Designer / Visual Designer / Gameplay Tester")).toBeVisible();
+  await expect(page.getByText("Story Writer / Documentation / Gameplay Tester")).toBeVisible();
+  await expect(page.getByText("Audio Designer / Marine Specialist / Gameplay Tester")).toBeVisible();
 
-  await page.getByRole("button", { name: "Back" }).click();
+  const entries = page.locator(".credit-entry");
+  const flags = page.locator(".credit-flag");
+  const creditsScreen = page.locator(".credits-overlay");
+  const creditsMenu = page.locator(".credits-menu");
+  const backButton = page.getByRole("button", { name: "Back" });
+  await expect(entries).toHaveCount(4);
+  await expect(flags).toHaveCount(4);
+  await expect(entries.first()).toHaveCSS("border-radius", "0px");
+  await expect(backButton).toHaveCSS("border-radius", "999px");
+  const [listBounds, backBounds] = await Promise.all([
+    page.locator(".credits-list").boundingBox(),
+    backButton.boundingBox(),
+  ]);
+  expect(backBounds?.width).toBe(listBounds?.width);
+  await expect(flags.first()).toHaveAttribute("aria-hidden", "true");
+  await expect(flags.first()).toHaveCSS("opacity", "0");
+  await entries.first().hover();
+  await expect(flags.first()).toHaveCSS("opacity", "1");
+  await expect(entries.first().locator(".credit-flag-cloth")).toHaveCSS("animation-name", "credit-flag-ripple");
+
+  await backButton.click();
+  await expect(creditsScreen).toHaveClass(/is-closing-to-title/);
+  await expect(creditsScreen).toHaveCSS("animation-name", "settings-backdrop-out");
+  await expect(creditsMenu).toHaveCSS("animation-name", "settings-menu-out");
+  await expect(creditsScreen).toHaveCount(0);
+  await expect(page.locator(".title-screen")).toHaveClass(/is-settings-return/);
+  await expect(page.locator(".title-panel")).toHaveCSS("animation-name", "menu-handoff-in");
   await expect(page.getByRole("button", { name: "Play", exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Credits" })).toHaveCount(0);
 });
