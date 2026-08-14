@@ -43,13 +43,15 @@ describe("fishing presentation", () => {
       fishingFishPose("reedfin", index * 0.2, 0, false).animationFrame
     )))).toHaveProperty("size", 4);
     expect(Math.abs(first.verticalOffsetRatio)).toBeLessThanOrEqual(0.012);
-    expect(fishingFishPose("reedfin", 12.5, 2.4, true)).toEqual({
+    const reducedMotionPose = fishingFishPose("reedfin", 12.5, 2.4, true);
+    expect(reducedMotionPose).toMatchObject({
       animationFrame: 0,
       verticalOffsetRatio: 0,
       rotation: 0,
       scaleX: 1,
       scaleY: 1,
     });
+    expect(Math.abs(reducedMotionPose.heading)).toBe(1);
   });
 
   test("keeps the simulated hook limit aligned with the visible float line", () => {

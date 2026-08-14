@@ -521,6 +521,7 @@ export class CanvasRenderer {
       if (fishing.reeling?.targetIndex === targetIndex) continue;
       const point = fishingPointToScreen(target, width, layout, maximumDepth);
       const pose = fishingFishPose(target.species, simulation.elapsed, target.phase, settings.reducedMotion);
+      const heading = target.direction === pose.heading ? 1 : -1;
       const animatedPoint = {
         x: point.x,
         y: point.y + pose.verticalOffsetRatio * layout.underwaterHeight,
@@ -529,12 +530,12 @@ export class CanvasRenderer {
       context.save();
       context.globalAlpha = (reachable ? 1 : 0.3) * schoolOpacity;
       context.translate(animatedPoint.x, animatedPoint.y);
-      context.rotate(pose.rotation * target.direction);
+      context.rotate(pose.rotation * heading);
       context.scale(pose.scaleX, pose.scaleY);
       if (target.species === targetSpecies) {
-        this.drawFishOutline(target.species, pose.animationFrame, { x: 0, y: 0 }, target.direction, width, height, settings.highContrast);
+        this.drawFishOutline(target.species, pose.animationFrame, { x: 0, y: 0 }, heading, width, height, settings.highContrast);
       }
-      this.drawFish(target.species, pose.animationFrame, { x: 0, y: 0 }, target.direction, width, height, settings.highContrast);
+      this.drawFish(target.species, pose.animationFrame, { x: 0, y: 0 }, heading, width, height, settings.highContrast);
       context.restore();
       if (target.species === targetSpecies) {
         context.save();

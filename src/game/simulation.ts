@@ -356,7 +356,7 @@ export function startFishing(simulation: Simulation, spotId: SpotId): boolean {
           x: 0.12 + ((index * 0.153) % 0.76),
           y: homeY,
           direction: index % 2 === 0 ? 1 : -1,
-          speed: 0.035 + fish.depthTier * 0.006 + simulation.random.next() * 0.025,
+          speed: 0.048 + fish.depthTier * 0.0075 + simulation.random.next() * 0.032,
           homeY,
           phase: (index * 1.73 + fish.depthTier * 0.61) % (Math.PI * 2),
         };
@@ -731,7 +731,7 @@ function updateFishing(simulation: Simulation, input: InputState, dt: number): v
   fishing.hook.y = clamp(fishing.hook.y + input.hookY * verticalSpeed * dt, 0.07, maxFishingDepth(simulation));
   for (const [targetIndex, target] of fishing.targets.entries()) {
     const motion = fishingSpeciesMotion(target.species, simulation.elapsed, target.phase);
-    target.x += target.speed * motion.horizontalMultiplier * target.direction * dt;
+    target.x += target.speed * motion.horizontalMultiplier * target.direction * motion.heading * dt;
     target.y = clamp(target.homeY + motion.depthOffset, 0.1, 0.92);
     if (target.x < 0.1 || target.x > 0.9) {
       target.x = clamp(target.x, 0.1, 0.9);
@@ -743,11 +743,15 @@ function updateFishing(simulation: Simulation, input: InputState, dt: number): v
         species: target.species,
         targetIndex,
         hookedAt: simulation.elapsed,
-        direction: target.direction,
+        direction: multiplyDirection(target.direction, motion.heading),
       };
       return;
     }
   }
+}
+
+function multiplyDirection(first: -1 | 1, second: -1 | 1): -1 | 1 {
+  return first === second ? 1 : -1;
 }
 
 function ageCargo(simulation: Simulation, dt: number): void {
