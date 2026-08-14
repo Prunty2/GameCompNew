@@ -544,14 +544,17 @@ export class Game {
     const harbor = harborById(harborId);
     const contract = this.simulation.activeContract;
     const available = this.simulation.availableContract?.origin === harborId ? this.simulation.availableContract : null;
-    const matchingCatch = contract
-      ? this.simulation.cargo.some((item) => item.species === contract.species)
-      : false;
+    const matchingCatchCount = contract
+      ? this.simulation.cargo.filter((item) => item.species === contract.species && item.freshness > 0).length
+      : 0;
+    const matchingCatch = contract ? matchingCatchCount >= contract.quantity : false;
     const freshCatch = contract
-      ? this.simulation.cargo.some((item) => item.species === contract.species && item.freshness >= contract.minimumFreshness)
+      ? this.simulation.cargo.filter(
+        (item) => item.species === contract.species && item.freshness >= contract.minimumFreshness,
+      ).length >= contract.quantity
       : false;
     const deliverable = contract?.destination === harborId
-      && freshCatch;
+      && matchingCatch;
     const isFirstJobOffer = this.simulation.progress.completedContracts === 0 && available?.id === "morning-order";
     const showCargo = !isFirstJobOffer;
     const showServices = !isFirstJobOffer;
@@ -561,11 +564,11 @@ export class Game {
       ? `<div class="contract-card job-ticket ${isFirstJobOffer ? "is-guided" : ""}">
           <div class="job-ticket-heading">
             <div>${isFirstJobOffer ? "" : `<span class="card-kicker">Your next job</span>`}<h3>${isFirstJobOffer ? "First Assignment" : available.title}</h3></div>
-            <span class="reward-stamp" aria-label="Reward: ${available.reward} shells"><span class="reward-label">Reward</span><span class="reward-value"><span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${available.reward}</strong></span></span>
+            <span class="reward-stamp" aria-label="Reward: ${available.reward} shells; reduced payout: ${available.reducedReward} shells"><span class="reward-label">Reward</span><span class="reward-value"><span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${available.reward}</strong></span></span>
           </div>
           <ol class="job-route" aria-label="Job steps">
-            <li><span class="job-route-number" aria-hidden="true">01</span><div class="job-route-copy"><small>Catch</small>${this.targetFishIcon(available.species)}<strong>${FISH[available.species].name}</strong><span class="job-route-detail">1 required</span></div></li>
-            <li><span class="job-route-number" aria-hidden="true">02</span><div class="job-route-copy"><small>Freshness</small><img class="job-route-icon job-route-freshness-icon" src="${freshnessFishIconUrl}" alt="" aria-hidden="true" /><strong>Every fish</strong><span class="job-route-detail">${available.minimumFreshness}%+</span></div></li>
+            <li><span class="job-route-number" aria-hidden="true">01</span><div class="job-route-copy"><small>Catch</small>${this.targetFishIcon(available.species)}<strong>${FISH[available.species].name}</strong><span class="job-route-detail">${available.quantity} required</span></div></li>
+            <li><span class="job-route-number" aria-hidden="true">02</span><div class="job-route-copy"><small>Freshness</small><img class="job-route-icon job-route-freshness-icon" src="${freshnessFishIconUrl}" alt="" aria-hidden="true" /><strong>Freshness ${available.minimumFreshness}%+</strong></div></li>
             <li><span class="job-route-number" aria-hidden="true">03</span><div class="job-route-copy"><small>Deliver</small><img class="job-route-icon job-route-deliver-icon" src="${deliverBeaconIconUrl}" alt="" aria-hidden="true" /><strong>${harborById(available.destination).name}</strong></div></li>
           </ol>
           <button class="primary-button mission-button" type="button" data-action="accept-contract" aria-label="Accept contract">
@@ -577,12 +580,12 @@ export class Game {
             <span class="card-kicker">${deliverable ? "Ready to hand in" : "Job in progress"}</span>
             <h3>${contract.title}</h3>
             <ol class="job-route" aria-label="Job steps">
-              <li class="${matchingCatch ? "is-complete" : "is-current"}"><span class="job-route-number" aria-hidden="true">${matchingCatch ? "✓" : "01"}</span><div class="job-route-copy"><small>Catch</small>${this.targetFishIcon(contract.species)}<strong>${FISH[contract.species].name}</strong><span class="job-route-detail">1 required</span></div></li>
-              <li class="${freshCatch ? "is-complete" : matchingCatch ? "is-current" : ""}"><span class="job-route-number" aria-hidden="true">${freshCatch ? "✓" : "02"}</span><div class="job-route-copy"><small>Freshness</small><img class="job-route-icon job-route-freshness-icon" src="${freshnessFishIconUrl}" alt="" aria-hidden="true" /><strong>Every fish</strong><span class="job-route-detail">${contract.minimumFreshness}%+</span></div></li>
+              <li class="${matchingCatch ? "is-complete" : "is-current"}"><span class="job-route-number" aria-hidden="true">${matchingCatch ? "✓" : "01"}</span><div class="job-route-copy"><small>Catch</small>${this.targetFishIcon(contract.species)}<strong>${FISH[contract.species].name}</strong><span class="job-route-detail">${matchingCatchCount}/${contract.quantity} secured</span></div></li>
+              <li class="${freshCatch ? "is-complete" : matchingCatch ? "is-current" : ""}"><span class="job-route-number" aria-hidden="true">${freshCatch ? "✓" : "02"}</span><div class="job-route-copy"><small>Freshness</small><img class="job-route-icon job-route-freshness-icon" src="${freshnessFishIconUrl}" alt="" aria-hidden="true" /><strong>Freshness ${contract.minimumFreshness}%+</strong></div></li>
               <li class="${deliverable ? "is-current" : ""}"><span class="job-route-number" aria-hidden="true">03</span><div class="job-route-copy"><small>Deliver</small><img class="job-route-icon job-route-deliver-icon" src="${deliverBeaconIconUrl}" alt="" aria-hidden="true" /><strong>${harborById(contract.destination).name}</strong></div></li>
             </ol>
             ${contract.destination === harborId
-              ? `<button class="primary-button mission-button" type="button" data-action="deliver" ${deliverable ? "" : "disabled"}>${deliverable ? "<span><strong>Complete delivery</strong></span><b aria-hidden=\"true\">→</b>" : "Catch is missing or no longer fresh enough"}</button>`
+              ? `<button class="primary-button mission-button" type="button" data-action="deliver" ${deliverable ? "" : "disabled"}>${deliverable ? `<span><strong>${freshCatch ? "Complete delivery" : `Deliver for reduced ${contract.reducedReward}-shell payout`}</strong></span><b aria-hidden="true">→</b>` : `${contract.quantity - matchingCatchCount} required fish missing`}</button>`
               : `<p class="next-step"><span class="ui-icon icon-objective" aria-hidden="true"></span><span><strong>Next</strong> Leave the harbor and follow the marker to ${harborById(contract.destination).name}.</span></p>`}
           </div>`
         : `<div class="contract-card empty-job"><h3>No delivery job available</h3><p>Return to the lake and dock again to refresh the job board.</p></div>`;
@@ -1043,6 +1046,13 @@ export class Game {
   private showDeliverySuccess(): void {
     const notification = this.uiRoot.querySelector<HTMLElement>("#delivery-success");
     if (!notification) return;
+    const result = this.simulation.lastDeliveryResult;
+    const message = notification.querySelector<HTMLElement>("strong");
+    if (message && result) {
+      message.textContent = result.metFreshnessRequirement
+        ? `Delivery Success · ${result.payment} shells`
+        : `Freshness missed · Reduced payout ${result.payment} shells`;
+    }
     window.clearTimeout(this.deliverySuccessTimer);
     window.clearTimeout(this.deliverySuccessExitTimer);
     notification.hidden = false;
@@ -1167,7 +1177,9 @@ export class Game {
       case "undock":
         this.dismissCargoReleaseToast();
         if (this.simulation.activeContract
-          && this.simulation.cargo.some((item) => item.species === this.simulation.activeContract?.species)
+          && this.simulation.cargo.filter(
+            (item) => item.species === this.simulation.activeContract?.species && item.freshness > 0,
+          ).length >= this.simulation.activeContract.quantity
           && !this.simulation.routeChoice) {
           chooseRoute(this.simulation, "fast");
         }
