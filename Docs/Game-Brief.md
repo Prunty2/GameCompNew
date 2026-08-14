@@ -291,7 +291,7 @@ Money is earned primarily from completed deliveries and spent on permanent impro
 - **Lights:** See landmarks and resist nighttime visibility penalties.
 - **Line depth:** Reach progressively deeper fish and new underwater color zones.
 - **Region access:** Purchase permits or equipment needed to enter new waters.
-- **Beach location:** A one-time 120-shell chart upgrade unlocks travel between the lake and Beach, a coastal bay with a surf club, timber pier, fish-and-chip shop, broad sandy shore, and lighthouse. The alternate panorama uses the same normalized world scale, camera, waterline, controls, harbors, and fishing interactions as the lake so it expands the sailing setting without creating a second ruleset.
+- **Beach location:** A one-time 120-shell chart upgrade unlocks travel between the lake and Beach, a coastal bay with a surf club, grand pale-timber pier, fish-and-chip shop, broad sandy shore, and lighthouse. The alternate panorama uses the same normalized world scale, camera, waterline, controls, harbors, and fishing interactions as the lake so it expands the sailing setting without creating a second ruleset. Beach fishing schools retain the same interaction distances but receive a stronger localized polarized-water glow and higher sprite contrast so their positions stay readable against the pale coastal water.
 
 Cargo has seven tiers to match its seven locked inventory slots; engine, lights, and line depth have six tiers. Repair costs support the opening scenario and any authored damage events. Prices rise by upgrade tier without requiring excessive repetition. The player should regularly face a useful decision between building a larger boat, improving travel time, strengthening night visibility, or reaching a deeper and more profitable fishing world.
 
@@ -679,6 +679,7 @@ Every authored visual asset in this slice is generated with GPT Image 2.0. No pr
 | `beach-chart-night.png` | Composition-matched nighttime Beach panorama |
 | `player-boat.png` | Player vessel in strict side profile on a chroma-key matte |
 | `harbor-pier.png` | Long weathered side-view harbor pier that extends from either shoreline; its fixed footprint uses roughly 36–44 narrow deck-plank divisions so the timber scale remains believable beside the player boat |
+| `beach-harbor-pier.png` | Larger Beach-only pier with pale sun-bleached timber, a restrained railing, paired pilings, and boat-scale plank divisions |
 | `fish-atlas.png` | Fishing-hook sprite and retained original fish reference cells |
 | `fish-atlas-v2.png` | Nine independently generated, silhouette-distinct species in a strict 3 × 3 atlas |
 | `surface-fishing-cues.png` | Six faint school-fish poses plus the primary proximity hook cue in a strict 4 × 2 atlas; the secondary disabled cell is unused |

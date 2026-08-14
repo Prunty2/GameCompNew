@@ -13,6 +13,11 @@ export interface SurfaceFishPose {
   scale: number;
 }
 
+export interface SurfaceFishingLocationVisibility {
+  fishVisibility: number;
+  lensVisibility: number;
+}
+
 const VISIBLE_FISH = 12;
 const HOOK_REVEAL_RADIUS_MULTIPLIER = 3;
 const MINIMUM_HOOK_VISIBILITY = 0.4;
@@ -53,6 +58,22 @@ export function surfaceFishingCue(
     fishVisibility: DISTANT_FISH_VISIBILITY + lensVisibility * PROXIMITY_FISH_VISIBILITY,
     lensVisibility,
     hookVisibility,
+  };
+}
+
+export function surfaceFishingLocationVisibility(
+  cue: SurfaceFishingCue,
+  beach: boolean,
+): SurfaceFishingLocationVisibility {
+  if (!beach) {
+    return {
+      fishVisibility: cue.fishVisibility,
+      lensVisibility: cue.lensVisibility,
+    };
+  }
+  return {
+    fishVisibility: clamp(cue.fishVisibility * 1.55, 0, 1),
+    lensVisibility: clamp(Math.max(0.18, cue.lensVisibility * 1.45), 0, 1),
   };
 }
 

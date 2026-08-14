@@ -1,6 +1,7 @@
 import boatSteamAtlasUrl from "../assets/boat-steam-atlas.png";
 import beachChartUrl from "../assets/beach-chart.png";
 import beachChartNightUrl from "../assets/beach-chart-night.png";
+import beachHarborPierUrl from "../assets/beach-harbor-pier.png";
 import tackleAtlasUrl from "../assets/fish-atlas.png";
 import gloamFishAtlasUrl from "../assets/fish-gloam-swim.png";
 import mosswaterFishAtlasUrl from "../assets/fish-mosswater-swim.png";
@@ -49,7 +50,12 @@ import {
   fishingReelSchoolOpacity,
   fishingReelWriggle,
 } from "./fishingReeling";
-import { surfaceFishingCue, surfaceFishPose, type SurfaceFishingCue } from "./fishingSpotEffects";
+import {
+  surfaceFishingCue,
+  surfaceFishingLocationVisibility,
+  surfaceFishPose,
+  type SurfaceFishingCue,
+} from "./fishingSpotEffects";
 import { calculatePanoramaLayout } from "./panorama";
 import {
   maxFishingDepth,
@@ -76,6 +82,7 @@ interface LoadedArt {
   lakeNight: HTMLImageElement;
   beach: HTMLImageElement;
   beachNight: HTMLImageElement;
+  beachPier: HTMLImageElement;
   pier: HTMLImageElement;
   boat: HTMLCanvasElement;
   fish: Record<SpotId, HTMLCanvasElement>;
@@ -144,6 +151,7 @@ export class CanvasRenderer {
       loadImage(lakeChartNightUrl),
       loadImage(beachChartUrl),
       loadImage(beachChartNightUrl),
+      loadImage(beachHarborPierUrl),
       loadImage(harborPierUrl),
       loadImage(playerBoatUrl),
       loadImage(sunwardFishAtlasUrl),
@@ -163,6 +171,7 @@ export class CanvasRenderer {
       lakeNight,
       beach,
       beachNight,
+      beachPier,
       pier,
       boat,
       sunwardFish,
@@ -193,6 +202,7 @@ export class CanvasRenderer {
         lakeNight,
         beach,
         beachNight,
+        beachPier,
         pier,
         boat: keyMagenta(boat, true),
         fish: keyedFish,
@@ -287,6 +297,7 @@ export class CanvasRenderer {
         x,
         waterline,
         harbor.id === "gloam",
+        simulation.world === "beach",
         surfaceLayer,
         width,
         height,
@@ -316,6 +327,7 @@ export class CanvasRenderer {
         elapsed: simulation.elapsed,
         reducedMotion: settings.reducedMotion,
         highContrast: settings.highContrast,
+        beach: simulation.world === "beach",
         opacity: 1,
       });
       if (cue.hookVisibility > 0) {
@@ -345,6 +357,7 @@ export class CanvasRenderer {
     x: number,
     waterline: number,
     fromRightShore: boolean,
+    beach: boolean,
     surfaceLayer: HTMLCanvasElement,
     viewportWidth: number,
     viewportHeight: number,
@@ -354,8 +367,11 @@ export class CanvasRenderer {
   ): void {
     const art = this.art;
     if (!art) return;
-    const pierWidth = clamp(this.canvas.clientHeight * 0.53, 300, 495);
-    const pierHeight = pierWidth * (art.pier.naturalHeight / art.pier.naturalWidth);
+    const pier = beach ? art.beachPier : art.pier;
+    const pierWidth = beach
+      ? clamp(this.canvas.clientHeight * 0.64, 340, 585)
+      : clamp(this.canvas.clientHeight * 0.53, 300, 495);
+    const pierHeight = pierWidth * (pier.naturalHeight / pier.naturalWidth);
     const deckTop = waterline - 32;
     const pierLift = clamp(pierHeight * 0.04, 4, 9);
     const drawY = deckTop - pierHeight * 0.43 - pierLift;
@@ -369,9 +385,9 @@ export class CanvasRenderer {
     if (fromRightShore) {
       this.context.translate(x - outboardOverlap, 0);
       this.context.scale(-1, 1);
-      this.context.drawImage(art.pier, -pierWidth, drawY, pierWidth, pierHeight);
+      this.context.drawImage(pier, -pierWidth, drawY, pierWidth, pierHeight);
     } else {
-      this.context.drawImage(art.pier, x + outboardOverlap - pierWidth, drawY, pierWidth, pierHeight);
+      this.context.drawImage(pier, x + outboardOverlap - pierWidth, drawY, pierWidth, pierHeight);
     }
     this.context.restore();
 
@@ -400,12 +416,14 @@ export class CanvasRenderer {
     elapsed: number;
     reducedMotion: boolean;
     highContrast: boolean;
+    beach: boolean;
     opacity: number;
   }): void {
     const { context } = this;
     const shoalWidth = clamp(options.height * 0.55, 250, 480);
     const shoalDepth = clamp((options.height - options.waterline) * 0.82, 130, 290);
-    const lensStrength = options.cue.lensVisibility * (options.locked ? 0.62 : 1);
+    const locationVisibility = surfaceFishingLocationVisibility(options.cue, options.beach);
+    const lensStrength = locationVisibility.lensVisibility * (options.locked ? 0.62 : 1);
 
     if (lensStrength > 0.01) {
       const art = this.art;
@@ -414,7 +432,11 @@ export class CanvasRenderer {
       const lensHeight = Math.min(options.height - options.waterline + 28, shoalDepth * 1.32);
       context.save();
       context.globalCompositeOperation = "screen";
-      context.globalAlpha = lensStrength * (options.highContrast ? 0.96 : 0.84) * options.opacity;
+      context.globalAlpha = clamp(
+        lensStrength * (options.highContrast ? 0.96 : options.beach ? 0.98 : 0.84) * options.opacity,
+        0,
+        1,
+      );
       context.drawImage(
         art.polarizedLens,
         options.x - lensWidth / 2,
@@ -434,10 +456,10 @@ export class CanvasRenderer {
       const cellHeight = cellWidth * 4 / 3;
       const [column, row] = SURFACE_FISH_CELLS[index % SURFACE_FISH_CELLS.length]!;
       context.save();
-      context.globalAlpha = options.cue.fishVisibility
+      context.globalAlpha = clamp(locationVisibility.fishVisibility
         * (options.locked ? 0.58 : 1)
         * (options.highContrast ? 1.28 : 1)
-        * options.opacity;
+        * options.opacity, 0, 1);
       context.translate(fishX, fishY);
       context.scale(pose.direction, 1);
       this.drawSurfaceFishingCueCell(column, row, 0, 0, cellWidth, cellHeight);
@@ -738,6 +760,7 @@ export class CanvasRenderer {
           x,
           surfaceY,
           harbor.id === "gloam",
+          simulation.world === "beach",
           surfaceLayer,
           width,
           height,
@@ -769,6 +792,7 @@ export class CanvasRenderer {
           elapsed: simulation.elapsed,
           reducedMotion: settings.reducedMotion,
           highContrast: settings.highContrast,
+          beach: simulation.world === "beach",
           opacity: surfaceBlend,
         });
         if (cue.hookVisibility > 0) activeFishingCue = { cue, x };
