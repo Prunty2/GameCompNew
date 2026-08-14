@@ -63,6 +63,17 @@ test("credits lists the team and returns to the main menu", async ({ page }) => 
   await expect(page.getByText("Game Designer / Storyteller / Documentation / Tester")).toBeVisible();
   await expect(page.getByText("Game Designer / Visual Designer / Tester")).toBeVisible();
 
+  const entries = page.locator(".credit-entry");
+  const flags = page.locator(".credit-flag");
+  await expect(entries).toHaveCount(4);
+  await expect(flags).toHaveCount(4);
+  await expect(entries.first()).toHaveCSS("border-radius", "0px");
+  await expect(flags.first()).toHaveAttribute("aria-hidden", "true");
+  await expect(flags.first()).toHaveCSS("opacity", "0");
+  await entries.first().hover();
+  await expect(flags.first()).toHaveCSS("opacity", "1");
+  await expect(entries.first().locator(".credit-flag-cloth")).toHaveCSS("animation-name", "credit-flag-ripple");
+
   await page.getByRole("button", { name: "Back" }).click();
   await expect(page.getByRole("button", { name: "Play", exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Credits" })).toHaveCount(0);

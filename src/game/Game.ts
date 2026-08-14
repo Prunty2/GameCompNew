@@ -748,6 +748,28 @@ export class Game {
   }
 
   private creditsScreen(): string {
+    const australianFlag = `
+      <span class="credit-flag" aria-hidden="true">
+        <span class="credit-flag-mast"></span>
+        <svg class="credit-flag-cloth" viewBox="0 0 72 44" focusable="false">
+          <path class="credit-flag-field" d="M2 3.5Q20 1 36 4t34-.5v34Q52 40 36 37.5T2 39Z" />
+          <g class="credit-flag-union">
+            <path d="M2 3.5Q18 2 35 3.8V21H2Z" fill="#092f6e" />
+            <path d="M2 4l33 17M35 4L2 21" stroke="#fff" stroke-width="5" />
+            <path d="M2 4l33 17M35 4L2 21" stroke="#e21d38" stroke-width="2" />
+            <path d="M18.5 3v18M2 12.5h33" stroke="#fff" stroke-width="6" />
+            <path d="M18.5 3v18M2 12.5h33" stroke="#e21d38" stroke-width="3" />
+          </g>
+          <g fill="#fff">
+            <polygon transform="translate(18 30) scale(.55)" points="0,-10 1.91,-3.96 7.82,-6.23 4.29,-.98 9.75,2.23 3.44,2.74 4.34,9.01 0,4.4 -4.34,9.01 -3.44,2.74 -9.75,2.23 -4.29,-.98 -7.82,-6.23 -1.91,-3.96" />
+            <polygon transform="translate(53 11) scale(.34)" points="0,-10 1.91,-3.96 7.82,-6.23 4.29,-.98 9.75,2.23 3.44,2.74 4.34,9.01 0,4.4 -4.34,9.01 -3.44,2.74 -9.75,2.23 -4.29,-.98 -7.82,-6.23 -1.91,-3.96" />
+            <polygon transform="translate(61 21) scale(.34)" points="0,-10 1.91,-3.96 7.82,-6.23 4.29,-.98 9.75,2.23 3.44,2.74 4.34,9.01 0,4.4 -4.34,9.01 -3.44,2.74 -9.75,2.23 -4.29,-.98 -7.82,-6.23 -1.91,-3.96" />
+            <polygon transform="translate(50 34) scale(.34)" points="0,-10 1.91,-3.96 7.82,-6.23 4.29,-.98 9.75,2.23 3.44,2.74 4.34,9.01 0,4.4 -4.34,9.01 -3.44,2.74 -9.75,2.23 -4.29,-.98 -7.82,-6.23 -1.91,-3.96" />
+            <polygon transform="translate(42 22) scale(.34)" points="0,-10 1.91,-3.96 7.82,-6.23 4.29,-.98 9.75,2.23 3.44,2.74 4.34,9.01 0,4.4 -4.34,9.01 -3.44,2.74 -9.75,2.23 -4.29,-.98 -7.82,-6.23 -1.91,-3.96" />
+            <polygon transform="translate(55 25) scale(.38)" points="0,-6 1.59,-2.18 5.71,-1.85 2.57,.83 3.53,4.85 0,2.7 -3.53,4.85 -2.57,.83 -5.71,-1.85 -1.59,-2.18" />
+          </g>
+        </svg>
+      </span>`;
     return `
       <section class="screen-overlay credits-overlay" role="dialog" aria-labelledby="credits-title">
         <div class="credits-menu">
@@ -758,19 +780,19 @@ export class Game {
           </header>
           <dl class="credits-list">
             <div class="credit-entry">
-              <dt>Liam</dt>
+              <dt>${australianFlag}<span class="credit-name">Liam</span></dt>
               <dd>Game Designer <span>/</span> Programmer <span>/</span> Tester</dd>
             </div>
             <div class="credit-entry">
-              <dt>David</dt>
+              <dt>${australianFlag}<span class="credit-name">David</span></dt>
               <dd>Game Designer <span>/</span> Audio Designer <span>/</span> Tester</dd>
             </div>
             <div class="credit-entry">
-              <dt>Harrison</dt>
+              <dt>${australianFlag}<span class="credit-name">Harrison</span></dt>
               <dd>Game Designer <span>/</span> Storyteller <span>/</span> Documentation <span>/</span> Tester</dd>
             </div>
             <div class="credit-entry">
-              <dt>Saxon</dt>
+              <dt>${australianFlag}<span class="credit-name">Saxon</span></dt>
               <dd>Game Designer <span>/</span> Visual Designer <span>/</span> Tester</dd>
             </div>
           </dl>
