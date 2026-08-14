@@ -56,7 +56,11 @@ import {
   surfaceFishPose,
   type SurfaceFishingCue,
 } from "./fishingSpotEffects";
-import { calculatePanoramaLayout } from "./panorama";
+import {
+  BEACH_AUTHORED_WATERLINE_RATIO,
+  calculatePanoramaLayout,
+  LAKE_AUTHORED_WATERLINE_RATIO,
+} from "./panorama";
 import {
   maxFishingDepth,
   navigationGuidance,
@@ -274,11 +278,21 @@ export class CanvasRenderer {
     const nightIntensity = nightVisualIntensity(simulation);
     const dayImage = simulation.world === "beach" ? art.beach : art.lake;
     const nightImage = simulation.world === "beach" ? art.beachNight : art.lakeNight;
-    const waterline = this.drawPanorama(nightIntensity >= 1 ? nightImage : dayImage, camera, width, height);
+    const authoredWaterlineRatio =
+      simulation.world === "beach"
+        ? BEACH_AUTHORED_WATERLINE_RATIO
+        : LAKE_AUTHORED_WATERLINE_RATIO;
+    const waterline = this.drawPanorama(
+      nightIntensity >= 1 ? nightImage : dayImage,
+      camera,
+      width,
+      height,
+      authoredWaterlineRatio,
+    );
     if (nightIntensity > 0 && nightIntensity < 1) {
       context.save();
       context.globalAlpha = nightIntensity;
-      this.drawPanorama(nightImage, camera, width, height);
+      this.drawPanorama(nightImage, camera, width, height, authoredWaterlineRatio);
       context.restore();
     }
     context.save();
@@ -690,6 +704,10 @@ export class CanvasRenderer {
     const nightIntensity = nightVisualIntensity(simulation);
     const dayImage = simulation.world === "beach" ? art.beach : art.lake;
     const nightImage = simulation.world === "beach" ? art.beachNight : art.lakeNight;
+    const authoredWaterlineRatio =
+      simulation.world === "beach"
+        ? BEACH_AUTHORED_WATERLINE_RATIO
+        : LAKE_AUTHORED_WATERLINE_RATIO;
     const drawSurfaceImage = (
       image: HTMLImageElement,
       alpha: number,
@@ -701,6 +719,7 @@ export class CanvasRenderer {
         camera,
         viewportWidth: width,
         viewportHeight: height,
+        authoredWaterlineRatio,
       });
       context.save();
       context.beginPath();
@@ -918,6 +937,7 @@ export class CanvasRenderer {
     camera: SideScrollCamera,
     width: number,
     height: number,
+    authoredWaterlineRatio: number,
   ): number {
     const layout = calculatePanoramaLayout({
       imageWidth: image.naturalWidth,
@@ -925,6 +945,7 @@ export class CanvasRenderer {
       camera,
       viewportWidth: width,
       viewportHeight: height,
+      authoredWaterlineRatio,
     });
     this.context.drawImage(
       image,

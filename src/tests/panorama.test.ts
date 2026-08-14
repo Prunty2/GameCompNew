@@ -5,7 +5,10 @@ import {
   dampSideScrollCamera,
   worldToScreenX,
 } from "../game/camera";
-import { calculatePanoramaLayout } from "../game/panorama";
+import {
+  BEACH_AUTHORED_WATERLINE_RATIO,
+  calculatePanoramaLayout,
+} from "../game/panorama";
 
 const IMAGE_WIDTH = 1672;
 const IMAGE_HEIGHT = 941;
@@ -34,6 +37,28 @@ describe("panorama layout", () => {
     expect(waterlineRatio).toBeCloseTo(0.78);
     expect(layout.sourceY).toBeLessThan(IMAGE_HEIGHT * 0.61);
     expect(layout.sourceY + layout.sourceHeight).toBeGreaterThan(IMAGE_HEIGHT * 0.61);
+  });
+
+  test("aligns the Beach crop to its lower painted ocean edge", () => {
+    const camera = createSideScrollCamera({
+      focusX: 0.15,
+      velocityX: 0,
+      viewWidth: 0.3,
+      lookAheadTime: 0.24,
+    });
+    const layout = calculatePanoramaLayout({
+      imageWidth: IMAGE_WIDTH,
+      imageHeight: IMAGE_HEIGHT,
+      camera,
+      viewportWidth: 1920,
+      viewportHeight: 1010,
+      authoredWaterlineRatio: BEACH_AUTHORED_WATERLINE_RATIO,
+    });
+    const paintedOceanEdge = IMAGE_HEIGHT * BEACH_AUTHORED_WATERLINE_RATIO;
+
+    expect(layout.waterline / 1010).toBeCloseTo(0.78);
+    expect(layout.sourceY).toBeLessThan(paintedOceanEdge);
+    expect(layout.sourceY + layout.sourceHeight).toBeGreaterThan(paintedOceanEdge);
   });
 
   test("keeps the crop within the panorama at both lake edges", () => {

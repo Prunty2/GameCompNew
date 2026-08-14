@@ -291,7 +291,7 @@ Money is earned primarily from completed deliveries and spent on permanent impro
 - **Lights:** See landmarks and resist nighttime visibility penalties.
 - **Line depth:** Reach progressively deeper fish and new underwater color zones.
 - **Region access:** Purchase permits or equipment needed to enter new waters.
-- **Beach location:** A one-time 120-shell chart upgrade unlocks travel between the lake and Beach, a coastal bay with a surf club, grand pale-timber pier, fish-and-chip shop, broad sandy shore, and lighthouse. The alternate panorama uses the same normalized world scale, camera, waterline, controls, harbors, and fishing interactions as the lake so it expands the sailing setting without creating a second ruleset. Beach fishing schools retain the same interaction distances but receive a stronger localized polarized-water glow and higher sprite contrast so their positions stay readable against the pale coastal water.
+- **Beach location:** A one-time 120-shell chart upgrade unlocks travel between the lake and Beach, a coastal bay with a low veranda-fronted surf club, substantial medium-tan timber pier, small fish-and-chip kiosk, broad sandy dunes, and lighthouse. Its left shoreline must read immediately as an open seaside settlement rather than reuse Brindle Harbor's boathouse, red-roof shed, conifers, reeds, or working-lake silhouette. The panorama leaves a clear shoreline landing for the separate gameplay pier sprite instead of painting a second foreground pier into the background. The alternate panorama uses the same normalized world scale, camera, controls, harbors, and fishing interactions as the lake while recording its own authored painted-waterline ratio, so the boat, pier, fish, and surface effects align to the actual ocean rather than to the lake artwork. Beach fishing schools retain the same interaction distances but receive a stronger localized polarized-water glow and higher sprite contrast so their positions stay readable against the pale coastal water.
 
 Cargo has seven tiers to match its seven locked inventory slots; engine, lights, and line depth have six tiers. Repair costs support the opening scenario and any authored damage events. Prices rise by upgrade tier without requiring excessive repetition. The player should regularly face a useful decision between building a larger boat, improving travel time, strengthening night visibility, or reaching a deeper and more profitable fishing world.
 
@@ -675,11 +675,11 @@ Every authored visual asset in this slice is generated with GPT Image 2.0. No pr
 | --- | --- |
 | `fshing-wordmark.png` | Restrained title-screen identity |
 | `lake-chart.png` | Side-on panoramic sky, distant shore, waterline, and lake atmosphere |
-| `beach-chart.png` | Side-on seaside-town panorama with the surf club, pier, fish-and-chip shop, beach, and lighthouse |
+| `beach-chart.png` | Side-on seaside-town panorama with a distinct low surf club, fish-and-chip kiosk, dune beach, clear gameplay-pier landing, and lighthouse |
 | `beach-chart-night.png` | Composition-matched nighttime Beach panorama |
 | `player-boat.png` | Player vessel in strict side profile on a chroma-key matte |
 | `harbor-pier.png` | Long weathered side-view harbor pier that extends from either shoreline; its fixed footprint uses roughly 36–44 narrow deck-plank divisions so the timber scale remains believable beside the player boat |
-| `beach-harbor-pier.png` | Larger Beach-only pier with pale sun-bleached timber, a restrained railing, paired pilings, and boat-scale plank divisions |
+| `beach-harbor-pier.png` | Larger Beach-only pier with medium weathered honey-tan timber, a restrained railing, paired pilings, and boat-scale plank divisions |
 | `fish-atlas.png` | Fishing-hook sprite and retained original fish reference cells |
 | `fish-atlas-v2.png` | Nine independently generated, silhouette-distinct species in a strict 3 × 3 atlas |
 | `surface-fishing-cues.png` | Six faint school-fish poses plus the primary proximity hook cue in a strict 4 × 2 atlas; the secondary disabled cell is unused |
