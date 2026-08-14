@@ -12,13 +12,13 @@
 }
 
 @media (hover: hover) and (pointer: fine) {
-  :is(.title-screen, .settings-overlay, .controls-overlay, .pause-screen, .harbor-screen)
+  :is(.title-screen, .settings-overlay, .controls-overlay, .credits-overlay, .pause-screen, .harbor-screen)
     button:hover:not(:disabled):not(.cargo-release) {
     animation: menu-button-hover-wobble 240ms ease-out;
     transform-origin: 50% 70%;
   }
 
-  :is(.title-screen, .settings-overlay, .controls-overlay, .pause-screen, .harbor-screen)
+  :is(.title-screen, .settings-overlay, .controls-overlay, .credits-overlay, .pause-screen, .harbor-screen)
     button:active:not(:disabled):not(.cargo-release) {
     animation: menu-button-click-wobble 140ms ease-out;
   }
@@ -29,7 +29,7 @@
 }
 
 .reduced-motion
-  :is(.title-screen, .settings-overlay, .controls-overlay, .pause-screen, .harbor-screen)
+  :is(.title-screen, .settings-overlay, .controls-overlay, .credits-overlay, .pause-screen, .harbor-screen)
   button,
 .reduced-motion .harbor-screen .cargo-slot.is-wobbling {
   animation: none !important;
@@ -37,7 +37,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  :is(.title-screen, .settings-overlay, .controls-overlay, .pause-screen, .harbor-screen) button,
+  :is(.title-screen, .settings-overlay, .controls-overlay, .credits-overlay, .pause-screen, .harbor-screen) button,
   .harbor-screen .cargo-slot.is-wobbling {
     animation: none !important;
     rotate: 0deg;

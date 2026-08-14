@@ -73,7 +73,7 @@ const MAX_FRAME = 0.05;
 const UI_REFRESH_INTERVAL = 100;
 const HELP_STEP_COUNT = 4;
 const PAUSE_EXIT_DURATION = 340;
-const SETTINGS_EXIT_DURATION = 340;
+const MENU_EXIT_DURATION = 340;
 const SCENE_COVER_DURATION = 120;
 const SCENE_REVEAL_DURATION = 160;
 const DELIVERY_NOTIFICATION_DURATION = 4_000;
@@ -89,6 +89,7 @@ type OverlayScreen =
   | "harbor"
   | "pause"
   | "settings"
+  | "credits"
   | "controls"
   | "help"
   | "seasonReport"
@@ -139,7 +140,7 @@ export class Game {
   private deliveryNotificationExitTimer: number | undefined;
   private deliveryAcceptedRevealTimer: number | undefined;
   private pauseTransitionTimer: number | undefined;
-  private settingsTransitionTimer: number | undefined;
+  private menuTransitionTimer: number | undefined;
   private cargoUpgradeTransitionTimer: number | undefined;
   private cargoReleaseTimer: number | undefined;
   private pendingCargoRelease: { item: CargoItem; index: number } | null = null;
@@ -232,7 +233,7 @@ export class Game {
     this.renderer.render(this.simulation, {
       ...this.save.settings,
       cinematic: this.overlay === "title"
-        || (this.overlay === "settings" || this.overlay === "controls") && this.overlayReturn === "title",
+        || (this.overlay === "settings" || this.overlay === "controls" || this.overlay === "credits") && this.overlayReturn === "title",
     });
     this.syncContextActionAnchor();
     if (time - this.lastUiRefresh >= UI_REFRESH_INTERVAL) {
@@ -485,6 +486,9 @@ export class Game {
       case "settings":
         host.innerHTML = this.settingsScreen();
         break;
+      case "credits":
+        host.innerHTML = this.creditsScreen();
+        break;
       case "controls":
         host.innerHTML = this.controlsScreen();
         break;
@@ -498,7 +502,9 @@ export class Game {
   }
 
   private titleScreen(): string {
-    const returnClass = this.overlaySource === "settings" ? " is-settings-return" : "";
+    const returnClass = this.overlaySource === "settings" || this.overlaySource === "credits"
+      ? " is-settings-return"
+      : "";
     return `
       <section class="screen-overlay title-screen${returnClass}" role="dialog" aria-label="FSHING main menu">
         <div class="title-panel">
@@ -508,7 +514,10 @@ export class Game {
               <span class="title-play-icon" aria-hidden="true">▶</span>
               <strong>Play</strong>
             </button>
-            <button class="menu-button title-settings-button" type="button" data-action="open-settings"><strong>Settings</strong></button>
+            <div class="title-secondary-actions">
+              <button class="menu-button title-settings-button" type="button" data-action="open-settings"><strong>Settings</strong></button>
+              <button class="menu-button title-credits-button" type="button" data-action="open-credits"><strong>Credits</strong></button>
+            </div>
           </div>
         </div>
         <small class="title-build-version">v${__APP_VERSION__} (PR #${__PR_NUMBER__})</small>
@@ -716,6 +725,60 @@ export class Game {
       </section>`;
   }
 
+  private creditsScreen(): string {
+    const australianFlag = `
+      <span class="credit-flag" aria-hidden="true">
+        <span class="credit-flag-mast"></span>
+        <svg class="credit-flag-cloth" viewBox="0 0 72 44" focusable="false">
+          <path class="credit-flag-field" d="M2 3.5Q20 1 36 4t34-.5v34Q52 40 36 37.5T2 39Z" />
+          <g class="credit-flag-union">
+            <path d="M2 3.5Q18 2 35 3.8V21H2Z" fill="#092f6e" />
+            <path d="M2 4l33 17M35 4L2 21" stroke="#fff" stroke-width="5" />
+            <path d="M2 4l33 17M35 4L2 21" stroke="#e21d38" stroke-width="2" />
+            <path d="M18.5 3v18M2 12.5h33" stroke="#fff" stroke-width="6" />
+            <path d="M18.5 3v18M2 12.5h33" stroke="#e21d38" stroke-width="3" />
+          </g>
+          <g fill="#fff">
+            <polygon transform="translate(18 30) scale(.55)" points="0,-10 1.91,-3.96 7.82,-6.23 4.29,-.98 9.75,2.23 3.44,2.74 4.34,9.01 0,4.4 -4.34,9.01 -3.44,2.74 -9.75,2.23 -4.29,-.98 -7.82,-6.23 -1.91,-3.96" />
+            <polygon transform="translate(53 11) scale(.34)" points="0,-10 1.91,-3.96 7.82,-6.23 4.29,-.98 9.75,2.23 3.44,2.74 4.34,9.01 0,4.4 -4.34,9.01 -3.44,2.74 -9.75,2.23 -4.29,-.98 -7.82,-6.23 -1.91,-3.96" />
+            <polygon transform="translate(61 21) scale(.34)" points="0,-10 1.91,-3.96 7.82,-6.23 4.29,-.98 9.75,2.23 3.44,2.74 4.34,9.01 0,4.4 -4.34,9.01 -3.44,2.74 -9.75,2.23 -4.29,-.98 -7.82,-6.23 -1.91,-3.96" />
+            <polygon transform="translate(50 34) scale(.34)" points="0,-10 1.91,-3.96 7.82,-6.23 4.29,-.98 9.75,2.23 3.44,2.74 4.34,9.01 0,4.4 -4.34,9.01 -3.44,2.74 -9.75,2.23 -4.29,-.98 -7.82,-6.23 -1.91,-3.96" />
+            <polygon transform="translate(42 22) scale(.34)" points="0,-10 1.91,-3.96 7.82,-6.23 4.29,-.98 9.75,2.23 3.44,2.74 4.34,9.01 0,4.4 -4.34,9.01 -3.44,2.74 -9.75,2.23 -4.29,-.98 -7.82,-6.23 -1.91,-3.96" />
+            <polygon transform="translate(55 25) scale(.38)" points="0,-6 1.59,-2.18 5.71,-1.85 2.57,.83 3.53,4.85 0,2.7 -3.53,4.85 -2.57,.83 -5.71,-1.85 -1.59,-2.18" />
+          </g>
+        </svg>
+      </span>`;
+    return `
+      <section class="screen-overlay credits-overlay" role="dialog" aria-labelledby="credits-title">
+        <div class="credits-menu">
+          <img class="wordmark credits-wordmark" src="${wordmarkUrl}" alt="FSHING" />
+          <header class="credits-heading">
+            <h2 id="credits-title">Credits</h2>
+            <p>The crew behind FSHING</p>
+          </header>
+          <dl class="credits-list">
+            <div class="credit-entry">
+              <dt>${australianFlag}<span class="credit-name">Liam</span></dt>
+              <dd>Game Designer <span>/</span> Programmer <span>/</span> Gameplay Tester</dd>
+            </div>
+            <div class="credit-entry">
+              <dt>${australianFlag}<span class="credit-name">Saxon</span></dt>
+              <dd>Game Designer <span>/</span> Visual Designer <span>/</span> Gameplay Tester</dd>
+            </div>
+            <div class="credit-entry">
+              <dt>${australianFlag}<span class="credit-name">Harrison</span></dt>
+              <dd>Story Writer <span>/</span> Documentation <span>/</span> Gameplay Tester</dd>
+            </div>
+            <div class="credit-entry">
+              <dt>${australianFlag}<span class="credit-name">David</span></dt>
+              <dd>Audio Designer <span>/</span> Marine Specialist <span>/</span> Gameplay Tester</dd>
+            </div>
+          </dl>
+          <button class="primary-button credits-back" type="button" data-action="back"><span aria-hidden="true">←</span><strong>Back</strong></button>
+        </div>
+      </section>`;
+  }
+
   private controlsScreen(): string {
     const rows = CONTROL_ACTIONS.map((action) => {
       const copy = CONTROL_LABELS[action];
@@ -818,26 +881,28 @@ export class Game {
     if (next === this.overlay) return;
 
     if (
-      this.overlay === "settings"
+      (this.overlay === "settings" || this.overlay === "credits")
       && (next === "title" || next === "pause")
       && this.overlayReturn === next
       && !this.save.settings.reducedMotion
     ) {
-      if (this.settingsTransitionTimer !== undefined) return;
-      const settingsScreen = this.uiRoot.querySelector<HTMLElement>(".settings-overlay");
-      if (settingsScreen) {
-        settingsScreen.classList.add("is-closing", `is-closing-to-${next}`);
-        this.settingsTransitionTimer = window.setTimeout(() => {
-          this.settingsTransitionTimer = undefined;
+      if (this.menuTransitionTimer !== undefined) return;
+      const menuScreen = this.uiRoot.querySelector<HTMLElement>(
+        this.overlay === "settings" ? ".settings-overlay" : ".credits-overlay",
+      );
+      if (menuScreen) {
+        menuScreen.classList.add("is-closing", `is-closing-to-${next}`);
+        this.menuTransitionTimer = window.setTimeout(() => {
+          this.menuTransitionTimer = undefined;
           this.commitOverlay(next);
-        }, SETTINGS_EXIT_DURATION);
+        }, MENU_EXIT_DURATION);
         return;
       }
     }
 
-    if (this.settingsTransitionTimer !== undefined) {
-      window.clearTimeout(this.settingsTransitionTimer);
-      this.settingsTransitionTimer = undefined;
+    if (this.menuTransitionTimer !== undefined) {
+      window.clearTimeout(this.menuTransitionTimer);
+      this.menuTransitionTimer = undefined;
     }
 
     if (this.overlay === "pause" && next === null && !this.save.settings.reducedMotion) {
@@ -1092,6 +1157,7 @@ export class Game {
       case "interact": this.handleInteract(); break;
       case "resume": this.setOverlay(null); break;
       case "open-settings": this.overlayReturn = this.overlay; this.setOverlay("settings"); break;
+      case "open-credits": this.overlayReturn = this.overlay; this.setOverlay("credits"); break;
       case "open-controls": this.setOverlay("controls"); break;
       case "close-controls": this.setOverlay("settings"); break;
       case "reset-controls":

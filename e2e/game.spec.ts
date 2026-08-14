@@ -14,7 +14,7 @@ test.beforeEach(async ({ page }) => {
   await page.route("https://sdk.crazygames.com/**", (route) => route.abort());
 });
 
-test("main menu presents only centered play and settings actions", async ({ page }) => {
+test("main menu presents centered play, settings, and credits actions", async ({ page }) => {
   await page.goto("/");
 
   const version = page.locator(".title-build-version");
@@ -25,7 +25,7 @@ test("main menu presents only centered play and settings actions", async ({ page
   expect(versionBounds!.y + versionBounds!.height).toBeGreaterThan(690);
 
   const actions = page.locator(".title-actions button");
-  await expect(actions).toHaveCount(2);
+  await expect(actions).toHaveCount(3);
   const playButton = page.getByRole("button", { name: "Play", exact: true });
   await expect(playButton).toBeVisible();
   await playButton.hover();
@@ -33,6 +33,7 @@ test("main menu presents only centered play and settings actions", async ({ page
   await page.mouse.move(0, 0);
   await page.waitForTimeout(250);
   await expect(page.getByRole("button", { name: "Settings" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Credits" })).toBeVisible();
   await expect(page.getByRole("button", { name: "How to play" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Field guide" })).toHaveCount(0);
   await expect(page.locator(".title-tagline, .title-controls")).toHaveCount(0);
@@ -46,8 +47,51 @@ test("main menu presents only centered play and settings actions", async ({ page
   }));
   const viewportCenter = await page.evaluate(() => window.innerWidth / 2);
 
-  expect(bounds[0].width).toBe(bounds[1].width);
-  expect(bounds.every(({ center }) => Math.abs(center - viewportCenter) <= 1)).toBe(true);
+  expect(bounds[1].width).toBe(bounds[2].width);
+  expect(Math.abs(bounds[0].center - viewportCenter)).toBeLessThanOrEqual(1);
+  expect(Math.abs((bounds[1].center + bounds[2].center) / 2 - viewportCenter)).toBeLessThanOrEqual(1);
+});
+
+test("credits lists the team and returns to the main menu", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Credits" }).click();
+
+  await expect(page.getByRole("heading", { name: "Credits" })).toBeVisible();
+  await expect(page.locator(".credits-list dt")).toHaveText(["Liam", "Saxon", "Harrison", "David"]);
+  await expect(page.getByText("Game Designer / Programmer / Gameplay Tester")).toBeVisible();
+  await expect(page.getByText("Game Designer / Visual Designer / Gameplay Tester")).toBeVisible();
+  await expect(page.getByText("Story Writer / Documentation / Gameplay Tester")).toBeVisible();
+  await expect(page.getByText("Audio Designer / Marine Specialist / Gameplay Tester")).toBeVisible();
+
+  const entries = page.locator(".credit-entry");
+  const flags = page.locator(".credit-flag");
+  const creditsScreen = page.locator(".credits-overlay");
+  const creditsMenu = page.locator(".credits-menu");
+  const backButton = page.getByRole("button", { name: "Back" });
+  await expect(entries).toHaveCount(4);
+  await expect(flags).toHaveCount(4);
+  await expect(entries.first()).toHaveCSS("border-radius", "0px");
+  await expect(backButton).toHaveCSS("border-radius", "999px");
+  const [listBounds, backBounds] = await Promise.all([
+    page.locator(".credits-list").boundingBox(),
+    backButton.boundingBox(),
+  ]);
+  expect(backBounds?.width).toBe(listBounds?.width);
+  await expect(flags.first()).toHaveAttribute("aria-hidden", "true");
+  await expect(flags.first()).toHaveCSS("opacity", "0");
+  await entries.first().hover();
+  await expect(flags.first()).toHaveCSS("opacity", "1");
+  await expect(entries.first().locator(".credit-flag-cloth")).toHaveCSS("animation-name", "credit-flag-ripple");
+
+  await backButton.click();
+  await expect(creditsScreen).toHaveClass(/is-closing-to-title/);
+  await expect(creditsScreen).toHaveCSS("animation-name", "settings-backdrop-out");
+  await expect(creditsMenu).toHaveCSS("animation-name", "settings-menu-out");
+  await expect(creditsScreen).toHaveCount(0);
+  await expect(page.locator(".title-screen")).toHaveClass(/is-settings-return/);
+  await expect(page.locator(".title-panel")).toHaveCSS("animation-name", "menu-handoff-in");
+  await expect(page.getByRole("button", { name: "Play", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Credits" })).toHaveCount(0);
 });
 
 test("accepting a delivery drops the shared confirmation pill", async ({ page }) => {
