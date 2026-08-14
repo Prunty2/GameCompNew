@@ -59,8 +59,8 @@ test("credits lists the team and returns to the main menu", async ({ page }) => 
   await expect(page.getByRole("heading", { name: "Credits" })).toBeVisible();
   await expect(page.locator(".credits-list dt")).toHaveText(["Liam", "David", "Harrison", "Saxon"]);
   await expect(page.getByText("Game Designer / Programmer / Tester")).toBeVisible();
-  await expect(page.getByText("Game Designer / Audio Designer / Tester")).toBeVisible();
-  await expect(page.getByText("Game Designer / Storyteller / Documentation / Tester")).toBeVisible();
+  await expect(page.getByText("Audio Designer / Documentation / Tester")).toBeVisible();
+  await expect(page.getByText("Storyteller / Tester")).toBeVisible();
   await expect(page.getByText("Game Designer / Visual Designer / Tester")).toBeVisible();
 
   const entries = page.locator(".credit-entry");
@@ -68,6 +68,7 @@ test("credits lists the team and returns to the main menu", async ({ page }) => 
   await expect(entries).toHaveCount(4);
   await expect(flags).toHaveCount(4);
   await expect(entries.first()).toHaveCSS("border-radius", "0px");
+  await expect(page.getByRole("button", { name: "Back" })).toHaveCSS("border-radius", "999px");
   await expect(flags.first()).toHaveAttribute("aria-hidden", "true");
   await expect(flags.first()).toHaveCSS("opacity", "0");
   await entries.first().hover();

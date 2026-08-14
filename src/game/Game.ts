@@ -785,11 +785,11 @@ export class Game {
             </div>
             <div class="credit-entry">
               <dt>${australianFlag}<span class="credit-name">David</span></dt>
-              <dd>Game Designer <span>/</span> Audio Designer <span>/</span> Tester</dd>
+              <dd>Audio Designer <span>/</span> Documentation <span>/</span> Tester</dd>
             </div>
             <div class="credit-entry">
               <dt>${australianFlag}<span class="credit-name">Harrison</span></dt>
-              <dd>Game Designer <span>/</span> Storyteller <span>/</span> Documentation <span>/</span> Tester</dd>
+              <dd>Storyteller <span>/</span> Tester</dd>
             </div>
             <div class="credit-entry">
               <dt>${australianFlag}<span class="credit-name">Saxon</span></dt>
