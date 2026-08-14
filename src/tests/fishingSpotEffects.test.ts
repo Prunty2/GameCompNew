@@ -10,17 +10,18 @@ describe("surface fishing-spot effects", () => {
     expect(cue.hookVisibility).toBe(0);
   });
 
-  it("reveals the hook from three times the interaction radius", () => {
+  it("reveals the hook at three radii and reaches full visibility by two radii", () => {
     const radius = 0.027;
     const outsideReveal = surfaceFishingCue(0.2 - radius * 3.01, 0.2, radius);
     const revealEdge = surfaceFishingCue(0.2 - radius * 2.99, 0.2, radius);
+    const fullVisibilityEdge = surfaceFishingCue(0.2 - radius * 2, 0.2, radius);
     const interactionEdge = surfaceFishingCue(0.2 - radius, 0.2, radius);
 
     expect(outsideReveal.lensVisibility).toBeGreaterThan(0);
     expect(outsideReveal.hookVisibility).toBe(0);
     expect(revealEdge.hookVisibility).toBeGreaterThanOrEqual(0.4);
-    expect(interactionEdge.hookVisibility).toBeGreaterThan(revealEdge.hookVisibility);
-    expect(interactionEdge.hookVisibility).toBeGreaterThan(0.8);
+    expect(fullVisibilityEdge.hookVisibility).toBe(1);
+    expect(interactionEdge.hookVisibility).toBe(1);
   });
 
   it("makes the lens and fish clearly strengthen during approach", () => {
