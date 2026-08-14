@@ -786,16 +786,16 @@ export class Game {
               <dd>Game Designer <span>/</span> Programmer <span>/</span> Tester</dd>
             </div>
             <div class="credit-entry">
-              <dt>${australianFlag}<span class="credit-name">David</span></dt>
-              <dd>Audio Designer <span>/</span> Documentation <span>/</span> Tester</dd>
+              <dt>${australianFlag}<span class="credit-name">Saxon</span></dt>
+              <dd>Game Designer <span>/</span> Visual Designer <span>/</span> Tester</dd>
             </div>
             <div class="credit-entry">
               <dt>${australianFlag}<span class="credit-name">Harrison</span></dt>
-              <dd>Storyteller <span>/</span> Tester</dd>
+              <dd>Story Writer <span>/</span> Documentation <span>/</span> Tester</dd>
             </div>
             <div class="credit-entry">
-              <dt>${australianFlag}<span class="credit-name">Saxon</span></dt>
-              <dd>Game Designer <span>/</span> Visual Designer <span>/</span> Tester</dd>
+              <dt>${australianFlag}<span class="credit-name">David</span></dt>
+              <dd>Audio Designer <span>/</span> Documentation <span>/</span> Tester</dd>
             </div>
           </dl>
           <button class="primary-button credits-back" type="button" data-action="back"><span aria-hidden="true">←</span><strong>Back</strong></button>
