@@ -235,7 +235,13 @@ export function updateSimulation(simulation: Simulation, input: InputState, dt: 
 
   if (travel !== 0) {
     const thrustMultiplier = simulation.boost.active ? BALANCE.boostThrustMultiplier : 1;
-    boat.speed += travel * BALANCE.horizontalThrust * thrustMultiplier * safeDt;
+    const isBraking = boat.speed !== 0 && Math.sign(boat.speed) !== travel;
+    const brakeMultiplier = isBraking
+      ? simulation.boost.active
+        ? BALANCE.boostBrakeMultiplier
+        : BALANCE.normalBrakeMultiplier
+      : 1;
+    boat.speed += travel * BALANCE.horizontalThrust * thrustMultiplier * brakeMultiplier * safeDt;
   } else {
     boat.speed *= Math.max(0, 1 - BALANCE.waterDrag * safeDt);
   }
