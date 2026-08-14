@@ -1,6 +1,6 @@
 # FSHING asset manifest
 
-The initial authored visual set was generated with GPT Image 2.0 on 24 July 2026. The expanded nine-species fish atlas was generated with OpenAI's built-in image-generation tool on 31 July 2026. The surface-school cue atlas and polarized-water lens were generated with the built-in GPT Image tool on 5 August 2026. The tugboat steam atlas was generated with the built-in GPT Image tool on 6 August 2026. No bitmap, SVG, icon, texture, panel, button, logo, scenery plate, or game sprite was created with drawing code.
+The initial authored visual set was generated with GPT Image 2.0 on 24 July 2026. The original fantasy-fish atlas was generated with OpenAI's built-in image-generation tool on 31 July 2026 and was superseded by the real-species sheets on 14 August 2026. The surface-school cue atlas and polarized-water lens were generated with the built-in GPT Image tool on 5 August 2026. The tugboat steam atlas was generated with the built-in GPT Image tool on 6 August 2026. The square FSHING logo was generated with the built-in image-generation tool on 14 August 2026. No bitmap, SVG, icon, texture, panel, button, logo, scenery plate, or game sprite was created with drawing code.
 
 Authoring originals are preserved outside the production bundle. Runtime copies live in `src/assets/` and are explicitly imported by TypeScript or CSS. HTML and CSS arrange and label the generated interface surfaces. Canvas draws the simulation, camera, line, wake, water movement, visibility, and accessibility indicators; it does not manufacture replacement UI art.
 
@@ -43,7 +43,7 @@ The boat, harbor pier, fish atlas, and world atlas were requested on a uniform `
 
 - Runtime role: original three-fish reference atlas; the hook cell remains in active use
 - Generated size: 1254 × 1254
-- Prompt: “Use GPT Image 2.0. Create a strict 2 by 2 sprite atlas for a side-on 2D fishing game. Every cell equal size and every object entirely inside its cell with generous padding. Top-left: round-bodied Reedfin with broad fan fins. Top-right: long needle-like pike with sharp pointed snout. Bottom-left: compact eerie Gloam Gill with forked tail and a single eye-like side marking. Bottom-right: simple J-shaped fishing hook with short swivel, no long line. All three fish in STRICT orthographic side profile facing right, with bold distinct silhouettes. Restrained editorial gouache/screen-print style, muted lake teal, cream, ink navy, and sparse orange accents. No labels, text, borders, cell dividers, bubbles, plants, scenery, water, shadows, or extra objects. Entire canvas behind all cells must be perfectly uniform full-bleed pure chroma-magenta #FF00FF with no texture, gradient, checkerboard, or variation.”
+- Prompt: “Use GPT Image 2.0. Create a strict 2 by 2 sprite atlas for a side-on 2D fishing game. Every cell equal size and every object entirely inside its cell with generous padding. Top-left: round-bodied Reedfin with broad fan fins. Top-right: long Needle Pike with sharp pointed snout. Bottom-left: compact eerie Gloam Gill with forked tail and a single eye-like side marking. Bottom-right: simple J-shaped fishing hook with short swivel, no long line. All three fish in STRICT orthographic side profile facing right, with bold distinct silhouettes. Restrained editorial gouache/screen-print style, muted lake teal, cream, ink navy, and sparse orange accents. No labels, text, borders, cell dividers, bubbles, plants, scenery, water, shadows, or extra objects. Entire canvas behind all cells must be perfectly uniform full-bleed pure chroma-magenta #FF00FF with no texture, gradient, checkerboard, or variation.”
 
 ### `fish-atlas-v2.png`
 
@@ -55,21 +55,22 @@ The boat, harbor pier, fish atlas, and world atlas were requested on a uniform `
 
 ### `fish-atlas-ui.png`
 
-- Runtime role: transparent 3 × 3 derivative of `fish-atlas-v2.png` for species-specific target-fish art in the harbor job route
+- Runtime role: transparent 3 × 3 neutral-pose derivative of the three real-species swim sheets for target-fish art in the harbor job route
 - Runtime size: 768 × 768 with authored alpha
-- Processing: the existing atlas's uniform chroma-magenta matte was mechanically removed with a soft chroma key and the result was uniformly downscaled with Lanczos filtering. Fish artwork, cell order, proportions, and colours were not redrawn or rearranged.
+- Processing: frame zero from each species row was mechanically cropped, chroma-keyed, proportionally resized with Lanczos filtering, and arranged in `SPOT_RESIDENTS` row-major order. Fish artwork and colours were not redrawn.
 
 ### Animated habitat fish sheets
 
 - Runtime files: `fish-sunward-swim.png`, `fish-mosswater-swim.png`, and `fish-gloam-swim.png`
 - Runtime role: four authored swim frames for every resident species, grouped by fishing site in strict 4-column × 3-row sheets. Columns are neutral glide, tail or fin flex, neutral return, and opposite flex. Rows follow each site's resident order from `SPOT_RESIDENTS`.
 - Authoring sources: `output/imagegen/fish-*-swim-source.png`
-- Generated on: 10 August 2026 with OpenAI's built-in image-generation tool
+- Generated on: 14 August 2026 with OpenAI's built-in image-generation tool
+- Authoring sizes: Sunward and Mosswater 1448 × 1086; Outer Gloam 1537 × 1023
 - Runtime processing: authoring sheets are proportionally downscaled to 768 px wide; the uniform magenta matte is keyed in memory. The deterministic presentation cycle selects one of four cells and reduced-motion mode holds frame zero. The renderer derives a thin, partially translucent rarity outline from the active frame only for the requested fish.
-- Shared prompt direction: “Create one strict 4 columns × 3 rows animation sprite sheet. Each row is one consistent fish individual shown through four sequential subtle swimming frames. Keep head, eye, body size, markings, lighting, and centre position identical across frames; move only the tail, rear body, and small fins. Strict orthographic side profile facing right; visually appealing semi-realistic natural-history gouache; anatomically plausible proportions; softly painted scales; controlled detail readable at 55–100 px. Exactly one complete fish per equal cell with generous safe padding on a uniform full-bleed `#FF00FF` matte. No pale sticker outline; only a thin soft habitat-dark keyline integrated into the painting. No text, labels, grid, borders, water, bubbles, scenery, shadows, extra objects, or watermark.”
-- Sunward rows: realistic rounded olive-teal Reedfin; compact amber barred Sun Perch; slim steel-blue Silver Dart.
-- Mosswater rows: long olive-silver Needle Pike; heavy mottled Mossback; charcoal-teal Lantern Eel with a restrained warm lure.
-- Outer Gloam rows: compact blue-violet Gloam Gill with a natural eye spot; dusky Violet Ray with subtly undulating wings; dark armored Abyss Crown with restrained raised head plates.
+- Shared prompt direction: “Use case: stylized-concept. Asset type: production animated freshwater fish sprite sheet for a side-on 2D browser game. Create one strict 4 columns × 3 rows atlas of the named real North American freshwater species. Columns are neutral glide, locomotor flex A, neutral return, and opposite flex B. Preserve real anatomy, proportions, fin placement, scales or scutes, markings, and natural coloration across frames. Restrained natural-history gouache and screen print; dry-brush texture; thin integrated dark keyline; readable at 60–100 px. Exactly twelve complete right-facing side-profile fish, one per equal cell, consistent within each row, generous padding. Perfectly uniform full-bleed `#FF00FF` matte. No text, labels, grid, borders, water, bubbles, scenery, hook, extra fish, fantasy anatomy, or watermark.”
+- Sunward prompt rows: Bluegill (*Lepomis macrochirus*) with pectoral-fin sculling; Yellow Perch (*Perca flavescens*) with moderate posterior flex; Emerald Shiner (*Notropis atherinoides*) with compact fast tail beats.
+- Mosswater prompt rows: Northern Pike (*Esox lucius*) nearly rigid except for subtle rear flex; Largemouth Bass (*Micropterus salmoides*) with compact burst-and-glide tail poses; Bowfin (*Amia calva*) with a mostly straight body and changing dorsal ribbon-fin wave.
+- Outer Gloam prompt rows: Lake Trout (*Salvelinus namaycush*) with restrained subcarangiform tail beats; Burbot (*Lota lota*) with gentle low-amplitude whole-body and long-fin waves; Lake Sturgeon (*Acipenser fulvescens*) with steady armored forebody, four barbels, bony scutes, heterocercal tail, and subtle broad rear sweeps.
 
 ### `surface-fishing-cues.png`
 
@@ -148,6 +149,14 @@ The boat, harbor pier, fish atlas, and world atlas were requested on a uniform `
 - Runtime role: title identity
 - Generated size: 1536 × 1024
 - Prompt: “Use GPT Image 2.0. Create a full-bleed title identity plate for a side-on 2D lake game. The exact single word FSHING, spelled F-S-H-I-N-G with no other words, in bold compact hand-painted uppercase display lettering. Cream letters with subtle worn ink texture and one small safety-orange accent stroke, centered with generous breathing room. Restrained editorial screen-print design, mature and understated, no nautical cliches, no hook forming a letter, no cartoon bubble style, no ornate frame, no extra icons. Full rectangular canvas covered edge-to-edge by a flat deep ink-navy painted background with very subtle paper grain; no transparency, no checkerboard, no border, no mockup.”
+
+### `fshing-logo.png`
+
+- Runtime role: square browser favicon and app icon
+- Generated source size: 1254 × 1254; optimized runtime size: 512 × 512
+- Generation mode: OpenAI built-in image generation using `fshing-wordmark.png` and `ui-icons.png` as visual references
+- Prompt: “Use case: logo-brand. Asset type: production square favicon and app icon for the browser game FSHING. Image 1 is the existing FSHING wordmark and defines the cream, safety-orange, deep ink-teal palette plus worn hand-painted screen-print texture; Image 2 is the existing UI pictogram atlas and defines the bold, practical silhouette language only. Do not copy or combine any existing individual icon. Create one original, compact emblem for FSHING, a calm environmental-research fishing game. The emblem should be a single bold warm-cream side-profile freshwater fish crossing two simple lake-wave bands, with one small safety-orange circular survey/sonar accent integrated near the fish. The fish and water must fuse into one memorable, balanced silhouette rather than appearing as several separate illustrations. Use a full-bleed deep ink-teal square background with subtle aged-paper screen-print grain. Flat vector-friendly logo mark rendered in restrained editorial gouache and screen-print style; mature, understated, handcrafted, and crisp. Exact 1:1 square; single centered emblem; generous equal safe padding; strong circular overall balance; readable at 16, 32, and 64 pixels. Deep ink teal background, warm ivory/cream main mark, and one sparse safety-orange accent; no other colors. No text, letters, wordmark, border, outer badge ring, hook, fishing rod, boat, gradients, realistic lighting, shadows, 3D bevel, glossy finish, cartoon face, extra fish, scenery, or watermark. Preserve a clear silhouette and large negative spaces; keep details extremely minimal. Original design only.”
+- Processing: the untouched generated source is retained as `output/imagegen/fshing-logo-source.png`; the runtime image was uniformly downscaled to 512 × 512. Readability was visually checked at 32 × 32 and 16 × 16 before integration.
 
 ### `ui-panel.png`
 

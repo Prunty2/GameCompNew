@@ -34,7 +34,7 @@ describe("versioned save data", () => {
       },
     }));
     expect(loadSave(storage)).toEqual({
-      version: 8,
+      version: 9,
       progress: {
         money: 999_999,
         upgrades: { cargo: 7, engine: 0, lamp: 1, line: 0 },
@@ -64,7 +64,7 @@ describe("versioned save data", () => {
     const migrated = loadSave(storage);
     expect(migrated.progress.money).toBe(0);
     expect(migrated.settings.muted).toBe(true);
-    expect(migrated.version).toBe(8);
+    expect(migrated.version).toBe(9);
   });
 
   test("adds a safe line-depth default to older saves", () => {
@@ -79,7 +79,7 @@ describe("versioned save data", () => {
       settings: defaultSave().settings,
     }));
     const migrated = loadSave(storage);
-    expect(migrated.version).toBe(8);
+    expect(migrated.version).toBe(9);
     expect(migrated.progress.upgrades).toEqual({ cargo: 2, engine: 1, lamp: 2, line: 0 });
     expect(migrated.progress.money).toBe(140);
   });
@@ -103,7 +103,7 @@ describe("versioned save data", () => {
     }));
 
     const migrated = loadSave(storage);
-    expect(migrated.version).toBe(8);
+    expect(migrated.version).toBe(9);
     expect(migrated.settings.controls).toEqual(DEFAULT_CONTROL_BINDINGS);
   });
 
@@ -113,8 +113,8 @@ describe("versioned save data", () => {
       progress: {
         money: 20,
         upgrades: {},
-        populations: { reedfin: -5, sunPerch: "broken", abyssCrown: 900, inventedFish: 1 },
-        discovered: ["reedfin", "reedfin", "inventedFish", 42],
+        populations: { bluegill: -5, yellowPerch: "broken", lakeSturgeon: 900, inventedFish: 1 },
+        discovered: ["bluegill", "bluegill", "inventedFish", 42],
         learning: {
           surveysCompleted: 12.8,
           correctPredictions: -2,
@@ -127,13 +127,27 @@ describe("versioned save data", () => {
     }));
     const loaded = loadSave(storage);
     expect("populations" in loaded.progress).toBe(false);
-    expect(loaded.progress.discovered).toEqual(["reedfin"]);
+    expect(loaded.progress.discovered).toEqual(["bluegill"]);
     expect(loaded.progress.learning).toEqual({
       surveysCompleted: 12,
       correctPredictions: 0,
       routePlans: 3,
     });
     expect(loaded.progress.seasonCompleted).toBe(true);
+  });
+
+  test("migrates discovered fantasy fish ids to their real species replacements", () => {
+    const baseline = defaultSave();
+    const storage = memoryStorage(JSON.stringify({
+      version: 8,
+      progress: {
+        ...baseline.progress,
+        discovered: ["reedfin", "lanternEel", "abyssCrown", "inventedFish"],
+      },
+      settings: baseline.settings,
+    }));
+
+    expect(loadSave(storage).progress.discovered).toEqual(["bluegill", "bowfin", "lakeSturgeon"]);
   });
 
   test("round trips valid saves", () => {

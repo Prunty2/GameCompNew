@@ -31,25 +31,27 @@ describe("fishing presentation", () => {
   });
 
   test("gives each fish a deterministic swim cycle and respects reduced motion", () => {
-    const first = fishingFishPose("reedfin", 12.5, 2.4, false);
-    const repeated = fishingFishPose("reedfin", 12.5, 2.4, false);
-    const neighbor = fishingFishPose("silverDart", 12.5, 2.4, false);
+    const first = fishingFishPose("bluegill", 12.5, 2.4, false);
+    const repeated = fishingFishPose("bluegill", 12.5, 2.4, false);
+    const neighbor = fishingFishPose("emeraldShiner", 12.5, 2.4, false);
 
     expect(first).toEqual(repeated);
     expect(first).not.toEqual(neighbor);
     expect(first.animationFrame).toBeGreaterThanOrEqual(0);
     expect(first.animationFrame).toBeLessThan(4);
     expect(new Set(Array.from({ length: 24 }, (_, index) => (
-      fishingFishPose("reedfin", index * 0.2, 0, false).animationFrame
+      fishingFishPose("bluegill", index * 0.2, 0, false).animationFrame
     )))).toHaveProperty("size", 4);
     expect(Math.abs(first.verticalOffsetRatio)).toBeLessThanOrEqual(0.012);
-    expect(fishingFishPose("reedfin", 12.5, 2.4, true)).toEqual({
+    const reducedMotionPose = fishingFishPose("bluegill", 12.5, 2.4, true);
+    expect(reducedMotionPose).toMatchObject({
       animationFrame: 0,
       verticalOffsetRatio: 0,
       rotation: 0,
       scaleX: 1,
       scaleY: 1,
     });
+    expect(Math.abs(reducedMotionPose.heading)).toBe(1);
   });
 
   test("keeps the simulated hook limit aligned with the visible float line", () => {
@@ -63,10 +65,10 @@ describe("fishing presentation", () => {
 
   test("assigns distinct rarity colors and site-specific environment assets", () => {
     expect(new Set(Object.values(FISHING_RARITY_COLOURS))).toHaveProperty("size", 4);
-    expect(FISH.reedfin.rarity).toBe("common");
-    expect(FISH.mossback.rarity).toBe("uncommon");
-    expect(FISH.violetRay.rarity).toBe("rare");
-    expect(FISH.abyssCrown.rarity).toBe("legendary");
+    expect(FISH.bluegill.rarity).toBe("common");
+    expect(FISH.largemouthBass.rarity).toBe("uncommon");
+    expect(FISH.burbot.rarity).toBe("rare");
+    expect(FISH.lakeSturgeon.rarity).toBe("legendary");
     expect(new Set(Object.values(FISHING_ENVIRONMENT_KEYS))).toHaveProperty("size", 3);
   });
 });

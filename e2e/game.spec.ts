@@ -18,7 +18,7 @@ test("main menu presents centered play, settings, and credits actions", async ({
   await page.goto("/");
 
   const version = page.locator(".title-build-version");
-  await expect(version).toHaveText("v0.2.0 (PR #37)");
+  await expect(version).toHaveText("v0.3.0 (PR #76)");
   const versionBounds = await version.boundingBox();
   expect(versionBounds).not.toBeNull();
   expect(versionBounds!.x).toBeLessThan(24);
@@ -92,6 +92,25 @@ test("credits lists the team and returns to the main menu", async ({ page }) => 
   await expect(page.locator(".title-panel")).toHaveCSS("animation-name", "menu-handoff-in");
   await expect(page.getByRole("button", { name: "Play", exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Credits" })).toHaveCount(0);
+});
+
+test("accepting a delivery drops the shared confirmation pill", async ({ page }) => {
+  await page.goto("/?e2e=1");
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.getByRole("button", { name: "Accept contract" }).click();
+
+  const notification = page.locator("#delivery-notification");
+  await expect(notification).toBeVisible();
+  await expect(notification).toContainText("Delivery Accepted");
+  await expect(notification).toHaveCSS("animation-name", "delivery-success-enter");
+  await expect(notification).toHaveCSS("border-radius", "999px");
+  await expect(notification).toHaveCSS("width", "310px");
+  await expect(notification.locator("strong")).toHaveCSS("color", "rgb(255, 215, 120)");
+  await expect(notification.locator(".delivery-success-seal")).toBeHidden();
+  await expect(page.locator("#toast")).not.toContainText("Contract accepted");
+
+  await page.getByRole("button", { name: "Close delivery accepted notification" }).click();
+  await expect(notification).toBeHidden();
 });
 
 test("the waterline transition carries title, dock, and lake scene changes", async ({ page }) => {
@@ -394,11 +413,31 @@ test("fishing descends through the sailing waterline into a site-specific scene"
   await expect(canvas).toHaveAttribute("data-target-rarity", "common");
   await expect(canvas).toHaveAttribute(
     "aria-label",
-    "Fishing at Sunward Shoal. Target Reedfin, common rarity.",
+    "Fishing at Sunward Shoal. Target Bluegill, common rarity.",
   );
   const initialDiveProgress = Number(await canvas.getAttribute("data-fishing-dive-progress"));
   expect(initialDiveProgress).toBeLessThan(1);
   await expect.poll(async () => Number(await canvas.getAttribute("data-fishing-dive-progress"))).toBeGreaterThan(0.99);
+});
+
+test("all three fishing spots render their habitat-specific real species", async ({ page }) => {
+  await page.goto("/?e2e=1");
+  const canvas = page.locator("#game-canvas");
+  const sites = [
+    { id: "sunwardShoal", name: "Sunward Shoal", species: "bluegill", label: "Bluegill", rarity: "common" },
+    { id: "mosswaterPool", name: "Mosswater Pool", species: "largemouthBass", label: "Largemouth Bass", rarity: "uncommon" },
+    { id: "outerGloam", name: "Outer Gloam", species: "lakeTrout", label: "Lake Trout", rarity: "rare" },
+  ] as const;
+
+  for (const site of sites) {
+    await page.evaluate(({ id, species }) => window.__FSHING_TEST__?.previewFishing(id, species), site);
+    await expect(canvas).toHaveAttribute("data-fishing-spot", site.id);
+    await expect(canvas).toHaveAttribute("data-target-rarity", site.rarity);
+    await expect(canvas).toHaveAttribute(
+      "aria-label",
+      `Fishing at ${site.name}. Target ${site.label}, ${site.rarity} rarity.`,
+    );
+  }
 });
 
 test("reels a hooked fish to the boat before securing the catch", async ({ page }) => {
@@ -412,7 +451,7 @@ test("reels a hooked fish to the boat before securing the catch", async ({ page 
   const [reelStart, reelMidpoint] = await page.evaluate(async () => {
     const element = document.querySelector<HTMLCanvasElement>("#game-canvas");
     if (!element) throw new Error("Expected the game canvas.");
-    window.__FSHING_TEST__?.hookSpecies("reedfin");
+    window.__FSHING_TEST__?.hookSpecies("bluegill");
 
     type ReelSample = {
       diveProgress: number;
@@ -470,7 +509,7 @@ test("first harbor job keeps full-size route art clear of the title", async ({ p
   const firstMarker = page.locator(".job-route-number").first();
   const firstStage = page.locator(".job-route > li").first();
   const secondStage = page.locator(".job-route > li").nth(1);
-  const fish = page.getByRole("img", { name: "Reedfin target fish" });
+  const fish = page.getByRole("img", { name: "Bluegill target fish" });
   const freshness = page.locator(".job-route-freshness-icon");
   const deliver = page.locator(".job-route-deliver-icon");
   const reward = page.getByLabel("Reward: 75 shells");
@@ -525,6 +564,19 @@ test("first harbor job keeps full-size route art clear of the title", async ({ p
   expect(await firstStage.evaluate((element) => getComputedStyle(element, "::after").content)).toBe("none");
 });
 
+test("navigation does not show a top tutorial callout", async ({ page }) => {
+  await page.goto("/?e2e=1");
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.getByRole("button", { name: "Accept contract" }).click();
+
+  await expect(page.locator("#tutorial-callout")).toHaveCount(0);
+  await expect(page.locator(".navigation-status")).toContainText("FISH AT Sunward Shoal");
+
+  await page.evaluate(() => window.__FSHING_TEST__?.sailToSpot("sunwardShoal"));
+  await expect(page.locator("#tutorial-callout")).toHaveCount(0);
+  await expect(page.locator(".navigation-status")).toContainText("Drop the line at Sunward Shoal");
+});
+
 test("completes the tutorial delivery, buys an upgrade, and persists it", async ({ page }) => {
   test.setTimeout(60_000);
   await page.goto("/?e2e=1");
@@ -543,7 +595,7 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   expect(firstPanelHeight).toBeLessThanOrEqual(720);
   await expect(page.locator(".job-route > li")).toHaveCount(3);
   await expect(page.locator(".job-route-icon")).toHaveCount(3);
-  await expect(page.getByRole("img", { name: "Reedfin target fish" })).toBeVisible();
+  await expect(page.getByRole("img", { name: "Bluegill target fish" })).toBeVisible();
   await expect(page.locator(".job-route")).toContainText("Catch");
   await expect(page.locator(".job-route")).toContainText("Freshness");
   await expect(page.locator(".job-route")).toContainText("Deliver");
@@ -573,24 +625,24 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await page.getByRole("button", { name: "Play", exact: true }).click();
   await expect(page.getByRole("heading", { name: "First Assignment" })).toBeVisible();
   await page.getByRole("button", { name: "Accept contract" }).click();
-  await expect(page.locator("#tutorial-callout")).toContainText("Sunward Shoal");
+  await expect(page.locator("#tutorial-callout")).toHaveCount(0);
   await expect(page.locator(".navigation-status")).toContainText("FISH AT Sunward Shoal");
-  await page.locator("#tutorial-callout").click();
-  await expect(page.locator("#tutorial-callout")).toBeHidden();
 
   await page.evaluate(() => window.__FSHING_TEST__?.sailToSpot("sunwardShoal"));
-  await expect(page.locator("#tutorial-callout")).toContainText("Drop the line at Sunward Shoal");
+  await expect(page.locator(".navigation-status")).toContainText("Drop the line at Sunward Shoal");
   await page.getByRole("button", { name: "Drop line · Sunward Shoal" }).click();
   await expect(page.getByRole("heading", { name: "Read the lake" })).toHaveCount(0);
-  await expect(page.getByText(/Guide the hook toward the Reedfin/)).toBeVisible();
-  await page.evaluate(() => window.__FSHING_TEST__?.catchSpecies("reedfin"));
+  await expect(page.locator("#game-canvas")).toHaveAttribute(
+    "aria-label",
+    "Fishing at Sunward Shoal. Target Bluegill, common rarity.",
+  );
+  await page.evaluate(() => window.__FSHING_TEST__?.catchSpecies("bluegill"));
   await expect(page.getByRole("heading", { name: "Plan your crossing" })).toHaveCount(0);
   await expect(page.getByText("Applied mathematics")).toHaveCount(0);
-  await expect(page.locator("#tutorial-callout")).toContainText("Gloam Ferry");
   await expect(page.locator(".navigation-status")).toContainText("DELIVER TO Gloam Ferry");
 
   await page.evaluate(() => window.__FSHING_TEST__?.sailToHarbor("gloam"));
-  await expect(page.locator("#tutorial-callout")).toContainText("Dock at Gloam Ferry");
+  await expect(page.locator(".navigation-status")).toContainText("Dock at Gloam Ferry");
   await page.getByRole("button", { name: "Dock · Gloam Ferry" }).click();
   await expect(page.getByRole("heading", { name: "Gloam Ferry" })).toBeVisible();
   await expect(page.locator(".harbor-screen")).toHaveAttribute("data-dock", "gloam");
@@ -621,7 +673,7 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await expect(page.locator(".cargo-slot")).toHaveCount(10);
   await expect(page.locator(".cargo-slot:not(.is-locked)")).toHaveCount(3);
   await expect(page.locator(".cargo-slot.is-locked")).toHaveCount(7);
-  const cargoBin = page.getByRole("button", { name: "Release Reedfin from cargo" });
+  const cargoBin = page.getByRole("button", { name: "Release Bluegill from cargo" });
   await expect(cargoBin).toBeVisible();
   await expect(cargoBin.locator("img")).toHaveCount(2);
   await expect(cargoBin.locator("img").first()).toHaveAttribute("src", /bin-icon/);
@@ -643,7 +695,7 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await page.getByRole("button", { name: "Delivery", exact: true }).click();
   await expect(page.locator(".harbor-content")).toHaveCSS("animation-name", "harbor-page-enter-backward");
   await page.getByRole("button", { name: "Complete delivery" }).click();
-  const deliverySuccess = page.locator("#delivery-success");
+  const deliverySuccess = page.locator("#delivery-notification");
   await expect(deliverySuccess).toBeVisible();
   await expect(deliverySuccess).toContainText("Delivery Success");
   await expect(deliverySuccess).toHaveCSS("animation-name", "delivery-success-enter");
@@ -651,17 +703,17 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await page.getByRole("button", { name: "Close delivery success notification" }).click();
   await expect(deliverySuccess).toBeHidden();
   await expect(page.getByRole("region", { name: "Dock services" })).toHaveCount(0);
-  await page.evaluate(() => window.__FSHING_TEST__?.catchSpecies("sunPerch"));
+  await page.evaluate(() => window.__FSHING_TEST__?.catchSpecies("yellowPerch"));
   await page.getByRole("button", { name: "Cargo", exact: true }).click();
-  await page.getByRole("button", { name: "Release Sun Perch from cargo" }).click();
+  await page.getByRole("button", { name: "Release Yellow Perch from cargo" }).click();
   await expect(page.locator(".cargo-slot.is-occupied")).toHaveCount(0);
-  await expect(page.locator("#toast")).toContainText("Sun Perch released to the lake.");
+  await expect(page.locator("#toast")).toContainText("Yellow Perch released to the lake.");
   const undoRelease = page.getByRole("button", { name: "Undo" });
   await expect(undoRelease).toBeVisible();
   await undoRelease.click();
   await expect(page.locator(".cargo-slot.is-occupied")).toHaveCount(1);
-  await expect(page.getByRole("button", { name: "Release Sun Perch from cargo" })).toBeFocused();
-  await expect(page.locator("#toast")).toContainText("Sun Perch returned to cargo.");
+  await expect(page.getByRole("button", { name: "Release Yellow Perch from cargo" })).toBeFocused();
+  await expect(page.locator("#toast")).toContainText("Yellow Perch returned to cargo.");
   const deliveryHubBounds = await page.locator(".harbor-panel").boundingBox();
   await page.getByRole("button", { name: "Services", exact: true }).click();
   await expect(page.getByRole("button", { name: "Services", exact: true })).toBeFocused();
@@ -669,6 +721,8 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await expect(page.getByRole("region", { name: "Dock services" })).toBeVisible();
   await expect(page.locator(".service-card > .ui-icon")).toHaveCount(6);
   await expect(page.getByRole("heading", { name: "Repair hull" })).toHaveCount(0);
+  const engineService = page.locator(".service-card").filter({ has: page.getByRole("heading", { name: "Engine", exact: true }) });
+  await expect(engineService.locator(".service-copy p")).toHaveText("+11% speed");
   await expect(page.locator(".service-card > .icon-line")).toHaveCSS("background-image", /ui-icons/);
   await expect(page.locator(".service-card > .icon-line")).toHaveCSS("background-color", "rgb(7, 27, 41)");
   await expect(page.locator(".harbor-utility-button")).toHaveCount(1);
@@ -710,7 +764,7 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
 
 test("delivers a matching catch that was aboard before accepting the contract", async ({ page }) => {
   await page.goto("/?e2e=1");
-  await page.evaluate(() => window.__FSHING_TEST__?.catchSpecies("reedfin"));
+  await page.evaluate(() => window.__FSHING_TEST__?.catchSpecies("bluegill"));
   await page.getByRole("button", { name: "Play", exact: true }).click();
   await page.getByRole("button", { name: "Accept contract" }).click();
 
@@ -720,9 +774,9 @@ test("delivers a matching catch that was aboard before accepting the contract", 
   await expect(completeDelivery).toBeEnabled();
   await completeDelivery.click();
 
-  const deliverySuccess = page.locator("#delivery-success");
+  const deliverySuccess = page.locator("#delivery-notification");
   await expect(deliverySuccess).toBeVisible();
-  await expect(deliverySuccess).toBeHidden({ timeout: 5_000 });
+  await expect(deliverySuccess).toBeHidden({ timeout: 6_000 });
   await expect(page.locator(".shell-balance strong")).toHaveText(/^[1-9]\d*$/);
   await expect(page.getByRole("heading", { name: "Harbor Trade" })).toBeVisible();
   await expect(page.locator(".job-route-detail").filter({ hasText: "2 required" })).toBeVisible();
