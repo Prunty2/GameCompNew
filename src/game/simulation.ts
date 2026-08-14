@@ -578,8 +578,9 @@ export function fogIntensity(simulation: Simulation): number {
 }
 
 export function navigationGuidance(simulation: Simulation): NavigationGuidance {
+  const contract = simulation.activeContract;
   const totalUpgradeTiers = Object.values(simulation.progress.upgrades).reduce((sum, tier) => sum + tier, 0);
-  if (simulation.progress.completedContracts > 0 && totalUpgradeTiers === 0) {
+  if (!contract && simulation.progress.completedContracts > 0 && totalUpgradeTiers === 0) {
     const harbor = harborById(simulation.availableContract?.origin ?? closestHarbor(simulation).id);
     return {
       point: harbor,
@@ -589,7 +590,6 @@ export function navigationGuidance(simulation: Simulation): NavigationGuidance {
     };
   }
 
-  const contract = simulation.activeContract;
   if (!contract) {
     const harbor = simulation.availableContract
       ? harborById(simulation.availableContract.origin)
@@ -779,6 +779,13 @@ function rescue(simulation: Simulation): void {
 
 function createAvailableContract(simulation: Simulation, origin: HarborId): Contract | null {
   if (simulation.progress.completedContracts === 0) {
+    const minimumFreshness = attainableFreshnessTarget(
+      "sunwardShoal",
+      "gloam",
+      1,
+      BALANCE.contractFreshnessMinimum,
+      simulation.progress.upgrades.engine,
+    );
     return {
       id: "morning-order",
       title: "The Morning Order",
@@ -787,8 +794,8 @@ function createAvailableContract(simulation: Simulation, origin: HarborId): Cont
       destination: "gloam",
       spot: "sunwardShoal",
       quantity: 1,
-      ...calculateContractPayouts("reedfin", 1, 80),
-      minimumFreshness: 80,
+      ...calculateContractPayouts("reedfin", 1, minimumFreshness),
+      minimumFreshness,
     };
   }
   const destination: HarborId = origin === "brindle" ? "gloam" : "brindle";
@@ -813,7 +820,18 @@ function createAvailableContract(simulation: Simulation, origin: HarborId): Cont
   const species = availableSpecies[simulation.progress.completedContracts % availableSpecies.length];
   if (!species) return null;
   const quantity = Math.min(cargoCapacity(simulation), 1 + (simulation.progress.completedContracts % 3));
-  const minimumFreshness = 80 + (simulation.progress.completedContracts % 4) * 5;
+  const desiredFreshness = Math.min(
+    BALANCE.contractFreshnessMaximum,
+    BALANCE.contractFreshnessMinimum
+      + (simulation.progress.completedContracts % 4) * BALANCE.contractFreshnessStep,
+  );
+  const minimumFreshness = attainableFreshnessTarget(
+    spotForSpecies[species],
+    destination,
+    quantity,
+    desiredFreshness,
+    simulation.progress.upgrades.engine,
+  );
   return {
     id: `route-${simulation.progress.completedContracts + 1}`,
     title: FISH[species].depthTier >= 3 ? "A Light in Deep Water" : "Harbor Trade",
@@ -825,6 +843,25 @@ function createAvailableContract(simulation: Simulation, origin: HarborId): Cont
     ...calculateContractPayouts(species, quantity, minimumFreshness),
     minimumFreshness,
   };
+}
+
+function attainableFreshnessTarget(
+  spot: SpotId,
+  destination: HarborId,
+  quantity: number,
+  desiredFreshness: number,
+  engineTier: number,
+): number {
+  const fastArrivalFreshness = estimateRoute({ spot, destination }, engineTier).fastArrivalFreshness;
+  const safetyMargin = BALANCE.contractRouteSafetyMargin
+    + Math.max(0, quantity - 1) * BALANCE.contractAdditionalFishSafetyMargin;
+  const attainableTarget = Math.floor(
+    (fastArrivalFreshness - safetyMargin) / BALANCE.contractFreshnessStep,
+  ) * BALANCE.contractFreshnessStep;
+  return Math.max(
+    BALANCE.contractFreshnessStep,
+    Math.min(desiredFreshness, attainableTarget),
+  );
 }
 
 function hasDeliverableCatch(simulation: Simulation, contract: Contract): boolean {

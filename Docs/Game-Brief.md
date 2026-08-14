@@ -176,7 +176,9 @@ The contract screen must show enough information for the player to judge the des
 
 Every requested fish at more than 0% freshness can complete a delivery. Meeting the listed freshness target on every fish pays the full reward; missing it pays a clearly quoted reduced reward equal to roughly 25% of the full amount. Fully spoiled fish cannot count toward a contract. Full and reduced rewards scale with species value, requested quantity, and the freshness target, so larger or more demanding orders pay more. Any unneeded catch can be released at harbor to free cargo space. Exact freshness rates and rewards are centralized in the deterministic contract model and covered by tests.
 
-The guided first delivery requests one fish at 80% freshness. Repeatable jobs request one to three fish, capped by the player's unlocked cargo capacity, and rotate through 80%, 85%, 90%, and 95% freshness targets. Route planning begins only after the complete quantity has been secured.
+The guided first delivery requests one fish at 80% freshness. Repeatable jobs request one to three fish, capped by the player's unlocked cargo capacity, and begin with desired targets of 80%, 85%, 90%, or 95%. Generation caps each target to the selected route's predicted fast-arrival freshness, rounded down to a five-point step, with a four-point travel margin plus two more points for every additional required fish. This keeps demanding jobs achievable with the player's current engine while allowing time to secure a multi-fish order. Route planning begins only after the complete quantity has been secured.
+
+When a contract is active, its fishing ground, cargo-management stop, or destination harbor always takes priority over upgrade reminders in the navigation arrow. With no accepted contract, the arrow may guide the player to the available job or the first-upgrade reminder.
 
 To keep the repeating game playable after all authored contract tiers are complete, the game may generate contracts from validated combinations of unlocked fish, regions, quantities, and destinations.
 
@@ -649,7 +651,7 @@ All durations use simulation seconds; horizontal positions use normalized world 
 | Tutorial minimum freshness | 80% |
 | Tutorial full / reduced reward | 75 / 19 shells |
 | Repeatable contract quantity | 1–3 fish, capped by unlocked cargo capacity |
-| Repeatable freshness target | 80–95% in 5-point steps |
+| Repeatable freshness target | Desired 80–95% in 5-point steps; capped from current fast-route arrival with 4 points of base margin and 2 points per additional fish |
 | Reward scaling | `(species value + 25) × quantity × (1 + freshness target ÷ 100)`, rounded to 5 shells; reduced payout is approximately 25% |
 | Cargo capacity | 3 fish, then +1 per boat tier up to 10 |
 | Boat and cargo upgrade | 60 shells base; six tiers |

@@ -179,6 +179,18 @@ describe("FSHING side-on simulation", () => {
     expect(tutorialPrompt(simulation)).toContain("buy one boat upgrade");
   });
 
+  test("keeps navigation on an accepted quest ahead of the upgrade reminder", () => {
+    const simulation = createSimulation(1, { completedContracts: 1 });
+    expect(navigationGuidance(simulation)).toMatchObject({ kicker: "UPGRADE AT" });
+    expect(acceptAvailableContract(simulation)).toBe(true);
+    undock(simulation);
+
+    expect(navigationGuidance(simulation)).toMatchObject({
+      kicker: "FISH AT",
+      label: "Sunward Shoal",
+    });
+  });
+
   test("blends region surface tints across ecosystem boundaries", () => {
     expect(regionSurfaceTintAt(0.2)).toBe("#2d91a0");
     expect(regionSurfaceTintAt(0.4)).toBe("rgb(62 140 135)");
@@ -414,6 +426,18 @@ describe("FSHING side-on simulation", () => {
     expect(fresherFish.reward).toBeGreaterThan(baseline.reward);
     expect(fresherFish.reducedReward).toBeGreaterThan(baseline.reducedReward);
     expect(baseline.reducedReward).toBeLessThan(baseline.reward);
+  });
+
+  test("caps generated freshness below the achievable fast-route estimate", () => {
+    const simulation = createSimulation(1, { completedContracts: 3 });
+    const contract = simulation.availableContract;
+    if (!contract) throw new Error("Expected a generated contract.");
+    const fastArrivalFreshness = estimateRoute(contract, simulation.progress.upgrades.engine).fastArrivalFreshness;
+    const safetyMargin = BALANCE.contractRouteSafetyMargin
+      + (contract.quantity - 1) * BALANCE.contractAdditionalFishSafetyMargin;
+
+    expect(contract.minimumFreshness).toBe(85);
+    expect(contract.minimumFreshness).toBeLessThanOrEqual(fastArrivalFreshness - safetyMargin);
   });
 
   test("requires every fish in a multi-fish contract and uses its reduced payout", () => {
