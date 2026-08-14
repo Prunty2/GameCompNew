@@ -19,18 +19,19 @@ export interface GameSettings {
 }
 
 export interface SaveData {
-  version: 8;
+  version: 9;
   progress: ProgressState;
   settings: GameSettings;
 }
 
 export function defaultSave(): SaveData {
   return {
-    version: 8,
+    version: 9,
     progress: {
       money: 0,
       upgrades: { cargo: 0, engine: 0, lamp: 0, line: 0 },
       outerUnlocked: false,
+      beachUnlocked: false,
       boostUnlocked: false,
       completedContracts: 0,
       discovered: [],
@@ -62,11 +63,12 @@ export function loadSave(storage: SaveStorage): SaveData {
     const learning = objectValue(progress.learning);
     const settings = objectValue(candidate.settings);
     return {
-      version: 8,
+      version: 9,
       progress: {
         money: finiteInteger(progress.money, 0, 999_999),
         upgrades: readUpgrades(upgrades),
         outerUnlocked: progress.outerUnlocked === true,
+        beachUnlocked: progress.beachUnlocked === true,
         boostUnlocked: progress.boostUnlocked === true,
         completedContracts: finiteInteger(progress.completedContracts, 0, 99_999),
         discovered: readDiscovered(progress.discovered),

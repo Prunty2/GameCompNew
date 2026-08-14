@@ -291,6 +291,7 @@ Money is earned primarily from completed deliveries and spent on permanent impro
 - **Lights:** See landmarks and resist nighttime visibility penalties.
 - **Line depth:** Reach progressively deeper fish and new underwater color zones.
 - **Region access:** Purchase permits or equipment needed to enter new waters.
+- **Beach location:** A one-time 120-shell chart upgrade unlocks travel between the lake and Beach, a coastal bay with a surf club, timber pier, fish-and-chip shop, broad sandy shore, and lighthouse. The alternate panorama uses the same normalized world scale, camera, waterline, controls, harbors, and fishing interactions as the lake so it expands the sailing setting without creating a second ruleset.
 
 Cargo has seven tiers to match its seven locked inventory slots; engine, lights, and line depth have six tiers. Repair costs support the opening scenario and any authored damage events. Prices rise by upgrade tier without requiring excessive repetition. The player should regularly face a useful decision between building a larger boat, improving travel time, strengthening night visibility, or reaching a deeper and more profitable fishing world.
 
@@ -654,6 +655,7 @@ All durations use simulation seconds; horizontal positions use normalized world 
 | Lamp upgrade | 70 shells base; six tiers |
 | Line-depth upgrade | 55 shells base; six tiers unlock progressively deeper water |
 | Outer Gloam permit | 85 shells |
+| Beach chart unlock | 120 shells; one-time permanent location access |
 | Repair price | 1 shell per 2 damage, rounded up |
 | Full day/night cycle | 210 seconds; final 70 seconds are night |
 | Night visual fade | 25 seconds into night and 25 seconds before morning |
@@ -673,6 +675,8 @@ Every authored visual asset in this slice is generated with GPT Image 2.0. No pr
 | --- | --- |
 | `fshing-wordmark.png` | Restrained title-screen identity |
 | `lake-chart.png` | Side-on panoramic sky, distant shore, waterline, and lake atmosphere |
+| `beach-chart.png` | Side-on seaside-town panorama with the surf club, pier, fish-and-chip shop, beach, and lighthouse |
+| `beach-chart-night.png` | Composition-matched nighttime Beach panorama |
 | `player-boat.png` | Player vessel in strict side profile on a chroma-key matte |
 | `harbor-pier.png` | Long weathered side-view harbor pier that extends from either shoreline; its fixed footprint uses roughly 36–44 narrow deck-plank divisions so the timber scale remains believable beside the player boat |
 | `fish-atlas.png` | Fishing-hook sprite and retained original fish reference cells |

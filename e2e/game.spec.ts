@@ -18,7 +18,7 @@ test("main menu presents only centered play and settings actions", async ({ page
   await page.goto("/");
 
   const version = page.locator(".title-build-version");
-  await expect(version).toHaveText("v0.2.0 (PR #37)");
+  await expect(version).toHaveText("v0.3.0 (PR #62)");
   const versionBounds = await version.boundingBox();
   expect(versionBounds).not.toBeNull();
   expect(versionBounds!.x).toBeLessThan(24);
@@ -603,7 +603,7 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await expect(page.getByRole("button", { name: "Services", exact: true })).toBeFocused();
   await expect(page.locator(".harbor-tab .ui-icon")).toHaveCount(3);
   await expect(page.getByRole("region", { name: "Dock services" })).toBeVisible();
-  await expect(page.locator(".service-card > .ui-icon")).toHaveCount(6);
+  await expect(page.locator(".service-card > .ui-icon")).toHaveCount(7);
   await expect(page.getByRole("heading", { name: "Repair hull" })).toHaveCount(0);
   await expect(page.locator(".service-card > .icon-line")).toHaveCSS("background-image", /ui-icons/);
   await expect(page.locator(".service-card > .icon-line")).toHaveCSS("background-color", "rgb(7, 27, 41)");
@@ -642,6 +642,39 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await expect(page.getByRole("region", { name: "Dock services" })).toHaveCount(0);
   await page.getByRole("button", { name: "Services", exact: true }).click();
   await expect(page.locator(".service-card").filter({ hasText: "+1 cargo slot" }).locator(".upgrade-meter")).toHaveAttribute("aria-label", "Cargo level 2 of 7");
+});
+
+test("Beach upgrade unlocks persistent travel to the seaside world", async ({ page }) => {
+  await page.goto("/?e2e=1");
+  await page.evaluate(() => {
+    window.localStorage.setItem("gamecomp-new.save", JSON.stringify({
+      version: 9,
+      progress: {
+        money: 120,
+        upgrades: {},
+        completedContracts: 1,
+      },
+      settings: {},
+    }));
+  });
+  await page.reload();
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.getByRole("button", { name: "Services", exact: true }).click();
+  await page.getByRole("button", { name: "Unlock Beach for 120 shells" }).click();
+  await expect(page.getByRole("button", { name: "Travel to Beach" })).toBeEnabled();
+  await page.getByRole("button", { name: "Travel to Beach" }).click();
+  await expect(page.locator("#game-canvas")).toHaveAttribute("data-world", "beach");
+  await expect(page.locator("#toast")).toContainText("Welcome to Beach");
+
+  await page.evaluate(() => window.__FSHING_TEST__?.sailToHarbor("brindle"));
+  await page.getByRole("button", { name: "Dock · Brindle Harbor" }).click();
+  await page.getByRole("button", { name: "Services", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Travel to Lake" })).toBeEnabled();
+
+  await page.reload();
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.getByRole("button", { name: "Services", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Travel to Beach" })).toBeEnabled();
 });
 
 test("delivers a matching catch that was aboard before accepting the contract", async ({ page }) => {

@@ -16,6 +16,7 @@ import {
   type HarborId,
   type SpotId,
   type UpgradeId,
+  type WorldId,
   type WorldPoint,
 } from "./balance";
 import {
@@ -65,6 +66,7 @@ export interface ProgressState {
   money: number;
   upgrades: Record<UpgradeId, number>;
   outerUnlocked: boolean;
+  beachUnlocked: boolean;
   boostUnlocked: boolean;
   completedContracts: number;
   discovered: FishSpecies[];
@@ -113,6 +115,7 @@ export type SimulationEvent =
   | { type: "rescued"; harbor: HarborId; cost: number }
   | { type: "upgrade"; upgrade: UpgradeId }
   | { type: "permit" }
+  | { type: "beach-unlocked" }
   | { type: "boost-unlocked"; temporary: boolean }
   | { type: "released"; species: FishSpecies }
   | { type: "season-complete" };
@@ -128,6 +131,7 @@ export interface Simulation {
   elapsed: number;
   random: RandomSource;
   progress: ProgressState;
+  world: WorldId;
   events: SimulationEvent[];
   routeChoice: RouteChoice | null;
   deliveryStartedAt: number | null;
@@ -172,6 +176,7 @@ export function createSimulation(seed = 1, progress?: Partial<ProgressState>): S
       line: clampInteger(progress?.upgrades?.line, 0, BALANCE.maxUpgradeTier),
     },
     outerUnlocked: progress?.outerUnlocked === true,
+    beachUnlocked: progress?.beachUnlocked === true,
     boostUnlocked: progress?.boostUnlocked === true,
     completedContracts: clampInteger(progress?.completedContracts, 0, 99_999),
     discovered: [...new Set(discovered)],
@@ -199,6 +204,7 @@ export function createSimulation(seed = 1, progress?: Partial<ProgressState>): S
     elapsed: 22,
     random: createRandom(seed),
     progress: resolvedProgress,
+    world: "lake",
     events: [],
     routeChoice: null,
     deliveryStartedAt: null,
@@ -475,6 +481,21 @@ export function buyPermit(simulation: Simulation): boolean {
   simulation.progress.outerUnlocked = true;
   simulation.events.push({ type: "permit" });
   return true;
+}
+
+export function buyBeachAccess(simulation: Simulation): boolean {
+  if (!simulation.dockedAt || simulation.progress.beachUnlocked || simulation.progress.money < BALANCE.beachAccessCost) return false;
+  simulation.progress.money -= BALANCE.beachAccessCost;
+  simulation.progress.beachUnlocked = true;
+  simulation.events.push({ type: "beach-unlocked" });
+  return true;
+}
+
+export function travelToWorld(simulation: Simulation, world: WorldId): boolean {
+  if (!simulation.dockedAt || simulation.world === world) return false;
+  if (world === "beach" && !simulation.progress.beachUnlocked) return false;
+  simulation.world = world;
+  return undock(simulation);
 }
 
 export function buyBoost(simulation: Simulation): boolean {

@@ -1,5 +1,7 @@
 import brindleDockDayUrl from "../assets/dock-brindle-day.jpg";
 import brindleDockNightUrl from "../assets/dock-brindle-night.jpg";
+import beachChartUrl from "../assets/beach-chart.png";
+import beachChartNightUrl from "../assets/beach-chart-night.png";
 import binIconUrl from "../assets/bin-icon.png";
 import gloamDockDayUrl from "../assets/dock-gloam-day.jpg";
 import gloamDockNightUrl from "../assets/dock-gloam-night.jpg";
@@ -25,6 +27,7 @@ import {
   type HarborId,
   type SpotId,
   type UpgradeId,
+  type WorldId,
 } from "./balance";
 import {
   CONTROL_ACTIONS,
@@ -40,6 +43,7 @@ import { CanvasRenderer } from "./renderer";
 import {
   acceptAvailableContract,
   buyBoost,
+  buyBeachAccess,
   buyPermit,
   buyUpgrade,
   cargoCapacity,
@@ -60,6 +64,7 @@ import {
   shouldShowNightIndicator,
   startFishing,
   tutorialPrompt,
+  travelToWorld,
   undock,
   unlockBoostForTesting,
   updateSimulation,
@@ -117,6 +122,7 @@ declare global {
       mode(): Simulation["mode"];
       boatX(): number;
       facing(): -1 | 1;
+      world(): WorldId;
     };
   }
 }
@@ -155,6 +161,8 @@ export class Game {
   private readonly interfaceReady = Promise.all([
     preloadImage(brindleDockDayUrl),
     preloadImage(brindleDockNightUrl),
+    preloadImage(beachChartUrl),
+    preloadImage(beachChartNightUrl),
     preloadImage(gloamDockDayUrl),
     preloadImage(gloamDockNightUrl),
     preloadImage(binIconUrl),
@@ -382,6 +390,11 @@ export class Game {
       case "permit":
         this.feedback.cue("upgrade");
         this.showToast("Outer Gloam permit granted. Keep your lamp close.");
+        break;
+      case "beach-unlocked":
+        this.feedback.cue("upgrade");
+        this.pulseFeedback("upgrade");
+        this.showToast("Beach unlocked. Travel there from Dock Services.");
         break;
       case "boost-unlocked":
         this.feedback.cue("upgrade");
@@ -619,6 +632,7 @@ export class Game {
               ${this.upgradeCard("lamp", "Lamp", "Wider night view")}
               ${this.upgradeCard("line", "Line depth", "Next depth tier")}
               ${this.boostCard()}
+              ${this.beachCard()}
               ${harborId === "gloam" ? this.permitCard() : ""}
             </div>
           </section>`
@@ -633,7 +647,7 @@ export class Game {
           </header>
           ${harborTabs}
           <div class="harbor-content is-${activeSection}">${activeContent}</div>
-          <footer class="panel-actions ${isFirstJobOffer ? "is-guided" : ""}"><div><button class="text-button harbor-utility-button" type="button" data-action="open-help" aria-label="How to play"><span class="ui-icon icon-objective" aria-hidden="true"></span><strong>Help</strong></button></div>${isFirstJobOffer ? `<button class="leave-button harbor-main-menu-button" type="button" data-action="title" aria-label="Back to main menu"><span class="harbor-back-arrow" aria-hidden="true">←</span><strong>Main Menu</strong></button>` : `<button class="leave-button" type="button" data-action="undock" aria-label="Back to lake →"><span class="ui-icon icon-hull" aria-hidden="true"></span><strong>Return to Lake</strong></button>`}</footer>
+          <footer class="panel-actions ${isFirstJobOffer ? "is-guided" : ""}"><div><button class="text-button harbor-utility-button" type="button" data-action="open-help" aria-label="How to play"><span class="ui-icon icon-objective" aria-hidden="true"></span><strong>Help</strong></button></div>${isFirstJobOffer ? `<button class="leave-button harbor-main-menu-button" type="button" data-action="title" aria-label="Back to main menu"><span class="harbor-back-arrow" aria-hidden="true">←</span><strong>Main Menu</strong></button>` : `<button class="leave-button" type="button" data-action="undock" aria-label="Back to ${this.simulation.world} →"><span class="ui-icon icon-hull" aria-hidden="true"></span><strong>Return to ${capitalise(this.simulation.world)}</strong></button>`}</footer>
         </div>
       </section>`;
   }
@@ -641,7 +655,9 @@ export class Game {
   private dockBackdropAttributes(harborId: HarborId): string {
     const nightOpacity = nightVisualIntensity(this.simulation);
     const timeOfDay = nightOpacity >= 0.5 ? "night" : "day";
-    const background = DOCK_BACKGROUND_URL[harborId];
+    const background = this.simulation.world === "beach"
+      ? { day: beachChartUrl, night: beachChartNightUrl }
+      : DOCK_BACKGROUND_URL[harborId];
     return `data-dock="${harborId}" data-time-of-day="${timeOfDay}" style="--dock-day-background: url(&quot;${background.day}&quot;); --dock-night-background: url(&quot;${background.night}&quot;); --dock-night-opacity: ${nightOpacity}"`;
   }
 
@@ -662,6 +678,16 @@ export class Game {
   private permitCard(): string {
     const unlocked = this.simulation.progress.outerUnlocked;
     return `<article class="service-card"><span class="ui-icon icon-permit" aria-hidden="true"></span><div class="service-copy"><h4>Outer permit</h4><p>Outer water access</p></div>${this.upgradeMeter("Outer permit", unlocked ? BALANCE.maxUpgradeTier : 0, BALANCE.maxUpgradeTier)}<button class="service-purchase" type="button" data-action="buy-permit" aria-label="${unlocked ? "Outer permit owned" : `Buy Outer permit for ${BALANCE.permitCost} shells`}" ${unlocked || this.simulation.progress.money < BALANCE.permitCost ? "disabled" : ""}>${unlocked ? "<strong>OWNED</strong>" : `<span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${BALANCE.permitCost}</strong>`}</button></article>`;
+  }
+
+  private beachCard(): string {
+    const unlocked = this.simulation.progress.beachUnlocked;
+    const destination: WorldId = this.simulation.world === "beach" ? "lake" : "beach";
+    const destinationName = capitalise(destination);
+    if (unlocked) {
+      return `<article class="service-card"><span class="ui-icon icon-objective" aria-hidden="true"></span><div class="service-copy"><h4>Beach</h4><p>Surf club · pier · lighthouse</p></div><span class="service-owned" aria-label="Beach location unlocked">UNLOCKED</span><button class="service-purchase" type="button" data-action="travel-world" data-world="${destination}" aria-label="Travel to ${destinationName}"><strong>${destination === "beach" ? "VISIT" : "RETURN"}</strong></button></article>`;
+    }
+    return `<article class="service-card"><span class="ui-icon icon-objective" aria-hidden="true"></span><div class="service-copy"><h4>Beach</h4><p>Unlock the seaside town</p></div><span class="service-owned" aria-label="One-time location unlock">LOCATION</span><button class="service-purchase" type="button" data-action="buy-beach" aria-label="Unlock Beach for ${BALANCE.beachAccessCost} shells" ${this.simulation.progress.money < BALANCE.beachAccessCost ? "disabled" : ""}><span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${BALANCE.beachAccessCost}</strong></button></article>`;
   }
 
   private boostCard(): string {
@@ -951,6 +977,7 @@ export class Game {
       money: this.simulation.progress.money,
       upgrades: { ...this.simulation.progress.upgrades },
       outerUnlocked: this.simulation.progress.outerUnlocked,
+      beachUnlocked: this.simulation.progress.beachUnlocked,
       boostUnlocked: this.simulation.progress.boostUnlocked,
       completedContracts: this.simulation.progress.completedContracts,
       discovered: [...this.simulation.progress.discovered],
@@ -1216,6 +1243,20 @@ export class Game {
           this.renderOverlay();
         }
         break;
+      case "buy-beach":
+        if (buyBeachAccess(this.simulation)) {
+          this.handleSimulationEvents();
+          this.renderOverlay();
+        }
+        break;
+      case "travel-world": {
+        const world = target.dataset.world as WorldId | undefined;
+        if (world && travelToWorld(this.simulation, world)) {
+          this.setOverlay(null, true);
+          this.showToast(world === "beach" ? "Welcome to Beach." : "Returned to the lake.");
+        }
+        break;
+      }
       case "release": {
         const index = Number(target.dataset.index);
         this.releaseCargoWithFeedback(target, index, event.detail === 0);
@@ -1308,6 +1349,7 @@ export class Game {
       mode: () => this.simulation.mode,
       boatX: () => this.simulation.boat.x,
       facing: () => this.simulation.boat.facing,
+      world: () => this.simulation.world,
     };
   }
 }

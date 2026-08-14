@@ -11,6 +11,7 @@ import {
 } from "../game/balance";
 import {
   acceptAvailableContract,
+  buyBeachAccess,
   buyBoost,
   buyPermit,
   buyUpgrade,
@@ -33,6 +34,7 @@ import {
   shouldShowNightIndicator,
   startFishing,
   tutorialPrompt,
+  travelToWorld,
   undock,
   unlockBoostForTesting,
   updateSimulation,
@@ -442,6 +444,24 @@ describe("FSHING side-on simulation", () => {
     expect(boatClassAt(simulation.progress.upgrades.cargo)).toBe("Lakebreaker");
     expect(buyUpgrade(simulation, "cargo")).toBe(false);
     expect(FISHING_SPOTS).toHaveLength(3);
+  });
+
+  test("unlocks Beach permanently and travels there only from a dock", () => {
+    const simulation = createSimulation(1, { money: BALANCE.beachAccessCost });
+    expect(simulation.world).toBe("lake");
+    expect(travelToWorld(simulation, "beach")).toBe(false);
+    expect(buyBeachAccess(simulation)).toBe(true);
+    expect(simulation.progress.beachUnlocked).toBe(true);
+    expect(simulation.progress.money).toBe(0);
+    expect(buyBeachAccess(simulation)).toBe(false);
+    expect(travelToWorld(simulation, "beach")).toBe(true);
+    expect(simulation.world).toBe("beach");
+    expect(simulation.dockedAt).toBeNull();
+
+    moveBoatForTesting(simulation, harborById("brindle"));
+    interact(simulation);
+    expect(travelToWorld(simulation, "lake")).toBe(true);
+    expect(simulation.world).toBe("lake");
   });
 
   test("rescues at critical damage without making progress unrecoverable", () => {

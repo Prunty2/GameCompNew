@@ -11,6 +11,7 @@ export type FishSpecies =
 export type HarborId = "brindle" | "gloam";
 export type SpotId = "sunwardShoal" | "mosswaterPool" | "outerGloam";
 export type UpgradeId = "cargo" | "engine" | "lamp" | "line";
+export type WorldId = "lake" | "beach";
 export type RegionId = "brindleCoast" | "mosswaterReach" | "violetGloam";
 export type FishRarity = "common" | "uncommon" | "rare" | "legendary";
 
@@ -81,6 +82,7 @@ export const BALANCE = {
   fishingHookDownSpeed: 0.25,
   upgradeCosts: { cargo: 60, engine: 70, lamp: 70, line: 55 },
   permitCost: 85,
+  beachAccessCost: 120,
   boostUnlockCost: 300,
   boostSpeedMultiplier: 1.35,
   boostThrustMultiplier: 1.75,

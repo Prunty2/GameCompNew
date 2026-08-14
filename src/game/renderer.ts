@@ -1,4 +1,6 @@
 import boatSteamAtlasUrl from "../assets/boat-steam-atlas.png";
+import beachChartUrl from "../assets/beach-chart.png";
+import beachChartNightUrl from "../assets/beach-chart-night.png";
 import tackleAtlasUrl from "../assets/fish-atlas.png";
 import gloamFishAtlasUrl from "../assets/fish-gloam-swim.png";
 import mosswaterFishAtlasUrl from "../assets/fish-mosswater-swim.png";
@@ -72,6 +74,8 @@ interface LoadedArt {
   boatSteam: HTMLImageElement;
   lake: HTMLImageElement;
   lakeNight: HTMLImageElement;
+  beach: HTMLImageElement;
+  beachNight: HTMLImageElement;
   pier: HTMLImageElement;
   boat: HTMLCanvasElement;
   fish: Record<SpotId, HTMLCanvasElement>;
@@ -138,6 +142,8 @@ export class CanvasRenderer {
       loadImage(boatSteamAtlasUrl),
       loadImage(lakeChartUrl),
       loadImage(lakeChartNightUrl),
+      loadImage(beachChartUrl),
+      loadImage(beachChartNightUrl),
       loadImage(harborPierUrl),
       loadImage(playerBoatUrl),
       loadImage(sunwardFishAtlasUrl),
@@ -155,6 +161,8 @@ export class CanvasRenderer {
       boatSteam,
       lake,
       lakeNight,
+      beach,
+      beachNight,
       pier,
       boat,
       sunwardFish,
@@ -183,6 +191,8 @@ export class CanvasRenderer {
         boatSteam,
         lake,
         lakeNight,
+        beach,
+        beachNight,
         pier,
         boat: keyMagenta(boat, true),
         fish: keyedFish,
@@ -220,6 +230,7 @@ export class CanvasRenderer {
     const width = this.canvas.clientWidth;
     const height = this.canvas.clientHeight;
     this.context.clearRect(0, 0, width, height);
+    this.canvas.dataset.world = simulation.world;
     if (!this.art) {
       this.context.fillStyle = "#0b2630";
       this.context.fillRect(0, 0, width, height);
@@ -251,11 +262,13 @@ export class CanvasRenderer {
     this.canvas.dataset.surfaceCameraCenter = camera.center.toFixed(3);
     this.canvas.dataset.surfaceCameraViewWidth = camera.viewWidth.toFixed(3);
     const nightIntensity = nightVisualIntensity(simulation);
-    const waterline = this.drawPanorama(nightIntensity >= 1 ? art.lakeNight : art.lake, camera, width, height);
+    const dayImage = simulation.world === "beach" ? art.beach : art.lake;
+    const nightImage = simulation.world === "beach" ? art.beachNight : art.lakeNight;
+    const waterline = this.drawPanorama(nightIntensity >= 1 ? nightImage : dayImage, camera, width, height);
     if (nightIntensity > 0 && nightIntensity < 1) {
       context.save();
       context.globalAlpha = nightIntensity;
-      this.drawPanorama(art.lakeNight, camera, width, height);
+      this.drawPanorama(nightImage, camera, width, height);
       context.restore();
     }
     context.save();
@@ -653,6 +666,8 @@ export class CanvasRenderer {
     const motionDelta = this.updateSurfaceMotion(simulation, false, settings.reducedMotion);
     const camera = this.camera(simulation, false, settings.reducedMotion, motionDelta);
     const nightIntensity = nightVisualIntensity(simulation);
+    const dayImage = simulation.world === "beach" ? art.beach : art.lake;
+    const nightImage = simulation.world === "beach" ? art.beachNight : art.lakeNight;
     const drawSurfaceImage = (
       image: HTMLImageElement,
       alpha: number,
@@ -689,9 +704,9 @@ export class CanvasRenderer {
     };
     const surfaceBlend = clamp(underwaterReveal, 0, 1);
     if (surfaceBlend > 0) {
-      drawSurfaceImage(art.lake, surfaceBlend, "below");
+      drawSurfaceImage(dayImage, surfaceBlend, "below");
       if (nightIntensity > 0) {
-        drawSurfaceImage(art.lakeNight, surfaceBlend * nightIntensity, "below");
+        drawSurfaceImage(nightImage, surfaceBlend * nightIntensity, "below");
       }
       context.save();
       context.beginPath();
@@ -702,8 +717,8 @@ export class CanvasRenderer {
       context.fillRect(0, surfaceY, width, height - surfaceY);
       context.restore();
     }
-    drawSurfaceImage(art.lake, 1, "above");
-    if (nightIntensity > 0) drawSurfaceImage(art.lakeNight, nightIntensity, "above");
+    drawSurfaceImage(dayImage, 1, "above");
+    if (nightIntensity > 0) drawSurfaceImage(nightImage, nightIntensity, "above");
 
     context.save();
     context.beginPath();
