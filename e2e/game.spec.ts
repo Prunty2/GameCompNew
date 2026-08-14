@@ -654,6 +654,8 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await expect(page.getByRole("region", { name: "Dock services" })).toBeVisible();
   await expect(page.locator(".service-card > .ui-icon")).toHaveCount(6);
   await expect(page.getByRole("heading", { name: "Repair hull" })).toHaveCount(0);
+  const engineService = page.locator(".service-card").filter({ has: page.getByRole("heading", { name: "Engine", exact: true }) });
+  await expect(engineService.locator(".service-copy p")).toHaveText("+11% speed");
   await expect(page.locator(".service-card > .icon-line")).toHaveCSS("background-image", /ui-icons/);
   await expect(page.locator(".service-card > .icon-line")).toHaveCSS("background-color", "rgb(7, 27, 41)");
   await expect(page.locator(".harbor-utility-button")).toHaveCount(1);

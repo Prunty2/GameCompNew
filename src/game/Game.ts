@@ -594,7 +594,7 @@ export class Game {
         ? `<section class="services" aria-label="Dock services">
             <div class="service-grid">
               ${this.upgradeCard("cargo", "Cargo", "+1 cargo slot")}
-              ${this.upgradeCard("engine", "Engine", "+11% speed · stronger final tier")}
+              ${this.upgradeCard("engine", "Engine", "+11% speed")}
               ${this.upgradeCard("lamp", "Lamp", "Wider night view")}
               ${this.upgradeCard("line", "Line depth", "Next depth tier")}
               ${this.boostCard()}
