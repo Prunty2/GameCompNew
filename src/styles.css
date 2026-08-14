@@ -6792,10 +6792,17 @@ kbd {
   padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
     max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
   overflow: auto;
-  background:
-    radial-gradient(circle at 50% 48%, rgb(10 47 58 / 16%), transparent 42%),
-    rgb(4 20 27 / 62%);
-  backdrop-filter: blur(9px) saturate(0.72);
+  background: rgb(4 20 27 / 48%);
+  backdrop-filter: blur(8px) saturate(0.78);
+}
+
+.credits-overlay.is-closing {
+  pointer-events: none;
+  animation: settings-backdrop-out 340ms ease-in-out both;
+}
+
+.credits-overlay.is-closing .credits-menu {
+  animation: settings-menu-out 300ms ease-in both;
 }
 
 .credits-menu {
@@ -6971,7 +6978,7 @@ kbd {
 
 .credits-overlay .credits-back {
   display: flex;
-  width: min(210px, calc(100% - 32px));
+  width: min(600px, calc(100% - 104px));
   min-height: 54px;
   align-items: center;
   justify-content: center;
@@ -7083,7 +7090,7 @@ kbd {
   }
 
   .credits-overlay .credits-back {
-    width: min(210px, calc(100% - 32px));
+    width: 100%;
   }
 
   .credit-entry {

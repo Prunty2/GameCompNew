@@ -74,7 +74,7 @@ const MAX_FRAME = 0.05;
 const UI_REFRESH_INTERVAL = 100;
 const HELP_STEP_COUNT = 4;
 const PAUSE_EXIT_DURATION = 340;
-const SETTINGS_EXIT_DURATION = 340;
+const MENU_EXIT_DURATION = 340;
 const SCENE_COVER_DURATION = 120;
 const SCENE_REVEAL_DURATION = 160;
 const DELIVERY_SUCCESS_DURATION = 4_000;
@@ -141,7 +141,7 @@ export class Game {
   private deliverySuccessExitTimer: number | undefined;
   private tutorialDismissTimer: number | undefined;
   private pauseTransitionTimer: number | undefined;
-  private settingsTransitionTimer: number | undefined;
+  private menuTransitionTimer: number | undefined;
   private cargoUpgradeTransitionTimer: number | undefined;
   private cargoReleaseTimer: number | undefined;
   private pendingCargoRelease: { item: CargoItem; index: number } | null = null;
@@ -526,7 +526,9 @@ export class Game {
   }
 
   private titleScreen(): string {
-    const returnClass = this.overlaySource === "settings" ? " is-settings-return" : "";
+    const returnClass = this.overlaySource === "settings" || this.overlaySource === "credits"
+      ? " is-settings-return"
+      : "";
     return `
       <section class="screen-overlay title-screen${returnClass}" role="dialog" aria-label="FSHING main menu">
         <div class="title-panel">
@@ -903,26 +905,28 @@ export class Game {
     if (next === this.overlay) return;
 
     if (
-      this.overlay === "settings"
+      (this.overlay === "settings" || this.overlay === "credits")
       && (next === "title" || next === "pause")
       && this.overlayReturn === next
       && !this.save.settings.reducedMotion
     ) {
-      if (this.settingsTransitionTimer !== undefined) return;
-      const settingsScreen = this.uiRoot.querySelector<HTMLElement>(".settings-overlay");
-      if (settingsScreen) {
-        settingsScreen.classList.add("is-closing", `is-closing-to-${next}`);
-        this.settingsTransitionTimer = window.setTimeout(() => {
-          this.settingsTransitionTimer = undefined;
+      if (this.menuTransitionTimer !== undefined) return;
+      const menuScreen = this.uiRoot.querySelector<HTMLElement>(
+        this.overlay === "settings" ? ".settings-overlay" : ".credits-overlay",
+      );
+      if (menuScreen) {
+        menuScreen.classList.add("is-closing", `is-closing-to-${next}`);
+        this.menuTransitionTimer = window.setTimeout(() => {
+          this.menuTransitionTimer = undefined;
           this.commitOverlay(next);
-        }, SETTINGS_EXIT_DURATION);
+        }, MENU_EXIT_DURATION);
         return;
       }
     }
 
-    if (this.settingsTransitionTimer !== undefined) {
-      window.clearTimeout(this.settingsTransitionTimer);
-      this.settingsTransitionTimer = undefined;
+    if (this.menuTransitionTimer !== undefined) {
+      window.clearTimeout(this.menuTransitionTimer);
+      this.menuTransitionTimer = undefined;
     }
 
     if (this.overlay === "pause" && next === null && !this.save.settings.reducedMotion) {
