@@ -95,7 +95,7 @@ flowchart LR
 
 Feedback uses three levels:
 
-- **Immediate:** requested-species marker, catch feedback, and objective guidance.
+- **Immediate:** a compact amber-text delivery-accepted pill without a seal, requested-species marker, catch feedback, and objective guidance.
 - **After a crossing:** a delivery-success notification confirms completion without interrupting harbor play.
 - **Across the season:** species discoveries, survey results, completed crossings, and a reflection prompt.
 
@@ -574,7 +574,7 @@ The two-month schedule requires an eight-week plan. The minimum viable game take
 - Enter fishing directly without a blocking quiz
 - Catch the requested fish and continue directly into the catch-to-harbor crossing
 - Catch and deliver a fish
-- View the timed delivery-success notification and the season report
+- View the matching timed delivery-accepted and delivery-success pills and the season report
 - Purchase and retain an upgrade after reload
 - Recover from critical boat damage
 - Navigate menus with keyboard and pointer
