@@ -429,7 +429,7 @@ test("first harbor job keeps full-size route art clear of the title", async ({ p
   const fish = page.getByRole("img", { name: "Reedfin target fish" });
   const freshness = page.locator(".job-route-freshness-icon");
   const deliver = page.locator(".job-route-deliver-icon");
-  const reward = page.getByLabel("Reward: 90 shells");
+  const reward = page.getByLabel("Reward: 75 shells");
   const missionButton = page.getByRole("button", { name: "Accept contract" });
   const helpButton = page.getByRole("button", { name: "How to play" });
   const menuButton = page.getByRole("button", { name: "Back to main menu" });
@@ -491,7 +491,7 @@ test("completes the tutorial delivery, buys an upgrade, and persists it", async 
   await expect(page.locator(".harbor-panel")).toHaveCSS("background-color", "rgba(4, 23, 31, 0.94)");
   await expect(page.locator(".mission-button")).toHaveCSS("border-radius", "14px");
   await expect(page.locator(".job-ticket")).toHaveClass(/is-guided/);
-  const reward = page.getByLabel("Reward: 90 shells");
+  const reward = page.getByLabel("Reward: 75 shells");
   await expect(reward).toBeVisible();
   await expect(reward).toContainText("Reward");
   await expect(reward).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
@@ -661,6 +661,8 @@ test("delivers a matching catch that was aboard before accepting the contract", 
   await expect(deliverySuccess).toBeHidden({ timeout: 5_000 });
   await expect(page.locator(".shell-balance strong")).toHaveText(/^[1-9]\d*$/);
   await expect(page.getByRole("heading", { name: "Harbor Trade" })).toBeVisible();
+  await expect(page.locator(".job-route-detail").filter({ hasText: "2 required" })).toBeVisible();
+  await expect(page.locator(".job-route-detail").filter({ hasText: "85%+" })).toContainText("if missed");
 });
 
 test("settings, keyboard pause, and local SDK fallback remain usable", async ({ page }) => {
