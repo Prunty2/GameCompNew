@@ -95,7 +95,7 @@ flowchart LR
 
 Feedback uses three levels:
 
-- **Immediate:** requested-species marker, catch feedback, and objective guidance.
+- **Immediate:** a compact amber-text delivery-accepted pill without a seal, requested-species marker, catch feedback, and objective guidance.
 - **After a crossing:** a delivery-success notification confirms completion without interrupting harbor play.
 - **Across the season:** species discoveries, survey results, completed crossings, and a reflection prompt.
 
@@ -174,7 +174,11 @@ Each contract defines:
 
 The contract screen must show enough information for the player to judge the destination and freshness requirement before travelling. Early contracts request common fish in nearby waters. Later contracts combine rarer catches, distant destinations, difficult conditions, and tighter freshness expectations.
 
-Fresh deliveries pay the full reward. Lower freshness reduces the payment. Fully spoiled fish cannot complete a contract. Any unneeded catch can be released at harbor to free cargo space. Exact freshness rates and rewards are centralized in balance data and covered by deterministic tests.
+Every requested fish at more than 0% freshness can complete a delivery. Meeting the listed freshness target on every fish pays the full reward; missing it pays a clearly quoted reduced reward equal to roughly 25% of the full amount. Fully spoiled fish cannot count toward a contract. Full and reduced rewards scale with species value, requested quantity, and the freshness target, so larger or more demanding orders pay more. Any unneeded catch can be released at harbor to free cargo space. Exact freshness rates and rewards are centralized in the deterministic contract model and covered by tests.
+
+The guided first delivery requests one fish at 80% freshness. Repeatable jobs request one to three fish, capped by the player's unlocked cargo capacity, and begin with desired targets of 80%, 85%, 90%, or 95%. Generation caps each target to the selected route's predicted fast-arrival freshness, rounded down to a five-point step, with a four-point travel margin plus two more points for every additional required fish. This keeps demanding jobs achievable with the player's current engine while allowing time to secure a multi-fish order. Route planning begins only after the complete quantity has been secured.
+
+When a contract is active, its fishing ground, cargo-management stop, or destination harbor always takes priority over upgrade reminders in the navigation arrow. With no accepted contract, the arrow may guide the player to the available job or the first-upgrade reminder.
 
 To keep the repeating game playable after all authored contract tiers are complete, the game may generate contracts from validated combinations of unlocked fish, regions, quantities, and destinations.
 
@@ -216,7 +220,7 @@ The boat uses direct horizontal side-scrolling movement:
 
 - Hold left or right to apply thrust in that direction
 - Releasing thrust allows short, readable momentum before water drag slows the boat
-- Brake reduces speed quickly without instantly snapping the boat to a stop
+- Opposite thrust brakes 15% more strongly than ordinary acceleration without instantly snapping the boat to a stop; while boost is active, its existing boosted thrust receives a 25% braking increase instead
 - Once purchased, holding boost overclocks the engine to 135% of its current maximum speed while filling an eight-second heat meter. Releasing boost cools the meter over ten seconds. Reaching full heat safely locks boost until the meter cools to 25%, preserving DREDGE's readable risk-and-recovery cadence without copying its engine-damage or panic penalties. While boost is active, the surface camera eases from a 0.30 to 0.354 world-unit view width over a clearly visible pull rather than snapping, so more of the route enters frame and the speed change reads beyond the wake effect. The boat, its steam, wake, and boost trail scale continuously with the live view width, reaching roughly 85% of their normal screen size at the widest view. The camera and boat ease back together after release; reduced-motion mode keeps the normal fixed view width and size.
 - The boat faces its current travel direction and uses restrained bob and tilt so motion remains calm and readable
 - Boat movement stays on the open horizontal surface without fixed collision obstacles
@@ -365,7 +369,7 @@ The first playable minutes should teach systems through one short delivery:
 5. Begin the crossing automatically as freshness starts.
 6. Return, deliver, confirm success, and buy the first upgrade.
 
-Tutorial prompts should disappear after the action is successfully performed and remain available from a help menu. The title screen uses a zoomed-out, full-bleed lake view with no panel behind its controls. A large wordmark sits slightly above center, followed by one unmistakable Play action and a quieter Settings action; no other content appears on the title screen. The pause menu echoes that simple title composition over the current lake view with a distinctly smaller wordmark, one dominant Resume action, and compact secondary buttons for settings, help, and the title screen. Settings follows the same centered, panel-free composition over the blurred lake: a compact wordmark and heading sit above a two-column instrument grid, while Controls and the amber Done action span the full width. Narrow portrait screens collapse the grid to one column. Opening Settings from the title preserves the title's zoomed-out lake framing while the dimming blur eases in and the controls settle into place; closing lifts the Settings controls away before the title actions settle back into the cleared lake. Returning from Settings to pause preserves the blurred backdrop and uses the same restrained handoff instead of replaying Pause's full off-screen drop. Its Controls submenu keeps that same camera and backdrop. Opening pause quickly blurs the gameplay lake before the menu drops in from above; resuming reverses that sequence before simulation restarts. Only starting from the title and returning to the title use the reusable 280 ms waterline wipe; pause, resume, harbor, and subordinate overlay changes use their own restrained treatments or switch directly. The wipe's translucent deep-teal halves have softly faded moving edges and blur the lake behind them before a thin amber sonar line reveals the destination. It blocks input and simulation while active. Reduced-motion mode removes the wipe, staged movement, and delay. How to play remains available from the harbor and pause menus. The first harbor visit reveals systems in three stages: the player first sees only a guided delivery ticket and must accept it before leaving; accepting the job reveals cargo and freshness information; completing that first delivery reveals upgrades and repairs. Later harbor visits present the current delivery as a three-step job route before cargo or upgrades, with plain-language guidance about the immediate next action. Navigation has no permanent status bar: world markers, a directional arrow, contextual actions, and short messages carry the active objective. Directional objective markers use phase-specific verbs such as Job at, Fish at, Deliver to, Manage cargo, and Upgrade at; the marker, tutorial callout, nearby action, and screen-reader status all derive from the same guidance state. Guidance responds to actual travel direction and proximity, switches from travel to the available action on arrival, rejects spoiled catches as deliverable, and routes a full hold to cargo management. Markers stay fully visible until the final approach, then fade smoothly and clear only when the destination enters interaction range. Cargo details, freshness, damage, money, and upgrades are reviewed in the harbor. Keyboard players can pause with Escape or their configured pause key; the navigation view has no permanent pause button.
+Tutorial guidance remains available from the How to play menu without adding a top-of-screen instruction callout during navigation. The title screen uses a zoomed-out, full-bleed lake view with no panel behind its controls. A large wordmark sits slightly above center, followed by one unmistakable Play action and a quieter Settings action; no other content appears on the title screen. The pause menu echoes that simple title composition over the current lake view with a distinctly smaller wordmark, one dominant Resume action, and compact secondary buttons for settings, help, and the title screen. Settings follows the same centered, panel-free composition over the blurred lake: a compact wordmark and heading sit above a two-column instrument grid, while Controls and the amber Done action span the full width. Narrow portrait screens collapse the grid to one column. Opening Settings from the title preserves the title's zoomed-out lake framing while the dimming blur eases in and the controls settle into place; closing lifts the Settings controls away before the title actions settle back into the cleared lake. Returning from Settings to pause preserves the blurred backdrop and uses the same restrained handoff instead of replaying Pause's full off-screen drop. Its Controls submenu keeps that same camera and backdrop. Opening pause quickly blurs the gameplay lake before the menu drops in from above; resuming reverses that sequence before simulation restarts. Only starting from the title and returning to the title use the reusable 280 ms waterline wipe; pause, resume, harbor, and subordinate overlay changes use their own restrained treatments or switch directly. The wipe's translucent deep-teal halves have softly faded moving edges and blur the lake behind them before a thin amber sonar line reveals the destination. It blocks input and simulation while active. Reduced-motion mode removes the wipe, staged movement, and delay. How to play remains available from the harbor and pause menus. The first harbor visit reveals systems in three stages: the player first sees only a guided delivery ticket and must accept it before leaving; accepting the job reveals cargo and freshness information; completing that first delivery reveals upgrades and repairs. Later harbor visits present the current delivery as a three-step job route before cargo or upgrades, with plain-language guidance about the immediate next action. Navigation has no permanent status bar: world markers, a directional arrow, contextual actions, and short messages carry the active objective. Directional objective markers use phase-specific verbs such as Job at, Fish at, Deliver to, Manage cargo, and Upgrade at; the marker, nearby action, and screen-reader status all derive from the same guidance state. Guidance responds to actual travel direction and proximity, switches from travel to the available action on arrival, rejects spoiled catches as deliverable, and routes a full hold to cargo management. Markers stay fully visible until the final approach, then fade smoothly and clear only when the destination enters interaction range. Cargo details, freshness, damage, money, and upgrades are reviewed in the harbor. Keyboard players can pause with Escape or their configured pause key; the navigation view has no permanent pause button.
 
 Menu presentation follows familiar shipped game conventions rather than general web-app patterns. Title, pause, and settings form a panel-free family whose wordmarks and actions float directly over the lake. Other screens keep one dominant action; job information uses a physical dispatch-ticket treatment; and cargo, upgrades, settings, and help are subordinate rows or pages rather than equal-weight cards. Warm amber is reserved for the current or available action, while completed and informational states stay neutral. Deep teal, soft sea-glass, warm ivory, and restrained coral form the shared palette. Remaining interior menu screens use the same softly rounded dockside frame, readable display typography, visible focus treatment, and restrained transitions.
 
@@ -570,7 +574,7 @@ The two-month schedule requires an eight-week plan. The minimum viable game take
 - Enter fishing directly without a blocking quiz
 - Catch the requested fish and continue directly into the catch-to-harbor crossing
 - Catch and deliver a fish
-- View the timed delivery-success notification and the season report
+- View the matching timed delivery-accepted and delivery-success pills and the season report
 - Purchase and retain an upgrade after reload
 - Recover from critical boat damage
 - Navigate menus with keyboard and pointer
@@ -639,14 +643,18 @@ All durations use simulation seconds; horizontal positions use normalized world 
 | Value | Initial setting |
 | --- | --- |
 | Horizontal thrust | 0.034 units/s² |
+| Opposite-thrust braking | 115% of normal thrust; 125% of boosted thrust while boost is active |
 | Base maximum surface speed | 0.05 units/s |
 | Passive water drag | 0.62 per second |
 | Camera view width | 0.30 world units |
 | Critical rescue threshold | 100 damage |
 | Freshness lifetime | 150 seconds |
-| Tutorial minimum freshness | 35% |
-| Tutorial reward | 90 shells |
-| Cargo capacity | 1 fish, then +1 per boat tier up to 7 |
+| Tutorial minimum freshness | 80% |
+| Tutorial full / reduced reward | 75 / 19 shells |
+| Repeatable contract quantity | 1–3 fish, capped by unlocked cargo capacity |
+| Repeatable freshness target | Desired 80–95% in 5-point steps; capped from current fast-route arrival with 4 points of base margin and 2 points per additional fish |
+| Reward scaling | `(species value + 25) × quantity × (1 + freshness target ÷ 100)`, rounded to 5 shells; reduced payout is approximately 25% |
+| Cargo capacity | 3 fish, then +1 per boat tier up to 10 |
 | Boat and cargo upgrade | 60 shells base; six tiers |
 | Engine upgrade | 70 shells base; +11% maximum speed per tier through tier 5; tier 6 reaches 195% of base speed |
 | Engine boost unlock | 300 shells; +35% maximum speed while held |
@@ -671,6 +679,7 @@ Every authored visual asset in this slice is generated with GPT Image 2.0. No pr
 
 | Asset | Runtime purpose |
 | --- | --- |
+| `fshing-logo.png` | Square fish-and-survey emblem for browser and app icons |
 | `fshing-wordmark.png` | Restrained title-screen identity |
 | `lake-chart.png` | Side-on panoramic sky, distant shore, waterline, and lake atmosphere |
 | `player-boat.png` | Player vessel in strict side profile on a chroma-key matte |

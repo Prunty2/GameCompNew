@@ -59,9 +59,16 @@ export interface RegionDefinition {
 
 export const BALANCE = {
   horizontalThrust: 0.034,
+  normalBrakeMultiplier: 1.15,
+  boostBrakeMultiplier: 1.25,
   maxSurfaceSpeed: 0.05,
   waterDrag: 0.62,
   freshnessLifetime: 150,
+  contractFreshnessMinimum: 80,
+  contractFreshnessMaximum: 95,
+  contractFreshnessStep: 5,
+  contractRouteSafetyMargin: 4,
+  contractAdditionalFishSafetyMargin: 2,
   routeDistanceScaleKm: 18,
   routeFreshnessLossPerMinute: 2 / 3,
   safeRouteSpeedMultiplier: 0.92,

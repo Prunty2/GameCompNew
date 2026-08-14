@@ -1,6 +1,6 @@
 # FSHING asset manifest
 
-The initial authored visual set was generated with GPT Image 2.0 on 24 July 2026. The expanded nine-species fish atlas was generated with OpenAI's built-in image-generation tool on 31 July 2026. The surface-school cue atlas and polarized-water lens were generated with the built-in GPT Image tool on 5 August 2026. The tugboat steam atlas was generated with the built-in GPT Image tool on 6 August 2026. No bitmap, SVG, icon, texture, panel, button, logo, scenery plate, or game sprite was created with drawing code.
+The initial authored visual set was generated with GPT Image 2.0 on 24 July 2026. The expanded nine-species fish atlas was generated with OpenAI's built-in image-generation tool on 31 July 2026. The surface-school cue atlas and polarized-water lens were generated with the built-in GPT Image tool on 5 August 2026. The tugboat steam atlas was generated with the built-in GPT Image tool on 6 August 2026. The square FSHING logo was generated with the built-in image-generation tool on 14 August 2026. No bitmap, SVG, icon, texture, panel, button, logo, scenery plate, or game sprite was created with drawing code.
 
 Authoring originals are preserved outside the production bundle. Runtime copies live in `src/assets/` and are explicitly imported by TypeScript or CSS. HTML and CSS arrange and label the generated interface surfaces. Canvas draws the simulation, camera, line, wake, water movement, visibility, and accessibility indicators; it does not manufacture replacement UI art.
 
@@ -148,6 +148,14 @@ The boat, harbor pier, fish atlas, and world atlas were requested on a uniform `
 - Runtime role: title identity
 - Generated size: 1536 × 1024
 - Prompt: “Use GPT Image 2.0. Create a full-bleed title identity plate for a side-on 2D lake game. The exact single word FSHING, spelled F-S-H-I-N-G with no other words, in bold compact hand-painted uppercase display lettering. Cream letters with subtle worn ink texture and one small safety-orange accent stroke, centered with generous breathing room. Restrained editorial screen-print design, mature and understated, no nautical cliches, no hook forming a letter, no cartoon bubble style, no ornate frame, no extra icons. Full rectangular canvas covered edge-to-edge by a flat deep ink-navy painted background with very subtle paper grain; no transparency, no checkerboard, no border, no mockup.”
+
+### `fshing-logo.png`
+
+- Runtime role: square browser favicon and app icon
+- Generated source size: 1254 × 1254; optimized runtime size: 512 × 512
+- Generation mode: OpenAI built-in image generation using `fshing-wordmark.png` and `ui-icons.png` as visual references
+- Prompt: “Use case: logo-brand. Asset type: production square favicon and app icon for the browser game FSHING. Image 1 is the existing FSHING wordmark and defines the cream, safety-orange, deep ink-teal palette plus worn hand-painted screen-print texture; Image 2 is the existing UI pictogram atlas and defines the bold, practical silhouette language only. Do not copy or combine any existing individual icon. Create one original, compact emblem for FSHING, a calm environmental-research fishing game. The emblem should be a single bold warm-cream side-profile freshwater fish crossing two simple lake-wave bands, with one small safety-orange circular survey/sonar accent integrated near the fish. The fish and water must fuse into one memorable, balanced silhouette rather than appearing as several separate illustrations. Use a full-bleed deep ink-teal square background with subtle aged-paper screen-print grain. Flat vector-friendly logo mark rendered in restrained editorial gouache and screen-print style; mature, understated, handcrafted, and crisp. Exact 1:1 square; single centered emblem; generous equal safe padding; strong circular overall balance; readable at 16, 32, and 64 pixels. Deep ink teal background, warm ivory/cream main mark, and one sparse safety-orange accent; no other colors. No text, letters, wordmark, border, outer badge ring, hook, fishing rod, boat, gradients, realistic lighting, shadows, 3D bevel, glossy finish, cartoon face, extra fish, scenery, or watermark. Preserve a clear silhouette and large negative spaces; keep details extremely minimal. Original design only.”
+- Processing: the untouched generated source is retained as `output/imagegen/fshing-logo-source.png`; the runtime image was uniformly downscaled to 512 × 512. Readability was visually checked at 32 × 32 and 16 × 16 before integration.
 
 ### `ui-panel.png`
 

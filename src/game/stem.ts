@@ -166,7 +166,10 @@ export function evaluateSurvey(
   };
 }
 
-export function estimateRoute(contract: Contract, engineTier: number): RouteEstimate {
+export function estimateRoute(
+  contract: Pick<Contract, "spot" | "destination">,
+  engineTier: number,
+): RouteEstimate {
   const origin = spotById(contract.spot);
   const destination = harborById(contract.destination);
   const distanceKm = Math.round(
