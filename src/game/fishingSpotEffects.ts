@@ -14,8 +14,11 @@ export interface SurfaceFishPose {
 }
 
 const VISIBLE_FISH = 12;
-const HOOK_REVEAL_RADIUS_MULTIPLIER = 3;
-const HOOK_FULL_VISIBILITY_RADIUS_MULTIPLIER = 2;
+const HOOK_FADE_RADIUS_MULTIPLIER = 5;
+const HOOK_PROMINENT_VISIBILITY_RADIUS_MULTIPLIER = 4;
+const HOOK_FULL_VISIBILITY_RADIUS_MULTIPLIER = 3;
+const PROMINENT_HOOK_VISIBILITY = 0.65;
+const LENS_REVEAL_RADIUS_MULTIPLIER = 4.6;
 const DISTANT_FISH_VISIBILITY = 0.3;
 const PROXIMITY_FISH_VISIBILITY = 0.35;
 const SCHOOL_POSITIONS = [
@@ -40,12 +43,17 @@ export function surfaceFishingCue(
 ): SurfaceFishingCue {
   const safeRadius = Math.max(0.000_001, interactionRadius);
   const distance = Math.abs(boatX - spotX);
-  const lensRadius = safeRadius * 3.6;
-  const hookRadius = safeRadius * HOOK_REVEAL_RADIUS_MULTIPLIER;
-  const fullHookRadius = safeRadius * HOOK_FULL_VISIBILITY_RADIUS_MULTIPLIER;
+  const lensRadius = safeRadius * LENS_REVEAL_RADIUS_MULTIPLIER;
+  const hookFadeRadius = safeRadius * HOOK_FADE_RADIUS_MULTIPLIER;
+  const prominentHookVisibilityRadius = safeRadius * HOOK_PROMINENT_VISIBILITY_RADIUS_MULTIPLIER;
+  const fullHookVisibilityRadius = safeRadius * HOOK_FULL_VISIBILITY_RADIUS_MULTIPLIER;
   const lensVisibility = Math.sqrt(smootherStep(1 - distance / lensRadius));
-  const hookFadeDistance = hookRadius - fullHookRadius;
-  const hookVisibility = smootherStep((hookRadius - distance) / hookFadeDistance);
+  const hookVisibility = hookCueVisibility(
+    distance,
+    hookFadeRadius,
+    prominentHookVisibilityRadius,
+    fullHookVisibilityRadius,
+  );
   return {
     distance,
     fishCount: VISIBLE_FISH,
@@ -53,6 +61,24 @@ export function surfaceFishingCue(
     lensVisibility,
     hookVisibility,
   };
+}
+
+function hookCueVisibility(
+  distance: number,
+  fadeRadius: number,
+  prominentRadius: number,
+  fullVisibilityRadius: number,
+): number {
+  if (distance >= fadeRadius) return 0;
+  if (distance > prominentRadius) {
+    const fadeProgress = (fadeRadius - distance) / (fadeRadius - prominentRadius);
+    return smootherStep(fadeProgress) * PROMINENT_HOOK_VISIBILITY;
+  }
+
+  const fullVisibilityProgress = (prominentRadius - distance)
+    / (prominentRadius - fullVisibilityRadius);
+  return PROMINENT_HOOK_VISIBILITY
+    + smootherStep(fullVisibilityProgress) * (1 - PROMINENT_HOOK_VISIBILITY);
 }
 
 export function surfaceFishPose(
