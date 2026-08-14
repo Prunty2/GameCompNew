@@ -56,6 +56,7 @@ describe("panorama layout", () => {
     });
     const paintedOceanEdge = IMAGE_HEIGHT * BEACH_AUTHORED_WATERLINE_RATIO;
 
+    expect(paintedOceanEdge).toBe(593);
     expect(layout.waterline / 1010).toBeCloseTo(0.78);
     expect(layout.sourceY).toBeLessThan(paintedOceanEdge);
     expect(layout.sourceY + layout.sourceHeight).toBeGreaterThan(paintedOceanEdge);

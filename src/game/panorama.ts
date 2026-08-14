@@ -18,7 +18,7 @@ interface PanoramaLayoutInput {
 }
 
 export const LAKE_AUTHORED_WATERLINE_RATIO = 0.61;
-export const BEACH_AUTHORED_WATERLINE_RATIO = 0.627;
+export const BEACH_AUTHORED_WATERLINE_RATIO = 593 / 941;
 const DISPLAYED_WATERLINE_RATIO = 0.78;
 
 export function calculatePanoramaLayout(input: PanoramaLayoutInput): PanoramaLayout {
