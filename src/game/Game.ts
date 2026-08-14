@@ -90,6 +90,7 @@ type OverlayScreen =
   | "harbor"
   | "pause"
   | "settings"
+  | "credits"
   | "controls"
   | "help"
   | "seasonReport"
@@ -234,7 +235,7 @@ export class Game {
     this.renderer.render(this.simulation, {
       ...this.save.settings,
       cinematic: this.overlay === "title"
-        || (this.overlay === "settings" || this.overlay === "controls") && this.overlayReturn === "title",
+        || (this.overlay === "settings" || this.overlay === "controls" || this.overlay === "credits") && this.overlayReturn === "title",
     });
     this.syncContextActionAnchor();
     if (time - this.lastUiRefresh >= UI_REFRESH_INTERVAL) {
@@ -509,6 +510,9 @@ export class Game {
       case "settings":
         host.innerHTML = this.settingsScreen();
         break;
+      case "credits":
+        host.innerHTML = this.creditsScreen();
+        break;
       case "controls":
         host.innerHTML = this.controlsScreen();
         break;
@@ -532,7 +536,10 @@ export class Game {
               <span class="title-play-icon" aria-hidden="true">▶</span>
               <strong>Play</strong>
             </button>
-            <button class="menu-button title-settings-button" type="button" data-action="open-settings"><strong>Settings</strong></button>
+            <div class="title-secondary-actions">
+              <button class="menu-button title-settings-button" type="button" data-action="open-settings"><strong>Settings</strong></button>
+              <button class="menu-button title-credits-button" type="button" data-action="open-credits"><strong>Credits</strong></button>
+            </div>
           </div>
         </div>
         <small class="title-build-version">v${__APP_VERSION__} (PR #${__PR_NUMBER__})</small>
@@ -736,6 +743,38 @@ export class Game {
           <button class="primary-button settings-done" type="button" data-action="back">
             <strong>Done</strong><span class="menu-arrow" aria-hidden="true">→</span>
           </button>
+        </div>
+      </section>`;
+  }
+
+  private creditsScreen(): string {
+    return `
+      <section class="screen-overlay credits-overlay" role="dialog" aria-labelledby="credits-title">
+        <div class="credits-menu">
+          <img class="wordmark credits-wordmark" src="${wordmarkUrl}" alt="FSHING" />
+          <header class="credits-heading">
+            <h2 id="credits-title">Credits</h2>
+            <p>The crew behind FSHING</p>
+          </header>
+          <dl class="credits-list">
+            <div class="credit-entry">
+              <dt>Liam</dt>
+              <dd>Game Designer <span>/</span> Programmer <span>/</span> Tester</dd>
+            </div>
+            <div class="credit-entry">
+              <dt>David</dt>
+              <dd>Game Designer <span>/</span> Audio Designer <span>/</span> Tester</dd>
+            </div>
+            <div class="credit-entry">
+              <dt>Harrison</dt>
+              <dd>Game Designer <span>/</span> Storyteller <span>/</span> Documentation <span>/</span> Tester</dd>
+            </div>
+            <div class="credit-entry">
+              <dt>Saxon</dt>
+              <dd>Game Designer <span>/</span> Visual Designer <span>/</span> Tester</dd>
+            </div>
+          </dl>
+          <button class="primary-button credits-back" type="button" data-action="back"><span aria-hidden="true">←</span><strong>Back</strong></button>
         </div>
       </section>`;
   }
@@ -1104,6 +1143,7 @@ export class Game {
       case "interact": this.handleInteract(); break;
       case "resume": this.setOverlay(null); break;
       case "open-settings": this.overlayReturn = this.overlay; this.setOverlay("settings"); break;
+      case "open-credits": this.overlayReturn = this.overlay; this.setOverlay("credits"); break;
       case "open-controls": this.setOverlay("controls"); break;
       case "close-controls": this.setOverlay("settings"); break;
       case "reset-controls":

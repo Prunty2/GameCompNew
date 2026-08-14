@@ -14,7 +14,7 @@ test.beforeEach(async ({ page }) => {
   await page.route("https://sdk.crazygames.com/**", (route) => route.abort());
 });
 
-test("main menu presents only centered play and settings actions", async ({ page }) => {
+test("main menu presents centered play, settings, and credits actions", async ({ page }) => {
   await page.goto("/");
 
   const version = page.locator(".title-build-version");
@@ -25,7 +25,7 @@ test("main menu presents only centered play and settings actions", async ({ page
   expect(versionBounds!.y + versionBounds!.height).toBeGreaterThan(690);
 
   const actions = page.locator(".title-actions button");
-  await expect(actions).toHaveCount(2);
+  await expect(actions).toHaveCount(3);
   const playButton = page.getByRole("button", { name: "Play", exact: true });
   await expect(playButton).toBeVisible();
   await playButton.hover();
@@ -33,6 +33,7 @@ test("main menu presents only centered play and settings actions", async ({ page
   await page.mouse.move(0, 0);
   await page.waitForTimeout(250);
   await expect(page.getByRole("button", { name: "Settings" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Credits" })).toBeVisible();
   await expect(page.getByRole("button", { name: "How to play" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Field guide" })).toHaveCount(0);
   await expect(page.locator(".title-tagline, .title-controls")).toHaveCount(0);
@@ -46,8 +47,25 @@ test("main menu presents only centered play and settings actions", async ({ page
   }));
   const viewportCenter = await page.evaluate(() => window.innerWidth / 2);
 
-  expect(bounds[0].width).toBe(bounds[1].width);
-  expect(bounds.every(({ center }) => Math.abs(center - viewportCenter) <= 1)).toBe(true);
+  expect(bounds[1].width).toBe(bounds[2].width);
+  expect(Math.abs(bounds[0].center - viewportCenter)).toBeLessThanOrEqual(1);
+  expect(Math.abs((bounds[1].center + bounds[2].center) / 2 - viewportCenter)).toBeLessThanOrEqual(1);
+});
+
+test("credits lists the team and returns to the main menu", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Credits" }).click();
+
+  await expect(page.getByRole("heading", { name: "Credits" })).toBeVisible();
+  await expect(page.locator(".credits-list dt")).toHaveText(["Liam", "David", "Harrison", "Saxon"]);
+  await expect(page.getByText("Game Designer / Programmer / Tester")).toBeVisible();
+  await expect(page.getByText("Game Designer / Audio Designer / Tester")).toBeVisible();
+  await expect(page.getByText("Game Designer / Storyteller / Documentation / Tester")).toBeVisible();
+  await expect(page.getByText("Game Designer / Visual Designer / Tester")).toBeVisible();
+
+  await page.getByRole("button", { name: "Back" }).click();
+  await expect(page.getByRole("button", { name: "Play", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Credits" })).toHaveCount(0);
 });
 
 test("the waterline transition carries title, dock, and lake scene changes", async ({ page }) => {
