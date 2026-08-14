@@ -247,6 +247,35 @@ describe("FSHING side-on simulation", () => {
     expect(simulation.boat.speed).toBe(BALANCE.maxSurfaceSpeed);
   });
 
+  test("applies 15% stronger braking during normal travel", () => {
+    const simulation = createSimulation();
+    undock(simulation);
+    simulation.boat.speed = 0.04;
+
+    updateSimulation(simulation, { ...idle, travel: -1 }, 0.1);
+
+    expect(BALANCE.normalBrakeMultiplier).toBe(1.15);
+    const brakingReduction = BALANCE.horizontalThrust * 1.15 * 0.1;
+    expect(simulation.boat.speed).toBeCloseTo(0.04 - brakingReduction);
+  });
+
+  test("applies 25% stronger braking while boost is active", () => {
+    const simulation = createSimulation();
+    unlockBoostForTesting(simulation);
+    undock(simulation);
+    simulation.boat.speed = 0.04;
+
+    updateSimulation(simulation, { ...idle, travel: -1, boost: true }, 0.1);
+
+    expect(BALANCE.boostBrakeMultiplier).toBe(1.25);
+    const brakingReduction = BALANCE.horizontalThrust
+      * BALANCE.boostThrustMultiplier
+      * 1.25
+      * 0.1;
+    expect(simulation.boost.active).toBe(true);
+    expect(simulation.boat.speed).toBeCloseTo(0.04 - brakingReduction);
+  });
+
   test("gives only the maximum engine tier a stronger speed increase", () => {
     expect(engineSpeedMultiplier(BALANCE.maxUpgradeTier - 1)).toBeCloseTo(1.55);
     expect(engineSpeedMultiplier(BALANCE.maxUpgradeTier)).toBeCloseTo(1.95);

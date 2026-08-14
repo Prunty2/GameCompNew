@@ -216,7 +216,7 @@ The boat uses direct horizontal side-scrolling movement:
 
 - Hold left or right to apply thrust in that direction
 - Releasing thrust allows short, readable momentum before water drag slows the boat
-- Brake reduces speed quickly without instantly snapping the boat to a stop
+- Opposite thrust brakes 15% more strongly than ordinary acceleration without instantly snapping the boat to a stop; while boost is active, its existing boosted thrust receives a 25% braking increase instead
 - Once purchased, holding boost overclocks the engine to 135% of its current maximum speed while filling an eight-second heat meter. Releasing boost cools the meter over ten seconds. Reaching full heat safely locks boost until the meter cools to 25%, preserving DREDGE's readable risk-and-recovery cadence without copying its engine-damage or panic penalties. While boost is active, the surface camera eases from a 0.30 to 0.354 world-unit view width over a clearly visible pull rather than snapping, so more of the route enters frame and the speed change reads beyond the wake effect. The boat, its steam, wake, and boost trail scale continuously with the live view width, reaching roughly 85% of their normal screen size at the widest view. The camera and boat ease back together after release; reduced-motion mode keeps the normal fixed view width and size.
 - The boat faces its current travel direction and uses restrained bob and tilt so motion remains calm and readable
 - Boat movement stays on the open horizontal surface without fixed collision obstacles
@@ -639,6 +639,7 @@ All durations use simulation seconds; horizontal positions use normalized world 
 | Value | Initial setting |
 | --- | --- |
 | Horizontal thrust | 0.034 units/s² |
+| Opposite-thrust braking | 115% of normal thrust; 125% of boosted thrust while boost is active |
 | Base maximum surface speed | 0.05 units/s |
 | Passive water drag | 0.62 per second |
 | Camera view width | 0.30 world units |
