@@ -8,8 +8,8 @@ import mosswaterFishingUrl from "../assets/fishing-mosswater-pool.jpg";
 import gloamFishingUrl from "../assets/fishing-outer-gloam.jpg";
 import sunwardFishingUrl from "../assets/fishing-sunward-shoal.jpg";
 import harborPierUrl from "../assets/harbor-pier.png";
-import lakeChartUrl from "../assets/lake-chart.png";
-import lakeChartNightUrl from "../assets/lake-chart-night.png";
+import lakeChartUrl from "../assets/lake-chart-hd.jpg";
+import lakeChartNightUrl from "../assets/lake-chart-night-hd.jpg";
 import polarizedLensUrl from "../assets/polarized-lens.png";
 import playerBoatUrl from "../assets/player-boat.png";
 import surfaceFishingCuesUrl from "../assets/surface-fishing-cues.png";
@@ -889,6 +889,7 @@ export class CanvasRenderer {
     });
     this.canvas.dataset.panoramaSourceWidth = layout.sourceWidth.toFixed(2);
     this.canvas.dataset.panoramaScale = (width / layout.sourceWidth).toFixed(3);
+    this.canvas.dataset.panoramaSourceX = layout.sourceX.toFixed(2);
     this.context.drawImage(
       image,
       layout.sourceX,

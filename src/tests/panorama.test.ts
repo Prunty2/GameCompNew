@@ -7,8 +7,8 @@ import {
 } from "../game/camera";
 import { calculatePanoramaLayout } from "../game/panorama";
 
-const IMAGE_WIDTH = 1672;
-const IMAGE_HEIGHT = 941;
+const IMAGE_WIDTH = 6688;
+const IMAGE_HEIGHT = 3764;
 
 describe("panorama layout", () => {
   test.each([
@@ -31,8 +31,7 @@ describe("panorama layout", () => {
     });
     const waterlineRatio = layout.waterline / viewportHeight;
 
-    expect(waterlineRatio).toBeGreaterThanOrEqual(0.61);
-    expect(waterlineRatio).toBeLessThanOrEqual(0.680001);
+    expect(waterlineRatio).toBeCloseTo(0.78);
     expect(layout.sourceY).toBeLessThan(IMAGE_HEIGHT * 0.61);
     expect(layout.sourceY + layout.sourceHeight).toBeGreaterThan(IMAGE_HEIGHT * 0.61);
   });
@@ -58,19 +57,12 @@ describe("panorama layout", () => {
     }
   });
 
-  test("expands the painted source crop as the viewport grows", () => {
+  test("keeps enough source pixels for a large viewport", () => {
     const camera = createSideScrollCamera({
       focusX: 0.56,
       velocityX: 0.04,
       viewWidth: 0.3,
       lookAheadTime: 0.24,
-    });
-    const compact = calculatePanoramaLayout({
-      imageWidth: IMAGE_WIDTH,
-      imageHeight: IMAGE_HEIGHT,
-      camera,
-      viewportWidth: 960,
-      viewportHeight: 540,
     });
     const large = calculatePanoramaLayout({
       imageWidth: IMAGE_WIDTH,
@@ -80,45 +72,30 @@ describe("panorama layout", () => {
       viewportHeight: 1080,
     });
 
-    expect(compact.sourceWidth).toBe(960);
-    expect(large.sourceWidth).toBe(IMAGE_WIDTH);
-    expect(large.sourceWidth).toBeGreaterThan(compact.sourceWidth);
-    expect(1920 / large.sourceWidth).toBeLessThan(1.15);
+    expect(large.sourceWidth).toBeCloseTo(IMAGE_WIDTH * 0.3);
+    expect(large.sourceWidth).toBeGreaterThan(1920);
   });
 
-  test("pans the distant plate more slowly than the gameplay camera", () => {
-    const leftCamera = createSideScrollCamera({
-      focusX: 0.35,
-      velocityX: 0,
+  test("uses the same horizontal projection for scenery pixels and world sprites", () => {
+    const viewportWidth = 1440;
+    const camera = createSideScrollCamera({
+      focusX: 0.56,
+      velocityX: 0.04,
       viewWidth: 0.3,
       lookAheadTime: 0.24,
     });
-    const rightCamera = createSideScrollCamera({
-      focusX: 0.65,
-      velocityX: 0,
-      viewWidth: 0.3,
-      lookAheadTime: 0.24,
-    });
-    const leftLayout = calculatePanoramaLayout({
+    const layout = calculatePanoramaLayout({
       imageWidth: IMAGE_WIDTH,
       imageHeight: IMAGE_HEIGHT,
-      camera: leftCamera,
-      viewportWidth: 960,
-      viewportHeight: 540,
+      camera,
+      viewportWidth,
+      viewportHeight: 810,
     });
-    const rightLayout = calculatePanoramaLayout({
-      imageWidth: IMAGE_WIDTH,
-      imageHeight: IMAGE_HEIGHT,
-      camera: rightCamera,
-      viewportWidth: 960,
-      viewportHeight: 540,
-    });
-    const backgroundTravel = rightLayout.sourceX - leftLayout.sourceX;
-    const foregroundTravel = worldToScreenX(0.5, leftCamera, 960)
-      - worldToScreenX(0.5, rightCamera, 960);
 
-    expect(backgroundTravel).toBeGreaterThan(0);
-    expect(backgroundTravel).toBeLessThan(Math.abs(foregroundTravel));
+    for (const worldX of [camera.left, camera.center, camera.right]) {
+      const sceneryX = ((worldX * IMAGE_WIDTH - layout.sourceX) / layout.sourceWidth) * viewportWidth;
+      expect(sceneryX).toBeCloseTo(worldToScreenX(worldX, camera, viewportWidth));
+    }
   });
 
   test("clamps the unified camera at lake edges without changing its scale", () => {

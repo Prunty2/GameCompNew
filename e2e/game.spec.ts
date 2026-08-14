@@ -150,20 +150,21 @@ test("leaving the title frames the boat before gameplay is revealed", async ({ p
   expect(Number(await canvas.getAttribute("data-surface-camera-center"))).toBeCloseTo(0.15, 2);
 });
 
-test("large windows reveal a broader main-world panorama without changing gameplay zoom", async ({ page }) => {
-  await page.setViewportSize({ width: 960, height: 540 });
+test("large windows keep the sharp main-world panorama scrolling with gameplay", async ({ page }) => {
+  await page.setViewportSize({ width: 1920, height: 1080 });
   await page.goto("/?e2e=1");
   await page.getByRole("button", { name: "Play", exact: true }).click();
   await page.getByRole("button", { name: "Accept contract" }).click();
 
   const canvas = page.locator("#game-canvas");
-  await expect(canvas).toHaveAttribute("data-panorama-source-width", "960.00");
-  const compactCameraWidth = await canvas.getAttribute("data-surface-camera-view-width");
+  await expect(canvas).toHaveAttribute("data-panorama-source-width", "2006.40");
+  expect(Number(await canvas.getAttribute("data-panorama-scale"))).toBeLessThan(1);
+  await expect(canvas).toHaveAttribute("data-surface-camera-view-width", "0.300");
+  const initialSourceX = Number(await canvas.getAttribute("data-panorama-source-x"));
 
-  await page.setViewportSize({ width: 1920, height: 1080 });
-  await expect(canvas).toHaveAttribute("data-panorama-source-width", "1672.00");
-  expect(Number(await canvas.getAttribute("data-panorama-scale"))).toBeLessThan(1.15);
-  expect(await canvas.getAttribute("data-surface-camera-view-width")).toBe(compactCameraWidth);
+  await page.evaluate(() => window.__FSHING_TEST__?.sailToHarbor("gloam"));
+  await expect.poll(async () => Number(await canvas.getAttribute("data-panorama-source-x")))
+    .toBeGreaterThan(initialSourceX + 1000);
 });
 
 test("nightfall changes the panorama and keeps a moon indicator visible until morning", async ({ page }) => {

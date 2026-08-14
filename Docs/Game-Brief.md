@@ -336,7 +336,7 @@ The visual design must communicate fish type, freshness, damage, navigation land
 
 ### Technical art constraints
 
-- Render the horizontally scrolling side-on lake, parallax layers, and moving game objects with Canvas 2D. Treat the painted lake panorama as a resolution-aware distant plate: expand its source crop as the viewport grows and pan it more slowly than the gameplay camera, rather than enlarging a narrow camera crop across a large window.
+- Render the horizontally scrolling side-on lake, parallax layers, and moving game objects with Canvas 2D. Keep the painted lake panorama on the same horizontal projection as gameplay landmarks so travel retains a focused side-scrolling composition; use a high-resolution runtime plate rather than widening the crop on large windows.
 - Use HTML/CSS overlays for contracts, shops, dialogue, settings, tutorials, and touch controls.
 - Design around responsive landscape play, while retaining a functional mobile layout.
 - Explicitly import runtime assets so source and authoring files do not enter the production build.
@@ -681,7 +681,7 @@ Every authored visual asset in this slice is generated with GPT Image 2.0. No pr
 | --- | --- |
 | `fshing-logo.png` | Square fish-and-survey emblem for browser and app icons |
 | `fshing-wordmark.png` | Restrained title-screen identity |
-| `lake-chart.png` | Side-on panoramic sky, distant shore, waterline, and lake atmosphere |
+| `lake-chart-hd.jpg` / `lake-chart-night-hd.jpg` | High-resolution, composition-matched daytime and nighttime side-on panoramas for sharp camera-linked scrolling |
 | `player-boat.png` | Player vessel in strict side profile on a chroma-key matte |
 | `harbor-pier.png` | Long weathered side-view harbor pier that extends from either shoreline; its fixed footprint uses roughly 36–44 narrow deck-plank divisions so the timber scale remains believable beside the player boat |
 | `fish-atlas.png` | Fishing-hook sprite and retained original fish reference cells |
