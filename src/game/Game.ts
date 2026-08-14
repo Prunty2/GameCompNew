@@ -1053,6 +1053,7 @@ export class Game {
     const closeButton = notification.querySelector<HTMLButtonElement>(".delivery-success-close");
     if (notificationText) notificationText.textContent = message;
     if (closeButton) closeButton.ariaLabel = closeLabel;
+    notification.classList.toggle("is-accepted", message === "Delivery Accepted");
     window.clearTimeout(this.deliveryNotificationTimer);
     window.clearTimeout(this.deliveryNotificationExitTimer);
     notification.hidden = false;

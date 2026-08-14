@@ -471,6 +471,35 @@ input:focus-visible {
   background: rgb(114 185 152 / 12%);
 }
 
+.delivery-success.is-accepted {
+  grid-template-columns: minmax(0, 1fr) 34px;
+  gap: 8px;
+  width: min(310px, calc(100% - 28px));
+  min-height: 52px;
+  padding: 6px 7px 6px 18px;
+}
+
+.delivery-success.is-accepted .delivery-success-seal {
+  display: none;
+}
+
+.delivery-success.is-accepted strong {
+  color: #ffd778;
+  font-size: clamp(0.95rem, 3vw, 1.12rem);
+}
+
+.delivery-success.is-accepted .delivery-success-close {
+  width: 34px;
+  height: 34px;
+  font-size: 1.25rem;
+}
+
+.delivery-success.is-accepted .delivery-success-close:hover,
+.delivery-success.is-accepted .delivery-success-close:focus-visible {
+  border-color: #ffd778;
+  background: rgb(255 215 120 / 10%);
+}
+
 .game-ui:has(.boost-gauge:not([hidden])) .toast {
   top: max(70px, calc(env(safe-area-inset-top) + 58px));
 }

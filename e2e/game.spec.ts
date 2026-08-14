@@ -60,6 +60,9 @@ test("accepting a delivery drops the shared confirmation pill", async ({ page })
   await expect(notification).toContainText("Delivery Accepted");
   await expect(notification).toHaveCSS("animation-name", "delivery-success-enter");
   await expect(notification).toHaveCSS("border-radius", "999px");
+  await expect(notification).toHaveCSS("width", "310px");
+  await expect(notification.locator("strong")).toHaveCSS("color", "rgb(255, 215, 120)");
+  await expect(notification.locator(".delivery-success-seal")).toBeHidden();
   await expect(page.locator("#toast")).not.toContainText("Contract accepted");
 
   await page.getByRole("button", { name: "Close delivery accepted notification" }).click();

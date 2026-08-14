@@ -95,7 +95,7 @@ flowchart LR
 
 Feedback uses three levels:
 
-- **Immediate:** a delivery-accepted pill, requested-species marker, catch feedback, and objective guidance.
+- **Immediate:** a compact amber-text delivery-accepted pill without a seal, requested-species marker, catch feedback, and objective guidance.
 - **After a crossing:** a delivery-success notification confirms completion without interrupting harbor play.
 - **Across the season:** species discoveries, survey results, completed crossings, and a reflection prompt.
 
