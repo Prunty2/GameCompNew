@@ -194,6 +194,25 @@ test("leaving the title frames the boat before gameplay is revealed", async ({ p
   expect(Number(await canvas.getAttribute("data-surface-camera-center"))).toBeCloseTo(0.15, 2);
 });
 
+test("returning to the title while fishing restores the surface scene", async ({ page }) => {
+  await page.goto("/?e2e=1");
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.getByRole("button", { name: "Accept contract" }).click();
+  await page.evaluate(() => window.__FSHING_TEST__?.previewFishing("sunwardShoal", "bluegill"));
+
+  const canvas = page.locator("#game-canvas");
+  await expect(canvas).toHaveAttribute("data-fishing-state", "steering");
+  expect(await page.evaluate(() => window.__FSHING_TEST__?.mode())).toBe("fishing");
+
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "Title screen" }).click();
+
+  await expect(page.getByRole("button", { name: "Play", exact: true })).toBeVisible();
+  await expect(canvas).not.toHaveAttribute("data-fishing-state");
+  await expect(canvas).toHaveAttribute("aria-label", "Game area");
+  expect(await page.evaluate(() => window.__FSHING_TEST__?.mode())).toBe("cruising");
+});
+
 test("nightfall changes the panorama and keeps a moon indicator visible until morning", async ({ page }) => {
   await page.goto("/?e2e=1");
   await page.getByRole("button", { name: "Play", exact: true }).click();

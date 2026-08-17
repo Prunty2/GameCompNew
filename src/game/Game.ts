@@ -51,6 +51,7 @@ import {
   deliverContract,
   getInteractionPrompt,
   interact,
+  leaveFishing,
   moveBoatForTesting,
   navigationGuidance,
   nightVisualIntensity,
@@ -1206,7 +1207,11 @@ export class Game {
         });
         break;
       case "back": this.setOverlay(this.overlayReturn); break;
-      case "title": this.started = false; this.setOverlay("title", true); break;
+      case "title":
+        if (this.simulation.mode === "fishing") leaveFishing(this.simulation);
+        this.started = false;
+        this.setOverlay("title", true);
+        break;
       case "harbor-section": {
         const section = target.dataset.harborSection as HarborSection | undefined;
         if (!section || !(["delivery", "cargo", "services"] as HarborSection[]).includes(section)) break;
@@ -1302,8 +1307,7 @@ export class Game {
       case "leave-fishing":
         if (this.simulation.fishing?.reeling) break;
         this.feedback.cue("cast");
-        this.simulation.mode = "cruising";
-        this.simulation.fishing = null;
+        leaveFishing(this.simulation);
         this.refreshHud();
         break;
     }
