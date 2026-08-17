@@ -39,6 +39,7 @@ import { InputController } from "./input";
 import { CanvasRenderer } from "./renderer";
 import {
   acceptAvailableContract,
+  beginFishingExit,
   buyBoost,
   buyPermit,
   buyUpgrade,
@@ -421,7 +422,8 @@ export class Game {
     if (navigation) navigation.hidden = this.overlay !== null || simulation.mode === "fishing";
     if (fishing) fishing.hidden = this.overlay !== null
       || simulation.mode !== "fishing"
-      || simulation.fishing?.reeling !== null;
+      || simulation.fishing?.reeling !== null
+      || simulation.fishing.exitingAt !== null;
     const showNightIndicator = shouldShowNightIndicator(simulation);
     document.body.classList.toggle("show-night-indicator", showNightIndicator);
     this.uiRoot.querySelector<HTMLElement>(".night-indicator")
@@ -1314,9 +1316,12 @@ export class Game {
   };
 
   private exitFishing(): void {
-    if (this.simulation.mode !== "fishing" || this.simulation.fishing?.reeling) return;
+    if (this.simulation.mode !== "fishing"
+      || this.simulation.fishing?.reeling
+      || this.simulation.fishing?.exitingAt !== null) return;
     this.feedback.cue("cast");
-    leaveFishing(this.simulation);
+    if (this.save.settings.reducedMotion) leaveFishing(this.simulation);
+    else beginFishingExit(this.simulation);
     this.refreshHud();
   }
 

@@ -11,6 +11,7 @@ import {
 } from "../game/balance";
 import {
   acceptAvailableContract,
+  beginFishingExit,
   buyBoost,
   buyPermit,
   buyUpgrade,
@@ -394,6 +395,22 @@ describe("FSHING side-on simulation", () => {
     for (let index = 0; index < 12; index += 1) updateSimulation(simulation, idle, 0.1);
     expect(simulation.mode).toBe("cruising");
     expect(simulation.cargo).toEqual([{ species: "bluegill", freshness: 100 }]);
+  });
+
+  test("keeps fishing active while a manual exit rises to the surface", () => {
+    const simulation = createSimulation(9);
+    expect(startFishing(simulation, "sunwardShoal")).toBe(true);
+    expect(beginFishingExit(simulation)).toBe(true);
+    expect(simulation.fishing?.exitingAt).toBe(simulation.elapsed);
+
+    for (let index = 0; index < 11; index += 1) updateSimulation(simulation, idle, 0.1);
+    expect(simulation.mode).toBe("fishing");
+    expect(simulation.cargo).toEqual([]);
+
+    updateSimulation(simulation, idle, 0.1);
+    expect(simulation.mode).toBe("cruising");
+    expect(simulation.fishing).toBeNull();
+    expect(simulation.cargo).toEqual([]);
   });
 
   test("moves the fishing hook faster upward than horizontally or downward", () => {

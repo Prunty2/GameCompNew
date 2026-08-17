@@ -88,6 +88,7 @@ export interface FishingState {
   hook: WorldPoint;
   targets: FishingTarget[];
   reeling: FishingReelState | null;
+  exitingAt: number | null;
 }
 
 export interface FishingReelState {
@@ -346,6 +347,7 @@ export function startFishing(simulation: Simulation, spotId: SpotId): boolean {
     startedAt: simulation.elapsed,
     hook: { x: 0.5, y: 0.08 },
     reeling: null,
+    exitingAt: null,
     targets: residents.flatMap((fishSpecies, residentIndex) => (
       [0, 1].map((schoolIndex) => {
         const fish = FISH[fishSpecies];
@@ -369,6 +371,12 @@ export function startFishing(simulation: Simulation, spotId: SpotId): boolean {
 export function leaveFishing(simulation: Simulation): void {
   simulation.mode = "cruising";
   simulation.fishing = null;
+}
+
+export function beginFishingExit(simulation: Simulation): boolean {
+  if (simulation.mode !== "fishing" || !simulation.fishing || simulation.fishing.reeling) return false;
+  simulation.fishing.exitingAt ??= simulation.elapsed;
+  return true;
 }
 
 export function resolveCatch(simulation: Simulation, species: FishSpecies): boolean {
@@ -673,6 +681,7 @@ export function tutorialPrompt(simulation: Simulation): string | null {
     if (simulation.fishing.reeling) {
       return `Reeling the ${FISH[simulation.fishing.reeling.species].name} to the boat.`;
     }
+    if (simulation.fishing.exitingAt !== null) return "Reeling in the line and returning to the surface.";
     const spot = spotById(simulation.fishing.spot);
     const target = simulation.activeContract?.spot === spot.id
       ? simulation.activeContract.species
@@ -720,6 +729,10 @@ function coolBoost(simulation: Simulation, dt: number): void {
 function updateFishing(simulation: Simulation, input: InputState, dt: number): void {
   const fishing = simulation.fishing;
   if (!fishing) return;
+  if (fishing.exitingAt !== null) {
+    if (simulation.elapsed - fishing.exitingAt >= FISHING_REEL_DURATION) leaveFishing(simulation);
+    return;
+  }
   if (fishing.reeling) {
     if (simulation.elapsed - fishing.reeling.hookedAt >= FISHING_REEL_DURATION) {
       resolveCatch(simulation, fishing.reeling.species);

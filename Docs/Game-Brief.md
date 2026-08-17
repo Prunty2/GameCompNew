@@ -237,7 +237,7 @@ The handling should feel smooth, measured, and forgiving rather than physically 
 - W/S: steer the hook vertically while fishing
 - Left Shift: hold engine boost after unlocking it
 - Space or E: interact, dock, or cast
-- Escape: leave fishing while the line is active; otherwise pause or resume
+- Escape: reel the empty line up and leave fishing with the same eased camera rise and surface fade as a catch; otherwise pause or resume
 - P (or the configured pause key): pause or resume
 - Temporary testing — B: grant the boost unlock for the current run without saving it
 - Development builds only — G: jump to the start of the dusk transition; H: jump to full night

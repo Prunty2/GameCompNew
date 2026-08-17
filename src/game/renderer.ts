@@ -479,22 +479,29 @@ export class CanvasRenderer {
     const reelProgress = fishing.reeling
       ? fishingReelProgress(simulation.elapsed, fishing.reeling.hookedAt)
       : 0;
-    const schoolOpacity = fishing.reeling ? fishingReelSchoolOpacity(reelProgress) : 1;
-    const diveProgress = fishing.reeling
-      ? fishingReelCameraProgress(entryDiveProgress, reelProgress, settings.reducedMotion)
+    const exitProgress = fishing.exitingAt === null
+      ? 0
+      : fishingReelProgress(simulation.elapsed, fishing.exitingAt);
+    const surfaceProgress = fishing.reeling ? reelProgress : exitProgress;
+    const surfacing = fishing.reeling !== null || fishing.exitingAt !== null;
+    const schoolOpacity = surfacing ? fishingReelSchoolOpacity(surfaceProgress) : 1;
+    const diveProgress = surfacing
+      ? fishingReelCameraProgress(entryDiveProgress, surfaceProgress, settings.reducedMotion)
       : entryDiveProgress;
     const layout = fishingViewLayout(height, simulation.progress.upgrades.line, diveProgress);
     this.canvas.dataset.fishingDiveProgress = diveProgress.toFixed(3);
     this.canvas.dataset.fishingSchoolOpacity = schoolOpacity.toFixed(3);
     this.canvas.dataset.fishingSurfaceSpriteOpacity = reelProgress.toFixed(3);
-    this.canvas.dataset.fishingSurfaceBlend = fishing.reeling ? reelProgress.toFixed(3) : "0.000";
+    this.canvas.dataset.fishingSurfaceBlend = surfaceProgress.toFixed(3);
     this.canvas.dataset.fishingSpot = spot.id;
     this.canvas.dataset.targetRarity = FISH[targetSpecies].rarity;
-    this.canvas.dataset.fishingState = fishing.reeling ? "reeling" : "steering";
+    this.canvas.dataset.fishingState = fishing.reeling ? "reeling" : fishing.exitingAt !== null ? "exiting" : "steering";
     this.canvas.setAttribute(
       "aria-label",
       fishing.reeling
         ? `Fishing at ${spot.name}. Reeling ${FISH[fishing.reeling.species].name} to the boat.`
+        : fishing.exitingAt !== null
+          ? `Leaving ${spot.name} and returning to the lake surface.`
         : `Fishing at ${spot.name}. Target ${FISH[targetSpecies].name}, ${FISH[targetSpecies].rarity} rarity.`,
     );
     this.drawFishingEnvironment(art.fishingEnvironments[spot.id], layout, width, height, settings.highContrast);
@@ -504,7 +511,7 @@ export class CanvasRenderer {
       width,
       height,
       layout.surfaceY,
-      fishing.reeling ? reelProgress : 0,
+      surfaceProgress,
     );
 
     const gameplayVisibility = clamp((diveProgress - 0.24) / 0.54, 0, 1);
@@ -546,10 +553,10 @@ export class CanvasRenderer {
     }
 
     const restingHook = fishingPointToScreen(fishing.hook, width, layout, maximumDepth);
-    const hook = fishing.reeling
+    const hook = surfacing
       ? {
-          x: restingHook.x + (width * 0.5 - restingHook.x) * reelProgress,
-          y: restingHook.y + (layout.surfaceY + 10 - restingHook.y) * reelProgress,
+          x: restingHook.x + (width * 0.5 - restingHook.x) * surfaceProgress,
+          y: restingHook.y + (layout.surfaceY + 10 - restingHook.y) * surfaceProgress,
         }
       : restingHook;
     context.strokeStyle = settings.highContrast ? "#ffffff" : "#f4e2b9";
