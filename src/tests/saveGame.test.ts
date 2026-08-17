@@ -114,8 +114,8 @@ describe("versioned save data", () => {
       progress: {
         money: 20,
         upgrades: {},
-        populations: { reedfin: -5, sunPerch: "broken", abyssCrown: 900, inventedFish: 1 },
-        discovered: ["reedfin", "reedfin", "inventedFish", 42],
+        populations: { bluegill: -5, yellowPerch: "broken", lakeSturgeon: 900, inventedFish: 1 },
+        discovered: ["bluegill", "bluegill", "inventedFish", 42],
         learning: {
           surveysCompleted: 12.8,
           correctPredictions: -2,
@@ -128,13 +128,27 @@ describe("versioned save data", () => {
     }));
     const loaded = loadSave(storage);
     expect("populations" in loaded.progress).toBe(false);
-    expect(loaded.progress.discovered).toEqual(["reedfin"]);
+    expect(loaded.progress.discovered).toEqual(["bluegill"]);
     expect(loaded.progress.learning).toEqual({
       surveysCompleted: 12,
       correctPredictions: 0,
       routePlans: 3,
     });
     expect(loaded.progress.seasonCompleted).toBe(true);
+  });
+
+  test("migrates discovered fantasy fish ids to their real species replacements", () => {
+    const baseline = defaultSave();
+    const storage = memoryStorage(JSON.stringify({
+      version: 8,
+      progress: {
+        ...baseline.progress,
+        discovered: ["reedfin", "lanternEel", "abyssCrown", "inventedFish"],
+      },
+      settings: baseline.settings,
+    }));
+
+    expect(loadSave(storage).progress.discovered).toEqual(["bluegill", "bowfin", "lakeSturgeon"]);
   });
 
   test("round trips valid saves", () => {

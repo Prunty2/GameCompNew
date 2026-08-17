@@ -50,7 +50,9 @@ export interface Contract {
   origin: HarborId;
   destination: HarborId;
   spot: SpotId;
+  quantity: number;
   reward: number;
+  reducedReward: number;
   minimumFreshness: number;
 }
 
@@ -99,6 +101,7 @@ export interface FishingReelState {
 
 export interface DeliveryResult {
   payment: number;
+  metFreshnessRequirement: boolean;
   route: RouteChoice;
   predictedFreshness: number;
   actualFreshness: number;
@@ -241,7 +244,13 @@ export function updateSimulation(simulation: Simulation, input: InputState, dt: 
 
   if (travel !== 0) {
     const thrustMultiplier = simulation.boost.active ? BALANCE.boostThrustMultiplier : 1;
-    boat.speed += travel * BALANCE.horizontalThrust * thrustMultiplier * safeDt;
+    const isBraking = boat.speed !== 0 && Math.sign(boat.speed) !== travel;
+    const brakeMultiplier = isBraking
+      ? simulation.boost.active
+        ? BALANCE.boostBrakeMultiplier
+        : BALANCE.normalBrakeMultiplier
+      : 1;
+    boat.speed += travel * BALANCE.horizontalThrust * thrustMultiplier * brakeMultiplier * safeDt;
   } else {
     boat.speed *= Math.max(0, 1 - BALANCE.waterDrag * safeDt);
   }
@@ -353,7 +362,7 @@ export function startFishing(simulation: Simulation, spotId: SpotId): boolean {
           x: 0.12 + ((index * 0.153) % 0.76),
           y: homeY,
           direction: index % 2 === 0 ? 1 : -1,
-          speed: 0.035 + fish.depthTier * 0.006 + simulation.random.next() * 0.025,
+          speed: 0.048 + fish.depthTier * 0.0075 + simulation.random.next() * 0.032,
           homeY,
           phase: (index * 1.73 + fish.depthTier * 0.61) % (Math.PI * 2),
         };
@@ -388,7 +397,7 @@ export function acceptAvailableContract(simulation: Simulation): boolean {
   simulation.routeChoice = null;
   simulation.deliveryStartedAt = null;
   simulation.lastDeliveryResult = null;
-  if (simulation.cargo.some((item) => item.species === simulation.activeContract?.species)) {
+  if (hasRequiredCatchCount(simulation, simulation.activeContract)) {
     chooseRoute(simulation, "fast");
   }
   return true;
@@ -397,26 +406,26 @@ export function acceptAvailableContract(simulation: Simulation): boolean {
 export function deliverContract(simulation: Simulation): number | null {
   const contract = simulation.activeContract;
   if (!contract || !simulation.routeChoice || simulation.dockedAt !== contract.destination) return null;
-  const cargoIndex = simulation.cargo.findIndex(
-    (item) => item.species === contract.species && item.freshness >= contract.minimumFreshness,
+  const selectedCargo = matchingCargo(simulation, contract).slice(0, contract.quantity);
+  if (selectedCargo.length < contract.quantity) return null;
+  const metFreshnessRequirement = selectedCargo.every(
+    ({ item }) => item.freshness >= contract.minimumFreshness,
   );
-  if (cargoIndex < 0) return null;
-  const item = simulation.cargo[cargoIndex];
-  if (!item) return null;
-  const freshnessRange = Math.max(1, 100 - contract.minimumFreshness);
-  const freshnessFactor = clamp((item.freshness - contract.minimumFreshness) / freshnessRange, 0, 1);
-  const basePayment = Math.floor(contract.reward * (0.45 + freshnessFactor * 0.55));
-  const payment = basePayment;
+  const payment = metFreshnessRequirement ? contract.reward : contract.reducedReward;
   const travelSeconds = Math.max(0, simulation.elapsed - (simulation.deliveryStartedAt ?? simulation.elapsed));
   const predictedFreshness = predictedFreshnessForRoute(simulation.routeChoice ?? "safe", contract, simulation.progress.upgrades.engine);
-  simulation.cargo.splice(cargoIndex, 1);
+  const actualFreshness = selectedCargo.reduce((sum, { item }) => sum + item.freshness, 0) / selectedCargo.length;
+  for (const { index } of [...selectedCargo].sort((first, second) => second.index - first.index)) {
+    simulation.cargo.splice(index, 1);
+  }
   simulation.progress.money += payment;
   simulation.progress.completedContracts += 1;
   simulation.lastDeliveryResult = {
     payment,
+    metFreshnessRequirement,
     route: simulation.routeChoice ?? "safe",
     predictedFreshness,
-    actualFreshness: Math.round(item.freshness),
+    actualFreshness: Math.round(actualFreshness),
     travelSeconds: Math.round(travelSeconds),
   };
   simulation.activeContract = null;
@@ -434,7 +443,7 @@ export function deliverContract(simulation: Simulation): number | null {
 export function chooseRoute(simulation: Simulation, choice: RouteChoice): boolean {
   const contract = simulation.activeContract;
   if (!contract || simulation.routeChoice) return false;
-  if (!simulation.cargo.some((item) => item.species === contract.species)) return false;
+  if (!hasRequiredCatchCount(simulation, contract)) return false;
   simulation.routeChoice = choice;
   simulation.deliveryStartedAt = simulation.elapsed;
   simulation.progress.learning.routePlans += 1;
@@ -596,8 +605,9 @@ export function fogIntensity(simulation: Simulation): number {
 }
 
 export function navigationGuidance(simulation: Simulation): NavigationGuidance {
+  const contract = simulation.activeContract;
   const totalUpgradeTiers = Object.values(simulation.progress.upgrades).reduce((sum, tier) => sum + tier, 0);
-  if (simulation.progress.completedContracts > 0 && totalUpgradeTiers === 0) {
+  if (!contract && simulation.progress.completedContracts > 0 && totalUpgradeTiers === 0) {
     const harbor = harborById(simulation.availableContract?.origin ?? closestHarbor(simulation).id);
     return {
       point: harbor,
@@ -607,7 +617,6 @@ export function navigationGuidance(simulation: Simulation): NavigationGuidance {
     };
   }
 
-  const contract = simulation.activeContract;
   if (!contract) {
     const harbor = simulation.availableContract
       ? harborById(simulation.availableContract.origin)
@@ -650,11 +659,17 @@ export function navigationGuidance(simulation: Simulation): NavigationGuidance {
   }
 
   const spot = spotById(contract.spot);
-  const spoiledCatch = simulation.cargo.some((item) => item.species === contract.species);
+  const caught = matchingCargo(simulation, contract).length;
+  const remaining = contract.quantity - caught;
+  const spoiledCatch = simulation.cargo.some(
+    (item) => item.species === contract.species && item.freshness <= 0,
+  );
   const prompt = getInteractionPrompt(simulation);
   const catchAction = spoiledCatch
-    ? `catch a fresher ${fish.name}; the current catch is below ${contract.minimumFreshness}%`
-    : `catch a ${fish.name}`;
+    ? `replace the spoiled ${fish.name}; ${remaining} still required`
+    : remaining === 1
+      ? `catch a ${fish.name}`
+      : `catch ${remaining} ${fish.name} specimens`;
   const instruction = prompt?.kind === "fishing" && prompt.spot === spot.id
     ? prompt.enabled
       ? `Drop the line at ${spot.name} and ${catchAction}.`
@@ -737,7 +752,7 @@ function updateFishing(simulation: Simulation, input: InputState, dt: number): v
   fishing.hook.y = clamp(fishing.hook.y + input.hookY * verticalSpeed * dt, 0.07, maxFishingDepth(simulation));
   for (const [targetIndex, target] of fishing.targets.entries()) {
     const motion = fishingSpeciesMotion(target.species, simulation.elapsed, target.phase);
-    target.x += target.speed * motion.horizontalMultiplier * target.direction * dt;
+    target.x += target.speed * motion.horizontalMultiplier * target.direction * motion.heading * dt;
     target.y = clamp(target.homeY + motion.depthOffset, 0.1, 0.92);
     if (target.x < 0.1 || target.x > 0.9) {
       target.x = clamp(target.x, 0.1, 0.9);
@@ -749,11 +764,15 @@ function updateFishing(simulation: Simulation, input: InputState, dt: number): v
         species: target.species,
         targetIndex,
         hookedAt: simulation.elapsed,
-        direction: target.direction,
+        direction: multiplyDirection(target.direction, motion.heading),
       };
       return;
     }
   }
+}
+
+function multiplyDirection(first: -1 | 1, second: -1 | 1): -1 | 1 {
+  return first === second ? 1 : -1;
 }
 
 function ageCargo(simulation: Simulation, dt: number): void {
@@ -791,28 +810,36 @@ function rescue(simulation: Simulation): void {
 
 function createAvailableContract(simulation: Simulation, origin: HarborId): Contract | null {
   if (simulation.progress.completedContracts === 0) {
+    const minimumFreshness = attainableFreshnessTarget(
+      "sunwardShoal",
+      "gloam",
+      1,
+      BALANCE.contractFreshnessMinimum,
+      simulation.progress.upgrades.engine,
+    );
     return {
       id: "morning-order",
       title: "The Morning Order",
-      species: "reedfin",
+      species: "bluegill",
       origin: "brindle",
       destination: "gloam",
       spot: "sunwardShoal",
-      reward: 90,
-      minimumFreshness: 35,
+      quantity: 1,
+      ...calculateContractPayouts("bluegill", 1, minimumFreshness),
+      minimumFreshness,
     };
   }
   const destination: HarborId = origin === "brindle" ? "gloam" : "brindle";
   const spotForSpecies: Record<FishSpecies, SpotId> = {
-    reedfin: "sunwardShoal",
-    sunPerch: "sunwardShoal",
-    silverDart: "sunwardShoal",
-    needlePike: "mosswaterPool",
-    mossback: "mosswaterPool",
-    lanternEel: "mosswaterPool",
-    gloamGill: "outerGloam",
-    violetRay: "outerGloam",
-    abyssCrown: "outerGloam",
+    bluegill: "sunwardShoal",
+    yellowPerch: "sunwardShoal",
+    emeraldShiner: "sunwardShoal",
+    northernPike: "mosswaterPool",
+    largemouthBass: "mosswaterPool",
+    bowfin: "mosswaterPool",
+    lakeTrout: "outerGloam",
+    burbot: "outerGloam",
+    lakeSturgeon: "outerGloam",
   };
   const availableSpecies = (Object.keys(FISH) as FishSpecies[]).filter((candidate) => {
     const fish = FISH[candidate];
@@ -823,6 +850,19 @@ function createAvailableContract(simulation: Simulation, origin: HarborId): Cont
   if (availableSpecies.length === 0) return null;
   const species = availableSpecies[simulation.progress.completedContracts % availableSpecies.length];
   if (!species) return null;
+  const quantity = Math.min(cargoCapacity(simulation), 1 + (simulation.progress.completedContracts % 3));
+  const desiredFreshness = Math.min(
+    BALANCE.contractFreshnessMaximum,
+    BALANCE.contractFreshnessMinimum
+      + (simulation.progress.completedContracts % 4) * BALANCE.contractFreshnessStep,
+  );
+  const minimumFreshness = attainableFreshnessTarget(
+    spotForSpecies[species],
+    destination,
+    quantity,
+    desiredFreshness,
+    simulation.progress.upgrades.engine,
+  );
   return {
     id: `route-${simulation.progress.completedContracts + 1}`,
     title: FISH[species].depthTier >= 3 ? "A Light in Deep Water" : "Harbor Trade",
@@ -830,15 +870,60 @@ function createAvailableContract(simulation: Simulation, origin: HarborId): Cont
     origin,
     destination,
     spot: spotForSpecies[species],
-    reward: FISH[species].value * 2 + 34,
-    minimumFreshness: 28 + (simulation.progress.completedContracts % 3) * 8,
+    quantity,
+    ...calculateContractPayouts(species, quantity, minimumFreshness),
+    minimumFreshness,
   };
 }
 
-function hasDeliverableCatch(simulation: Simulation, contract: Contract): boolean {
-  return simulation.cargo.some(
-    (item) => item.species === contract.species && item.freshness >= contract.minimumFreshness,
+function attainableFreshnessTarget(
+  spot: SpotId,
+  destination: HarborId,
+  quantity: number,
+  desiredFreshness: number,
+  engineTier: number,
+): number {
+  const fastArrivalFreshness = estimateRoute({ spot, destination }, engineTier).fastArrivalFreshness;
+  const safetyMargin = BALANCE.contractRouteSafetyMargin
+    + Math.max(0, quantity - 1) * BALANCE.contractAdditionalFishSafetyMargin;
+  const attainableTarget = Math.floor(
+    (fastArrivalFreshness - safetyMargin) / BALANCE.contractFreshnessStep,
+  ) * BALANCE.contractFreshnessStep;
+  return Math.max(
+    BALANCE.contractFreshnessStep,
+    Math.min(desiredFreshness, attainableTarget),
   );
+}
+
+function hasDeliverableCatch(simulation: Simulation, contract: Contract): boolean {
+  return hasRequiredCatchCount(simulation, contract);
+}
+
+function hasRequiredCatchCount(simulation: Simulation, contract: Contract): boolean {
+  return matchingCargo(simulation, contract).length >= contract.quantity;
+}
+
+function matchingCargo(
+  simulation: Simulation,
+  contract: Contract,
+): Array<{ index: number; item: CargoItem }> {
+  return simulation.cargo
+    .map((item, index) => ({ index, item }))
+    .filter(({ item }) => item.species === contract.species && item.freshness > 0)
+    .sort((first, second) => second.item.freshness - first.item.freshness);
+}
+
+export function calculateContractPayouts(
+  species: FishSpecies,
+  quantity: number,
+  minimumFreshness: number,
+): Pick<Contract, "reward" | "reducedReward"> {
+  const scaledValue = (FISH[species].value + 25) * quantity * (1 + minimumFreshness / 100);
+  const reward = Math.max(5, Math.round(scaledValue / 5) * 5);
+  return {
+    reward,
+    reducedReward: Math.max(1, Math.round(reward * 0.25)),
+  };
 }
 
 function closestHarbor(simulation: Simulation): (typeof HARBORS)[number] {
@@ -872,12 +957,15 @@ function deliveryInstruction(
 ): string {
   const prompt = getInteractionPrompt(simulation);
   const fishName = FISH[contract.species].name;
+  const cargoDescription = contract.quantity === 1
+    ? `the ${fishName}`
+    : `${contract.quantity} ${fishName} specimens`;
   if (prompt?.kind === "harbor" && prompt.harbor === harbor.id) {
     return prompt.enabled
-      ? `Dock at ${harbor.name} and deliver the ${fishName}.`
-      : `Slow down to dock at ${harbor.name}, then deliver the ${fishName}.`;
+      ? `Dock at ${harbor.name} and deliver ${cargoDescription}.`
+      : `Slow down to dock at ${harbor.name}, then deliver ${cargoDescription}.`;
   }
-  return `Head ${horizontalDirection(simulation.boat.x, harbor.x)} to ${harbor.name}. Keep the ${fishName} above ${contract.minimumFreshness}% freshness.`;
+  return `Head ${horizontalDirection(simulation.boat.x, harbor.x)} to ${harbor.name}. Keep every ${fishName} above ${contract.minimumFreshness}% freshness.`;
 }
 
 function nearestHorizontal<T extends WorldPoint>(x: number, choices: readonly T[], radius: number): T | null {

@@ -1,13 +1,13 @@
 export type FishSpecies =
-  | "reedfin"
-  | "sunPerch"
-  | "silverDart"
-  | "needlePike"
-  | "mossback"
-  | "lanternEel"
-  | "gloamGill"
-  | "violetRay"
-  | "abyssCrown";
+  | "bluegill"
+  | "yellowPerch"
+  | "emeraldShiner"
+  | "northernPike"
+  | "largemouthBass"
+  | "bowfin"
+  | "lakeTrout"
+  | "burbot"
+  | "lakeSturgeon";
 export type HarborId = "brindle" | "gloam";
 export type SpotId = "sunwardShoal" | "mosswaterPool" | "outerGloam";
 export type UpgradeId = "cargo" | "engine" | "lamp" | "line";
@@ -60,9 +60,16 @@ export interface RegionDefinition {
 
 export const BALANCE = {
   horizontalThrust: 0.034,
+  normalBrakeMultiplier: 1.15,
+  boostBrakeMultiplier: 1.25,
   maxSurfaceSpeed: 0.05,
   waterDrag: 0.62,
   freshnessLifetime: 150,
+  contractFreshnessMinimum: 80,
+  contractFreshnessMaximum: 95,
+  contractFreshnessStep: 5,
+  contractRouteSafetyMargin: 4,
+  contractAdditionalFishSafetyMargin: 2,
   routeDistanceScaleKm: 18,
   routeFreshnessLossPerMinute: 2 / 3,
   safeRouteSpeedMultiplier: 0.92,
@@ -106,27 +113,27 @@ export const HARBORS: readonly HarborDefinition[] = [
 ];
 
 export const FISH: Record<FishSpecies, FishDefinition> = {
-  reedfin: { id: "reedfin", name: "Reedfin", shape: "Round body · fan fins", value: 18, depthTier: 0, atlasCell: [0, 0], hue: 0, scale: 0.86, rarity: "common" },
-  sunPerch: { id: "sunPerch", name: "Sun Perch", shape: "Tall body · bright crest", value: 22, depthTier: 0, atlasCell: [1, 0], hue: 0, scale: 0.78, rarity: "common" },
-  silverDart: { id: "silverDart", name: "Silver Dart", shape: "Slim body · split tail", value: 26, depthTier: 0, atlasCell: [2, 0], hue: 0, scale: 0.82, rarity: "common" },
-  needlePike: { id: "needlePike", name: "Needle Pike", shape: "Long body · pointed snout", value: 34, depthTier: 1, atlasCell: [0, 1], hue: 0, scale: 0.96, rarity: "uncommon" },
-  mossback: { id: "mossback", name: "Mossback", shape: "Heavy hump · leaf fins", value: 46, depthTier: 2, atlasCell: [1, 1], hue: 0, scale: 1.02, rarity: "uncommon" },
-  lanternEel: { id: "lanternEel", name: "Lantern Eel", shape: "Snake body · glowing lure", value: 58, depthTier: 2, atlasCell: [2, 1], hue: 0, scale: 1.04, rarity: "uncommon" },
-  gloamGill: { id: "gloamGill", name: "Gloam Gill", shape: "Fork tail · eye mark", value: 72, depthTier: 3, atlasCell: [0, 2], hue: 0, scale: 1.02, rarity: "rare" },
-  violetRay: { id: "violetRay", name: "Violet Ray", shape: "Wing fins · ribbon tail", value: 92, depthTier: 4, atlasCell: [1, 2], hue: 0, scale: 1.14, rarity: "rare" },
-  abyssCrown: { id: "abyssCrown", name: "Abyss Crown", shape: "Crowned head · pale eye", value: 125, depthTier: 5, atlasCell: [2, 2], hue: 0, scale: 1.22, rarity: "legendary" },
+  bluegill: { id: "bluegill", name: "Bluegill", shape: "Deep body · dark ear flap", value: 18, depthTier: 0, atlasCell: [0, 0], hue: 0, scale: 0.86, rarity: "common" },
+  yellowPerch: { id: "yellowPerch", name: "Yellow Perch", shape: "Golden flank · dark bars", value: 22, depthTier: 0, atlasCell: [1, 0], hue: 0, scale: 0.82, rarity: "common" },
+  emeraldShiner: { id: "emeraldShiner", name: "Emerald Shiner", shape: "Silver body · forked tail", value: 28, depthTier: 0, atlasCell: [2, 0], hue: 0, scale: 0.76, rarity: "uncommon" },
+  northernPike: { id: "northernPike", name: "Northern Pike", shape: "Long body · duckbill snout", value: 38, depthTier: 1, atlasCell: [0, 1], hue: 0, scale: 1, rarity: "uncommon" },
+  largemouthBass: { id: "largemouthBass", name: "Largemouth Bass", shape: "Heavy jaw · dark side band", value: 48, depthTier: 2, atlasCell: [1, 1], hue: 0, scale: 1.02, rarity: "uncommon" },
+  bowfin: { id: "bowfin", name: "Bowfin", shape: "Long dorsal fin · rounded tail", value: 62, depthTier: 2, atlasCell: [2, 1], hue: 0, scale: 1.06, rarity: "rare" },
+  lakeTrout: { id: "lakeTrout", name: "Lake Trout", shape: "Pale spots · forked tail", value: 74, depthTier: 3, atlasCell: [0, 2], hue: 0, scale: 1.04, rarity: "rare" },
+  burbot: { id: "burbot", name: "Burbot", shape: "Mottled body · chin barbel", value: 94, depthTier: 4, atlasCell: [1, 2], hue: 0, scale: 1.12, rarity: "rare" },
+  lakeSturgeon: { id: "lakeSturgeon", name: "Lake Sturgeon", shape: "Bony scutes · four barbels", value: 128, depthTier: 5, atlasCell: [2, 2], hue: 0, scale: 1.24, rarity: "legendary" },
 };
 
 export const FISHING_SPOTS: readonly FishingSpotDefinition[] = [
-  { id: "sunwardShoal", name: "Sunward Shoal", species: "reedfin", requiresPermit: false, requiredDepthTier: 0, region: "brindleCoast", x: 0.18, y: SURFACE_Y },
-  { id: "mosswaterPool", name: "Mosswater Pool", species: "mossback", requiresPermit: false, requiredDepthTier: 1, region: "mosswaterReach", x: 0.5, y: SURFACE_Y },
-  { id: "outerGloam", name: "Outer Gloam", species: "gloamGill", requiresPermit: true, requiredDepthTier: 3, region: "violetGloam", x: 0.82, y: SURFACE_Y },
+  { id: "sunwardShoal", name: "Sunward Shoal", species: "bluegill", requiresPermit: false, requiredDepthTier: 0, region: "brindleCoast", x: 0.18, y: SURFACE_Y },
+  { id: "mosswaterPool", name: "Mosswater Pool", species: "largemouthBass", requiresPermit: false, requiredDepthTier: 1, region: "mosswaterReach", x: 0.5, y: SURFACE_Y },
+  { id: "outerGloam", name: "Outer Gloam", species: "lakeTrout", requiresPermit: true, requiredDepthTier: 3, region: "violetGloam", x: 0.82, y: SURFACE_Y },
 ];
 
 export const SPOT_RESIDENTS: Record<SpotId, readonly FishSpecies[]> = {
-  sunwardShoal: ["reedfin", "sunPerch", "silverDart"],
-  mosswaterPool: ["needlePike", "mossback", "lanternEel"],
-  outerGloam: ["gloamGill", "violetRay", "abyssCrown"],
+  sunwardShoal: ["bluegill", "yellowPerch", "emeraldShiner"],
+  mosswaterPool: ["northernPike", "largemouthBass", "bowfin"],
+  outerGloam: ["lakeTrout", "burbot", "lakeSturgeon"],
 };
 
 export const REGIONS: readonly RegionDefinition[] = [

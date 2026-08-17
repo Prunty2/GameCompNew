@@ -63,7 +63,6 @@ import {
   resolveCatch,
   shouldShowNightIndicator,
   startFishing,
-  tutorialPrompt,
   travelToWorld,
   undock,
   unlockBoostForTesting,
@@ -79,11 +78,11 @@ const MAX_FRAME = 0.05;
 const UI_REFRESH_INTERVAL = 100;
 const HELP_STEP_COUNT = 4;
 const PAUSE_EXIT_DURATION = 340;
-const SETTINGS_EXIT_DURATION = 340;
+const MENU_EXIT_DURATION = 340;
 const SCENE_COVER_DURATION = 120;
 const SCENE_REVEAL_DURATION = 160;
-const DELIVERY_SUCCESS_DURATION = 4_000;
-const DELIVERY_SUCCESS_EXIT_DURATION = 280;
+const DELIVERY_NOTIFICATION_DURATION = 4_000;
+const DELIVERY_NOTIFICATION_EXIT_DURATION = 280;
 
 const DOCK_BACKGROUND_URL: Record<HarborId, { day: string; night: string }> = {
   brindle: { day: brindleDockDayUrl, night: brindleDockNightUrl },
@@ -95,6 +94,7 @@ type OverlayScreen =
   | "harbor"
   | "pause"
   | "settings"
+  | "credits"
   | "controls"
   | "help"
   | "seasonReport"
@@ -142,18 +142,17 @@ export class Game {
   private harborSection: HarborSection = "delivery";
   private helpStep = 0;
   private toastTimer: number | undefined;
-  private deliverySuccessTimer: number | undefined;
-  private deliverySuccessExitTimer: number | undefined;
-  private tutorialDismissTimer: number | undefined;
+  private deliveryNotificationTimer: number | undefined;
+  private deliveryNotificationExitTimer: number | undefined;
+  private deliveryAcceptedRevealTimer: number | undefined;
   private pauseTransitionTimer: number | undefined;
-  private settingsTransitionTimer: number | undefined;
+  private menuTransitionTimer: number | undefined;
   private cargoUpgradeTransitionTimer: number | undefined;
   private cargoReleaseTimer: number | undefined;
   private pendingCargoRelease: { item: CargoItem; index: number } | null = null;
   private sceneTransitioning = false;
   private sceneTransitionTarget: OverlayScreen | undefined;
   private queuedOverlay: { next: OverlayScreen; useSceneTransition: boolean } | null = null;
-  private dismissedTutorialText: string | null = null;
   private seasonReportQueued = false;
   private readonly visualTestSpot = import.meta.env.DEV
     ? new URLSearchParams(window.location.search).get("e2eSpot") as SpotId | null
@@ -242,7 +241,7 @@ export class Game {
     this.renderer.render(this.simulation, {
       ...this.save.settings,
       cinematic: this.overlay === "title"
-        || (this.overlay === "settings" || this.overlay === "controls") && this.overlayReturn === "title",
+        || (this.overlay === "settings" || this.overlay === "controls" || this.overlay === "credits") && this.overlayReturn === "title",
     });
     this.syncContextActionAnchor();
     if (time - this.lastUiRefresh >= UI_REFRESH_INTERVAL) {
@@ -264,15 +263,11 @@ export class Game {
           <small>SHIFT</small>
         </div>
         <p class="visually-hidden navigation-status" role="status" aria-live="polite"></p>
-        <button class="tutorial-callout" id="tutorial-callout" type="button" data-action="dismiss-tutorial" title="Dismiss instruction" hidden>
-          <span class="tutorial-label" aria-hidden="true">Next</span>
-          <span class="tutorial-message" aria-live="polite"></span>
-        </button>
         <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
-        <section class="delivery-success" id="delivery-success" role="status" aria-live="polite" aria-atomic="true" hidden>
+        <section class="delivery-success" id="delivery-notification" role="status" aria-live="polite" aria-atomic="true" hidden>
           <span class="delivery-success-seal" aria-hidden="true">✓</span>
-          <strong>Delivery Success</strong>
-          <button class="delivery-success-close" type="button" data-action="dismiss-delivery-success" aria-label="Close delivery success notification">
+          <strong></strong>
+          <button class="delivery-success-close" type="button" data-action="dismiss-delivery-notification">
             <span aria-hidden="true">×</span>
           </button>
         </section>
@@ -415,24 +410,6 @@ export class Game {
   private refreshHud(): void {
     const simulation = this.simulation;
 
-    const tutorial = this.uiRoot.querySelector<HTMLElement>("#tutorial-callout");
-    const tutorialText = tutorialPrompt(simulation);
-    if (tutorial) {
-      if (this.dismissedTutorialText && tutorialText !== this.dismissedTutorialText) {
-        this.dismissedTutorialText = null;
-      }
-      const tutorialMessage = tutorial.querySelector<HTMLElement>(".tutorial-message");
-      if (tutorialMessage) tutorialMessage.textContent = tutorialText ?? "";
-      const shouldShow = Boolean(tutorialText) && this.overlay === null && tutorialText !== this.dismissedTutorialText;
-      if (shouldShow) {
-        window.clearTimeout(this.tutorialDismissTimer);
-        tutorial.classList.remove("is-dismissing");
-        tutorial.hidden = false;
-      } else if (!tutorial.classList.contains("is-dismissing")) {
-        tutorial.hidden = true;
-      }
-    }
-
     const guidance = navigationGuidance(simulation);
     const navigationStatus = this.uiRoot.querySelector<HTMLElement>(".navigation-status");
     const navigationStatusText = this.overlay === null && simulation.mode === "cruising"
@@ -522,6 +499,9 @@ export class Game {
       case "settings":
         host.innerHTML = this.settingsScreen();
         break;
+      case "credits":
+        host.innerHTML = this.creditsScreen();
+        break;
       case "controls":
         host.innerHTML = this.controlsScreen();
         break;
@@ -535,7 +515,9 @@ export class Game {
   }
 
   private titleScreen(): string {
-    const returnClass = this.overlaySource === "settings" ? " is-settings-return" : "";
+    const returnClass = this.overlaySource === "settings" || this.overlaySource === "credits"
+      ? " is-settings-return"
+      : "";
     return `
       <section class="screen-overlay title-screen${returnClass}" role="dialog" aria-label="FSHING main menu">
         <div class="title-panel">
@@ -545,7 +527,10 @@ export class Game {
               <span class="title-play-icon" aria-hidden="true">▶</span>
               <strong>Play</strong>
             </button>
-            <button class="menu-button title-settings-button" type="button" data-action="open-settings"><strong>Settings</strong></button>
+            <div class="title-secondary-actions">
+              <button class="menu-button title-settings-button" type="button" data-action="open-settings"><strong>Settings</strong></button>
+              <button class="menu-button title-credits-button" type="button" data-action="open-credits"><strong>Credits</strong></button>
+            </div>
           </div>
         </div>
         <small class="title-build-version">v${__APP_VERSION__} (PR #${__PR_NUMBER__})</small>
@@ -557,14 +542,17 @@ export class Game {
     const harbor = harborById(harborId);
     const contract = this.simulation.activeContract;
     const available = this.simulation.availableContract?.origin === harborId ? this.simulation.availableContract : null;
-    const matchingCatch = contract
-      ? this.simulation.cargo.some((item) => item.species === contract.species)
-      : false;
+    const matchingCatchCount = contract
+      ? this.simulation.cargo.filter((item) => item.species === contract.species && item.freshness > 0).length
+      : 0;
+    const matchingCatch = contract ? matchingCatchCount >= contract.quantity : false;
     const freshCatch = contract
-      ? this.simulation.cargo.some((item) => item.species === contract.species && item.freshness >= contract.minimumFreshness)
+      ? this.simulation.cargo.filter(
+        (item) => item.species === contract.species && item.freshness >= contract.minimumFreshness,
+      ).length >= contract.quantity
       : false;
     const deliverable = contract?.destination === harborId
-      && freshCatch;
+      && matchingCatch;
     const isFirstJobOffer = this.simulation.progress.completedContracts === 0 && available?.id === "morning-order";
     const showCargo = !isFirstJobOffer;
     const showServices = !isFirstJobOffer;
@@ -574,11 +562,11 @@ export class Game {
       ? `<div class="contract-card job-ticket ${isFirstJobOffer ? "is-guided" : ""}">
           <div class="job-ticket-heading">
             <div>${isFirstJobOffer ? "" : `<span class="card-kicker">Your next job</span>`}<h3>${isFirstJobOffer ? "First Assignment" : available.title}</h3></div>
-            <span class="reward-stamp" aria-label="Reward: ${available.reward} shells"><span class="reward-label">Reward</span><span class="reward-value"><span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${available.reward}</strong></span></span>
+            <span class="reward-stamp" aria-label="Reward: ${available.reward} shells; reduced payout: ${available.reducedReward} shells"><span class="reward-label">Reward</span><span class="reward-value"><span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${available.reward}</strong></span></span>
           </div>
           <ol class="job-route" aria-label="Job steps">
-            <li><span class="job-route-number" aria-hidden="true">01</span><div class="job-route-copy"><small>Catch</small>${this.targetFishIcon(available.species)}<strong>${FISH[available.species].name}</strong><span class="job-route-detail">1 required</span></div></li>
-            <li><span class="job-route-number" aria-hidden="true">02</span><div class="job-route-copy"><small>Freshness</small><img class="job-route-icon job-route-freshness-icon" src="${freshnessFishIconUrl}" alt="" aria-hidden="true" /><strong>Every fish</strong><span class="job-route-detail">${available.minimumFreshness}%+</span></div></li>
+            <li><span class="job-route-number" aria-hidden="true">01</span><div class="job-route-copy"><small>Catch</small>${this.targetFishIcon(available.species)}<strong>${FISH[available.species].name}</strong><span class="job-route-detail">${available.quantity} required</span></div></li>
+            <li><span class="job-route-number" aria-hidden="true">02</span><div class="job-route-copy"><small>Freshness</small><img class="job-route-icon job-route-freshness-icon" src="${freshnessFishIconUrl}" alt="" aria-hidden="true" /><strong>Freshness ${available.minimumFreshness}%+</strong></div></li>
             <li><span class="job-route-number" aria-hidden="true">03</span><div class="job-route-copy"><small>Deliver</small><img class="job-route-icon job-route-deliver-icon" src="${deliverBeaconIconUrl}" alt="" aria-hidden="true" /><strong>${harborById(available.destination).name}</strong></div></li>
           </ol>
           <button class="primary-button mission-button" type="button" data-action="accept-contract" aria-label="Accept contract">
@@ -590,12 +578,12 @@ export class Game {
             <span class="card-kicker">${deliverable ? "Ready to hand in" : "Job in progress"}</span>
             <h3>${contract.title}</h3>
             <ol class="job-route" aria-label="Job steps">
-              <li class="${matchingCatch ? "is-complete" : "is-current"}"><span class="job-route-number" aria-hidden="true">${matchingCatch ? "✓" : "01"}</span><div class="job-route-copy"><small>Catch</small>${this.targetFishIcon(contract.species)}<strong>${FISH[contract.species].name}</strong><span class="job-route-detail">1 required</span></div></li>
-              <li class="${freshCatch ? "is-complete" : matchingCatch ? "is-current" : ""}"><span class="job-route-number" aria-hidden="true">${freshCatch ? "✓" : "02"}</span><div class="job-route-copy"><small>Freshness</small><img class="job-route-icon job-route-freshness-icon" src="${freshnessFishIconUrl}" alt="" aria-hidden="true" /><strong>Every fish</strong><span class="job-route-detail">${contract.minimumFreshness}%+</span></div></li>
+              <li class="${matchingCatch ? "is-complete" : "is-current"}"><span class="job-route-number" aria-hidden="true">${matchingCatch ? "✓" : "01"}</span><div class="job-route-copy"><small>Catch</small>${this.targetFishIcon(contract.species)}<strong>${FISH[contract.species].name}</strong><span class="job-route-detail">${matchingCatchCount}/${contract.quantity} secured</span></div></li>
+              <li class="${freshCatch ? "is-complete" : matchingCatch ? "is-current" : ""}"><span class="job-route-number" aria-hidden="true">${freshCatch ? "✓" : "02"}</span><div class="job-route-copy"><small>Freshness</small><img class="job-route-icon job-route-freshness-icon" src="${freshnessFishIconUrl}" alt="" aria-hidden="true" /><strong>Freshness ${contract.minimumFreshness}%+</strong></div></li>
               <li class="${deliverable ? "is-current" : ""}"><span class="job-route-number" aria-hidden="true">03</span><div class="job-route-copy"><small>Deliver</small><img class="job-route-icon job-route-deliver-icon" src="${deliverBeaconIconUrl}" alt="" aria-hidden="true" /><strong>${harborById(contract.destination).name}</strong></div></li>
             </ol>
             ${contract.destination === harborId
-              ? `<button class="primary-button mission-button" type="button" data-action="deliver" ${deliverable ? "" : "disabled"}>${deliverable ? "<span><strong>Complete delivery</strong></span><b aria-hidden=\"true\">→</b>" : "Catch is missing or no longer fresh enough"}</button>`
+              ? `<button class="primary-button mission-button" type="button" data-action="deliver" ${deliverable ? "" : "disabled"}>${deliverable ? `<span><strong>${freshCatch ? "Complete delivery" : `Deliver for reduced ${contract.reducedReward}-shell payout`}</strong></span><b aria-hidden="true">→</b>` : `${contract.quantity - matchingCatchCount} required fish missing`}</button>`
               : `<p class="next-step"><span class="ui-icon icon-objective" aria-hidden="true"></span><span><strong>Next</strong> Leave the harbor and follow the marker to ${harborById(contract.destination).name}.</span></p>`}
           </div>`
         : `<div class="contract-card empty-job"><h3>No delivery job available</h3><p>Return to the lake and dock again to refresh the job board.</p></div>`;
@@ -628,7 +616,7 @@ export class Game {
         ? `<section class="services" aria-label="Dock services">
             <div class="service-grid">
               ${this.upgradeCard("cargo", "Cargo", "+1 cargo slot")}
-              ${this.upgradeCard("engine", "Engine", "+11% speed · stronger final tier")}
+              ${this.upgradeCard("engine", "Engine", "+11% speed")}
               ${this.upgradeCard("lamp", "Lamp", "Wider night view")}
               ${this.upgradeCard("line", "Line depth", "Next depth tier")}
               ${this.boostCard()}
@@ -763,6 +751,60 @@ export class Game {
       </section>`;
   }
 
+  private creditsScreen(): string {
+    const australianFlag = `
+      <span class="credit-flag" aria-hidden="true">
+        <span class="credit-flag-mast"></span>
+        <svg class="credit-flag-cloth" viewBox="0 0 72 44" focusable="false">
+          <path class="credit-flag-field" d="M2 3.5Q20 1 36 4t34-.5v34Q52 40 36 37.5T2 39Z" />
+          <g class="credit-flag-union">
+            <path d="M2 3.5Q18 2 35 3.8V21H2Z" fill="#092f6e" />
+            <path d="M2 4l33 17M35 4L2 21" stroke="#fff" stroke-width="5" />
+            <path d="M2 4l33 17M35 4L2 21" stroke="#e21d38" stroke-width="2" />
+            <path d="M18.5 3v18M2 12.5h33" stroke="#fff" stroke-width="6" />
+            <path d="M18.5 3v18M2 12.5h33" stroke="#e21d38" stroke-width="3" />
+          </g>
+          <g fill="#fff">
+            <polygon transform="translate(18 30) scale(.55)" points="0,-10 1.91,-3.96 7.82,-6.23 4.29,-.98 9.75,2.23 3.44,2.74 4.34,9.01 0,4.4 -4.34,9.01 -3.44,2.74 -9.75,2.23 -4.29,-.98 -7.82,-6.23 -1.91,-3.96" />
+            <polygon transform="translate(53 11) scale(.34)" points="0,-10 1.91,-3.96 7.82,-6.23 4.29,-.98 9.75,2.23 3.44,2.74 4.34,9.01 0,4.4 -4.34,9.01 -3.44,2.74 -9.75,2.23 -4.29,-.98 -7.82,-6.23 -1.91,-3.96" />
+            <polygon transform="translate(61 21) scale(.34)" points="0,-10 1.91,-3.96 7.82,-6.23 4.29,-.98 9.75,2.23 3.44,2.74 4.34,9.01 0,4.4 -4.34,9.01 -3.44,2.74 -9.75,2.23 -4.29,-.98 -7.82,-6.23 -1.91,-3.96" />
+            <polygon transform="translate(50 34) scale(.34)" points="0,-10 1.91,-3.96 7.82,-6.23 4.29,-.98 9.75,2.23 3.44,2.74 4.34,9.01 0,4.4 -4.34,9.01 -3.44,2.74 -9.75,2.23 -4.29,-.98 -7.82,-6.23 -1.91,-3.96" />
+            <polygon transform="translate(42 22) scale(.34)" points="0,-10 1.91,-3.96 7.82,-6.23 4.29,-.98 9.75,2.23 3.44,2.74 4.34,9.01 0,4.4 -4.34,9.01 -3.44,2.74 -9.75,2.23 -4.29,-.98 -7.82,-6.23 -1.91,-3.96" />
+            <polygon transform="translate(55 25) scale(.38)" points="0,-6 1.59,-2.18 5.71,-1.85 2.57,.83 3.53,4.85 0,2.7 -3.53,4.85 -2.57,.83 -5.71,-1.85 -1.59,-2.18" />
+          </g>
+        </svg>
+      </span>`;
+    return `
+      <section class="screen-overlay credits-overlay" role="dialog" aria-labelledby="credits-title">
+        <div class="credits-menu">
+          <img class="wordmark credits-wordmark" src="${wordmarkUrl}" alt="FSHING" />
+          <header class="credits-heading">
+            <h2 id="credits-title">Credits</h2>
+            <p>The crew behind FSHING</p>
+          </header>
+          <dl class="credits-list">
+            <div class="credit-entry">
+              <dt>${australianFlag}<span class="credit-name">Liam</span></dt>
+              <dd>Game Designer <span>/</span> Programmer <span>/</span> Gameplay Tester</dd>
+            </div>
+            <div class="credit-entry">
+              <dt>${australianFlag}<span class="credit-name">Saxon</span></dt>
+              <dd>Game Designer <span>/</span> Visual Designer <span>/</span> Gameplay Tester</dd>
+            </div>
+            <div class="credit-entry">
+              <dt>${australianFlag}<span class="credit-name">Harrison</span></dt>
+              <dd>Story Writer <span>/</span> Documentation <span>/</span> Gameplay Tester</dd>
+            </div>
+            <div class="credit-entry">
+              <dt>${australianFlag}<span class="credit-name">David</span></dt>
+              <dd>Audio Designer <span>/</span> Marine Specialist <span>/</span> Gameplay Tester</dd>
+            </div>
+          </dl>
+          <button class="primary-button credits-back" type="button" data-action="back"><span aria-hidden="true">←</span><strong>Back</strong></button>
+        </div>
+      </section>`;
+  }
+
   private controlsScreen(): string {
     const rows = CONTROL_ACTIONS.map((action) => {
       const copy = CONTROL_LABELS[action];
@@ -865,26 +907,28 @@ export class Game {
     if (next === this.overlay) return;
 
     if (
-      this.overlay === "settings"
+      (this.overlay === "settings" || this.overlay === "credits")
       && (next === "title" || next === "pause")
       && this.overlayReturn === next
       && !this.save.settings.reducedMotion
     ) {
-      if (this.settingsTransitionTimer !== undefined) return;
-      const settingsScreen = this.uiRoot.querySelector<HTMLElement>(".settings-overlay");
-      if (settingsScreen) {
-        settingsScreen.classList.add("is-closing", `is-closing-to-${next}`);
-        this.settingsTransitionTimer = window.setTimeout(() => {
-          this.settingsTransitionTimer = undefined;
+      if (this.menuTransitionTimer !== undefined) return;
+      const menuScreen = this.uiRoot.querySelector<HTMLElement>(
+        this.overlay === "settings" ? ".settings-overlay" : ".credits-overlay",
+      );
+      if (menuScreen) {
+        menuScreen.classList.add("is-closing", `is-closing-to-${next}`);
+        this.menuTransitionTimer = window.setTimeout(() => {
+          this.menuTransitionTimer = undefined;
           this.commitOverlay(next);
-        }, SETTINGS_EXIT_DURATION);
+        }, MENU_EXIT_DURATION);
         return;
       }
     }
 
-    if (this.settingsTransitionTimer !== undefined) {
-      window.clearTimeout(this.settingsTransitionTimer);
-      this.settingsTransitionTimer = undefined;
+    if (this.menuTransitionTimer !== undefined) {
+      window.clearTimeout(this.menuTransitionTimer);
+      this.menuTransitionTimer = undefined;
     }
 
     if (this.overlay === "pause" && next === null && !this.save.settings.reducedMotion) {
@@ -1068,31 +1112,63 @@ export class Game {
   }
 
   private showDeliverySuccess(): void {
-    const notification = this.uiRoot.querySelector<HTMLElement>("#delivery-success");
+    window.clearTimeout(this.deliveryAcceptedRevealTimer);
+    const result = this.simulation.lastDeliveryResult;
+    const message = result?.metFreshnessRequirement
+      ? `Delivery Success · ${result.payment} shells`
+      : result
+        ? `Freshness missed · Reduced payout ${result.payment} shells`
+        : "Delivery Success";
+    this.showDeliveryNotification(message, "Close delivery success notification");
+  }
+
+  private showDeliveryAccepted(): void {
+    window.clearTimeout(this.deliveryAcceptedRevealTimer);
+    const reveal = (): void => {
+      this.deliveryAcceptedRevealTimer = undefined;
+      this.showDeliveryNotification("Delivery Accepted", "Close delivery accepted notification");
+    };
+    if (this.save.settings.reducedMotion) {
+      reveal();
+      return;
+    }
+    this.deliveryAcceptedRevealTimer = window.setTimeout(
+      reveal,
+      SCENE_COVER_DURATION + SCENE_REVEAL_DURATION,
+    );
+  }
+
+  private showDeliveryNotification(message: string, closeLabel: string): void {
+    const notification = this.uiRoot.querySelector<HTMLElement>("#delivery-notification");
     if (!notification) return;
-    window.clearTimeout(this.deliverySuccessTimer);
-    window.clearTimeout(this.deliverySuccessExitTimer);
+    const notificationText = notification.querySelector<HTMLElement>("strong");
+    const closeButton = notification.querySelector<HTMLButtonElement>(".delivery-success-close");
+    if (notificationText) notificationText.textContent = message;
+    if (closeButton) closeButton.ariaLabel = closeLabel;
+    notification.classList.toggle("is-accepted", message === "Delivery Accepted");
+    window.clearTimeout(this.deliveryNotificationTimer);
+    window.clearTimeout(this.deliveryNotificationExitTimer);
     notification.hidden = false;
     notification.classList.remove("is-visible", "is-dismissing");
     void notification.offsetWidth;
     notification.classList.add("is-visible");
-    this.deliverySuccessTimer = window.setTimeout(
-      () => this.dismissDeliverySuccess(),
-      DELIVERY_SUCCESS_DURATION,
+    this.deliveryNotificationTimer = window.setTimeout(
+      () => this.dismissDeliveryNotification(),
+      DELIVERY_NOTIFICATION_DURATION,
     );
   }
 
-  private dismissDeliverySuccess(): void {
-    const notification = this.uiRoot.querySelector<HTMLElement>("#delivery-success");
+  private dismissDeliveryNotification(): void {
+    const notification = this.uiRoot.querySelector<HTMLElement>("#delivery-notification");
     if (!notification || notification.hidden) return;
-    window.clearTimeout(this.deliverySuccessTimer);
-    window.clearTimeout(this.deliverySuccessExitTimer);
+    window.clearTimeout(this.deliveryNotificationTimer);
+    window.clearTimeout(this.deliveryNotificationExitTimer);
     notification.classList.remove("is-visible");
     notification.classList.add("is-dismissing");
-    this.deliverySuccessExitTimer = window.setTimeout(() => {
+    this.deliveryNotificationExitTimer = window.setTimeout(() => {
       notification.hidden = true;
       notification.classList.remove("is-dismissing");
-    }, this.save.settings.reducedMotion ? 0 : DELIVERY_SUCCESS_EXIT_DURATION);
+    }, this.save.settings.reducedMotion ? 0 : DELIVERY_NOTIFICATION_EXIT_DURATION);
   }
 
   private readonly onClick = (event: MouseEvent): void => {
@@ -1101,26 +1177,14 @@ export class Game {
     const action = target.dataset.action;
     this.feedback.cue("ui");
     switch (action) {
-      case "dismiss-delivery-success":
-        this.dismissDeliverySuccess();
+      case "dismiss-delivery-notification":
+        this.dismissDeliveryNotification();
         break;
-      case "dismiss-tutorial": {
-        const tutorial = this.uiRoot.querySelector<HTMLButtonElement>("#tutorial-callout");
-        const message = tutorial?.querySelector<HTMLElement>(".tutorial-message")?.textContent;
-        if (!tutorial || !message) break;
-        window.clearTimeout(this.tutorialDismissTimer);
-        this.dismissedTutorialText = message;
-        tutorial.classList.add("is-dismissing");
-        this.tutorialDismissTimer = window.setTimeout(() => {
-          tutorial.hidden = true;
-          tutorial.classList.remove("is-dismissing");
-        }, this.save.settings.reducedMotion ? 0 : 280);
-        break;
-      }
       case "start": this.beginVoyage(); break;
       case "interact": this.handleInteract(); break;
       case "resume": this.setOverlay(null); break;
       case "open-settings": this.overlayReturn = this.overlay; this.setOverlay("settings"); break;
+      case "open-credits": this.overlayReturn = this.overlay; this.setOverlay("credits"); break;
       case "open-controls": this.setOverlay("controls"); break;
       case "close-controls": this.setOverlay("settings"); break;
       case "reset-controls":
@@ -1194,7 +1258,9 @@ export class Game {
       case "undock":
         this.dismissCargoReleaseToast();
         if (this.simulation.activeContract
-          && this.simulation.cargo.some((item) => item.species === this.simulation.activeContract?.species)
+          && this.simulation.cargo.filter(
+            (item) => item.species === this.simulation.activeContract?.species && item.freshness > 0,
+          ).length >= this.simulation.activeContract.quantity
           && !this.simulation.routeChoice) {
           chooseRoute(this.simulation, "fast");
         }
@@ -1213,7 +1279,7 @@ export class Game {
             }
           }
           this.setOverlay(null, true);
-          this.showToast("Contract accepted. Follow the shoal and drop your line.");
+          this.showDeliveryAccepted();
         }
         break;
       case "deliver":

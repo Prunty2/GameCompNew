@@ -14,17 +14,24 @@ describe("surface fishing-spot effects", () => {
     expect(cue.hookVisibility).toBe(0);
   });
 
-  it("reveals the hook from three times the interaction radius", () => {
+  it("smoothly fades the hook around its prominent and full-visibility ranges", () => {
     const radius = 0.027;
-    const outsideReveal = surfaceFishingCue(0.2 - radius * 3.01, 0.2, radius);
-    const revealEdge = surfaceFishingCue(0.2 - radius * 2.99, 0.2, radius);
+    const outsideFade = surfaceFishingCue(0.2 - radius * 5.01, 0.2, radius);
+    const fadeStart = surfaceFishingCue(0.2 - radius * 5, 0.2, radius);
+    const fading = surfaceFishingCue(0.2 - radius * 4.5, 0.2, radius);
+    const fadingFromOtherDirection = surfaceFishingCue(0.2 + radius * 4.5, 0.2, radius);
+    const prominentVisibilityEdge = surfaceFishingCue(0.2 - radius * 4, 0.2, radius);
+    const fullVisibilityEdge = surfaceFishingCue(0.2 - radius * 3, 0.2, radius);
     const interactionEdge = surfaceFishingCue(0.2 - radius, 0.2, radius);
 
-    expect(outsideReveal.lensVisibility).toBeGreaterThan(0);
-    expect(outsideReveal.hookVisibility).toBe(0);
-    expect(revealEdge.hookVisibility).toBeGreaterThanOrEqual(0.4);
-    expect(interactionEdge.hookVisibility).toBeGreaterThan(revealEdge.hookVisibility);
-    expect(interactionEdge.hookVisibility).toBeGreaterThan(0.8);
+    expect(outsideFade.hookVisibility).toBe(0);
+    expect(fadeStart.hookVisibility).toBe(0);
+    expect(fading.hookVisibility).toBeGreaterThan(0);
+    expect(fading.hookVisibility).toBeLessThan(0.65);
+    expect(fadingFromOtherDirection.hookVisibility).toBeCloseTo(fading.hookVisibility);
+    expect(prominentVisibilityEdge.hookVisibility).toBeCloseTo(0.65);
+    expect(fullVisibilityEdge.hookVisibility).toBe(1);
+    expect(interactionEdge.hookVisibility).toBe(1);
   });
 
   it("makes the lens and fish clearly strengthen during approach", () => {

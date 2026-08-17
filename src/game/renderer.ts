@@ -109,15 +109,15 @@ const SURFACE_FISH_CELLS = [
 ] as const;
 
 const FISH_SPRITE_CELLS: Record<FishSpecies, { sheet: SpotId; row: number }> = {
-  reedfin: { sheet: "sunwardShoal", row: 0 },
-  sunPerch: { sheet: "sunwardShoal", row: 1 },
-  silverDart: { sheet: "sunwardShoal", row: 2 },
-  needlePike: { sheet: "mosswaterPool", row: 0 },
-  mossback: { sheet: "mosswaterPool", row: 1 },
-  lanternEel: { sheet: "mosswaterPool", row: 2 },
-  gloamGill: { sheet: "outerGloam", row: 0 },
-  violetRay: { sheet: "outerGloam", row: 1 },
-  abyssCrown: { sheet: "outerGloam", row: 2 },
+  bluegill: { sheet: "sunwardShoal", row: 0 },
+  yellowPerch: { sheet: "sunwardShoal", row: 1 },
+  emeraldShiner: { sheet: "sunwardShoal", row: 2 },
+  northernPike: { sheet: "mosswaterPool", row: 0 },
+  largemouthBass: { sheet: "mosswaterPool", row: 1 },
+  bowfin: { sheet: "mosswaterPool", row: 2 },
+  lakeTrout: { sheet: "outerGloam", row: 0 },
+  burbot: { sheet: "outerGloam", row: 1 },
+  lakeSturgeon: { sheet: "outerGloam", row: 2 },
 };
 
 // Center of the visible hook-and-arc paint inside each 192 × 256 authored atlas cell.
@@ -191,9 +191,9 @@ export class CanvasRenderer {
       world,
     ]) => {
       const keyedFish: Record<SpotId, HTMLCanvasElement> = {
-        sunwardShoal: keyMagenta(sunwardFish, false),
-        mosswaterPool: keyMagenta(mosswaterFish, false),
-        outerGloam: keyMagenta(gloamFish, false),
+        sunwardShoal: keyMagenta(sunwardFish, false, true),
+        mosswaterPool: keyMagenta(mosswaterFish, false, true),
+        outerGloam: keyMagenta(gloamFish, false, true),
       };
       const tintedFish = (colour: string): Record<SpotId, HTMLCanvasElement> => ({
         sunwardShoal: tintAlpha(keyedFish.sunwardShoal, colour),
@@ -570,6 +570,7 @@ export class CanvasRenderer {
       if (fishing.reeling?.targetIndex === targetIndex) continue;
       const point = fishingPointToScreen(target, width, layout, maximumDepth);
       const pose = fishingFishPose(target.species, simulation.elapsed, target.phase, settings.reducedMotion);
+      const heading = target.direction === pose.heading ? 1 : -1;
       const animatedPoint = {
         x: point.x,
         y: point.y + pose.verticalOffsetRatio * layout.underwaterHeight,
@@ -578,12 +579,12 @@ export class CanvasRenderer {
       context.save();
       context.globalAlpha = (reachable ? 1 : 0.3) * schoolOpacity;
       context.translate(animatedPoint.x, animatedPoint.y);
-      context.rotate(pose.rotation * target.direction);
+      context.rotate(pose.rotation * heading);
       context.scale(pose.scaleX, pose.scaleY);
       if (target.species === targetSpecies) {
-        this.drawFishOutline(target.species, pose.animationFrame, { x: 0, y: 0 }, target.direction, width, height, settings.highContrast);
+        this.drawFishOutline(target.species, pose.animationFrame, { x: 0, y: 0 }, heading, width, height, settings.highContrast);
       }
-      this.drawFish(target.species, pose.animationFrame, { x: 0, y: 0 }, target.direction, width, height, settings.highContrast);
+      this.drawFish(target.species, pose.animationFrame, { x: 0, y: 0 }, heading, width, height, settings.highContrast);
       context.restore();
       if (target.species === targetSpecies) {
         context.save();
@@ -1357,11 +1358,21 @@ export class CanvasRenderer {
   private fishDimensions(species: FishSpecies, width: number, height: number): { fishWidth: number; fishHeight: number } {
     const fish = FISH[species];
     const scale = clamp(Math.min(width, height) * 0.105, 54, 92) * fish.scale;
-    const longBody = species === "needlePike" || species === "lanternEel";
-    const wideBody = species === "violetRay";
+    const proportions: Record<FishSpecies, readonly [number, number]> = {
+      bluegill: [1.05, 1],
+      yellowPerch: [1.14, 0.95],
+      emeraldShiner: [1.46, 0.72],
+      northernPike: [1.56, 0.7],
+      largemouthBass: [1.12, 0.96],
+      bowfin: [1.44, 0.76],
+      lakeTrout: [1.34, 0.82],
+      burbot: [1.46, 0.76],
+      lakeSturgeon: [1.56, 0.7],
+    };
+    const [widthRatio, heightRatio] = proportions[species];
     return {
-      fishWidth: scale * (longBody ? 1.42 : wideBody ? 1.24 : 1.08),
-      fishHeight: scale * (longBody ? 0.82 : wideBody ? 0.94 : 1),
+      fishWidth: scale * widthRatio,
+      fishHeight: scale * heightRatio,
     };
   }
 
@@ -1521,7 +1532,7 @@ function loadImage(source: string): Promise<HTMLImageElement> {
   });
 }
 
-function keyMagenta(image: HTMLImageElement, crop: boolean): HTMLCanvasElement {
+function keyMagenta(image: HTMLImageElement, crop: boolean, softEdges = false): HTMLCanvasElement {
   const source = document.createElement("canvas");
   source.width = image.naturalWidth;
   source.height = image.naturalHeight;
@@ -1544,6 +1555,14 @@ function keyMagenta(image: HTMLImageElement, crop: boolean): HTMLCanvasElement {
     if (magenta) {
       pixels.data[index + 3] = 0;
       continue;
+    }
+    if (softEdges && red > green * 1.05 && blue > green * 1.05) {
+      const spill = Math.max(0, Math.min(red - green * 1.05, blue - green * 1.05));
+      const alpha = clamp(1 - spill / 70, 0, 1);
+      pixels.data[index] = Math.round(green + (red - green) * alpha);
+      pixels.data[index + 2] = Math.round(green + (blue - green) * alpha);
+      pixels.data[index + 3] = Math.round(alpha * 255);
+      if (alpha < 0.03) continue;
     }
     const pixel = index / 4;
     const x = pixel % source.width;

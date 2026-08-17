@@ -14,6 +14,7 @@ export interface FishingFishPose {
   rotation: number;
   scaleX: number;
   scaleY: number;
+  heading: -1 | 1;
 }
 
 export const FISHING_DIVE_DURATION = 0.85;
@@ -67,17 +68,22 @@ export function fishingFishPose(
   reducedMotion: boolean,
 ): FishingFishPose {
   if (reducedMotion) {
-    return { animationFrame: 0, verticalOffsetRatio: 0, rotation: 0, scaleX: 1, scaleY: 1 };
+    const motion = fishingSpeciesMotion(species, elapsed, phase);
+    return { animationFrame: 0, verticalOffsetRatio: 0, rotation: 0, scaleX: 1, scaleY: 1, heading: motion.heading };
   }
   const profile = FISHING_MOVEMENT_PROFILES[species];
   const motion = fishingSpeciesMotion(species, elapsed, phase);
   const framePhase = ((elapsed * profile.bodyFrequency + phase * 0.8) / (Math.PI * 2)) % 1;
+  const animationFrame = motion.propulsion < 0.16
+    ? 0
+    : Math.floor((framePhase < 0 ? framePhase + 1 : framePhase) * 4) % 4;
   return {
-    animationFrame: Math.floor((framePhase < 0 ? framePhase + 1 : framePhase) * 4) % 4,
+    animationFrame,
     verticalOffsetRatio: motion.flex * profile.flexAmount * 0.08,
     rotation: motion.pitch,
     scaleX: 1 + motion.flex * profile.flexAmount,
     scaleY: 1 - motion.flex * profile.flexAmount * 0.62,
+    heading: motion.heading,
   };
 }
 
