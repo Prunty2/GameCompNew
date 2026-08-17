@@ -420,6 +420,20 @@ test("fishing descends through the sailing waterline into a site-specific scene"
   await expect.poll(async () => Number(await canvas.getAttribute("data-fishing-dive-progress"))).toBeGreaterThan(0.99);
 });
 
+test("Escape leaves fishing without opening the pause menu", async ({ page }) => {
+  await page.goto("/?e2e=1&e2eSpot=sunwardShoal");
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.getByRole("button", { name: "Accept contract" }).click();
+  await page.getByRole("button", { name: "Drop line · Sunward Shoal" }).click();
+
+  await expect.poll(async () => page.evaluate(() => window.__FSHING_TEST__?.mode())).toBe("fishing");
+  await page.keyboard.press("Escape");
+
+  await expect.poll(async () => page.evaluate(() => window.__FSHING_TEST__?.mode())).toBe("cruising");
+  await expect(page.getByRole("heading", { name: "Paused" })).toHaveCount(0);
+  await expect(page.locator("#game-canvas")).not.toHaveAttribute("data-fishing-state");
+});
+
 test("all three fishing spots render their habitat-specific real species", async ({ page }) => {
   await page.goto("/?e2e=1");
   const canvas = page.locator("#game-canvas");

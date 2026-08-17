@@ -8,6 +8,7 @@ export class InputController {
   private readonly pressed = new Set<string>();
   private readonly virtualPressed = new Set<VirtualControl>();
   private actionQueued = false;
+  private escapeQueued = false;
   private pauseQueued = false;
   private debugTimeJumpQueued: DebugTimeJump | null = null;
   private debugBoostUnlockQueued = false;
@@ -65,6 +66,12 @@ export class InputController {
   consumeAction(): boolean {
     const queued = this.actionQueued;
     this.actionQueued = false;
+    return queued;
+  }
+
+  consumeEscape(): boolean {
+    const queued = this.escapeQueued;
+    this.escapeQueued = false;
     return queued;
   }
 
@@ -163,7 +170,8 @@ export class InputController {
     }
     if (event.code.startsWith("Arrow") || event.code === "Space") event.preventDefault();
     if (!event.repeat && event.code === this.controlBindings.action) this.actionQueued = true;
-    if (!event.repeat && (event.code === "Escape" || event.code === this.controlBindings.pause)) this.pauseQueued = true;
+    if (!event.repeat && event.code === "Escape") this.escapeQueued = true;
+    if (!event.repeat && event.code === this.controlBindings.pause) this.pauseQueued = true;
     this.pressed.add(event.code);
   };
 
