@@ -109,7 +109,7 @@ declare global {
     __FSHING_TEST__?: {
       sailToSpot(id: SpotId): void;
       sailToHarbor(id: HarborId): void;
-      previewFishing(id: SpotId, species: FishSpecies): void;
+      previewFishing(id: SpotId, species: FishSpecies, preserveOverlay?: boolean): void;
       catchSpecies(species: FishSpecies): void;
       hookSpecies(species: FishSpecies): void;
       damage(amount: number): void;
@@ -1341,7 +1341,7 @@ export class Game {
     window.__FSHING_TEST__ = {
       sailToSpot: (id) => moveBoatForTesting(this.simulation, spotById(id)),
       sailToHarbor: (id) => moveBoatForTesting(this.simulation, harborById(id)),
-      previewFishing: (id, species) => {
+      previewFishing: (id, species, preserveOverlay = false) => {
         const spot = spotById(id);
         this.simulation.progress.upgrades.line = spot.requiredDepthTier;
         this.simulation.progress.outerUnlocked = true;
@@ -1351,7 +1351,7 @@ export class Game {
         }
         moveBoatForTesting(this.simulation, spot);
         startFishing(this.simulation, id);
-        this.setOverlay(null);
+        if (!preserveOverlay) this.setOverlay(null);
         this.refreshHud();
       },
       catchSpecies: (species) => {

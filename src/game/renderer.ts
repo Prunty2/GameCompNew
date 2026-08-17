@@ -226,7 +226,7 @@ export class CanvasRenderer {
       return;
     }
     this.context.save();
-    if (simulation.mode === "fishing" && simulation.fishing) {
+    if (!settings.cinematic && simulation.mode === "fishing" && simulation.fishing) {
       this.renderFishing(simulation, settings, width, height);
     } else {
       delete this.canvas.dataset.fishingDiveProgress;

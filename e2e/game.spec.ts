@@ -208,9 +208,15 @@ test("returning to the title while fishing restores the surface scene", async ({
   await page.getByRole("button", { name: "Title screen" }).click();
 
   await expect(page.getByRole("button", { name: "Play", exact: true })).toBeVisible();
+  await expect(page.locator("#scene-transition")).not.toHaveClass(/is-(covering|revealing)/);
   await expect(canvas).not.toHaveAttribute("data-fishing-state");
   await expect(canvas).toHaveAttribute("aria-label", "Game area");
   expect(await page.evaluate(() => window.__FSHING_TEST__?.mode())).toBe("cruising");
+
+  await page.evaluate(() => window.__FSHING_TEST__?.previewFishing("sunwardShoal", "bluegill", true));
+  expect(await page.evaluate(() => window.__FSHING_TEST__?.mode())).toBe("fishing");
+  await expect(canvas).not.toHaveAttribute("data-fishing-state");
+  await expect(canvas).toHaveAttribute("aria-label", "Game area");
 });
 
 test("nightfall changes the panorama and keeps a moon indicator visible until morning", async ({ page }) => {
