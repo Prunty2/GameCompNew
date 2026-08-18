@@ -39,6 +39,7 @@ import { InputController } from "./input";
 import { CanvasRenderer } from "./renderer";
 import {
   acceptAvailableContract,
+  beginFishingExit,
   buyBoost,
   buyPermit,
   buyUpgrade,
@@ -51,6 +52,7 @@ import {
   deliverContract,
   getInteractionPrompt,
   interact,
+  leaveFishing,
   moveBoatForTesting,
   navigationGuidance,
   nightVisualIntensity,
@@ -192,9 +194,16 @@ export class Game {
     this.lastTime = time;
     this.accumulator += delta;
 
-    if (this.input.consumePause() && this.started) {
-      if (this.overlay === null || this.sceneTransitioning && this.sceneTransitionTarget === null) this.setOverlay("pause");
-      else if (this.overlay === "pause") this.setOverlay(null);
+    const escapeRequested = this.input.consumeEscape();
+    const pauseRequested = this.input.consumePause();
+    if ((escapeRequested || pauseRequested) && this.started) {
+      if (escapeRequested && this.overlay === null && this.simulation.mode === "fishing") {
+        this.exitFishing();
+      } else if (this.overlay === null || this.sceneTransitioning && this.sceneTransitionTarget === null) {
+        this.setOverlay("pause");
+      } else if (this.overlay === "pause") {
+        this.setOverlay(null);
+      }
     }
 
     if (import.meta.env.DEV) {
@@ -413,7 +422,8 @@ export class Game {
     if (navigation) navigation.hidden = this.overlay !== null || simulation.mode === "fishing";
     if (fishing) fishing.hidden = this.overlay !== null
       || simulation.mode !== "fishing"
-      || simulation.fishing?.reeling !== null;
+      || simulation.fishing?.reeling !== null
+      || simulation.fishing.exitingAt !== null;
     const showNightIndicator = shouldShowNightIndicator(simulation);
     document.body.classList.toggle("show-night-indicator", showNightIndicator);
     this.uiRoot.querySelector<HTMLElement>(".night-indicator")
@@ -1300,14 +1310,20 @@ export class Game {
         break;
       }
       case "leave-fishing":
-        if (this.simulation.fishing?.reeling) break;
-        this.feedback.cue("cast");
-        this.simulation.mode = "cruising";
-        this.simulation.fishing = null;
-        this.refreshHud();
+        this.exitFishing();
         break;
     }
   };
+
+  private exitFishing(): void {
+    if (this.simulation.mode !== "fishing"
+      || this.simulation.fishing?.reeling
+      || this.simulation.fishing?.exitingAt !== null) return;
+    this.feedback.cue("cast");
+    if (this.save.settings.reducedMotion) leaveFishing(this.simulation);
+    else beginFishingExit(this.simulation);
+    this.refreshHud();
+  }
 
   private readonly onChange = (event: Event): void => {
     const input = (event.target as HTMLElement).closest<HTMLInputElement>("[data-setting]");

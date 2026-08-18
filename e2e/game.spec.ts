@@ -329,6 +329,31 @@ test("pause blurs the lake and slides the compact menu in and out", async ({ pag
   await expect(pauseScreen).toHaveCount(0);
 });
 
+test("pause stays open when Escape keydown is duplicated before keyup", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.getByRole("button", { name: "Accept contract" }).click();
+
+  await page.evaluate(() => {
+    window.dispatchEvent(new KeyboardEvent("keydown", { code: "Escape" }));
+  });
+  const pauseScreen = page.locator(".pause-screen");
+  await expect(pauseScreen).toBeVisible();
+
+  await page.evaluate(() => {
+    window.dispatchEvent(new KeyboardEvent("keydown", { code: "Escape" }));
+  });
+  await page.waitForTimeout(100);
+  await expect(pauseScreen).toBeVisible();
+  await expect(pauseScreen).not.toHaveClass(/is-closing/);
+
+  await page.evaluate(() => {
+    window.dispatchEvent(new KeyboardEvent("keyup", { code: "Escape" }));
+  });
+  await page.keyboard.press("Escape");
+  await expect(pauseScreen).toHaveCount(0);
+});
+
 test("settings reverses its title transition when closing", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("button", { name: "Settings" })).toBeVisible();
@@ -418,6 +443,27 @@ test("fishing descends through the sailing waterline into a site-specific scene"
   const initialDiveProgress = Number(await canvas.getAttribute("data-fishing-dive-progress"));
   expect(initialDiveProgress).toBeLessThan(1);
   await expect.poll(async () => Number(await canvas.getAttribute("data-fishing-dive-progress"))).toBeGreaterThan(0.99);
+});
+
+test("Escape leaves fishing without opening the pause menu", async ({ page }) => {
+  await page.goto("/?e2e=1&e2eSpot=sunwardShoal");
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.getByRole("button", { name: "Accept contract" }).click();
+  await page.getByRole("button", { name: "Drop line · Sunward Shoal" }).click();
+
+  await expect.poll(async () => page.evaluate(() => window.__FSHING_TEST__?.mode())).toBe("fishing");
+  const canvas = page.locator("#game-canvas");
+  const startingDiveProgress = Number(await canvas.getAttribute("data-fishing-dive-progress"));
+  await page.keyboard.press("Escape");
+
+  await expect(canvas).toHaveAttribute("data-fishing-state", "exiting");
+  await expect(page.locator(".fishing-controls")).toBeHidden();
+  await expect.poll(async () => Number(await canvas.getAttribute("data-fishing-surface-blend"))).toBeGreaterThan(0.05);
+  await expect.poll(async () => Number(await canvas.getAttribute("data-fishing-dive-progress"))).toBeLessThan(startingDiveProgress - 0.05);
+  await expect(page.getByRole("heading", { name: "Paused" })).toHaveCount(0);
+  await expect.poll(async () => page.evaluate(() => window.__FSHING_TEST__?.mode())).toBe("cruising");
+  await expect(page.getByRole("heading", { name: "Paused" })).toHaveCount(0);
+  await expect(canvas).not.toHaveAttribute("data-fishing-state");
 });
 
 test("all three fishing spots render their habitat-specific real species", async ({ page }) => {

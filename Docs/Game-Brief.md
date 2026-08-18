@@ -237,7 +237,8 @@ The handling should feel smooth, measured, and forgiving rather than physically 
 - W/S: steer the hook vertically while fishing
 - Left Shift: hold engine boost after unlocking it
 - Space or E: interact, dock, or cast
-- Escape or P: pause
+- Escape: reel the empty line up and leave fishing with the same eased camera rise and surface fade as a catch; otherwise pause or resume
+- P (or the configured pause key): pause or resume
 - Temporary testing — B: grant the boost unlock for the current run without saving it
 - Development builds only — G: jump to the start of the dusk transition; H: jump to full night
 
@@ -250,7 +251,7 @@ The handling should feel smooth, measured, and forgiving rather than physically 
 
 All essential actions must work without hover. Touch targets must be large enough for mobile play, and the interface must respect display safe areas.
 
-Keyboard actions can be rebound from the Controls submenu within Settings. Controls uses the same centered, panel-free lake treatment as its parent, with bindings arranged as a compact two-column input map on wide and landscape screens and one column on narrow portrait screens. Bindings persist with the rest of the validated settings; assigning an occupied key swaps the two actions, and Escape remains an always-available pause fallback.
+Keyboard actions can be rebound from the Controls submenu within Settings. Controls uses the same centered, panel-free lake treatment as its parent, with bindings arranged as a compact two-column input map on wide and landscape screens and one column on narrow portrait screens. Bindings persist with the rest of the validated settings; assigning an occupied key swaps the two actions, and Escape remains an always-available pause fallback outside fishing.
 
 The How to play menu presents the core loop as four step-by-step field-note cards: accept, travel, catch, and conserve. Previous and Next controls move through one card at a time, with the main Back action kept separate below the card navigation.
 
