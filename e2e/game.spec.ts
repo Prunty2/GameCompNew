@@ -793,6 +793,12 @@ test("Beach upgrade unlocks persistent travel to the seaside world", async ({ pa
   await page.getByRole("button", { name: "Play", exact: true }).click();
   await page.getByRole("button", { name: "Services", exact: true }).click();
   await expect(page.getByRole("button", { name: "Travel to Beach" })).toBeEnabled();
+  await page.getByRole("button", { name: "Travel to Beach" }).click();
+  await page.evaluate(() => window.__FSHING_TEST__?.previewFishing("sunwardShoal", "seaMullet"));
+  await expect(page.locator("#game-canvas")).toHaveAttribute(
+    "aria-label",
+    "Fishing at Sunward Shoal. Target Sea Mullet, common rarity.",
+  );
 });
 
 test("delivers a matching catch that was aboard before accepting the contract", async ({ page }) => {

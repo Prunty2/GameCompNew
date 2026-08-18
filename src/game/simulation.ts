@@ -6,10 +6,12 @@ import {
   FISH,
   FISHING_SPOTS,
   HARBORS,
-  SPOT_RESIDENTS,
   SURFACE_Y,
+  WORLD_SPOT_RESIDENTS,
   engineSpeedMultiplier,
   harborById,
+  primarySpeciesForSpot,
+  residentsForSpot,
   spotById,
   upgradeTierCap,
   type FishSpecies,
@@ -344,7 +346,7 @@ export function startFishing(simulation: Simulation, spotId: SpotId): boolean {
     return false;
   }
 
-  const residents = SPOT_RESIDENTS[spotId];
+  const residents = residentsForSpot(simulation.world, spotId);
   simulation.boat.speed = 0;
   simulation.mode = "fishing";
   simulation.fishing = {
@@ -456,7 +458,7 @@ export function recordSurvey(
   prediction: FishSpecies,
   researchTarget?: FishSpecies,
 ): SurveyResult {
-  const result = evaluateSurvey(spotId, prediction, researchTarget);
+  const result = evaluateSurvey(spotId, prediction, researchTarget, simulation.world);
   simulation.progress.learning.surveysCompleted += 1;
   if (result.correct) simulation.progress.learning.correctPredictions += 1;
   discoverSpecies(simulation, result.expected);
@@ -501,9 +503,13 @@ export function buyBeachAccess(simulation: Simulation): boolean {
 }
 
 export function travelToWorld(simulation: Simulation, world: WorldId): boolean {
-  if (!simulation.dockedAt || simulation.world === world) return false;
+  if (!simulation.dockedAt || simulation.world === world || simulation.activeContract) return false;
   if (world === "beach" && !simulation.progress.beachUnlocked) return false;
+  const origin = simulation.dockedAt;
   simulation.world = world;
+  if (!simulation.activeContract) {
+    simulation.availableContract = createAvailableContract(simulation, origin);
+  }
   return undock(simulation);
 }
 
@@ -697,7 +703,7 @@ export function tutorialPrompt(simulation: Simulation): string | null {
     const spot = spotById(simulation.fishing.spot);
     const target = simulation.activeContract?.spot === spot.id
       ? simulation.activeContract.species
-      : spot.species;
+      : primarySpeciesForSpot(simulation.world, spot.id);
     return `Guide the hook toward the ${FISH[target].name}.`;
   }
   return navigationGuidance(simulation).instruction;
@@ -809,7 +815,7 @@ function rescue(simulation: Simulation): void {
 }
 
 function createAvailableContract(simulation: Simulation, origin: HarborId): Contract | null {
-  if (simulation.progress.completedContracts === 0) {
+  if (simulation.progress.completedContracts === 0 && simulation.world === "lake") {
     const minimumFreshness = attainableFreshnessTarget(
       "sunwardShoal",
       "gloam",
@@ -840,8 +846,18 @@ function createAvailableContract(simulation: Simulation, origin: HarborId): Cont
     lakeTrout: "outerGloam",
     burbot: "outerGloam",
     lakeSturgeon: "outerGloam",
+    seaMullet: "sunwardShoal",
+    yellowfinBream: "sunwardShoal",
+    sandWhiting: "sunwardShoal",
+    duskyFlathead: "mosswaterPool",
+    luderick: "mosswaterPool",
+    easternAustralianSalmon: "mosswaterPool",
+    snapper: "outerGloam",
+    yellowtailKingfish: "outerGloam",
+    mulloway: "outerGloam",
   };
-  const availableSpecies = (Object.keys(FISH) as FishSpecies[]).filter((candidate) => {
+  const worldSpecies = Object.values(WORLD_SPOT_RESIDENTS[simulation.world]).flat();
+  const availableSpecies = worldSpecies.filter((candidate) => {
     const fish = FISH[candidate];
     const spot = spotById(spotForSpecies[candidate]);
     return fish.depthTier <= simulation.progress.upgrades.line

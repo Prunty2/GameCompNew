@@ -6,6 +6,7 @@ import binIconUrl from "../assets/bin-icon.png";
 import gloamDockDayUrl from "../assets/dock-gloam-day.jpg";
 import gloamDockNightUrl from "../assets/dock-gloam-night.jpg";
 import fishAtlasUiUrl from "../assets/fish-atlas-ui.png";
+import beachFishAtlasUiUrl from "../assets/fish-beach-atlas-ui.png";
 import wordmarkUrl from "../assets/fshing-wordmark.png";
 import deliverBeaconIconUrl from "../assets/job-deliver-beacon.png";
 import freshnessFishIconUrl from "../assets/job-freshness-fish.png";
@@ -18,6 +19,7 @@ import type { PlatformService } from "../services/platformService";
 import { saveGame, type SaveData } from "../services/saveGame";
 import {
   BALANCE,
+  BEACH_SPOT_RESIDENTS,
   FISH,
   engineSpeedMultiplier,
   harborById,
@@ -88,6 +90,8 @@ const DOCK_BACKGROUND_URL: Record<HarborId, { day: string; night: string }> = {
   brindle: { day: brindleDockDayUrl, night: brindleDockNightUrl },
   gloam: { day: gloamDockDayUrl, night: gloamDockNightUrl },
 };
+
+const BEACH_FISH = new Set<FishSpecies>(Object.values(BEACH_SPOT_RESIDENTS).flat());
 
 type OverlayScreen =
   | "title"
@@ -651,7 +655,8 @@ export class Game {
 
   private targetFishIcon(species: FishSpecies): string {
     const [column, row] = FISH[species].atlasCell;
-    return `<span class="job-route-icon job-route-fish" role="img" aria-label="${FISH[species].name} target fish" style="--fish-atlas-url: url(&quot;${fishAtlasUiUrl}&quot;); --fish-atlas-x: ${column * 50}%; --fish-atlas-y: ${row * 50}%"></span>`;
+    const atlasUrl = BEACH_FISH.has(species) ? beachFishAtlasUiUrl : fishAtlasUiUrl;
+    return `<span class="job-route-icon job-route-fish" role="img" aria-label="${FISH[species].name} target fish" style="--fish-atlas-url: url(&quot;${atlasUrl}&quot;); --fish-atlas-x: ${column * 50}%; --fish-atlas-y: ${row * 50}%"></span>`;
   }
 
   private upgradeCard(upgrade: UpgradeId, title: string, detail: string): string {
@@ -673,7 +678,8 @@ export class Game {
     const destination: WorldId = this.simulation.world === "beach" ? "lake" : "beach";
     const destinationName = capitalise(destination);
     if (unlocked) {
-      return `<article class="service-card"><span class="ui-icon icon-objective" aria-hidden="true"></span><div class="service-copy"><h4>Beach</h4><p>Surf club · pier · lighthouse</p></div><span class="service-owned" aria-label="Beach location unlocked">UNLOCKED</span><button class="service-purchase" type="button" data-action="travel-world" data-world="${destination}" aria-label="Travel to ${destinationName}"><strong>${destination === "beach" ? "VISIT" : "RETURN"}</strong></button></article>`;
+      const activeJob = this.simulation.activeContract !== null;
+      return `<article class="service-card"><span class="ui-icon icon-objective" aria-hidden="true"></span><div class="service-copy"><h4>Beach</h4><p>${activeJob ? "Finish the active job before travelling" : "Surf club · pier · lighthouse"}</p></div><span class="service-owned" aria-label="Beach location unlocked">UNLOCKED</span><button class="service-purchase" type="button" data-action="travel-world" data-world="${destination}" aria-label="Travel to ${destinationName}" ${activeJob ? "disabled" : ""}><strong>${destination === "beach" ? "VISIT" : "RETURN"}</strong></button></article>`;
     }
     return `<article class="service-card"><span class="ui-icon icon-objective" aria-hidden="true"></span><div class="service-copy"><h4>Beach</h4><p>Unlock the seaside town</p></div><span class="service-owned" aria-label="One-time location unlock">LOCATION</span><button class="service-purchase" type="button" data-action="buy-beach" aria-label="Unlock Beach for ${BALANCE.beachAccessCost} shells" ${this.simulation.progress.money < BALANCE.beachAccessCost ? "disabled" : ""}><span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${BALANCE.beachAccessCost}</strong></button></article>`;
   }

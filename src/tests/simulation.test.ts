@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import {
   BALANCE,
+  BEACH_SPOT_RESIDENTS,
   FISHING_SPOTS,
   SPOT_RESIDENTS,
   boatClassAt,
@@ -553,9 +554,21 @@ describe("FSHING side-on simulation", () => {
     expect(simulation.progress.beachUnlocked).toBe(true);
     expect(simulation.progress.money).toBe(0);
     expect(buyBeachAccess(simulation)).toBe(false);
+    expect(acceptAvailableContract(simulation)).toBe(true);
+    expect(travelToWorld(simulation, "beach")).toBe(false);
+    simulation.activeContract = null;
     expect(travelToWorld(simulation, "beach")).toBe(true);
     expect(simulation.world).toBe("beach");
     expect(simulation.dockedAt).toBeNull();
+    expect(new Set(Object.values(BEACH_SPOT_RESIDENTS).flat()).has(simulation.availableContract!.species)).toBe(true);
+
+    expect(startFishing(simulation, "sunwardShoal")).toBe(true);
+    expect(new Set(simulation.fishing?.targets.map((target) => target.species))).toEqual(
+      new Set(BEACH_SPOT_RESIDENTS.sunwardShoal),
+    );
+    expect(tutorialPrompt(simulation)).toContain("Sea Mullet");
+    simulation.mode = "cruising";
+    simulation.fishing = null;
 
     moveBoatForTesting(simulation, harborById("brindle"));
     interact(simulation);
@@ -591,6 +604,11 @@ describe("FSHING side-on simulation", () => {
     expect(simulation.progress.learning.surveysCompleted).toBe(3);
     expect(simulation.progress.learning.correctPredictions).toBe(2);
     expect(learningAccuracy(simulation)).toBe(67);
+
+    simulation.world = "beach";
+    const beachSurvey = recordSurvey(simulation, "mosswaterPool", "duskyFlathead");
+    expect(beachSurvey).toMatchObject({ correct: true, expected: "duskyFlathead" });
+    expect(beachSurvey.explanation).toContain("sand, seagrass, and shallow reef");
   });
 
   test("allows repeated catches and releases unneeded cargo", () => {

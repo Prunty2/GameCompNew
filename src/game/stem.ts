@@ -1,12 +1,13 @@
 import {
   BALANCE,
   FISH,
-  SPOT_RESIDENTS,
+  WORLD_SPOT_RESIDENTS,
   engineSpeedMultiplier,
   harborById,
   spotById,
   type FishSpecies,
   type SpotId,
+  type WorldId,
 } from "./balance";
 import type { Contract } from "./simulation";
 
@@ -66,6 +67,38 @@ export const WATER_READINGS: Record<SpotId, WaterReading> = {
     habitat: "cold rocky drop-off",
     clue: "Cold, darker water favours species with large eyes and efficient movement.",
   },
+};
+
+export const BEACH_WATER_READINGS: Record<SpotId, WaterReading> = {
+  sunwardShoal: {
+    depthM: 4,
+    temperatureC: 20,
+    oxygenMgL: 8,
+    turbidity: "low",
+    habitat: "sandy surf and estuary edge",
+    clue: "Open sand and oxygenated shallows support schooling mullet, bream, and whiting.",
+  },
+  mosswaterPool: {
+    depthM: 8,
+    temperatureC: 19,
+    oxygenMgL: 7.2,
+    turbidity: "moderate",
+    habitat: "sand, seagrass, and shallow reef",
+    clue: "Mixed cover supports sand ambushers, algae grazers, and fast coastal schools.",
+  },
+  outerGloam: {
+    depthM: 31,
+    temperatureC: 16,
+    oxygenMgL: 6.5,
+    turbidity: "low",
+    habitat: "rocky lighthouse reef and adjacent deep water",
+    clue: "Deeper reef edges suit powerful pelagic fish and large coastal predators.",
+  },
+};
+
+const WORLD_WATER_READINGS: Record<WorldId, Record<SpotId, WaterReading>> = {
+  lake: WATER_READINGS,
+  beach: BEACH_WATER_READINGS,
 };
 
 export const FISH_SCIENCE: Record<FishSpecies, FishScienceProfile> = {
@@ -132,6 +165,60 @@ export const FISH_SCIENCE: Record<FishSpecies, FishScienceProfile> = {
     ecologicalRole: "Long-lived benthic feeder with very slow population recovery.",
     evidence: "Its armored forebody stays steady while the broad tail powers slow bottom cruising.",
   },
+  seaMullet: {
+    temperatureRangeC: [12, 27], minimumOxygenMgL: 5,
+    habitat: "Coastal shallows, estuaries, and surf-zone schools",
+    ecologicalRole: "Schooling detritivore that links estuary productivity with coastal food webs.",
+    evidence: "Its streamlined body and forked tail support steady, coordinated schooling near shore.",
+  },
+  yellowfinBream: {
+    temperatureRangeC: [14, 25], minimumOxygenMgL: 5,
+    habitat: "Estuaries, nearshore beaches, and rocky reef edges",
+    ecologicalRole: "Omnivore that feeds on shellfish, worms, and small crustaceans.",
+    evidence: "Its deep body and active pectoral fins suit close maneuvering around mixed coastal structure.",
+  },
+  sandWhiting: {
+    temperatureRangeC: [16, 26], minimumOxygenMgL: 5.5,
+    habitat: "Sandy bays, estuaries, seagrass margins, and water beyond the breakers",
+    ecologicalRole: "Benthic feeder on worms, small crustaceans, and molluscs.",
+    evidence: "Its slender body makes compact tail beats while cruising close above open sand.",
+  },
+  duskyFlathead: {
+    temperatureRangeC: [14, 26], minimumOxygenMgL: 5,
+    habitat: "Shallow sand and mud beside sheltered rocky reef",
+    ecologicalRole: "Bottom ambush predator of fish and crustaceans.",
+    evidence: "Its flattened head and camouflaged body stay nearly still before a short explosive strike.",
+  },
+  luderick: {
+    temperatureRangeC: [14, 24], minimumOxygenMgL: 5.5,
+    habitat: "Estuaries, seagrass, and shallow algae-covered rocky reef",
+    ecologicalRole: "Important coastal grazer of algae and aquatic vegetation.",
+    evidence: "Its deep body and pectoral sculling support controlled turns while grazing close to structure.",
+  },
+  easternAustralianSalmon: {
+    temperatureRangeC: [12, 22], minimumOxygenMgL: 6,
+    habitat: "Coastal schools over sand, with juveniles entering bays and estuaries",
+    ecologicalRole: "Mobile predator of schooling fish and coastal invertebrates.",
+    evidence: "Its powerful forked tail drives fast, coordinated open-water schooling.",
+  },
+  snapper: {
+    temperatureRangeC: [12, 22], minimumOxygenMgL: 5.5,
+    habitat: "Juvenile bays and estuaries, then deeper offshore rocky reefs",
+    ecologicalRole: "Reef predator and benthic feeder on fish, crustaceans, and molluscs.",
+    evidence: "Its robust body uses measured posterior beats to patrol reef margins efficiently.",
+  },
+  yellowtailKingfish: {
+    temperatureRangeC: [16, 24], minimumOxygenMgL: 6,
+    habitat: "Open water around rocky reefs and adjacent sand",
+    ecologicalRole: "Fast pelagic predator of fish, squid, and crustaceans.",
+    evidence: "Its narrow tail base and deeply forked tail produce swift rear-body-driven swimming.",
+  },
+  mulloway: {
+    temperatureRangeC: [13, 24], minimumOxygenMgL: 5,
+    habitat: "Shallow estuaries, coastal channels, and offshore reefs",
+    ecologicalRole: "Large coastal predator of fish, prawns, and squid.",
+    evidence: "Its long robust body cruises steadily, reserving stronger tail beats for a surge.",
+  },
 };
 
 const SURVEY_CHOICES: Record<FishSpecies, readonly [FishSpecies, FishSpecies, FishSpecies]> = {
@@ -144,19 +231,29 @@ const SURVEY_CHOICES: Record<FishSpecies, readonly [FishSpecies, FishSpecies, Fi
   lakeTrout: ["lakeTrout", "yellowPerch", "bowfin"],
   burbot: ["burbot", "northernPike", "bluegill"],
   lakeSturgeon: ["lakeSturgeon", "bluegill", "northernPike"],
+  seaMullet: ["seaMullet", "yellowfinBream", "sandWhiting"],
+  yellowfinBream: ["yellowfinBream", "seaMullet", "luderick"],
+  sandWhiting: ["sandWhiting", "yellowfinBream", "duskyFlathead"],
+  duskyFlathead: ["duskyFlathead", "sandWhiting", "luderick"],
+  luderick: ["luderick", "yellowfinBream", "easternAustralianSalmon"],
+  easternAustralianSalmon: ["easternAustralianSalmon", "seaMullet", "yellowtailKingfish"],
+  snapper: ["snapper", "mulloway", "yellowfinBream"],
+  yellowtailKingfish: ["yellowtailKingfish", "easternAustralianSalmon", "mulloway"],
+  mulloway: ["mulloway", "snapper", "duskyFlathead"],
 };
 
-export function surveyChoices(spotId: SpotId, researchTarget?: FishSpecies): readonly FishSpecies[] {
-  return SURVEY_CHOICES[surveyTarget(spotId, researchTarget)];
+export function surveyChoices(spotId: SpotId, researchTarget?: FishSpecies, world: WorldId = "lake"): readonly FishSpecies[] {
+  return SURVEY_CHOICES[surveyTarget(spotId, researchTarget, world)];
 }
 
 export function evaluateSurvey(
   spotId: SpotId,
   prediction: FishSpecies,
   researchTarget?: FishSpecies,
+  world: WorldId = "lake",
 ): SurveyResult {
-  const reading = WATER_READINGS[spotId];
-  const expected = surveyTarget(spotId, researchTarget);
+  const reading = WORLD_WATER_READINGS[world][spotId];
+  const expected = surveyTarget(spotId, researchTarget, world);
   const correct = prediction === expected;
   const profile = FISH_SCIENCE[expected];
   return {
@@ -199,7 +296,8 @@ function roundOne(value: number): number {
   return Math.round(value * 10) / 10;
 }
 
-function surveyTarget(spotId: SpotId, researchTarget?: FishSpecies): FishSpecies {
-  if (researchTarget && SPOT_RESIDENTS[spotId].includes(researchTarget)) return researchTarget;
-  return spotById(spotId).species;
+function surveyTarget(spotId: SpotId, researchTarget: FishSpecies | undefined, world: WorldId): FishSpecies {
+  const residents = WORLD_SPOT_RESIDENTS[world][spotId];
+  if (researchTarget && residents.includes(researchTarget)) return researchTarget;
+  return world === "lake" ? spotById(spotId).species : residents[0]!;
 }

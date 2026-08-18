@@ -3,6 +3,9 @@ import beachChartUrl from "../assets/beach-chart.png";
 import beachChartNightUrl from "../assets/beach-chart-night.png";
 import beachHarborPierUrl from "../assets/beach-harbor-pier.png";
 import tackleAtlasUrl from "../assets/fish-atlas.png";
+import beachBayFishAtlasUrl from "../assets/fish-beach-bay-swim.png";
+import beachReefFishAtlasUrl from "../assets/fish-beach-reef-swim.png";
+import beachSurfFishAtlasUrl from "../assets/fish-beach-surf-swim.png";
 import gloamFishAtlasUrl from "../assets/fish-gloam-swim.png";
 import mosswaterFishAtlasUrl from "../assets/fish-mosswater-swim.png";
 import sunwardFishAtlasUrl from "../assets/fish-sunward-swim.png";
@@ -22,6 +25,7 @@ import {
   FISH,
   FISHING_SPOTS,
   HARBORS,
+  primarySpeciesForSpot,
   regionSurfaceTintAt,
   type FishRarity,
   type FishSpecies,
@@ -89,8 +93,8 @@ interface LoadedArt {
   beachPier: HTMLImageElement;
   pier: HTMLImageElement;
   boat: HTMLCanvasElement;
-  fish: Record<SpotId, HTMLCanvasElement>;
-  fishOutlines: Record<FishRarity, Record<SpotId, HTMLCanvasElement>>;
+  fish: Record<FishSheetId, HTMLCanvasElement>;
+  fishOutlines: Record<FishRarity, Record<FishSheetId, HTMLCanvasElement>>;
   fishingEnvironments: Record<SpotId, HTMLImageElement>;
   lineLimitFloat: HTMLImageElement;
   fishingCues: HTMLCanvasElement;
@@ -98,6 +102,8 @@ interface LoadedArt {
   tackle: HTMLCanvasElement;
   world: HTMLCanvasElement;
 }
+
+type FishSheetId = SpotId | "beachSurf" | "beachBay" | "beachReef";
 
 const SURFACE_FISH_CELLS = [
   [0, 0],
@@ -108,7 +114,7 @@ const SURFACE_FISH_CELLS = [
   [1, 1],
 ] as const;
 
-const FISH_SPRITE_CELLS: Record<FishSpecies, { sheet: SpotId; row: number }> = {
+const FISH_SPRITE_CELLS: Record<FishSpecies, { sheet: FishSheetId; row: number }> = {
   bluegill: { sheet: "sunwardShoal", row: 0 },
   yellowPerch: { sheet: "sunwardShoal", row: 1 },
   emeraldShiner: { sheet: "sunwardShoal", row: 2 },
@@ -118,6 +124,15 @@ const FISH_SPRITE_CELLS: Record<FishSpecies, { sheet: SpotId; row: number }> = {
   lakeTrout: { sheet: "outerGloam", row: 0 },
   burbot: { sheet: "outerGloam", row: 1 },
   lakeSturgeon: { sheet: "outerGloam", row: 2 },
+  seaMullet: { sheet: "beachSurf", row: 0 },
+  yellowfinBream: { sheet: "beachSurf", row: 1 },
+  sandWhiting: { sheet: "beachSurf", row: 2 },
+  duskyFlathead: { sheet: "beachBay", row: 0 },
+  luderick: { sheet: "beachBay", row: 1 },
+  easternAustralianSalmon: { sheet: "beachBay", row: 2 },
+  snapper: { sheet: "beachReef", row: 0 },
+  yellowtailKingfish: { sheet: "beachReef", row: 1 },
+  mulloway: { sheet: "beachReef", row: 2 },
 };
 
 // Center of the visible hook-and-arc paint inside each 192 × 256 authored atlas cell.
@@ -161,6 +176,9 @@ export class CanvasRenderer {
       loadImage(sunwardFishAtlasUrl),
       loadImage(mosswaterFishAtlasUrl),
       loadImage(gloamFishAtlasUrl),
+      loadImage(beachSurfFishAtlasUrl),
+      loadImage(beachBayFishAtlasUrl),
+      loadImage(beachReefFishAtlasUrl),
       loadImage(sunwardFishingUrl),
       loadImage(mosswaterFishingUrl),
       loadImage(gloamFishingUrl),
@@ -181,6 +199,9 @@ export class CanvasRenderer {
       sunwardFish,
       mosswaterFish,
       gloamFish,
+      beachSurfFish,
+      beachBayFish,
+      beachReefFish,
       sunwardFishing,
       mosswaterFishing,
       gloamFishing,
@@ -190,15 +211,21 @@ export class CanvasRenderer {
       tackle,
       world,
     ]) => {
-      const keyedFish: Record<SpotId, HTMLCanvasElement> = {
+      const keyedFish: Record<FishSheetId, HTMLCanvasElement> = {
         sunwardShoal: keyMagenta(sunwardFish, false, true),
         mosswaterPool: keyMagenta(mosswaterFish, false, true),
         outerGloam: keyMagenta(gloamFish, false, true),
+        beachSurf: keyMagenta(beachSurfFish, false, true),
+        beachBay: keyMagenta(beachBayFish, false, true),
+        beachReef: keyMagenta(beachReefFish, false, true),
       };
-      const tintedFish = (colour: string): Record<SpotId, HTMLCanvasElement> => ({
+      const tintedFish = (colour: string): Record<FishSheetId, HTMLCanvasElement> => ({
         sunwardShoal: tintAlpha(keyedFish.sunwardShoal, colour),
         mosswaterPool: tintAlpha(keyedFish.mosswaterPool, colour),
         outerGloam: tintAlpha(keyedFish.outerGloam, colour),
+        beachSurf: tintAlpha(keyedFish.beachSurf, colour),
+        beachBay: tintAlpha(keyedFish.beachBay, colour),
+        beachReef: tintAlpha(keyedFish.beachReef, colour),
       });
       this.art = {
         boatSteam,
@@ -522,7 +549,7 @@ export class CanvasRenderer {
     if (!spot) return;
     const targetSpecies = simulation.activeContract?.spot === spot.id
       ? simulation.activeContract.species
-      : spot.species;
+      : primarySpeciesForSpot(simulation.world, spot.id);
     const maximumDepth = maxFishingDepth(simulation);
     const entryDiveProgress = fishingDiveProgress(simulation.elapsed, fishing.startedAt, settings.reducedMotion);
     const reelProgress = fishing.reeling
@@ -1368,6 +1395,15 @@ export class CanvasRenderer {
       lakeTrout: [1.34, 0.82],
       burbot: [1.46, 0.76],
       lakeSturgeon: [1.56, 0.7],
+      seaMullet: [1.5, 0.68],
+      yellowfinBream: [1.08, 0.98],
+      sandWhiting: [1.58, 0.62],
+      duskyFlathead: [1.62, 0.6],
+      luderick: [1.08, 0.98],
+      easternAustralianSalmon: [1.45, 0.72],
+      snapper: [1.18, 0.9],
+      yellowtailKingfish: [1.58, 0.66],
+      mulloway: [1.5, 0.72],
     };
     const [widthRatio, heightRatio] = proportions[species];
     return {
