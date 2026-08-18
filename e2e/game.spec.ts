@@ -329,6 +329,31 @@ test("pause blurs the lake and slides the compact menu in and out", async ({ pag
   await expect(pauseScreen).toHaveCount(0);
 });
 
+test("pause stays open when Escape keydown is duplicated before keyup", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.getByRole("button", { name: "Accept contract" }).click();
+
+  await page.evaluate(() => {
+    window.dispatchEvent(new KeyboardEvent("keydown", { code: "Escape" }));
+  });
+  const pauseScreen = page.locator(".pause-screen");
+  await expect(pauseScreen).toBeVisible();
+
+  await page.evaluate(() => {
+    window.dispatchEvent(new KeyboardEvent("keydown", { code: "Escape" }));
+  });
+  await page.waitForTimeout(100);
+  await expect(pauseScreen).toBeVisible();
+  await expect(pauseScreen).not.toHaveClass(/is-closing/);
+
+  await page.evaluate(() => {
+    window.dispatchEvent(new KeyboardEvent("keyup", { code: "Escape" }));
+  });
+  await page.keyboard.press("Escape");
+  await expect(pauseScreen).toHaveCount(0);
+});
+
 test("settings reverses its title transition when closing", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("button", { name: "Settings" })).toBeVisible();

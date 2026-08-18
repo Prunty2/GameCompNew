@@ -155,7 +155,9 @@ export class InputController {
       pending.callback(event.code === "Escape" ? null : event.code);
       return;
     }
-    if (import.meta.env.DEV && !event.repeat) {
+    const newlyPressed = !event.repeat && !this.pressed.has(event.code);
+    this.pressed.add(event.code);
+    if (import.meta.env.DEV && newlyPressed) {
       const debugTimeJump = debugTimeJumpForCode(event.code);
       if (debugTimeJump) {
         event.preventDefault();
@@ -163,16 +165,15 @@ export class InputController {
         return;
       }
     }
-    if (!event.repeat && event.code === "KeyB") {
+    if (newlyPressed && event.code === "KeyB") {
       event.preventDefault();
       this.debugBoostUnlockQueued = true;
       return;
     }
     if (event.code.startsWith("Arrow") || event.code === "Space") event.preventDefault();
-    if (!event.repeat && event.code === this.controlBindings.action) this.actionQueued = true;
-    if (!event.repeat && event.code === "Escape") this.escapeQueued = true;
-    if (!event.repeat && event.code === this.controlBindings.pause) this.pauseQueued = true;
-    this.pressed.add(event.code);
+    if (newlyPressed && event.code === this.controlBindings.action) this.actionQueued = true;
+    if (newlyPressed && event.code === "Escape") this.escapeQueued = true;
+    if (newlyPressed && event.code === this.controlBindings.pause) this.pauseQueued = true;
   };
 
   private readonly onKeyUp = (event: KeyboardEvent): void => {
