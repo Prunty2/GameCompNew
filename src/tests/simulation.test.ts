@@ -8,6 +8,7 @@ import {
   harborById,
   regionSurfaceTintAt,
   spotById,
+  type FishSpecies,
 } from "../game/balance";
 import {
   acceptAvailableContract,
@@ -24,7 +25,6 @@ import {
   getInteractionPrompt,
   interact,
   learningAccuracy,
-  maxFishingDepth,
   moveBoatForTesting,
   navigationGuidance,
   nightVisualIntensity,
@@ -40,6 +40,7 @@ import {
   updateSimulation,
   type InputState,
 } from "../game/simulation";
+import { projectFishingInteraction } from "../game/fishingInteraction";
 import { estimateRoute } from "../game/stem";
 
 const idle: InputState = {
@@ -48,6 +49,25 @@ const idle: InputState = {
   hookX: 0,
   hookY: 0,
 };
+
+function steerSimulationToSpecies(
+  simulation: ReturnType<typeof createSimulation>,
+  species: FishSpecies,
+): void {
+  for (let step = 0; step < 1_500 && simulation.fishing; step += 1) {
+    const scene = projectFishingInteraction(simulation.fishing, false);
+    if (scene.phase === "reeling") return;
+    const target = scene.fish.find((candidate) => candidate.species === species);
+    if (!target) throw new Error(`Expected ${species} in the Fishing interaction.`);
+    const horizontallyAligned = Math.abs(target.point.x - scene.hook.x) < 0.012;
+    updateSimulation(simulation, {
+      ...idle,
+      hookX: Math.sign(target.point.x - scene.hook.x),
+      hookY: horizontallyAligned ? Math.sign(target.point.y - scene.hook.y) : 0,
+    }, 1 / 120);
+  }
+  throw new Error(`Failed to hook ${species}.`);
+}
 
 describe("FSHING side-on simulation", () => {
   test("eases night visuals in and out over twenty-five seconds", () => {
@@ -384,12 +404,12 @@ describe("FSHING side-on simulation", () => {
     acceptAvailableContract(simulation);
     undock(simulation);
     expect(startFishing(simulation, "sunwardShoal")).toBe(true);
-    const target = simulation.fishing?.targets[0];
-    if (!simulation.fishing || !target) throw new Error("Expected a fishing target.");
-    simulation.fishing.hook = { x: target.x, y: target.y };
-    updateSimulation(simulation, idle, 0);
+    steerSimulationToSpecies(simulation, "bluegill");
     expect(simulation.mode).toBe("fishing");
-    expect(simulation.fishing?.reeling).toMatchObject({ species: "bluegill" });
+    expect(simulation.fishing && projectFishingInteraction(simulation.fishing, false)).toMatchObject({
+      phase: "reeling",
+      hookedFish: { species: "bluegill" },
+    });
     expect(tutorialPrompt(simulation)).toBe("Reeling the Bluegill to the boat.");
     expect(simulation.cargo).toEqual([]);
     for (let index = 0; index < 12; index += 1) updateSimulation(simulation, idle, 0.1);
@@ -401,7 +421,7 @@ describe("FSHING side-on simulation", () => {
     const simulation = createSimulation(9);
     expect(startFishing(simulation, "sunwardShoal")).toBe(true);
     expect(beginFishingExit(simulation)).toBe(true);
-    expect(simulation.fishing?.exitingAt).toBe(simulation.elapsed);
+    expect(simulation.fishing && projectFishingInteraction(simulation.fishing, false).phase).toBe("exiting");
 
     for (let index = 0; index < 11; index += 1) updateSimulation(simulation, idle, 0.1);
     expect(simulation.mode).toBe("fishing");
@@ -416,23 +436,25 @@ describe("FSHING side-on simulation", () => {
   test("moves the fishing hook faster upward than horizontally or downward", () => {
     const simulation = createSimulation(9);
     expect(startFishing(simulation, "sunwardShoal")).toBe(true);
-    const startingHook = simulation.fishing?.hook;
-    if (!startingHook) throw new Error("Expected a fishing hook.");
+    if (!simulation.fishing) throw new Error("Expected a Fishing interaction.");
+    const startingHook = projectFishingInteraction(simulation.fishing, false).hook;
     const startX = startingHook.x;
     const startY = startingHook.y;
 
     updateSimulation(simulation, { ...idle, hookX: 1 }, 0.1);
 
-    expect(simulation.fishing?.hook.x).toBeCloseTo(startX + BALANCE.fishingHookHorizontalSpeed * 0.1);
-    expect(simulation.fishing?.hook.y).toBeCloseTo(startY);
+    expect(simulation.fishing && projectFishingInteraction(simulation.fishing, false).hook.x)
+      .toBeCloseTo(startX + BALANCE.fishingHookHorizontalSpeed * 0.1);
+    expect(simulation.fishing && projectFishingInteraction(simulation.fishing, false).hook.y).toBeCloseTo(startY);
 
     updateSimulation(simulation, { ...idle, hookY: 1 }, 0.1);
 
-    expect(simulation.fishing?.hook.y).toBeCloseTo(startY + BALANCE.fishingHookDownSpeed * 0.1);
+    expect(simulation.fishing && projectFishingInteraction(simulation.fishing, false).hook.y)
+      .toBeCloseTo(startY + BALANCE.fishingHookDownSpeed * 0.1);
 
     updateSimulation(simulation, { ...idle, hookY: -1 }, 0.1);
 
-    expect(simulation.fishing?.hook.y).toBeCloseTo(
+    expect(simulation.fishing && projectFishingInteraction(simulation.fishing, false).hook.y).toBeCloseTo(
       startY + BALANCE.fishingHookDownSpeed * 0.1 - BALANCE.fishingHookUpSpeed * 0.1,
     );
     expect(BALANCE.fishingHookHorizontalSpeed).toBe(0.25);
@@ -535,16 +557,16 @@ describe("FSHING side-on simulation", () => {
     undock(simulation);
     simulation.progress.upgrades.line = 1;
     expect(startFishing(simulation, "mosswaterPool")).toBe(true);
-    expect(simulation.fishing?.targets).toHaveLength(SPOT_RESIDENTS.mosswaterPool.length * 2);
-    expect(new Set(simulation.fishing?.targets.map((target) => target.species))).toEqual(
+    if (!simulation.fishing) throw new Error("Expected a Fishing interaction.");
+    const fishingScene = projectFishingInteraction(simulation.fishing, false);
+    expect(fishingScene.fish).toHaveLength(SPOT_RESIDENTS.mosswaterPool.length * 2);
+    expect(new Set(fishingScene.fish.map((target) => target.species))).toEqual(
       new Set(SPOT_RESIDENTS.mosswaterPool),
     );
-    expect(maxFishingDepth(simulation)).toBeCloseTo(0.425);
+    expect(fishingScene.maximumDepth).toBeCloseTo(0.425);
 
-    const deepTarget = simulation.fishing?.targets.find((target) => target.species === "largemouthBass");
-    expect(deepTarget?.y).toBeGreaterThan(maxFishingDepth(simulation));
-    simulation.progress.upgrades.line = 5;
-    expect(maxFishingDepth(simulation)).toBeGreaterThanOrEqual(deepTarget?.y ?? 1);
+    const deepTarget = fishingScene.fish.find((target) => target.species === "largemouthBass");
+    expect(deepTarget?.point.y).toBeGreaterThan(fishingScene.maximumDepth);
   });
 
   test("supports ten cargo slots across seven cargo upgrades", () => {

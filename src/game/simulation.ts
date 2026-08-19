@@ -1,12 +1,9 @@
 import { clamp, createRandom, type RandomSource } from "./math";
-import { fishingSpeciesMotion } from "./fishingMovement";
-import { FISHING_REEL_DURATION } from "./fishingReeling";
 import {
   BALANCE,
   FISH,
   FISHING_SPOTS,
   HARBORS,
-  SPOT_RESIDENTS,
   SURFACE_Y,
   engineSpeedMultiplier,
   harborById,
@@ -18,6 +15,13 @@ import {
   type UpgradeId,
   type WorldPoint,
 } from "./balance";
+import {
+  advanceFishingInteraction,
+  beginFishingInteraction,
+  projectFishingInteraction,
+  requestFishingExit,
+  type FishingInteraction,
+} from "./fishingInteraction";
 import {
   estimateRoute,
   evaluateSurvey,
@@ -74,30 +78,6 @@ export interface ProgressState {
   seasonCompleted: boolean;
 }
 
-export interface FishingTarget extends WorldPoint {
-  species: FishSpecies;
-  direction: -1 | 1;
-  speed: number;
-  homeY: number;
-  phase: number;
-}
-
-export interface FishingState {
-  spot: SpotId;
-  startedAt: number;
-  hook: WorldPoint;
-  targets: FishingTarget[];
-  reeling: FishingReelState | null;
-  exitingAt: number | null;
-}
-
-export interface FishingReelState {
-  species: FishSpecies;
-  targetIndex: number;
-  hookedAt: number;
-  direction: -1 | 1;
-}
-
 export interface DeliveryResult {
   payment: number;
   metFreshnessRequirement: boolean;
@@ -128,7 +108,7 @@ export interface Simulation {
   availableContract: Contract | null;
   dockedAt: HarborId | null;
   mode: "cruising" | "fishing";
-  fishing: FishingState | null;
+  fishing: FishingInteraction | null;
   elapsed: number;
   random: RandomSource;
   progress: ProgressState;
@@ -160,7 +140,6 @@ export interface NavigationGuidance {
   instruction: string;
 }
 
-const FISHING_CATCH_RADIUS = 0.058;
 const SEASON_DELIVERIES = 8;
 
 export function createSimulation(seed = 1, progress?: Partial<ProgressState>): Simulation {
@@ -339,32 +318,18 @@ export function startFishing(simulation: Simulation, spotId: SpotId): boolean {
     return false;
   }
 
-  const residents = SPOT_RESIDENTS[spotId];
   simulation.boat.speed = 0;
   simulation.mode = "fishing";
-  simulation.fishing = {
+  const objectiveSpecies = simulation.activeContract?.spot === spotId
+    ? simulation.activeContract.species
+    : spot.species;
+  simulation.fishing = beginFishingInteraction({
     spot: spotId,
-    startedAt: simulation.elapsed,
-    hook: { x: 0.5, y: 0.08 },
-    reeling: null,
-    exitingAt: null,
-    targets: residents.flatMap((fishSpecies, residentIndex) => (
-      [0, 1].map((schoolIndex) => {
-        const fish = FISH[fishSpecies];
-        const index = residentIndex * 2 + schoolIndex;
-        const homeY = Math.min(0.92, 0.19 + fish.depthTier * 0.135 + simulation.random.next() * 0.05);
-        return {
-          species: fishSpecies,
-          x: 0.12 + ((index * 0.153) % 0.76),
-          y: homeY,
-          direction: index % 2 === 0 ? 1 : -1,
-          speed: 0.048 + fish.depthTier * 0.0075 + simulation.random.next() * 0.032,
-          homeY,
-          phase: (index * 1.73 + fish.depthTier * 0.61) % (Math.PI * 2),
-        };
-      })
-    )),
-  };
+    objectiveSpecies,
+    lineTier: simulation.progress.upgrades.line,
+    random: simulation.random,
+    initialTime: simulation.elapsed,
+  });
   return true;
 }
 
@@ -373,9 +338,11 @@ export function leaveFishing(simulation: Simulation): void {
   simulation.fishing = null;
 }
 
-export function beginFishingExit(simulation: Simulation): boolean {
-  if (simulation.mode !== "fishing" || !simulation.fishing || simulation.fishing.reeling) return false;
-  simulation.fishing.exitingAt ??= simulation.elapsed;
+export function beginFishingExit(simulation: Simulation, reducedMotion = false): boolean {
+  if (simulation.mode !== "fishing" || !simulation.fishing) return false;
+  const request = requestFishingExit(simulation.fishing, reducedMotion);
+  if (!request.accepted) return false;
+  if (request.step.status === "complete") leaveFishing(simulation);
   return true;
 }
 
@@ -552,10 +519,6 @@ export function cargoCapacity(simulation: Simulation): number {
   return Math.min(BALANCE.maxCargoSlots, BALANCE.baseCargoSlots + simulation.progress.upgrades.cargo);
 }
 
-export function maxFishingDepth(simulation: Simulation): number {
-  return Math.min(0.94, 0.3 + simulation.progress.upgrades.line * 0.125);
-}
-
 export function upgradeCost(upgrade: UpgradeId, tier: number): number {
   return BALANCE.upgradeCosts[upgrade] + Math.max(0, tier) * 55;
 }
@@ -678,15 +641,10 @@ export function tutorialPrompt(simulation: Simulation): string | null {
     return totalUpgradeTiers === 0 ? navigationGuidance(simulation).instruction : null;
   }
   if (simulation.mode === "fishing" && simulation.fishing) {
-    if (simulation.fishing.reeling) {
-      return `Reeling the ${FISH[simulation.fishing.reeling.species].name} to the boat.`;
-    }
-    if (simulation.fishing.exitingAt !== null) return "Reeling in the line and returning to the surface.";
-    const spot = spotById(simulation.fishing.spot);
-    const target = simulation.activeContract?.spot === spot.id
-      ? simulation.activeContract.species
-      : spot.species;
-    return `Guide the hook toward the ${FISH[target].name}.`;
+    const fishing = projectFishingInteraction(simulation.fishing, false);
+    if (fishing.phase === "reeling") return `Reeling the ${FISH[fishing.hookedFish!.species].name} to the boat.`;
+    if (fishing.phase === "exiting") return "Reeling in the line and returning to the surface.";
+    return `Guide the hook toward the ${FISH[fishing.objectiveSpecies].name}.`;
   }
   return navigationGuidance(simulation).instruction;
 }
@@ -729,42 +687,10 @@ function coolBoost(simulation: Simulation, dt: number): void {
 function updateFishing(simulation: Simulation, input: InputState, dt: number): void {
   const fishing = simulation.fishing;
   if (!fishing) return;
-  if (fishing.exitingAt !== null) {
-    if (simulation.elapsed - fishing.exitingAt >= FISHING_REEL_DURATION) leaveFishing(simulation);
-    return;
-  }
-  if (fishing.reeling) {
-    if (simulation.elapsed - fishing.reeling.hookedAt >= FISHING_REEL_DURATION) {
-      resolveCatch(simulation, fishing.reeling.species);
-    }
-    return;
-  }
-  const verticalSpeed = input.hookY < 0 ? BALANCE.fishingHookUpSpeed : BALANCE.fishingHookDownSpeed;
-  fishing.hook.x = clamp(fishing.hook.x + input.hookX * BALANCE.fishingHookHorizontalSpeed * dt, 0.07, 0.93);
-  fishing.hook.y = clamp(fishing.hook.y + input.hookY * verticalSpeed * dt, 0.07, maxFishingDepth(simulation));
-  for (const [targetIndex, target] of fishing.targets.entries()) {
-    const motion = fishingSpeciesMotion(target.species, simulation.elapsed, target.phase);
-    target.x += target.speed * motion.horizontalMultiplier * target.direction * motion.heading * dt;
-    target.y = clamp(target.homeY + motion.depthOffset, 0.1, 0.92);
-    if (target.x < 0.1 || target.x > 0.9) {
-      target.x = clamp(target.x, 0.1, 0.9);
-      target.direction = target.direction === 1 ? -1 : 1;
-    }
-    const reachable = FISH[target.species].depthTier <= simulation.progress.upgrades.line;
-    if (reachable && distance(fishing.hook, target) <= FISHING_CATCH_RADIUS) {
-      fishing.reeling = {
-        species: target.species,
-        targetIndex,
-        hookedAt: simulation.elapsed,
-        direction: multiplyDirection(target.direction, motion.heading),
-      };
-      return;
-    }
-  }
-}
-
-function multiplyDirection(first: -1 | 1, second: -1 | 1): -1 | 1 {
-  return first === second ? 1 : -1;
+  const step = advanceFishingInteraction(fishing, { hookX: input.hookX, hookY: input.hookY }, dt);
+  if (step.status !== "complete") return;
+  if (step.outcome.kind === "caught") resolveCatch(simulation, step.outcome.species);
+  else leaveFishing(simulation);
 }
 
 function ageCargo(simulation: Simulation, dt: number): void {
@@ -963,10 +889,6 @@ function deliveryInstruction(
 function nearestHorizontal<T extends WorldPoint>(x: number, choices: readonly T[], radius: number): T | null {
   const nearest = [...choices].sort((first, second) => Math.abs(x - first.x) - Math.abs(x - second.x))[0];
   return nearest && Math.abs(x - nearest.x) <= radius ? nearest : null;
-}
-
-function distance(first: WorldPoint, second: WorldPoint): number {
-  return Math.hypot(first.x - second.x, first.y - second.y);
 }
 
 function clampInteger(value: unknown, minimum: number, maximum: number): number {

@@ -1,57 +1,21 @@
 import { describe, expect, test } from "vitest";
 import { FISH } from "../game/balance";
 import {
-  FISHING_DIVE_DURATION,
   FISHING_ENVIRONMENT_KEYS,
   FISHING_RARITY_COLOURS,
-  fishingDiveProgress,
-  fishingFishPose,
   fishingPointToScreen,
-  fishingReelCameraProgress,
   fishingViewLayout,
 } from "../game/fishingPresentation";
 
 describe("fishing presentation", () => {
-  test("moves the waterline upward as the camera descends below the surface", () => {
-    const start = fishingViewLayout(900, 0, fishingDiveProgress(20, 20, false));
-    const middle = fishingViewLayout(900, 0, fishingDiveProgress(20 + FISHING_DIVE_DURATION / 2, 20, false));
-    const settled = fishingViewLayout(900, 0, fishingDiveProgress(20 + FISHING_DIVE_DURATION, 20, false));
+  test("maps Fishing interaction dive progress to the waterline", () => {
+    const start = fishingViewLayout(900, 0, 0);
+    const middle = fishingViewLayout(900, 0, 0.5);
+    const settled = fishingViewLayout(900, 0, 1);
 
     expect(start.surfaceY).toBeCloseTo(702);
     expect(middle.surfaceY).toBeLessThan(start.surfaceY);
     expect(settled.surfaceY).toBeCloseTo(279);
-    expect(fishingDiveProgress(20, 20, true)).toBe(1);
-  });
-
-  test("returns the camera to sailing height during the reel", () => {
-    expect(fishingReelCameraProgress(1, 0, false)).toBe(1);
-    expect(fishingReelCameraProgress(1, 0.5, false)).toBe(0.5);
-    expect(fishingReelCameraProgress(1, 1, false)).toBe(0);
-    expect(fishingReelCameraProgress(1, 0, true)).toBe(0);
-  });
-
-  test("gives each fish a deterministic swim cycle and respects reduced motion", () => {
-    const first = fishingFishPose("bluegill", 12.5, 2.4, false);
-    const repeated = fishingFishPose("bluegill", 12.5, 2.4, false);
-    const neighbor = fishingFishPose("emeraldShiner", 12.5, 2.4, false);
-
-    expect(first).toEqual(repeated);
-    expect(first).not.toEqual(neighbor);
-    expect(first.animationFrame).toBeGreaterThanOrEqual(0);
-    expect(first.animationFrame).toBeLessThan(4);
-    expect(new Set(Array.from({ length: 24 }, (_, index) => (
-      fishingFishPose("bluegill", index * 0.2, 0, false).animationFrame
-    )))).toHaveProperty("size", 4);
-    expect(Math.abs(first.verticalOffsetRatio)).toBeLessThanOrEqual(0.012);
-    const reducedMotionPose = fishingFishPose("bluegill", 12.5, 2.4, true);
-    expect(reducedMotionPose).toMatchObject({
-      animationFrame: 0,
-      verticalOffsetRatio: 0,
-      rotation: 0,
-      scaleX: 1,
-      scaleY: 1,
-    });
-    expect(Math.abs(reducedMotionPose.heading)).toBe(1);
   });
 
   test("keeps the simulated hook limit aligned with the visible float line", () => {

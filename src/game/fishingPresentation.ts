@@ -1,5 +1,4 @@
-import type { FishRarity, FishSpecies, SpotId, WorldPoint } from "./balance";
-import { FISHING_MOVEMENT_PROFILES, fishingSpeciesMotion } from "./fishingMovement";
+import type { FishRarity, SpotId, WorldPoint } from "./balance";
 
 export interface FishingViewLayout {
   surfaceY: number;
@@ -7,17 +6,6 @@ export interface FishingViewLayout {
   lineLimitY: number;
   lineLimitRatio: number;
 }
-
-export interface FishingFishPose {
-  animationFrame: number;
-  verticalOffsetRatio: number;
-  rotation: number;
-  scaleX: number;
-  scaleY: number;
-  heading: -1 | 1;
-}
-
-export const FISHING_DIVE_DURATION = 0.85;
 
 export const FISHING_RARITY_COLOURS: Record<FishRarity, string> = {
   common: "#f4e6c5",
@@ -32,21 +20,6 @@ export const FISHING_ENVIRONMENT_KEYS: Record<SpotId, string> = {
   outerGloam: "fishing-outer-gloam",
 };
 
-export function fishingDiveProgress(elapsed: number, startedAt: number, reducedMotion: boolean): number {
-  if (reducedMotion) return 1;
-  const linear = clamp((elapsed - startedAt) / FISHING_DIVE_DURATION, 0, 1);
-  return 1 - (1 - linear) ** 3;
-}
-
-export function fishingReelCameraProgress(
-  diveProgress: number,
-  reelProgress: number,
-  reducedMotion: boolean,
-): number {
-  if (reducedMotion) return 0;
-  return clamp(diveProgress, 0, 1) * (1 - clamp(reelProgress, 0, 1));
-}
-
 export function fishingViewLayout(height: number, lineTier: number, diveProgress: number): FishingViewLayout {
   const settledSurfaceY = height * 0.31;
   const sailingSurfaceY = height * 0.78;
@@ -58,32 +31,6 @@ export function fishingViewLayout(height: number, lineTier: number, diveProgress
     underwaterHeight,
     lineLimitY: surfaceY + underwaterHeight * lineLimitRatio,
     lineLimitRatio,
-  };
-}
-
-export function fishingFishPose(
-  species: FishSpecies,
-  elapsed: number,
-  phase: number,
-  reducedMotion: boolean,
-): FishingFishPose {
-  if (reducedMotion) {
-    const motion = fishingSpeciesMotion(species, elapsed, phase);
-    return { animationFrame: 0, verticalOffsetRatio: 0, rotation: 0, scaleX: 1, scaleY: 1, heading: motion.heading };
-  }
-  const profile = FISHING_MOVEMENT_PROFILES[species];
-  const motion = fishingSpeciesMotion(species, elapsed, phase);
-  const framePhase = ((elapsed * profile.bodyFrequency + phase * 0.8) / (Math.PI * 2)) % 1;
-  const animationFrame = motion.propulsion < 0.16
-    ? 0
-    : Math.floor((framePhase < 0 ? framePhase + 1 : framePhase) * 4) % 4;
-  return {
-    animationFrame,
-    verticalOffsetRatio: motion.flex * profile.flexAmount * 0.08,
-    rotation: motion.pitch,
-    scaleX: 1 + motion.flex * profile.flexAmount,
-    scaleY: 1 - motion.flex * profile.flexAmount * 0.62,
-    heading: motion.heading,
   };
 }
 
@@ -105,10 +52,6 @@ export function fishingPointToScreen(
     x: point.x * width,
     y: layout.surfaceY + layout.underwaterHeight * clamp(depthRatio, topRatio, bottomRatio),
   };
-}
-
-export function targetRarity(species: FishSpecies, rarity: FishRarity): { species: FishSpecies; colour: string } {
-  return { species, colour: FISHING_RARITY_COLOURS[rarity] };
 }
 
 function clamp(value: number, minimum: number, maximum: number): number {

@@ -37,6 +37,7 @@ import {
 } from "./controls";
 import { InputController } from "./input";
 import { CanvasRenderer } from "./renderer";
+import { projectFishingInteraction } from "./fishingInteraction";
 import {
   acceptAvailableContract,
   beginFishingExit,
@@ -52,7 +53,6 @@ import {
   deliverContract,
   getInteractionPrompt,
   interact,
-  leaveFishing,
   moveBoatForTesting,
   navigationGuidance,
   nightVisualIntensity,
@@ -420,10 +420,10 @@ export class Game {
     const navigation = this.uiRoot.querySelector<HTMLElement>(".navigation-controls");
     const fishing = this.uiRoot.querySelector<HTMLElement>(".fishing-controls");
     if (navigation) navigation.hidden = this.overlay !== null || simulation.mode === "fishing";
-    if (fishing) fishing.hidden = this.overlay !== null
-      || simulation.mode !== "fishing"
-      || simulation.fishing?.reeling !== null
-      || simulation.fishing.exitingAt !== null;
+    const fishingScene = simulation.fishing
+      ? projectFishingInteraction(simulation.fishing, this.save.settings.reducedMotion)
+      : null;
+    if (fishing) fishing.hidden = this.overlay !== null || fishingScene?.controls.canSteer !== true;
     const showNightIndicator = shouldShowNightIndicator(simulation);
     document.body.classList.toggle("show-night-indicator", showNightIndicator);
     this.uiRoot.querySelector<HTMLElement>(".night-indicator")
@@ -1316,12 +1316,8 @@ export class Game {
   };
 
   private exitFishing(): void {
-    if (this.simulation.mode !== "fishing"
-      || this.simulation.fishing?.reeling
-      || this.simulation.fishing?.exitingAt !== null) return;
+    if (!beginFishingExit(this.simulation, this.save.settings.reducedMotion)) return;
     this.feedback.cue("cast");
-    if (this.save.settings.reducedMotion) leaveFishing(this.simulation);
-    else beginFishingExit(this.simulation);
     this.refreshHud();
   }
 
@@ -1372,10 +1368,16 @@ export class Game {
         this.refreshHud();
       },
       hookSpecies: (species) => {
-        const target = this.simulation.fishing?.targets.find((candidate) => candidate.species === species);
-        if (!this.simulation.fishing || !target) return;
-        this.simulation.fishing.hook = { x: target.x, y: target.y };
-        updateSimulation(this.simulation, { travel: 0, hookX: 0, hookY: 0, boost: false }, 0);
+        for (let step = 0; step < 1_500 && this.simulation.fishing; step += 1) {
+          const scene = projectFishingInteraction(this.simulation.fishing, false);
+          if (scene.phase !== "steering") break;
+          const target = scene.fish.find((candidate) => candidate.species === species);
+          if (!target) break;
+          const hookX = Math.sign(target.point.x - scene.hook.x);
+          const horizontallyAligned = Math.abs(target.point.x - scene.hook.x) < 0.012;
+          const hookY = horizontallyAligned ? Math.sign(target.point.y - scene.hook.y) : 0;
+          updateSimulation(this.simulation, { travel: 0, hookX, hookY, boost: false }, FIXED_STEP);
+        }
         this.refreshHud();
       },
       damage: (amount) => {

@@ -35,22 +35,16 @@ import {
 } from "./camera";
 import {
   FISHING_RARITY_COLOURS,
-  fishingDiveProgress,
-  fishingFishPose,
   fishingPointToScreen,
-  fishingReelCameraProgress,
   fishingViewLayout,
   type FishingViewLayout,
 } from "./fishingPresentation";
 import {
-  fishingReelProgress,
-  fishingReelSchoolOpacity,
-  fishingReelWriggle,
-} from "./fishingReeling";
+  projectFishingInteraction,
+} from "./fishingInteraction";
 import { surfaceFishingCue, surfaceFishPose, type SurfaceFishingCue } from "./fishingSpotEffects";
 import { calculatePanoramaLayout } from "./panorama";
 import {
-  maxFishingDepth,
   navigationGuidance,
   nightVisualIntensity,
   type Simulation,
@@ -469,41 +463,28 @@ export class CanvasRenderer {
     const art = this.art;
     if (!art) return;
     const { context } = this;
-    const spot = FISHING_SPOTS.find((candidate) => candidate.id === fishing.spot);
+    const scene = projectFishingInteraction(fishing, settings.reducedMotion);
+    const spot = FISHING_SPOTS.find((candidate) => candidate.id === scene.spot);
     if (!spot) return;
-    const targetSpecies = simulation.activeContract?.spot === spot.id
-      ? simulation.activeContract.species
-      : spot.species;
-    const maximumDepth = maxFishingDepth(simulation);
-    const entryDiveProgress = fishingDiveProgress(simulation.elapsed, fishing.startedAt, settings.reducedMotion);
-    const reelProgress = fishing.reeling
-      ? fishingReelProgress(simulation.elapsed, fishing.reeling.hookedAt)
-      : 0;
-    const exitProgress = fishing.exitingAt === null
-      ? 0
-      : fishingReelProgress(simulation.elapsed, fishing.exitingAt);
-    const surfaceProgress = fishing.reeling ? reelProgress : exitProgress;
-    const surfacing = fishing.reeling !== null || fishing.exitingAt !== null;
-    const schoolOpacity = surfacing ? fishingReelSchoolOpacity(surfaceProgress) : 1;
-    const diveProgress = surfacing
-      ? fishingReelCameraProgress(entryDiveProgress, surfaceProgress, settings.reducedMotion)
-      : entryDiveProgress;
-    const layout = fishingViewLayout(height, simulation.progress.upgrades.line, diveProgress);
+    const targetSpecies = scene.objectiveSpecies;
+    const maximumDepth = scene.maximumDepth;
+    const {
+      diveProgress,
+      reelProgress,
+      surfaceProgress,
+      schoolOpacity,
+      surfaceSpriteOpacity,
+    } = scene.transition;
+    const surfacing = scene.phase !== "steering";
+    const layout = fishingViewLayout(height, scene.lineTier, diveProgress);
     this.canvas.dataset.fishingDiveProgress = diveProgress.toFixed(3);
     this.canvas.dataset.fishingSchoolOpacity = schoolOpacity.toFixed(3);
-    this.canvas.dataset.fishingSurfaceSpriteOpacity = reelProgress.toFixed(3);
+    this.canvas.dataset.fishingSurfaceSpriteOpacity = surfaceSpriteOpacity.toFixed(3);
     this.canvas.dataset.fishingSurfaceBlend = surfaceProgress.toFixed(3);
     this.canvas.dataset.fishingSpot = spot.id;
     this.canvas.dataset.targetRarity = FISH[targetSpecies].rarity;
-    this.canvas.dataset.fishingState = fishing.reeling ? "reeling" : fishing.exitingAt !== null ? "exiting" : "steering";
-    this.canvas.setAttribute(
-      "aria-label",
-      fishing.reeling
-        ? `Fishing at ${spot.name}. Reeling ${FISH[fishing.reeling.species].name} to the boat.`
-        : fishing.exitingAt !== null
-          ? `Leaving ${spot.name} and returning to the lake surface.`
-        : `Fishing at ${spot.name}. Target ${FISH[targetSpecies].name}, ${FISH[targetSpecies].rarity} rarity.`,
-    );
+    this.canvas.dataset.fishingState = scene.phase;
+    this.canvas.setAttribute("aria-label", scene.narration);
     this.drawFishingEnvironment(art.fishingEnvironments[spot.id], layout, width, height, settings.highContrast);
     this.drawFishingSurfaceBand(
       simulation,
@@ -512,6 +493,7 @@ export class CanvasRenderer {
       height,
       layout.surfaceY,
       surfaceProgress,
+      scene.hookedFish?.species ?? null,
     );
 
     const gameplayVisibility = clamp((diveProgress - 0.24) / 0.54, 0, 1);
@@ -524,35 +506,32 @@ export class CanvasRenderer {
       this.drawFishingLineLimit(depthLine, width, height, settings.highContrast);
     }
 
-    for (const [targetIndex, target] of fishing.targets.entries()) {
-      if (fishing.reeling?.targetIndex === targetIndex) continue;
-      const point = fishingPointToScreen(target, width, layout, maximumDepth);
-      const pose = fishingFishPose(target.species, simulation.elapsed, target.phase, settings.reducedMotion);
-      const heading = target.direction === pose.heading ? 1 : -1;
+    for (const target of scene.fish) {
+      if (target.hooked) continue;
+      const point = fishingPointToScreen(target.point, width, layout, maximumDepth);
       const animatedPoint = {
         x: point.x,
-        y: point.y + pose.verticalOffsetRatio * layout.underwaterHeight,
+        y: point.y + target.pose.verticalOffsetRatio * layout.underwaterHeight,
       };
-      const reachable = FISH[target.species].depthTier <= simulation.progress.upgrades.line;
       context.save();
-      context.globalAlpha = (reachable ? 1 : 0.3) * schoolOpacity;
+      context.globalAlpha = (target.reachable ? 1 : 0.3) * target.opacity;
       context.translate(animatedPoint.x, animatedPoint.y);
-      context.rotate(pose.rotation * heading);
-      context.scale(pose.scaleX, pose.scaleY);
-      if (target.species === targetSpecies) {
-        this.drawFishOutline(target.species, pose.animationFrame, { x: 0, y: 0 }, heading, width, height, settings.highContrast);
+      context.rotate(target.pose.rotation * target.heading);
+      context.scale(target.pose.scaleX, target.pose.scaleY);
+      if (target.objective) {
+        this.drawFishOutline(target.species, target.pose.animationFrame, { x: 0, y: 0 }, target.heading, width, height, settings.highContrast);
       }
-      this.drawFish(target.species, pose.animationFrame, { x: 0, y: 0 }, heading, width, height, settings.highContrast);
+      this.drawFish(target.species, target.pose.animationFrame, { x: 0, y: 0 }, target.heading, width, height, settings.highContrast);
       context.restore();
-      if (target.species === targetSpecies) {
+      if (target.objective) {
         context.save();
-        context.globalAlpha = schoolOpacity;
+        context.globalAlpha = target.opacity;
         this.drawFishingTargetChevron(animatedPoint, target.species, width, height, settings.highContrast);
         context.restore();
       }
     }
 
-    const restingHook = fishingPointToScreen(fishing.hook, width, layout, maximumDepth);
+    const restingHook = fishingPointToScreen(scene.hook, width, layout, maximumDepth);
     const hook = surfacing
       ? {
           x: restingHook.x + (width * 0.5 - restingHook.x) * surfaceProgress,
@@ -566,23 +545,18 @@ export class CanvasRenderer {
     context.lineTo(hook.x, hook.y);
     context.stroke();
     const hookSize = clamp(Math.min(width, height) * 0.076, 46, 68);
-    if (fishing.reeling) {
-      const wriggle = fishingReelWriggle(
-        simulation.elapsed,
-        fishing.reeling.hookedAt,
-        settings.reducedMotion,
-      );
-      const fishOffset = fishing.reeling.direction * hookSize * 0.24;
+    if (scene.hookedFish) {
+      const fishOffset = scene.hookedFish.direction * hookSize * 0.24;
       context.save();
       context.globalAlpha = 1;
       context.translate(hook.x - fishOffset, hook.y + hookSize * 0.08);
-      context.rotate(wriggle * 0.18);
-      context.scale(1, 1 + Math.abs(wriggle) * 0.06);
+      context.rotate(scene.hookedFish.wriggle * 0.18);
+      context.scale(1, 1 + Math.abs(scene.hookedFish.wriggle) * 0.06);
       this.drawFish(
-        fishing.reeling.species,
-        fishingFishPose(fishing.reeling.species, simulation.elapsed, 0, settings.reducedMotion).animationFrame,
+        scene.hookedFish.species,
+        scene.hookedFish.animationFrame,
         { x: 0, y: 0 },
-        fishing.reeling.direction,
+        scene.hookedFish.direction,
         width,
         height,
         settings.highContrast,
@@ -592,8 +566,8 @@ export class CanvasRenderer {
     this.drawTackleCell(1, 1, hook.x, hook.y, hookSize, hookSize);
 
     this.drawFishingTargetGuide(targetSpecies, width, height, settings.highContrast, layout.surfaceY);
-    if (fishing.reeling) {
-      this.drawReelingCue(fishing.reeling.species, reelProgress, width, height, settings.highContrast);
+    if (scene.hookedFish) {
+      this.drawReelingCue(scene.hookedFish.species, reelProgress, width, height, settings.highContrast);
     } else {
       this.drawFishingControlCue(width, height, settings.highContrast);
     }
@@ -654,6 +628,7 @@ export class CanvasRenderer {
     height: number,
     surfaceY: number,
     underwaterReveal: number,
+    hookedSpecies: FishSpecies | null,
   ): void {
     const art = this.art;
     if (!art) return;
@@ -779,12 +754,12 @@ export class CanvasRenderer {
         );
       }
 
-      const surfaceSimulation: Simulation = simulation.fishing?.reeling
+      const surfaceSimulation: Simulation = hookedSpecies
         ? {
             ...simulation,
             cargo: [
               ...simulation.cargo,
-              { species: simulation.fishing.reeling.species, freshness: 100 },
+              { species: hookedSpecies, freshness: 100 },
             ],
             mode: "cruising",
             fishing: null,
