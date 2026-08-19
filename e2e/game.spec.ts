@@ -101,7 +101,7 @@ test("first assignment teaches the complete market sale loop", async ({ page }) 
   const tutorial = page.locator("#market-tutorial");
   const bluegillListing = page.locator('[data-action="select-market-fish"][data-species="bluegill"]');
   await expect(page.getByRole("heading", { name: "Brindle Harbor" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Today's catch prices" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Fish market" })).toBeVisible();
   await expect(tutorial).toContainText("FIRST ASSIGNMENT · 1 of 5");
   await expect(bluegillListing).toHaveClass(/is-tutorial-target/);
   await expect(bluegillListing).toHaveCSS("animation-name", "tutorial-target-pulse");
@@ -110,7 +110,6 @@ test("first assignment teaches the complete market sale loop", async ({ page }) 
   await expect(tutorial).toContainText("FIRST ASSIGNMENT · 2 of 5");
   const trackButton = page.locator('[data-action="track-market-fish"][data-species="bluegill"]');
   await expect(trackButton).toHaveClass(/is-tutorial-target/);
-  await expect(page.getByText("Sunward Shoal, Brindle Coast")).toBeVisible();
   await expect(page.getByRole("img", { name: /Bluegill price history/ })).toBeVisible();
 
   await trackButton.click();
@@ -126,12 +125,13 @@ test("first assignment teaches the complete market sale loop", async ({ page }) 
   await page.evaluate(() => window.__FSHING_TEST__?.sailToHarbor("gloam"));
   await page.getByRole("button", { name: "Dock · Gloam Ferry" }).click();
   await expect(page.getByRole("heading", { name: "Gloam Ferry" })).toBeVisible();
+  await page.locator('[data-action="select-market-fish"][data-species="bluegill"]').click();
   const sellButton = page.locator('[data-action="sell-market-fish"][data-species="bluegill"]');
   await expect(sellButton).toHaveClass(/is-tutorial-target/);
-  await expect(sellButton).toHaveText(/Sell 1 for \d+ shells/);
+  await expect(sellButton).toHaveText(/Sell 1 fish · \d+ shells/);
   await sellButton.click();
 
-  await expect(page.locator("#delivery-notification")).toContainText(/Bluegill · 1 sold · \d+ shells/);
+  await expect(page.locator("#delivery-notification")).toContainText("Sold, 1 fish");
   await expect(tutorial).toContainText("FIRST ASSIGNMENT · 5 of 5");
   await page.locator('[data-action="finish-market-tutorial"]').click({ force: true });
   await expect(tutorial).toBeHidden();
@@ -143,7 +143,7 @@ test("first assignment teaches the complete market sale loop", async ({ page }) 
   await expect(page.locator(".shell-balance strong")).toHaveText(/^[1-9]\d*$/);
 });
 
-test("market grid exposes every discovered fish and a usable detail graph", async ({ page }) => {
+test("market uses a scrollable fish-card grid and a focused detail view", async ({ page }) => {
   await page.goto("/?e2e=1");
   await page.getByRole("button", { name: "Play", exact: true }).click();
   await page.evaluate(() => window.__FSHING_TEST__?.discoverAllFish());
@@ -151,7 +151,9 @@ test("market grid exposes every discovered fish and a usable detail graph", asyn
   const list = page.locator(".market-list");
   const listings = list.locator(".market-listing");
   await expect(listings).toHaveCount(9);
-  await expect(page.locator(".market-list-heading")).toContainText("9 of 9");
+  await expect(listings.first().locator(".market-listing-fish")).toBeVisible();
+  await expect(listings.first().locator(".market-listing-copy > strong")).not.toBeEmpty();
+  await expect(listings.first().locator(".market-price-pill")).toHaveText(/^\d+$/);
   const scrollState = await list.evaluate((element) => ({
     clientHeight: element.clientHeight,
     scrollHeight: element.scrollHeight,
@@ -160,17 +162,39 @@ test("market grid exposes every discovered fish and a usable detail graph", asyn
   expect(scrollState.overflowY).toBe("auto");
   expect(scrollState.scrollHeight).toBeGreaterThan(scrollState.clientHeight);
 
-  await page.locator('[data-action="select-market-fish"][data-species="lakeSturgeon"]').click();
+  const sturgeonCard = page.locator('[data-action="select-market-fish"][data-species="lakeSturgeon"]');
+  await sturgeonCard.hover();
+  await expect(sturgeonCard).toHaveCSS("animation-name", "menu-button-hover-wobble");
+  await sturgeonCard.click();
   const detail = page.locator(".market-detail");
   await expect(detail.getByRole("heading", { name: "Lake Sturgeon" })).toBeVisible();
   await expect(detail.getByRole("img", { name: /Lake Sturgeon price history/ })).toBeVisible();
-  await expect(detail).toContainText("Found at");
-  await expect(detail).toContainText("Access");
-  await expect(detail).toContainText("Today's supply");
-  await expect(detail).toContainText("shells");
+  await expect(detail.getByText("in your hold")).toBeVisible();
+  await expect(detail.getByRole("button", { name: "Back to market" })).toBeVisible();
+  await expect(detail).not.toContainText("Found at");
+  await expect(detail).not.toContainText("Today's supply");
+
+  const desktopLayout = await detail.evaluate((element) => {
+    const summary = element.querySelector<HTMLElement>(".market-fish-summary")?.getBoundingClientRect();
+    const chart = element.querySelector<HTMLElement>(".market-chart-shell")?.getBoundingClientRect();
+    return { summaryRight: summary?.right ?? 0, chartLeft: chart?.left ?? 0 };
+  });
+  expect(desktopLayout.chartLeft).toBeGreaterThanOrEqual(desktopLayout.summaryRight);
+
+  await detail.getByRole("button", { name: "Back to market" }).click();
+  await expect(listings).toHaveCount(9);
+  await expect(sturgeonCard).toBeFocused();
+
+  await sturgeonCard.click();
 
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(detail).toBeVisible();
+  const mobileLayout = await detail.evaluate((element) => {
+    const summary = element.querySelector<HTMLElement>(".market-fish-summary")?.getBoundingClientRect();
+    const chart = element.querySelector<HTMLElement>(".market-chart-shell")?.getBoundingClientRect();
+    return { summaryBottom: summary?.bottom ?? 0, chartTop: chart?.top ?? 0 };
+  });
+  expect(mobileLayout.chartTop).toBeGreaterThanOrEqual(mobileLayout.summaryBottom);
   const panelFitsWidth = await page.locator(".market-harbor-panel").evaluate(
     (element) => element.scrollWidth <= element.clientWidth,
   );
