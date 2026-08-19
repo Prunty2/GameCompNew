@@ -19,6 +19,7 @@ import {
   FISH,
   FISHING_SPOTS,
   HARBORS,
+  SPOT_RESIDENTS,
   regionSurfaceTintAt,
   type FishRarity,
   type FishSpecies,
@@ -471,8 +472,9 @@ export class CanvasRenderer {
     const { context } = this;
     const spot = FISHING_SPOTS.find((candidate) => candidate.id === fishing.spot);
     if (!spot) return;
-    const targetSpecies = simulation.activeContract?.spot === spot.id
-      ? simulation.activeContract.species
+    const targetSpecies = simulation.progress.marketTarget
+      && SPOT_RESIDENTS[spot.id].includes(simulation.progress.marketTarget)
+      ? simulation.progress.marketTarget
       : spot.species;
     const maximumDepth = maxFishingDepth(simulation);
     const entryDiveProgress = fishingDiveProgress(simulation.elapsed, fishing.startedAt, settings.reducedMotion);

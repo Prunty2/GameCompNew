@@ -5,8 +5,6 @@ import gloamDockDayUrl from "../assets/dock-gloam-day.jpg";
 import gloamDockNightUrl from "../assets/dock-gloam-night.jpg";
 import fishAtlasUiUrl from "../assets/fish-atlas-ui.png";
 import wordmarkUrl from "../assets/fshing-wordmark.png";
-import deliverBeaconIconUrl from "../assets/job-deliver-beacon.png";
-import freshnessFishIconUrl from "../assets/job-freshness-fish.png";
 import padlockIconUrl from "../assets/padlock-icon.png";
 import uiButtonUrl from "../assets/ui-button.png";
 import uiIconsUrl from "../assets/ui-icons.png";
@@ -37,20 +35,20 @@ import {
 } from "./controls";
 import { InputController } from "./input";
 import { CanvasRenderer } from "./renderer";
+import { marketBoardMarkup } from "./marketView";
 import {
-  acceptAvailableContract,
   beginFishingExit,
   buyBoost,
   buyPermit,
   buyUpgrade,
   cargoCapacity,
-  chooseRoute,
   consumeEvents,
   createSimulation,
   damageBoat,
   dayProgress,
-  deliverContract,
   getInteractionPrompt,
+  finishMarketTutorial,
+  inspectMarketSpecies,
   interact,
   leaveFishing,
   moveBoatForTesting,
@@ -59,8 +57,11 @@ import {
   releaseCargo,
   restoreCargo,
   resolveCatch,
+  sellSpeciesAtMarket,
   shouldShowNightIndicator,
+  skipMarketTutorial,
   startFishing,
+  trackMarketSpecies,
   undock,
   unlockBoostForTesting,
   updateSimulation,
@@ -97,10 +98,10 @@ type OverlayScreen =
   | "seasonReport"
   | null;
 
-type HarborSection = "delivery" | "cargo" | "services";
+type HarborSection = "market" | "cargo" | "services";
 
 const HARBOR_SECTION_ICON: Record<HarborSection, string> = {
-  delivery: "objective",
+  market: "objective",
   cargo: "cargo",
   services: "repair",
 };
@@ -112,6 +113,7 @@ declare global {
       sailToHarbor(id: HarborId): void;
       previewFishing(id: SpotId, species: FishSpecies): void;
       catchSpecies(species: FishSpecies): void;
+      discoverAllFish(): void;
       hookSpecies(species: FishSpecies): void;
       damage(amount: number): void;
       setElapsed(seconds: number): void;
@@ -135,12 +137,12 @@ export class Game {
   private overlay: OverlayScreen = "title";
   private overlaySource: OverlayScreen = null;
   private overlayReturn: OverlayScreen = "pause";
-  private harborSection: HarborSection = "delivery";
+  private harborSection: HarborSection = "market";
+  private selectedMarketSpecies: FishSpecies = "bluegill";
   private helpStep = 0;
   private toastTimer: number | undefined;
   private deliveryNotificationTimer: number | undefined;
   private deliveryNotificationExitTimer: number | undefined;
-  private deliveryAcceptedRevealTimer: number | undefined;
   private pauseTransitionTimer: number | undefined;
   private menuTransitionTimer: number | undefined;
   private cargoUpgradeTransitionTimer: number | undefined;
@@ -273,6 +275,7 @@ export class Game {
           </button>
         </section>
         <div class="feedback-flash" id="feedback-flash" aria-hidden="true"></div>
+        <aside class="market-tutorial" id="market-tutorial" role="status" aria-live="polite" hidden></aside>
 
         <button class="context-action" id="context-action" type="button" data-action="interact" data-control="action" hidden>Interact</button>
 
@@ -329,7 +332,7 @@ export class Game {
       this.syncSave();
       this.refreshHud();
     }
-    if (events.some((event) => event.type === "delivered") && this.seasonReportQueued) {
+    if (events.some((event) => event.type === "sold") && this.seasonReportQueued) {
       this.seasonReportQueued = false;
       this.setOverlay("seasonReport");
     }
@@ -340,24 +343,24 @@ export class Game {
       case "caught":
         this.feedback.cue("catch");
         this.pulseFeedback("catch");
-        if (
-          this.simulation.activeContract?.species === event.species
-          && !this.simulation.routeChoice
-        ) {
-          chooseRoute(this.simulation, "fast");
-        }
         this.showToast(`${FISH[event.species].name} secured. Freshness is falling.`);
         break;
-      case "delivered":
+      case "sold":
         this.feedback.cue("delivery");
         this.pulseFeedback("delivery");
-        this.harborSection = "delivery";
-        this.setOverlay("harbor");
-        this.showDeliverySuccess();
+        this.harborSection = "market";
+        this.showDeliveryNotification(
+          `${FISH[event.result.species].name} · ${event.result.quantity} sold · ${event.result.payment} shells`,
+          "Close sale notification",
+        );
+        break;
+      case "market-day":
+        this.showToast(`Market day ${event.day}. Harbor prices have changed.`);
+        if (this.overlay === "harbor") this.renderOverlay();
         break;
       case "docked":
         this.feedback.cue("dock");
-        this.harborSection = "delivery";
+        this.harborSection = "market";
         this.setOverlay("harbor", true);
         break;
       case "full-cargo":
@@ -375,7 +378,7 @@ export class Game {
       case "rescued":
         this.feedback.cue("collision");
         this.showToast(`Harbor rescue · ${event.cost} shells · cargo lost`);
-        this.harborSection = "delivery";
+        this.harborSection = "market";
         this.setOverlay("harbor", true);
         break;
       case "upgrade":
@@ -416,6 +419,7 @@ export class Game {
     }
 
     this.refreshContextAction();
+    this.refreshMarketTutorial();
 
     const navigation = this.uiRoot.querySelector<HTMLElement>(".navigation-controls");
     const fishing = this.uiRoot.querySelector<HTMLElement>(".fishing-controls");
@@ -455,8 +459,36 @@ export class Game {
       action.setAttribute("aria-label", prompt?.label ?? "Interact");
       action.title = prompt?.label ?? "";
       action.classList.toggle("is-fishing-cue", fishingCue);
+      const tutorialFishingTarget = this.simulation.progress.marketTutorialStep === "catch"
+        && fishingCue
+        && prompt?.spot === "sunwardShoal";
+      action.classList.toggle("is-tutorial-target", tutorialFishingTarget);
       this.syncContextActionAnchor(action);
     }
+  }
+
+  private refreshMarketTutorial(): void {
+    const tutorial = this.uiRoot.querySelector<HTMLElement>("#market-tutorial");
+    if (!tutorial) return;
+    const step = this.simulation.progress.marketTutorialStep;
+    const hiddenByScreen = !this.started
+      || this.overlay === "title"
+      || this.overlay === "settings"
+      || this.overlay === "credits"
+      || this.overlay === "controls"
+      || this.overlay === "help"
+      || this.overlay === "seasonReport";
+    tutorial.hidden = step === "done" || hiddenByScreen;
+    if (tutorial.hidden) return;
+    const copy = {
+      inspect: ["1 of 5", "Choose Bluegill", "Select the glowing Bluegill listing to read today's price."],
+      track: ["2 of 5", "Track the catch", "Read where Bluegill lives, then choose Track Bluegill."],
+      catch: ["3 of 5", "Catch a Bluegill", "Follow Fish at Sunward Shoal. Slow down, drop the line, and hook a Bluegill."],
+      sell: ["4 of 5", "Sell while fresh", "Follow Sell at to the stronger quote, then sell your Bluegill from its listing."],
+      complete: ["5 of 5", "First sale complete", "You earned shells at the live market price. Prices change when a new day begins."],
+      done: ["", "", ""],
+    }[step];
+    tutorial.innerHTML = `<div><span>FIRST ASSIGNMENT · ${copy[0]}</span><strong>${copy[1]}</strong><p>${copy[2]}</p></div><div class="market-tutorial-actions">${step === "complete" ? `<button type="button" data-action="finish-market-tutorial">Finish</button>` : ""}<button type="button" data-action="skip-market-tutorial">Skip tutorial</button></div>`;
   }
 
   private syncContextActionAnchor(
@@ -535,56 +567,14 @@ export class Game {
   }
 
   private harborScreen(): string {
+    return this.marketHarborScreen();
+  }
+
+  private marketHarborScreen(): string {
     const harborId = this.simulation.dockedAt ?? "brindle";
     const harbor = harborById(harborId);
-    const contract = this.simulation.activeContract;
-    const available = this.simulation.availableContract?.origin === harborId ? this.simulation.availableContract : null;
-    const matchingCatchCount = contract
-      ? this.simulation.cargo.filter((item) => item.species === contract.species && item.freshness > 0).length
-      : 0;
-    const matchingCatch = contract ? matchingCatchCount >= contract.quantity : false;
-    const freshCatch = contract
-      ? this.simulation.cargo.filter(
-        (item) => item.species === contract.species && item.freshness >= contract.minimumFreshness,
-      ).length >= contract.quantity
-      : false;
-    const deliverable = contract?.destination === harborId
-      && matchingCatch;
-    const isFirstJobOffer = this.simulation.progress.completedContracts === 0 && available?.id === "morning-order";
-    const showCargo = !isFirstJobOffer;
-    const showServices = !isFirstJobOffer;
-    const availableSections: HarborSection[] = ["delivery", ...(showCargo ? ["cargo" as const] : []), ...(showServices ? ["services" as const] : [])];
-    const activeSection: HarborSection = availableSections.includes(this.harborSection) ? this.harborSection : "delivery";
-    const contractMarkup = available
-      ? `<div class="contract-card job-ticket ${isFirstJobOffer ? "is-guided" : ""}">
-          <div class="job-ticket-heading">
-            <div>${isFirstJobOffer ? "" : `<span class="card-kicker">Your next job</span>`}<h3>${isFirstJobOffer ? "First Assignment" : available.title}</h3></div>
-            <span class="reward-stamp" aria-label="Reward: ${available.reward} shells; reduced payout: ${available.reducedReward} shells"><span class="reward-label">Reward</span><span class="reward-value"><span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${available.reward}</strong></span></span>
-          </div>
-          <ol class="job-route" aria-label="Job steps">
-            <li><span class="job-route-number" aria-hidden="true">01</span><div class="job-route-copy"><small>Catch</small>${this.targetFishIcon(available.species)}<strong>${FISH[available.species].name}</strong><span class="job-route-detail">${available.quantity} required</span></div></li>
-            <li><span class="job-route-number" aria-hidden="true">02</span><div class="job-route-copy"><small>Freshness</small><img class="job-route-icon job-route-freshness-icon" src="${freshnessFishIconUrl}" alt="" aria-hidden="true" /><strong>Freshness ${available.minimumFreshness}%+</strong></div></li>
-            <li><span class="job-route-number" aria-hidden="true">03</span><div class="job-route-copy"><small>Deliver</small><img class="job-route-icon job-route-deliver-icon" src="${deliverBeaconIconUrl}" alt="" aria-hidden="true" /><strong>${harborById(available.destination).name}</strong></div></li>
-          </ol>
-          <button class="primary-button mission-button" type="button" data-action="accept-contract" aria-label="Accept contract">
-            <span><strong>${isFirstJobOffer ? "Begin the First Voyage" : "Take this job"}</strong></span><b aria-hidden="true">→</b>
-          </button>
-        </div>`
-      : contract
-        ? `<div class="contract-card job-ticket ${deliverable ? "is-ready" : ""}">
-            <span class="card-kicker">${deliverable ? "Ready to hand in" : "Job in progress"}</span>
-            <h3>${contract.title}</h3>
-            <ol class="job-route" aria-label="Job steps">
-              <li class="${matchingCatch ? "is-complete" : "is-current"}"><span class="job-route-number" aria-hidden="true">${matchingCatch ? "✓" : "01"}</span><div class="job-route-copy"><small>Catch</small>${this.targetFishIcon(contract.species)}<strong>${FISH[contract.species].name}</strong><span class="job-route-detail">${matchingCatchCount}/${contract.quantity} secured</span></div></li>
-              <li class="${freshCatch ? "is-complete" : matchingCatch ? "is-current" : ""}"><span class="job-route-number" aria-hidden="true">${freshCatch ? "✓" : "02"}</span><div class="job-route-copy"><small>Freshness</small><img class="job-route-icon job-route-freshness-icon" src="${freshnessFishIconUrl}" alt="" aria-hidden="true" /><strong>Freshness ${contract.minimumFreshness}%+</strong></div></li>
-              <li class="${deliverable ? "is-current" : ""}"><span class="job-route-number" aria-hidden="true">03</span><div class="job-route-copy"><small>Deliver</small><img class="job-route-icon job-route-deliver-icon" src="${deliverBeaconIconUrl}" alt="" aria-hidden="true" /><strong>${harborById(contract.destination).name}</strong></div></li>
-            </ol>
-            ${contract.destination === harborId
-              ? `<button class="primary-button mission-button" type="button" data-action="deliver" ${deliverable ? "" : "disabled"}>${deliverable ? `<span><strong>${freshCatch ? "Complete delivery" : `Deliver for reduced ${contract.reducedReward}-shell payout`}</strong></span><b aria-hidden="true">→</b>` : `${contract.quantity - matchingCatchCount} required fish missing`}</button>`
-              : `<p class="next-step"><span class="ui-icon icon-objective" aria-hidden="true"></span><span><strong>Next</strong> Leave the harbor and follow the marker to ${harborById(contract.destination).name}.</span></p>`}
-          </div>`
-        : `<div class="contract-card empty-job"><h3>No delivery job available</h3><p>Return to the lake and dock again to refresh the job board.</p></div>`;
-
+    const availableSections: HarborSection[] = ["market", "cargo", "services"];
+    const activeSection = availableSections.includes(this.harborSection) ? this.harborSection : "market";
     const availableCargoSlots = cargoCapacity(this.simulation);
     const cargoMarkup = Array.from({ length: BALANCE.maxCargoSlots }, (_, index) => {
       const item = this.simulation.cargo[index];
@@ -597,43 +587,20 @@ export class Game {
       }
       return `<button class="cargo-slot is-locked" type="button" data-action="open-cargo-upgrades" aria-label="Cargo slot ${index + 1} locked. Open Cargo upgrades"><span class="cargo-slot-number">${slotNumber}</span><img class="cargo-padlock" src="${padlockIconUrl}" alt="" aria-hidden="true" /><small>Upgrade</small></button>`;
     }).join("");
-
-    const harborTabs = !isFirstJobOffer
-      ? `<nav class="harbor-tabs has-${availableSections.length}-tabs" aria-label="Harbor sections" style="--harbor-tab-count: ${availableSections.length}">
-          ${availableSections.map((section) => `<button class="harbor-tab ${activeSection === section ? "is-active" : ""}" type="button" data-action="harbor-section" data-harbor-section="${section}" aria-label="${capitalise(section)}" aria-pressed="${activeSection === section}"><span class="ui-icon icon-${HARBOR_SECTION_ICON[section]}" aria-hidden="true"></span><span>${capitalise(section)}</span></button>`).join("")}
-        </nav>`
-      : "";
-
-    const activeContent = activeSection === "cargo"
-      ? `<aside class="cargo-section" aria-labelledby="cargo-heading">
-          <div class="cargo-inventory-heading"><h3 id="cargo-heading">Fish inventory</h3><span>${this.simulation.cargo.length} carried · ${availableCargoSlots} unlocked</span></div>
-          <div class="cargo-slot-grid" aria-label="Cargo inventory">${cargoMarkup}</div>
-        </aside>`
-      : activeSection === "services"
-        ? `<section class="services" aria-label="Dock services">
-            <div class="service-grid">
-              ${this.upgradeCard("cargo", "Cargo", "+1 cargo slot")}
-              ${this.upgradeCard("engine", "Engine", "+11% speed")}
-              ${this.upgradeCard("lamp", "Lamp", "Wider night view")}
-              ${this.upgradeCard("line", "Line depth", "Next depth tier")}
-              ${this.boostCard()}
-              ${harborId === "gloam" ? this.permitCard() : ""}
-            </div>
-          </section>`
-        : `<section class="mission-section" aria-label="Delivery job">${contractMarkup}</section>`;
-
-    return `
-      <section class="screen-overlay harbor-screen is-first-voyage${isFirstJobOffer ? " is-first-job-offer" : " is-expanded-harbor"} is-harbor-${activeSection} is-dock-${harborId}" ${this.dockBackdropAttributes(harborId)} role="dialog" aria-labelledby="harbor-title">
-        <div class="art-panel harbor-panel side-sheet">
-          <header class="panel-heading harbor-header">
-            <div class="harbor-title-block"><img class="wordmark harbor-wordmark" src="${wordmarkUrl}" alt="FSHING" /><span class="harbor-title-divider" aria-hidden="true"></span><div><h2 id="harbor-title">${harbor.name}</h2></div></div>
-            <span class="shell-balance" aria-label="${this.simulation.progress.money} shells"><span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${this.simulation.progress.money}</strong></span>
-          </header>
-          ${harborTabs}
-          <div class="harbor-content is-${activeSection}">${activeContent}</div>
-          <footer class="panel-actions ${isFirstJobOffer ? "is-guided" : ""}"><div><button class="text-button harbor-utility-button" type="button" data-action="open-help" aria-label="How to play"><span class="ui-icon icon-objective" aria-hidden="true"></span><strong>Help</strong></button></div>${isFirstJobOffer ? `<button class="leave-button harbor-main-menu-button" type="button" data-action="title" aria-label="Back to main menu"><span class="harbor-back-arrow" aria-hidden="true">←</span><strong>Main Menu</strong></button>` : `<button class="leave-button" type="button" data-action="undock" aria-label="Back to lake →"><span class="ui-icon icon-hull" aria-hidden="true"></span><strong>Return to Lake</strong></button>`}</footer>
-        </div>
-      </section>`;
+    const content = activeSection === "market"
+      ? marketBoardMarkup(this.simulation, harborId, this.selectedMarketSpecies, fishAtlasUiUrl)
+      : activeSection === "cargo"
+        ? `<aside class="cargo-section" aria-labelledby="cargo-heading"><div class="cargo-inventory-heading"><h3 id="cargo-heading">Fish inventory</h3><span>${this.simulation.cargo.length} carried · ${availableCargoSlots} unlocked</span></div><div class="cargo-slot-grid" aria-label="Cargo inventory">${cargoMarkup}</div></aside>`
+        : `<section class="services" aria-label="Dock services"><div class="service-grid">${this.upgradeCard("cargo", "Cargo", "+1 cargo slot")}${this.upgradeCard("engine", "Engine", "+11% speed")}${this.upgradeCard("lamp", "Lamp", "Wider night view")}${this.upgradeCard("line", "Line depth", "Next depth tier")}${this.boostCard()}${harborId === "gloam" ? this.permitCard() : ""}</div></section>`;
+    const tabs = `<nav class="harbor-tabs has-3-tabs" aria-label="Harbor sections" style="--harbor-tab-count: 3">${availableSections.map((section) => `<button class="harbor-tab ${activeSection === section ? "is-active" : ""}" type="button" data-action="harbor-section" data-harbor-section="${section}" aria-label="${capitalise(section)}" aria-pressed="${activeSection === section}"><span class="ui-icon icon-${HARBOR_SECTION_ICON[section]}" aria-hidden="true"></span><span>${capitalise(section)}</span></button>`).join("")}</nav>`;
+    return `<section class="screen-overlay harbor-screen is-first-voyage is-expanded-harbor is-harbor-${activeSection} is-dock-${harborId}" ${this.dockBackdropAttributes(harborId)} role="dialog" aria-labelledby="harbor-title">
+      <div class="art-panel harbor-panel side-sheet market-harbor-panel">
+        <header class="panel-heading harbor-header"><div class="harbor-title-block"><img class="wordmark harbor-wordmark" src="${wordmarkUrl}" alt="FSHING" /><span class="harbor-title-divider" aria-hidden="true"></span><div><h2 id="harbor-title">${harbor.name}</h2></div></div><span class="shell-balance" aria-label="${this.simulation.progress.money} shells"><span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${this.simulation.progress.money}</strong></span></header>
+        ${tabs}
+        <div class="harbor-content is-${activeSection}">${content}</div>
+        <footer class="panel-actions"><div><button class="text-button harbor-utility-button" type="button" data-action="open-help" aria-label="How to play"><span class="ui-icon icon-objective" aria-hidden="true"></span><strong>Help</strong></button></div><button class="leave-button ${this.simulation.progress.marketTutorialStep === "catch" ? "is-tutorial-target" : ""}" type="button" data-action="undock" aria-label="Back to lake"><span class="ui-icon icon-hull" aria-hidden="true"></span><strong>Return to Lake</strong></button></footer>
+      </div>
+    </section>`;
   }
 
   private dockBackdropAttributes(harborId: HarborId): string {
@@ -641,11 +608,6 @@ export class Game {
     const timeOfDay = nightOpacity >= 0.5 ? "night" : "day";
     const background = DOCK_BACKGROUND_URL[harborId];
     return `data-dock="${harborId}" data-time-of-day="${timeOfDay}" style="--dock-day-background: url(&quot;${background.day}&quot;); --dock-night-background: url(&quot;${background.night}&quot;); --dock-night-opacity: ${nightOpacity}"`;
-  }
-
-  private targetFishIcon(species: FishSpecies): string {
-    const [column, row] = FISH[species].atlasCell;
-    return `<span class="job-route-icon job-route-fish" role="img" aria-label="${FISH[species].name} target fish" style="--fish-atlas-url: url(&quot;${fishAtlasUiUrl}&quot;); --fish-atlas-x: ${column * 50}%; --fish-atlas-y: ${row * 50}%"></span>`;
   }
 
   private upgradeCard(upgrade: UpgradeId, title: string, detail: string): string {
@@ -819,20 +781,20 @@ export class Game {
     const harborId = this.simulation.dockedAt ?? "brindle";
     const steps = [
       {
-        title: "Take a job",
-        body: "At a harbor, choose the delivery job. It tells you exactly which fish to catch and where to take it.",
+        title: "Read the market",
+        body: "Every discovered fish has a local quote. Select one to compare both harbors, read its seven-day graph, and see where it lives.",
       },
       {
-        title: "Follow the shoal",
-        body: `Use <kbd>${formatKey(this.save.settings.controls.left)}</kbd> and <kbd>${formatKey(this.save.settings.controls.right)}</kbd> to follow faint fish activity. When the water clears and the hook appears, press <kbd>${formatKey(this.save.settings.controls.action)}</kbd>.`,
+        title: "Track and catch",
+        body: `Track a listing, then use <kbd>${formatKey(this.save.settings.controls.left)}</kbd> and <kbd>${formatKey(this.save.settings.controls.right)}</kbd> to follow its marker. When the hook appears, press <kbd>${formatKey(this.save.settings.controls.action)}</kbd>.`,
       },
       {
-        title: "Catch the right fish",
-        body: "Drop the line, then steer the hook with the movement keys or touch pad. The requested fish is marked in the water.",
+        title: "Protect freshness",
+        body: "Fresh fish earn more. Engine speed shortens the trip, fog slows your decisions, and the farther harbor may not remain the better sale after freshness loss.",
       },
       {
-        title: "Manage your cargo",
-        body: "Release unneeded catches at a harbor to make room for the fish requested by your current delivery job.",
+        title: "Sell and invest",
+        body: "Open a fish listing to sell every fresh catch of that species. A bigger cargo hold increases each trip's potential, while line upgrades reach more valuable fish.",
       },
     ];
     const step = steps[this.helpStep] ?? steps[0];
@@ -865,20 +827,19 @@ export class Game {
   }
 
   private seasonReportScreen(): string {
-    const learning = this.simulation.progress.learning;
     return `
       <section class="screen-overlay sheet-overlay science-overlay" role="dialog" aria-labelledby="season-title">
         <div class="art-panel science-panel result-panel side-sheet">
           <span class="panel-eyebrow">End-of-season evaluation</span><h2 id="season-title">Research season complete</h2>
-          <p>You completed ${this.simulation.progress.completedContracts} deliveries and built a reusable field record. You can keep exploring and improving every result.</p>
+          <p>You completed ${this.simulation.progress.marketSales} market sales and earned ${this.simulation.progress.marketEarnings} shells. The exchange remains open after this report.</p>
           <div class="report-grid">
             <div><small>Species discovered</small><strong>${this.simulation.progress.discovered.length} / ${Object.keys(FISH).length}</strong><span>recorded this season</span></div>
-            <div><small>Crossings started</small><strong>${learning.routePlans}</strong><span>contract catches secured</span></div>
-            <div><small>Surveys completed</small><strong>${learning.surveysCompleted}</strong><span>habitats evaluated</span></div>
-            <div><small>Correct predictions</small><strong>${learning.correctPredictions}</strong><span>species identified</span></div>
+            <div><small>Market sales</small><strong>${this.simulation.progress.marketSales}</strong><span>transactions completed</span></div>
+            <div><small>Market earnings</small><strong>${this.simulation.progress.marketEarnings}</strong><span>shells earned from fish</span></div>
+            <div><small>Current market day</small><strong>${this.simulation.progress.marketDay}</strong><span>daily prices observed</span></div>
           </div>
-          <p class="reflection-prompt"><strong>Reflect:</strong> Which fishing ground was most productive? How did engine speed affect freshness? Which habitat clues helped identify each species?</p>
-          <button class="primary-button" type="button" data-action="continue-season">Continue researching</button>
+          <p class="reflection-prompt"><strong>Reflect:</strong> Which harbor offered the best sales? When was a longer crossing worth the freshness loss? Which habitat produced your strongest catch?</p>
+          <button class="primary-button" type="button" data-action="continue-season">Continue trading</button>
         </div>
       </section>`;
   }
@@ -979,13 +940,13 @@ export class Game {
 
   private beginVoyage(): void {
     this.started = true;
-    this.harborSection = "delivery";
+    this.harborSection = "market";
     if (this.simulation.dockedAt) this.setOverlay("harbor", true);
     else this.setOverlay(null, true);
   }
 
   private openHarborSection(section: HarborSection): void {
-    const sectionOrder: HarborSection[] = ["delivery", "cargo", "services"];
+    const sectionOrder: HarborSection[] = ["market", "cargo", "services"];
     const previousIndex = sectionOrder.indexOf(this.harborSection);
     const nextIndex = sectionOrder.indexOf(section);
     this.harborSection = section;
@@ -1009,6 +970,11 @@ export class Game {
       completedContracts: this.simulation.progress.completedContracts,
       discovered: [...this.simulation.progress.discovered],
       learning: { ...this.simulation.progress.learning },
+      marketDay: this.simulation.progress.marketDay,
+      marketSales: this.simulation.progress.marketSales,
+      marketEarnings: this.simulation.progress.marketEarnings,
+      marketTarget: this.simulation.progress.marketTarget,
+      marketTutorialStep: this.simulation.progress.marketTutorialStep,
       seasonCompleted: this.simulation.progress.seasonCompleted,
     };
     saveGame(this.platform.saveStorage, this.save);
@@ -1092,33 +1058,6 @@ export class Game {
     target.closest<HTMLElement>(".cargo-slot")?.classList.add("is-releasing");
     if (target instanceof HTMLButtonElement) target.disabled = true;
     this.cargoReleaseTimer = window.setTimeout(finishRelease, 180);
-  }
-
-  private showDeliverySuccess(): void {
-    window.clearTimeout(this.deliveryAcceptedRevealTimer);
-    const result = this.simulation.lastDeliveryResult;
-    const message = result?.metFreshnessRequirement
-      ? `Delivery Success · ${result.payment} shells`
-      : result
-        ? `Freshness missed · Reduced payout ${result.payment} shells`
-        : "Delivery Success";
-    this.showDeliveryNotification(message, "Close delivery success notification");
-  }
-
-  private showDeliveryAccepted(): void {
-    window.clearTimeout(this.deliveryAcceptedRevealTimer);
-    const reveal = (): void => {
-      this.deliveryAcceptedRevealTimer = undefined;
-      this.showDeliveryNotification("Delivery Accepted", "Close delivery accepted notification");
-    };
-    if (this.save.settings.reducedMotion) {
-      reveal();
-      return;
-    }
-    this.deliveryAcceptedRevealTimer = window.setTimeout(
-      reveal,
-      SCENE_COVER_DURATION + SCENE_REVEAL_DURATION,
-    );
   }
 
   private showDeliveryNotification(message: string, closeLabel: string): void {
@@ -1219,10 +1158,54 @@ export class Game {
       case "title": this.started = false; this.setOverlay("title", true); break;
       case "harbor-section": {
         const section = target.dataset.harborSection as HarborSection | undefined;
-        if (!section || !(["delivery", "cargo", "services"] as HarborSection[]).includes(section)) break;
+        if (!section || !(["market", "cargo", "services"] as HarborSection[]).includes(section)) break;
         this.openHarborSection(section);
         break;
       }
+      case "select-market-fish": {
+        const species = target.dataset.species as FishSpecies | undefined;
+        if (!species || !(species in FISH)) break;
+        this.selectedMarketSpecies = species;
+        inspectMarketSpecies(this.simulation, species);
+        this.syncSave();
+        this.renderOverlay();
+        this.refreshMarketTutorial();
+        requestAnimationFrame(() => {
+          this.uiRoot.querySelector<HTMLButtonElement>(`[data-action="track-market-fish"][data-species="${species}"]`)?.focus({ preventScroll: true });
+        });
+        break;
+      }
+      case "track-market-fish": {
+        const species = target.dataset.species as FishSpecies | undefined;
+        if (!species || !(species in FISH) || !trackMarketSpecies(this.simulation, species)) break;
+        this.selectedMarketSpecies = species;
+        this.syncSave();
+        this.renderOverlay();
+        this.refreshMarketTutorial();
+        this.showToast(`${FISH[species].name} tracked. The lake marker now points to its fishing ground.`);
+        break;
+      }
+      case "sell-market-fish": {
+        const species = target.dataset.species as FishSpecies | undefined;
+        if (!species || !(species in FISH)) break;
+        if (sellSpeciesAtMarket(this.simulation, species)) {
+          this.handleSimulationEvents();
+          this.renderOverlay();
+          this.refreshMarketTutorial();
+        }
+        break;
+      }
+      case "finish-market-tutorial":
+        finishMarketTutorial(this.simulation);
+        this.syncSave();
+        this.refreshMarketTutorial();
+        break;
+      case "skip-market-tutorial":
+        skipMarketTutorial(this.simulation);
+        this.syncSave();
+        this.renderOverlay();
+        this.refreshMarketTutorial();
+        break;
       case "open-cargo-upgrades": {
         const openCargoUpgrade = (): void => {
           if (this.overlay !== "harbor" || !this.simulation.dockedAt) return;
@@ -1240,38 +1223,17 @@ export class Game {
       }
       case "undock":
         this.dismissCargoReleaseToast();
-        if (this.simulation.activeContract
-          && this.simulation.cargo.filter(
-            (item) => item.species === this.simulation.activeContract?.species && item.freshness > 0,
-          ).length >= this.simulation.activeContract.quantity
-          && !this.simulation.routeChoice) {
-          chooseRoute(this.simulation, "fast");
-        }
         undock(this.simulation);
+        if (this.visualTestSpot) {
+          try {
+            moveBoatForTesting(this.simulation, spotById(this.visualTestSpot));
+          } catch {
+            // Ignore malformed development-only visual test parameters.
+          }
+        }
         this.setOverlay(null, true);
         break;
-      case "accept-contract":
-        if (acceptAvailableContract(this.simulation)) {
-          this.syncSave();
-          undock(this.simulation);
-          if (this.visualTestSpot) {
-            try {
-              moveBoatForTesting(this.simulation, spotById(this.visualTestSpot));
-            } catch {
-              // Ignore malformed development-only visual test parameters.
-            }
-          }
-          this.setOverlay(null, true);
-          this.showDeliveryAccepted();
-        }
-        break;
-      case "deliver":
-        if (deliverContract(this.simulation) !== null) {
-          this.handleSimulationEvents();
-          this.renderOverlay();
-        }
-        break;
-      case "continue-season": this.harborSection = "delivery"; this.setOverlay("harbor"); break;
+      case "continue-season": this.harborSection = "market"; this.setOverlay("harbor"); break;
       case "buy-upgrade": {
         const upgrade = target.dataset.upgrade as UpgradeId | undefined;
         if (upgrade && buyUpgrade(this.simulation, upgrade)) {
@@ -1370,6 +1332,15 @@ export class Game {
         resolveCatch(this.simulation, species);
         this.handleSimulationEvents();
         this.refreshHud();
+      },
+      discoverAllFish: () => {
+        for (const species of Object.keys(FISH) as FishSpecies[]) {
+          if (!this.simulation.progress.discovered.includes(species)) {
+            this.simulation.progress.discovered.push(species);
+          }
+        }
+        this.syncSave();
+        this.renderOverlay();
       },
       hookSpecies: (species) => {
         const target = this.simulation.fishing?.targets.find((candidate) => candidate.species === species);
