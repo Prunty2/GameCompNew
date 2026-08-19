@@ -114,6 +114,8 @@ test("first assignment teaches the complete market sale loop", async ({ page }) 
 
   await trackButton.click();
   await expect(tutorial).toContainText("FIRST ASSIGNMENT · 3 of 5");
+  await expect(page.getByRole("button", { name: "Back to market" })).toHaveClass(/is-tutorial-target/);
+  await page.getByRole("button", { name: "Back to market" }).click();
   await expect(page.locator('[data-action="undock"]')).toHaveClass(/is-tutorial-target/);
   await page.locator('[data-action="undock"]').click();
   await expect(page.locator(".navigation-status")).toContainText("FISH AT Sunward Shoal");
@@ -154,6 +156,8 @@ test("market uses a scrollable fish-card grid and a focused detail view", async 
   await expect(listings.first().locator(".market-listing-fish")).toBeVisible();
   await expect(listings.first().locator(".market-listing-copy > strong")).not.toBeEmpty();
   await expect(listings.first().locator(".market-price-pill")).toHaveText(/^\d+$/);
+  await expect(page.locator(".market-board-heading .panel-eyebrow")).toHaveCount(0);
+  await expect(page.locator(".market-info-pill")).toHaveCount(0);
   const scrollState = await list.evaluate((element) => ({
     clientHeight: element.clientHeight,
     scrollHeight: element.scrollHeight,
@@ -163,14 +167,16 @@ test("market uses a scrollable fish-card grid and a focused detail view", async 
   expect(scrollState.scrollHeight).toBeGreaterThan(scrollState.clientHeight);
 
   const sturgeonCard = page.locator('[data-action="select-market-fish"][data-species="lakeSturgeon"]');
+  await expect(sturgeonCard).toHaveCSS("border-radius", "18px");
   await sturgeonCard.hover();
-  await expect(sturgeonCard).toHaveCSS("animation-name", "menu-button-hover-wobble");
+  await expect(sturgeonCard).toHaveCSS("animation-name", "market-card-hover-bounce");
   await sturgeonCard.click();
   const detail = page.locator(".market-detail");
   await expect(detail.getByRole("heading", { name: "Lake Sturgeon" })).toBeVisible();
   await expect(detail.getByRole("img", { name: /Lake Sturgeon price history/ })).toBeVisible();
-  await expect(detail.getByText("in your hold")).toBeVisible();
-  await expect(detail.getByRole("button", { name: "Back to market" })).toBeVisible();
+  await expect(detail.locator(".market-hold-pill")).toHaveCount(0);
+  await expect(detail.locator(".panel-eyebrow")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Back to market" })).toBeVisible();
   await expect(detail).not.toContainText("Found at");
   await expect(detail).not.toContainText("Today's supply");
 
@@ -181,7 +187,7 @@ test("market uses a scrollable fish-card grid and a focused detail view", async 
   });
   expect(desktopLayout.chartLeft).toBeGreaterThanOrEqual(desktopLayout.summaryRight);
 
-  await detail.getByRole("button", { name: "Back to market" }).click();
+  await page.getByRole("button", { name: "Back to market" }).click();
   await expect(listings).toHaveCount(9);
   await expect(sturgeonCard).toBeFocused();
 
