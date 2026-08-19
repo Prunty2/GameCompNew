@@ -19,7 +19,8 @@ export function marketBoardMarkup(
   detailOpen: boolean,
   fishAtlasUrl: string,
 ): string {
-  const discovered = (Object.keys(FISH) as FishSpecies[]).filter((species) => (
+  const speciesList = Object.keys(FISH) as FishSpecies[];
+  const discovered = speciesList.filter((species) => (
     simulation.progress.discovered.includes(species)
   ));
   const selected = discovered.includes(selectedSpecies) ? selectedSpecies : discovered[0] ?? "bluegill";
@@ -30,7 +31,16 @@ export function marketBoardMarkup(
     </section>`;
   }
 
-  const listings = discovered.map((species, index) => {
+  const listings = speciesList.map((species, index) => {
+    if (!simulation.progress.discovered.includes(species)) {
+      return `<div class="market-listing is-locked" role="listitem" aria-label="Undiscovered fish, locked" style="--market-card-index: ${index}">
+        <span class="market-locked-fish-wrap" aria-hidden="true">
+          ${fishIcon(species, fishAtlasUrl, "market-listing-fish")}
+          <span class="market-lock-question">?</span>
+        </span>
+        <span class="market-listing-copy"><strong>Undiscovered</strong><span class="market-lock-pill">Locked</span></span>
+      </div>`;
+    }
     const quote = marketQuote(species, harborId, simulation.progress.marketDay, simulation.seed);
     const tutorialTarget = (
       simulation.progress.marketTutorialStep === "inspect"
@@ -46,7 +56,7 @@ export function marketBoardMarkup(
     <header class="market-board-heading">
       <h3>Fish market</h3>
     </header>
-    <div class="market-list" role="list" aria-label="Discovered fish prices">${listings}</div>
+    <div class="market-list" role="list" aria-label="Fish prices and locked discoveries">${listings}</div>
   </section>`;
 }
 

@@ -99,7 +99,7 @@
   border-radius: 18px;
 }
 
-.market-listing:hover,
+.market-listing:not(.is-locked):hover,
 .market-listing:focus-visible {
   border-color: rgb(247 241 227 / 68%);
   background: #0b2b37;
@@ -111,9 +111,14 @@
   box-shadow: 0 0 0 2px var(--menu-paper), 0 7px 0 rgb(2 15 21 / 62%), 0 16px 30px rgb(1 10 16 / 26%);
 }
 
-.market-listing:active {
+.market-listing:not(.is-locked):active {
   box-shadow: 0 3px 0 rgb(2 15 21 / 62%), 0 8px 16px rgb(1 10 16 / 24%);
   transform: translateY(4px) rotate(0);
+}
+
+.market-listing.is-locked {
+  cursor: default;
+  user-select: none;
 }
 
 .market-fish-icon {
@@ -132,6 +137,35 @@
   filter: drop-shadow(0 7px 6px rgb(0 9 14 / 48%));
 }
 
+.market-locked-fish-wrap {
+  position: relative;
+  display: grid;
+  min-height: 96px;
+  place-items: center;
+}
+
+.market-locked-fish-wrap .market-listing-fish {
+  filter: brightness(0) drop-shadow(0 7px 6px rgb(0 9 14 / 48%));
+  opacity: 0.72;
+}
+
+.market-lock-question {
+  position: absolute;
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 2px solid rgb(247 241 227 / 78%);
+  border-radius: 50%;
+  background: rgb(4 20 28 / 88%);
+  color: var(--menu-paper);
+  font-family: system-ui, sans-serif;
+  font-size: 1.55rem;
+  font-weight: 900;
+  line-height: 1;
+  box-shadow: 0 5px 12px rgb(0 8 13 / 45%);
+}
+
 .market-listing-copy {
   display: grid;
   min-width: 0;
@@ -146,6 +180,25 @@
   line-height: 1.15;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.market-listing.is-locked .market-listing-copy > strong {
+  color: rgb(247 241 227 / 58%);
+}
+
+.market-lock-pill {
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border: 1px solid rgb(145 169 176 / 38%);
+  border-radius: 999px;
+  color: rgb(216 228 229 / 62%);
+  font-size: 0.64rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .market-price-pill {

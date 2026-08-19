@@ -102,6 +102,11 @@ test("first assignment teaches the complete market sale loop", async ({ page }) 
   const bluegillListing = page.locator('[data-action="select-market-fish"][data-species="bluegill"]');
   await expect(page.getByRole("heading", { name: "Brindle Harbor" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Fish market" })).toBeVisible();
+  await expect(page.locator(".market-listing")).toHaveCount(9);
+  await expect(page.locator(".market-listing.is-locked")).toHaveCount(8);
+  await expect(page.locator(".market-listing.is-locked").first().locator(".market-lock-question")).toHaveText("?");
+  await expect(page.locator(".market-listing.is-locked").first().locator(".market-listing-fish")).toHaveCSS("filter", /brightness\(0\)/);
+  await expect(page.locator(".market-listing.is-locked").first()).not.toHaveAttribute("data-action");
   await expect(tutorial).toContainText("FIRST ASSIGNMENT · 1 of 5");
   await expect(bluegillListing).toHaveClass(/is-tutorial-target/);
   await expect(bluegillListing).toHaveCSS("animation-name", "tutorial-target-pulse");
@@ -153,6 +158,7 @@ test("market uses a scrollable fish-card grid and a focused detail view", async 
   const list = page.locator(".market-list");
   const listings = list.locator(".market-listing");
   await expect(listings).toHaveCount(9);
+  await expect(list.locator(".market-listing.is-locked")).toHaveCount(0);
   await expect(listings.first().locator(".market-listing-fish")).toBeVisible();
   await expect(listings.first().locator(".market-listing-copy > strong")).not.toBeEmpty();
   await expect(listings.first().locator(".market-price-pill")).toHaveText(/^\d+$/);
@@ -169,7 +175,7 @@ test("market uses a scrollable fish-card grid and a focused detail view", async 
   const sturgeonCard = page.locator('[data-action="select-market-fish"][data-species="lakeSturgeon"]');
   await expect(sturgeonCard).toHaveCSS("border-radius", "18px");
   await sturgeonCard.hover();
-  await expect(sturgeonCard).toHaveCSS("animation-name", "market-card-hover-bounce");
+  await expect(sturgeonCard).toHaveCSS("animation-name", "menu-button-hover-wobble");
   await sturgeonCard.click();
   const detail = page.locator(".market-detail");
   await expect(detail.getByRole("heading", { name: "Lake Sturgeon" })).toBeVisible();
