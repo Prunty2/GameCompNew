@@ -1,18 +1,18 @@
 # FSHING
 
-FSHING is a single-player, side-on environmental-science fishing and delivery game for desktop and mobile browsers. Pilot a research boat across three lake ecosystems, target requested species, fish at an upgrade-gated depth, and cross the lake efficiently while preserving catch freshness.
+FSHING is a single-player, side-on environmental-science fishing market game for desktop and mobile browsers. Pilot a working boat across the lake and unlockable Beach, track species, fish at an upgrade-gated depth, and choose where to sell each catch while preserving freshness.
 
 The MVP vertical slice includes:
 
-- Deterministic fixed-step boat, fishing, contract, freshness, weather, and day/night simulation
-- An unobstructed lake spanning several camera widths with two harbors, three regions, three widely separated fishing grounds, and nine distinct fish arranged into habitat-specific resident sets
+- Deterministic fixed-step boat, fishing, market, freshness, weather, and day/night simulation
+- An unobstructed lake and unlockable Beach, each with three fishing grounds and nine distinct fish arranged into habitat-specific resident sets
 - Habitat-specific resident species and environmental surveys
-- Catch-to-harbor distance–speed–time route planning with predicted-versus-actual freshness feedback
+- Deterministic two-harbor quotes, seven-day price history, and freshness-adjusted fish sales
 - Six tiers each of boat/cargo, engine, lamp, and line upgrades; seven visible boat classes
-- Cargo release, guided help, and an eight-delivery season report
-- Keyboard, pointer, and touch controls plus pause-on-focus-loss
+- Cargo release, guided help, and an eight-sale season report
+- Keyboard gameplay controls, pointer/touch interface actions, and pause-on-focus-loss
 - Mute, volume, high-contrast, and reduced-motion settings
-- Version 9 validated persistence with safe Beach access and fantasy-to-real species migration, plus a local-safe CrazyGames SDK v3 adapter
+- Version 10 validated persistence with market progress, safe Beach access, and fantasy-to-real species migration, plus a local-safe CrazyGames SDK v3 adapter
 - GPT Image 2.0-generated runtime art documented in [`Docs/Asset-Manifest.md`](Docs/Asset-Manifest.md)
 
 ## Run locally
