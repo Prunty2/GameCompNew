@@ -18,7 +18,7 @@ test("main menu presents centered play, settings, and credits actions", async ({
   await page.goto("/");
 
   const version = page.locator(".title-build-version");
-  await expect(version).toHaveText("v0.4.0 (PR #79)");
+  await expect(version).toHaveText("v0.4.1 (PR #81)");
   const versionBounds = await version.boundingBox();
   expect(versionBounds).not.toBeNull();
   expect(versionBounds!.x).toBeLessThan(24);
@@ -101,7 +101,12 @@ test("first assignment teaches the complete market sale loop", async ({ page }) 
   const tutorial = page.locator("#market-tutorial");
   const bluegillListing = page.locator('[data-action="select-market-fish"][data-species="bluegill"]');
   await expect(page.getByRole("heading", { name: "Brindle Harbor" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Today's catch prices" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Fish market" })).toBeVisible();
+  await expect(page.locator(".market-listing")).toHaveCount(9);
+  await expect(page.locator(".market-listing.is-locked")).toHaveCount(8);
+  await expect(page.locator(".market-listing.is-locked").first().locator(".market-lock-question")).toHaveText("?");
+  await expect(page.locator(".market-listing.is-locked").first().locator(".market-listing-fish")).toHaveCSS("filter", /brightness\(0\)/);
+  await expect(page.locator(".market-listing.is-locked").first()).not.toHaveAttribute("data-action");
   await expect(tutorial).toContainText("FIRST ASSIGNMENT · 1 of 5");
   await expect(bluegillListing).toHaveClass(/is-tutorial-target/);
   await expect(bluegillListing).toHaveCSS("animation-name", "tutorial-target-pulse");
@@ -110,11 +115,19 @@ test("first assignment teaches the complete market sale loop", async ({ page }) 
   await expect(tutorial).toContainText("FIRST ASSIGNMENT · 2 of 5");
   const trackButton = page.locator('[data-action="track-market-fish"][data-species="bluegill"]');
   await expect(trackButton).toHaveClass(/is-tutorial-target/);
-  await expect(page.getByText("Sunward Shoal, Brindle Coast")).toBeVisible();
   await expect(page.getByRole("img", { name: /Bluegill price history/ })).toBeVisible();
 
   await trackButton.click();
   await expect(tutorial).toContainText("FIRST ASSIGNMENT · 3 of 5");
+  await expect(page.getByRole("button", { name: "Back to market" })).toHaveClass(/is-tutorial-target/);
+  await page.getByRole("button", { name: "Back to market" }).click();
+  await expect(bluegillListing.locator(".market-tracking-badge")).toHaveText("!");
+  await expect(bluegillListing.locator(".market-tracking-badge")).toHaveAttribute("aria-label", "Tracking Bluegill");
+  await expect(bluegillListing.locator(".market-tracking-badge")).toHaveCSS("left", "0px");
+  await expect(bluegillListing.locator(".market-tracking-badge")).toHaveCSS("top", "0px");
+  await expect(bluegillListing.locator(".market-tracking-badge")).toHaveCSS("border-radius", "50%");
+  await expect(bluegillListing).toHaveAttribute("aria-label", /tracked/);
+  await expect(page.locator(".market-tracking-badge")).toHaveCount(1);
   await expect(page.locator('[data-action="undock"]')).toHaveClass(/is-tutorial-target/);
   await page.locator('[data-action="undock"]').click();
   await expect(page.locator(".navigation-status")).toContainText("FISH AT Sunward Shoal");
@@ -126,12 +139,13 @@ test("first assignment teaches the complete market sale loop", async ({ page }) 
   await page.evaluate(() => window.__FSHING_TEST__?.sailToHarbor("gloam"));
   await page.getByRole("button", { name: "Dock · Gloam Ferry" }).click();
   await expect(page.getByRole("heading", { name: "Gloam Ferry" })).toBeVisible();
+  await page.locator('[data-action="select-market-fish"][data-species="bluegill"]').click();
   const sellButton = page.locator('[data-action="sell-market-fish"][data-species="bluegill"]');
   await expect(sellButton).toHaveClass(/is-tutorial-target/);
-  await expect(sellButton).toHaveText(/Sell 1 for \d+ shells/);
+  await expect(sellButton).toHaveText(/Sell 1 fish · \d+ shells/);
   await sellButton.click();
 
-  await expect(page.locator("#delivery-notification")).toContainText(/Bluegill · 1 sold · \d+ shells/);
+  await expect(page.locator("#delivery-notification")).toContainText("Sold, 1 fish");
   await expect(tutorial).toContainText("FIRST ASSIGNMENT · 5 of 5");
   await page.locator('[data-action="finish-market-tutorial"]').click({ force: true });
   await expect(tutorial).toBeHidden();
@@ -143,15 +157,27 @@ test("first assignment teaches the complete market sale loop", async ({ page }) 
   await expect(page.locator(".shell-balance strong")).toHaveText(/^[1-9]\d*$/);
 });
 
-test("market grid exposes every discovered fish and a usable detail graph", async ({ page }) => {
+test("market uses a scrollable fish-card grid and a focused detail view", async ({ page }) => {
   await page.goto("/?e2e=1");
   await page.getByRole("button", { name: "Play", exact: true }).click();
-  await page.evaluate(() => window.__FSHING_TEST__?.discoverAllFish());
+  await page.evaluate(() => {
+    for (let index = 0; index < 3; index += 1) window.__FSHING_TEST__?.catchSpecies("bluegill");
+    window.__FSHING_TEST__?.discoverAllFish();
+  });
 
   const list = page.locator(".market-list");
   const listings = list.locator(".market-listing");
   await expect(listings).toHaveCount(9);
-  await expect(page.locator(".market-list-heading")).toContainText("9 of 9");
+  await expect(list.locator(".market-listing.is-locked")).toHaveCount(0);
+  await expect(listings.first().locator(".market-listing-fish")).toBeVisible();
+  await expect(listings.first().locator(".market-listing-copy > strong")).not.toBeEmpty();
+  await expect(listings.first().locator(".market-price-pill")).toHaveText(/^\d+$/);
+  await expect(listings.first().locator(".market-cargo-count")).toHaveText("×3");
+  await expect(listings.first().locator(".market-cargo-count")).toHaveAttribute("aria-label", "3 Bluegill in cargo");
+  await expect(listings.first().locator(".market-cargo-count")).toHaveCSS("right", "0px");
+  await expect(listings.nth(1).locator(".market-cargo-count")).toHaveCount(0);
+  await expect(page.locator(".market-board-heading .panel-eyebrow")).toHaveCount(0);
+  await expect(page.locator(".market-info-pill")).toHaveCount(0);
   const scrollState = await list.evaluate((element) => ({
     clientHeight: element.clientHeight,
     scrollHeight: element.scrollHeight,
@@ -160,17 +186,41 @@ test("market grid exposes every discovered fish and a usable detail graph", asyn
   expect(scrollState.overflowY).toBe("auto");
   expect(scrollState.scrollHeight).toBeGreaterThan(scrollState.clientHeight);
 
-  await page.locator('[data-action="select-market-fish"][data-species="lakeSturgeon"]').click();
+  const sturgeonCard = page.locator('[data-action="select-market-fish"][data-species="lakeSturgeon"]');
+  await expect(sturgeonCard).toHaveCSS("border-radius", "18px");
+  await sturgeonCard.hover();
+  await expect(sturgeonCard).toHaveCSS("animation-name", "menu-button-hover-wobble");
+  await sturgeonCard.click();
   const detail = page.locator(".market-detail");
   await expect(detail.getByRole("heading", { name: "Lake Sturgeon" })).toBeVisible();
   await expect(detail.getByRole("img", { name: /Lake Sturgeon price history/ })).toBeVisible();
-  await expect(detail).toContainText("Found at");
-  await expect(detail).toContainText("Access");
-  await expect(detail).toContainText("Today's supply");
-  await expect(detail).toContainText("shells");
+  await expect(detail.locator(".market-hold-pill")).toHaveCount(0);
+  await expect(detail.locator(".panel-eyebrow")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Back to market" })).toBeVisible();
+  await expect(detail).not.toContainText("Found at");
+  await expect(detail).not.toContainText("Today's supply");
+
+  const desktopLayout = await detail.evaluate((element) => {
+    const summary = element.querySelector<HTMLElement>(".market-fish-summary")?.getBoundingClientRect();
+    const chart = element.querySelector<HTMLElement>(".market-chart-shell")?.getBoundingClientRect();
+    return { summaryRight: summary?.right ?? 0, chartLeft: chart?.left ?? 0 };
+  });
+  expect(desktopLayout.chartLeft).toBeGreaterThanOrEqual(desktopLayout.summaryRight);
+
+  await page.getByRole("button", { name: "Back to market" }).click();
+  await expect(listings).toHaveCount(9);
+  await expect(sturgeonCard).toBeFocused();
+
+  await sturgeonCard.click();
 
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(detail).toBeVisible();
+  const mobileLayout = await detail.evaluate((element) => {
+    const summary = element.querySelector<HTMLElement>(".market-fish-summary")?.getBoundingClientRect();
+    const chart = element.querySelector<HTMLElement>(".market-chart-shell")?.getBoundingClientRect();
+    return { summaryBottom: summary?.bottom ?? 0, chartTop: chart?.top ?? 0 };
+  });
+  expect(mobileLayout.chartTop).toBeGreaterThanOrEqual(mobileLayout.summaryBottom);
   const panelFitsWidth = await page.locator(".market-harbor-panel").evaluate(
     (element) => element.scrollWidth <= element.clientWidth,
   );

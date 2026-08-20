@@ -1,16 +1,12 @@
 import {
   FISH,
-  HARBORS,
   type FishSpecies,
   type HarborId,
 } from "./balance";
 import {
-  marketCondition,
   marketHistory,
-  marketLocationText,
   marketQuote,
   salePreview,
-  spotForSpecies,
   type MarketHistoryPoint,
   type MarketTrend,
 } from "./market";
@@ -20,35 +16,56 @@ export function marketBoardMarkup(
   simulation: Simulation,
   harborId: HarborId,
   selectedSpecies: FishSpecies,
+  detailOpen: boolean,
   fishAtlasUrl: string,
 ): string {
-  const discovered = (Object.keys(FISH) as FishSpecies[]).filter((species) => (
+  const speciesList = Object.keys(FISH) as FishSpecies[];
+  const discovered = speciesList.filter((species) => (
     simulation.progress.discovered.includes(species)
   ));
   const selected = discovered.includes(selectedSpecies) ? selectedSpecies : discovered[0] ?? "bluegill";
-  const condition = marketCondition(simulation.progress.marketDay, simulation.seed);
-  const listings = discovered.map((species) => {
+
+  if (detailOpen) {
+    return `<section class="market-board is-detail-view" aria-label="Fish market">
+      ${marketDetailMarkup(simulation, harborId, selected, fishAtlasUrl)}
+    </section>`;
+  }
+
+  const listings = speciesList.map((species, index) => {
+    if (!simulation.progress.discovered.includes(species)) {
+      return `<div class="market-listing is-locked" role="listitem" aria-label="Undiscovered fish, locked" style="--market-card-index: ${index}">
+        <span class="market-locked-fish-wrap" aria-hidden="true">
+          ${fishIcon(species, fishAtlasUrl, "market-listing-fish")}
+          <span class="market-lock-question">?</span>
+        </span>
+        <span class="market-listing-copy"><strong>Undiscovered</strong><span class="market-lock-pill">Locked</span></span>
+      </div>`;
+    }
     const quote = marketQuote(species, harborId, simulation.progress.marketDay, simulation.seed);
-    const tutorialTarget = simulation.progress.marketTutorialStep === "inspect" && species === "bluegill";
-    return `<button class="market-listing ${selected === species ? "is-selected" : ""} ${tutorialTarget ? "is-tutorial-target" : ""}" type="button" data-action="select-market-fish" data-species="${species}" aria-pressed="${selected === species}">
-      ${fishIcon(species, fishAtlasUrl, "market-listing-fish")}
-      <span class="market-listing-copy"><strong>${FISH[species].name}</strong><small>${availabilityLabel(quote.availability)} · ${trendLabel(quote.trend)}</small></span>
-      <span class="market-listing-price"><strong>${quote.price}</strong><small>shells</small><span class="market-trend is-${quote.trend}" aria-label="${trendAria(quote.changePercent)}">${trendSymbol(quote.trend)} ${formatChange(quote.changePercent)}</span></span>
+    const cargoCount = simulation.cargo.filter((item) => item.species === species).length;
+    const tutorialTarget = (
+      simulation.progress.marketTutorialStep === "inspect"
+      || simulation.progress.marketTutorialStep === "sell"
+    ) && species === "bluegill";
+    const isTracked = simulation.progress.marketTarget === species;
+    const cargoLabel = cargoCount > 0 ? `, ${cargoCount} in cargo` : "";
+    const cargoBadge = cargoCount > 0
+      ? `<span class="market-cargo-count" aria-label="${cargoCount} ${FISH[species].name} in cargo">×${cargoCount}</span>`
+      : "";
+    const trackingBadge = isTracked
+      ? `<span class="market-tracking-badge" aria-label="Tracking ${FISH[species].name}">!</span>`
+      : "";
+    return `<button class="market-listing ${tutorialTarget ? "is-tutorial-target" : ""}" type="button" data-action="select-market-fish" data-species="${species}" aria-label="${FISH[species].name}, ${quote.price} shells${cargoLabel}${isTracked ? ", tracked" : ""}" style="--market-card-index: ${index}">
+      <span class="market-listing-fish-wrap">${trackingBadge}${fishIcon(species, fishAtlasUrl, "market-listing-fish")}${cargoBadge}</span>
+      <span class="market-listing-copy"><strong>${FISH[species].name}</strong><span class="market-price-pill"><span class="ui-icon icon-shells" aria-hidden="true"></span>${quote.price}</span></span>
     </button>`;
   }).join("");
 
-  return `<section class="market-board" aria-label="Fish market">
+  return `<section class="market-board is-catalogue-view" aria-label="Fish market">
     <header class="market-board-heading">
-      <div><span class="panel-eyebrow">DAY ${simulation.progress.marketDay} · LOCAL EXCHANGE</span><h3>Today's catch prices</h3></div>
-      <div class="market-condition" aria-label="Lake condition: ${condition.name}"><strong>${condition.name}</strong><span>${condition.description}</span></div>
+      <h3>Fish market</h3>
     </header>
-    <div class="market-layout">
-      <section class="market-list-shell" aria-labelledby="market-list-title">
-        <div class="market-list-heading"><h4 id="market-list-title">Discovered fish</h4><span>${discovered.length} of ${Object.keys(FISH).length}</span></div>
-        <div class="market-list" role="list">${listings}</div>
-      </section>
-      ${marketDetailMarkup(simulation, harborId, selected, fishAtlasUrl)}
-    </div>
+    <div class="market-list" role="list" aria-label="Fish prices and locked discoveries">${listings}</div>
   </section>`;
 }
 
@@ -60,39 +77,29 @@ function marketDetailMarkup(
 ): string {
   const fish = FISH[species];
   const quote = marketQuote(species, harborId, simulation.progress.marketDay, simulation.seed);
-  const otherHarbor = HARBORS.find((harbor) => harbor.id !== harborId) ?? HARBORS[0]!;
-  const otherQuote = marketQuote(species, otherHarbor.id, simulation.progress.marketDay, simulation.seed);
   const history = marketHistory(species, harborId, simulation.progress.marketDay, simulation.seed);
   const sale = salePreview(simulation.cargo, species, quote.price);
-  const spot = spotForSpecies(species);
   const isTracked = simulation.progress.marketTarget === species;
   const trackTarget = simulation.progress.marketTutorialStep === "track" && species === "bluegill";
   const sellTarget = simulation.progress.marketTutorialStep === "sell" && species === "bluegill";
   return `<article class="market-detail" aria-labelledby="market-detail-title">
-    <header class="market-detail-heading">
-      ${fishIcon(species, fishAtlasUrl, "market-detail-fish")}
-      <div><span class="panel-eyebrow">${fish.rarity} · line tier ${fish.depthTier}</span><h3 id="market-detail-title">${fish.name}</h3><p>${fish.shape}</p></div>
-      <div class="market-current-price"><span>Whole fish</span><strong>${quote.price}</strong><small>shells</small></div>
-    </header>
-    <section class="market-chart-shell" aria-labelledby="price-history-title">
-      <div class="market-chart-heading"><div><span class="panel-eyebrow">LOCAL QUOTE</span><h4 id="price-history-title">Seven-day price</h4></div><span class="market-trend is-${quote.trend}">${trendSymbol(quote.trend)} ${trendLabel(quote.trend)} ${formatChange(quote.changePercent)}</span></div>
-      ${priceGraph(history, fish.name)}
-    </section>
-    <dl class="market-facts">
-      <div><dt>Found at</dt><dd>${marketLocationText(species)}</dd></div>
-      <div><dt>Access</dt><dd>${spot.requiresPermit ? "Outer Gloam permit · " : ""}Line tier ${fish.depthTier}</dd></div>
-      <div><dt>Today's supply</dt><dd>${availabilityLabel(quote.availability)}</dd></div>
-      <div><dt>${otherHarbor.name}</dt><dd>${otherQuote.price} shells ${otherQuote.price > quote.price ? "· higher" : otherQuote.price < quote.price ? "· lower" : "· same"}</dd></div>
-    </dl>
-    <section class="market-sale-summary" aria-label="Sale estimate">
-      <div><span>In your hold</span><strong>${sale.quantity}</strong></div>
-      <div><span>Average freshness</span><strong>${sale.quantity > 0 ? `${sale.averageFreshness}%` : "None"}</strong></div>
-      <div><span>Freshness cost</span><strong>${sale.quantity > 0 ? `−${sale.freshnessLoss}` : "0"}</strong></div>
-      <div class="market-sale-total"><span>You receive</span><strong>${sale.total} shells</strong></div>
-    </section>
-    <div class="market-detail-actions">
-      <button class="market-track-button ${isTracked ? "is-tracked" : ""} ${trackTarget ? "is-tutorial-target" : ""}" type="button" data-action="track-market-fish" data-species="${species}" aria-pressed="${isTracked}">${isTracked ? "Tracking" : `Track ${fish.name}`}</button>
-      <button class="primary-button market-sell-button ${sellTarget ? "is-tutorial-target" : ""}" type="button" data-action="sell-market-fish" data-species="${species}" ${sale.quantity === 0 ? "disabled" : ""}>${sale.quantity === 0 ? "No fresh catch to sell" : `Sell ${sale.quantity} for ${sale.total} shells`}</button>
+    <div class="market-detail-layout">
+      <section class="market-fish-summary" aria-label="${fish.name} sale summary">
+        ${fishIcon(species, fishAtlasUrl, "market-detail-fish")}
+        <div class="market-fish-heading"><h3 id="market-detail-title">${fish.name}</h3></div>
+        <div class="market-summary-pills">
+          <span class="market-price-pill is-large"><span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${quote.price}</strong><small>each</small></span>
+        </div>
+        <button class="market-track-button ${isTracked ? "is-tracked" : ""} ${trackTarget ? "is-tutorial-target" : ""}" type="button" data-action="track-market-fish" data-species="${species}" aria-pressed="${isTracked}">${isTracked ? "✓ Tracking this fish" : `Track ${fish.name}`}</button>
+        <button class="primary-button market-sell-button ${sellTarget ? "is-tutorial-target" : ""}" type="button" data-action="sell-market-fish" data-species="${species}" ${sale.quantity === 0 ? "disabled" : ""}>${sale.quantity === 0 ? "No fresh fish to sell" : `Sell ${sale.quantity} fish · ${sale.total} shells`}</button>
+      </section>
+      <section class="market-chart-shell" aria-labelledby="price-history-title">
+        <div class="market-chart-heading">
+          <h4 id="price-history-title">7-day price</h4>
+          <span class="market-trend is-${quote.trend}" aria-label="${trendAria(quote.changePercent)}">${trendSymbol(quote.trend)} ${trendLabel(quote.trend)} ${formatChange(quote.changePercent)}</span>
+        </div>
+        ${priceGraph(history, fish.name)}
+      </section>
     </div>
   </article>`;
 }
@@ -108,17 +115,18 @@ function priceGraph(history: MarketHistoryPoint[], fishName: string): string {
   const maximum = Math.max(...prices);
   const range = Math.max(1, maximum - minimum);
   const points = history.map((point, index) => {
-    const x = 10 + (index / Math.max(1, history.length - 1)) * 180;
-    const y = 72 - ((point.price - minimum) / range) * 54;
+    const x = 34 + (index / Math.max(1, history.length - 1)) * 332;
+    const y = 176 - ((point.price - minimum) / range) * 126;
     return { ...point, x, y };
   });
   const path = points.map((point) => `${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(" ");
   const currentDay = history.at(-1)?.day ?? 1;
-  const labels = points.map((point) => `<text x="${point.x}" y="94" text-anchor="middle">${point.day === currentDay ? "TODAY" : `${point.day - currentDay}d`}</text>`).join("");
+  const guides = points.map((point) => `<line class="graph-guide" x1="${point.x}" y1="42" x2="${point.x}" y2="176"></line>`).join("");
+  const labels = points.map((point) => `<text x="${point.x}" y="207" text-anchor="middle">${point.day === currentDay ? "TODAY" : `${point.day - currentDay}d`}</text>`).join("");
   const dots = points.map((point) => {
     const daysAgo = currentDay - point.day;
     const dayLabel = daysAgo === 0 ? "Today" : `${daysAgo} ${daysAgo === 1 ? "day" : "days"} ago`;
-    return `<circle cx="${point.x}" cy="${point.y}" r="2.8"><title>${dayLabel}: ${point.price} shells</title></circle>`;
+    return `<circle cx="${point.x}" cy="${point.y}" r="5"><title>${dayLabel}: ${point.price} shells</title></circle>`;
   }).join("");
   const description = history.map((point) => {
     const daysAgo = currentDay - point.day;
@@ -127,12 +135,12 @@ function priceGraph(history: MarketHistoryPoint[], fishName: string): string {
       : `${daysAgo} ${daysAgo === 1 ? "day" : "days"} ago`;
     return `${dayLabel}, ${point.price} shells`;
   }).join("; ");
-  return `<svg class="market-price-graph" viewBox="0 0 200 100" role="img" aria-label="${fishName} price history: ${description}">
-    <line x1="10" y1="72" x2="190" y2="72"></line>
-    <line x1="10" y1="18" x2="10" y2="72"></line>
+  return `<svg class="market-price-graph" viewBox="0 0 400 220" role="img" aria-label="${fishName} price history: ${description}">
+    ${guides}
+    <line class="graph-axis" x1="34" y1="176" x2="366" y2="176"></line>
     <polyline points="${path}"></polyline>${dots}${labels}
-    <text class="graph-value graph-value-high" x="12" y="15">${maximum}</text>
-    <text class="graph-value" x="12" y="84">${minimum}</text>
+    <text class="graph-value graph-value-high" x="34" y="30">${maximum} shells</text>
+    <text class="graph-value" x="34" y="194">${minimum}</text>
   </svg>`;
 }
 
@@ -150,8 +158,4 @@ function trendAria(change: number): string {
 
 function formatChange(change: number): string {
   return `${Math.abs(change).toFixed(1)}%`;
-}
-
-function availabilityLabel(availability: "abundant" | "normal" | "scarce"): string {
-  return availability === "abundant" ? "Plentiful" : availability === "scarce" ? "Hard to find" : "Usual supply";
 }

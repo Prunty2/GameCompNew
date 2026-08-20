@@ -139,6 +139,7 @@ export class Game {
   private overlayReturn: OverlayScreen = "pause";
   private harborSection: HarborSection = "market";
   private selectedMarketSpecies: FishSpecies = "bluegill";
+  private marketDetailOpen = false;
   private helpStep = 0;
   private toastTimer: number | undefined;
   private deliveryNotificationTimer: number | undefined;
@@ -350,7 +351,7 @@ export class Game {
         this.pulseFeedback("delivery");
         this.harborSection = "market";
         this.showDeliveryNotification(
-          `${FISH[event.result.species].name} · ${event.result.quantity} sold · ${event.result.payment} shells`,
+          `Sold, ${event.result.quantity} fish`,
           "Close sale notification",
         );
         break;
@@ -361,6 +362,7 @@ export class Game {
       case "docked":
         this.feedback.cue("dock");
         this.harborSection = "market";
+        this.marketDetailOpen = false;
         this.setOverlay("harbor", true);
         break;
       case "full-cargo":
@@ -379,6 +381,7 @@ export class Game {
         this.feedback.cue("collision");
         this.showToast(`Harbor rescue · ${event.cost} shells · cargo lost`);
         this.harborSection = "market";
+        this.marketDetailOpen = false;
         this.setOverlay("harbor", true);
         break;
       case "upgrade":
@@ -482,9 +485,9 @@ export class Game {
     if (tutorial.hidden) return;
     const copy = {
       inspect: ["1 of 5", "Choose Bluegill", "Select the glowing Bluegill listing to read today's price."],
-      track: ["2 of 5", "Track the catch", "Read where Bluegill lives, then choose Track Bluegill."],
+      track: ["2 of 5", "Track the catch", "Review Bluegill, then choose Track Bluegill."],
       catch: ["3 of 5", "Catch a Bluegill", "Follow Fish at Sunward Shoal. Slow down, drop the line, and hook a Bluegill."],
-      sell: ["4 of 5", "Sell while fresh", "Follow Sell at to the stronger quote, then sell your Bluegill from its listing."],
+      sell: ["4 of 5", "Sell while fresh", "Follow Sell at, open the Bluegill card, then sell your catch."],
       complete: ["5 of 5", "First sale complete", "You earned shells at the live market price. Prices change when a new day begins."],
       done: ["", "", ""],
     }[step];
@@ -588,17 +591,20 @@ export class Game {
       return `<button class="cargo-slot is-locked" type="button" data-action="open-cargo-upgrades" aria-label="Cargo slot ${index + 1} locked. Open Cargo upgrades"><span class="cargo-slot-number">${slotNumber}</span><img class="cargo-padlock" src="${padlockIconUrl}" alt="" aria-hidden="true" /><small>Upgrade</small></button>`;
     }).join("");
     const content = activeSection === "market"
-      ? marketBoardMarkup(this.simulation, harborId, this.selectedMarketSpecies, fishAtlasUiUrl)
+      ? marketBoardMarkup(this.simulation, harborId, this.selectedMarketSpecies, this.marketDetailOpen, fishAtlasUiUrl)
       : activeSection === "cargo"
         ? `<aside class="cargo-section" aria-labelledby="cargo-heading"><div class="cargo-inventory-heading"><h3 id="cargo-heading">Fish inventory</h3><span>${this.simulation.cargo.length} carried · ${availableCargoSlots} unlocked</span></div><div class="cargo-slot-grid" aria-label="Cargo inventory">${cargoMarkup}</div></aside>`
         : `<section class="services" aria-label="Dock services"><div class="service-grid">${this.upgradeCard("cargo", "Cargo", "+1 cargo slot")}${this.upgradeCard("engine", "Engine", "+11% speed")}${this.upgradeCard("lamp", "Lamp", "Wider night view")}${this.upgradeCard("line", "Line depth", "Next depth tier")}${this.boostCard()}${harborId === "gloam" ? this.permitCard() : ""}</div></section>`;
     const tabs = `<nav class="harbor-tabs has-3-tabs" aria-label="Harbor sections" style="--harbor-tab-count: 3">${availableSections.map((section) => `<button class="harbor-tab ${activeSection === section ? "is-active" : ""}" type="button" data-action="harbor-section" data-harbor-section="${section}" aria-label="${capitalise(section)}" aria-pressed="${activeSection === section}"><span class="ui-icon icon-${HARBOR_SECTION_ICON[section]}" aria-hidden="true"></span><span>${capitalise(section)}</span></button>`).join("")}</nav>`;
+    const mainFooterAction = activeSection === "market" && this.marketDetailOpen
+      ? `<button class="leave-button market-footer-back ${this.simulation.progress.marketTutorialStep === "catch" ? "is-tutorial-target" : ""}" type="button" data-action="close-market-fish-detail" aria-label="Back to market"><span class="harbor-back-arrow" aria-hidden="true">←</span><strong>Back to market</strong></button>`
+      : `<button class="leave-button ${this.simulation.progress.marketTutorialStep === "catch" ? "is-tutorial-target" : ""}" type="button" data-action="undock" aria-label="Back to lake"><span class="ui-icon icon-hull" aria-hidden="true"></span><strong>Return to Lake</strong></button>`;
     return `<section class="screen-overlay harbor-screen is-first-voyage is-expanded-harbor is-harbor-${activeSection} is-dock-${harborId}" ${this.dockBackdropAttributes(harborId)} role="dialog" aria-labelledby="harbor-title">
       <div class="art-panel harbor-panel side-sheet market-harbor-panel">
         <header class="panel-heading harbor-header"><div class="harbor-title-block"><img class="wordmark harbor-wordmark" src="${wordmarkUrl}" alt="FSHING" /><span class="harbor-title-divider" aria-hidden="true"></span><div><h2 id="harbor-title">${harbor.name}</h2></div></div><span class="shell-balance" aria-label="${this.simulation.progress.money} shells"><span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${this.simulation.progress.money}</strong></span></header>
         ${tabs}
         <div class="harbor-content is-${activeSection}">${content}</div>
-        <footer class="panel-actions"><div><button class="text-button harbor-utility-button" type="button" data-action="open-help" aria-label="How to play"><span class="ui-icon icon-objective" aria-hidden="true"></span><strong>Help</strong></button></div><button class="leave-button ${this.simulation.progress.marketTutorialStep === "catch" ? "is-tutorial-target" : ""}" type="button" data-action="undock" aria-label="Back to lake"><span class="ui-icon icon-hull" aria-hidden="true"></span><strong>Return to Lake</strong></button></footer>
+        <footer class="panel-actions"><div><button class="text-button harbor-utility-button" type="button" data-action="open-help" aria-label="How to play"><span class="ui-icon icon-objective" aria-hidden="true"></span><strong>Help</strong></button></div>${mainFooterAction}</footer>
       </div>
     </section>`;
   }
@@ -941,6 +947,7 @@ export class Game {
   private beginVoyage(): void {
     this.started = true;
     this.harborSection = "market";
+    this.marketDetailOpen = false;
     if (this.simulation.dockedAt) this.setOverlay("harbor", true);
     else this.setOverlay(null, true);
   }
@@ -950,6 +957,7 @@ export class Game {
     const previousIndex = sectionOrder.indexOf(this.harborSection);
     const nextIndex = sectionOrder.indexOf(section);
     this.harborSection = section;
+    this.marketDetailOpen = false;
     this.renderOverlay();
 
     const content = this.uiRoot.querySelector<HTMLElement>(".harbor-content");
@@ -1166,12 +1174,21 @@ export class Game {
         const species = target.dataset.species as FishSpecies | undefined;
         if (!species || !(species in FISH)) break;
         this.selectedMarketSpecies = species;
+        this.marketDetailOpen = true;
         inspectMarketSpecies(this.simulation, species);
         this.syncSave();
         this.renderOverlay();
         this.refreshMarketTutorial();
         requestAnimationFrame(() => {
           this.uiRoot.querySelector<HTMLButtonElement>(`[data-action="track-market-fish"][data-species="${species}"]`)?.focus({ preventScroll: true });
+        });
+        break;
+      }
+      case "close-market-fish-detail": {
+        this.marketDetailOpen = false;
+        this.renderOverlay();
+        requestAnimationFrame(() => {
+          this.uiRoot.querySelector<HTMLButtonElement>(`[data-action="select-market-fish"][data-species="${this.selectedMarketSpecies}"]`)?.focus({ preventScroll: true });
         });
         break;
       }
@@ -1233,7 +1250,7 @@ export class Game {
         }
         this.setOverlay(null, true);
         break;
-      case "continue-season": this.harborSection = "market"; this.setOverlay("harbor"); break;
+      case "continue-season": this.harborSection = "market"; this.marketDetailOpen = false; this.setOverlay("harbor"); break;
       case "buy-upgrade": {
         const upgrade = target.dataset.upgrade as UpgradeId | undefined;
         if (upgrade && buyUpgrade(this.simulation, upgrade)) {
