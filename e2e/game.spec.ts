@@ -121,6 +121,13 @@ test("first assignment teaches the complete market sale loop", async ({ page }) 
   await expect(tutorial).toContainText("FIRST ASSIGNMENT · 3 of 5");
   await expect(page.getByRole("button", { name: "Back to market" })).toHaveClass(/is-tutorial-target/);
   await page.getByRole("button", { name: "Back to market" }).click();
+  await expect(bluegillListing.locator(".market-tracking-badge")).toHaveText("!");
+  await expect(bluegillListing.locator(".market-tracking-badge")).toHaveAttribute("aria-label", "Tracking Bluegill");
+  await expect(bluegillListing.locator(".market-tracking-badge")).toHaveCSS("left", "0px");
+  await expect(bluegillListing.locator(".market-tracking-badge")).toHaveCSS("top", "0px");
+  await expect(bluegillListing.locator(".market-tracking-badge")).toHaveCSS("border-radius", "50%");
+  await expect(bluegillListing).toHaveAttribute("aria-label", /tracked/);
+  await expect(page.locator(".market-tracking-badge")).toHaveCount(1);
   await expect(page.locator('[data-action="undock"]')).toHaveClass(/is-tutorial-target/);
   await page.locator('[data-action="undock"]').click();
   await expect(page.locator(".navigation-status")).toContainText("FISH AT Sunward Shoal");
@@ -167,6 +174,7 @@ test("market uses a scrollable fish-card grid and a focused detail view", async 
   await expect(listings.first().locator(".market-price-pill")).toHaveText(/^\d+$/);
   await expect(listings.first().locator(".market-cargo-count")).toHaveText("×3");
   await expect(listings.first().locator(".market-cargo-count")).toHaveAttribute("aria-label", "3 Bluegill in cargo");
+  await expect(listings.first().locator(".market-cargo-count")).toHaveCSS("right", "0px");
   await expect(listings.nth(1).locator(".market-cargo-count")).toHaveCount(0);
   await expect(page.locator(".market-board-heading .panel-eyebrow")).toHaveCount(0);
   await expect(page.locator(".market-info-pill")).toHaveCount(0);

@@ -144,17 +144,16 @@
   place-items: center;
 }
 
-.market-cargo-count {
+.market-cargo-count,
+.market-tracking-badge {
   position: absolute;
   top: 0;
-  right: 0;
   display: grid;
   width: 34px;
   height: 34px;
   place-items: center;
   border: 2px solid #071824;
   border-radius: 50%;
-  background: var(--menu-paper);
   color: #071824;
   font-family: system-ui, sans-serif;
   font-size: 0.74rem;
@@ -162,6 +161,18 @@
   letter-spacing: -0.04em;
   line-height: 1;
   box-shadow: 0 4px 10px rgb(0 8 13 / 42%);
+}
+
+.market-cargo-count {
+  right: 0;
+  background: var(--menu-paper);
+}
+
+.market-tracking-badge {
+  left: 0;
+  background: #f1ac50;
+  font-size: 1rem;
+  letter-spacing: 0;
 }
 
 .market-locked-fish-wrap {
