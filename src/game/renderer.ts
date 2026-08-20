@@ -1,5 +1,11 @@
 import boatSteamAtlasUrl from "../assets/boat-steam-atlas.png";
+import beachChartUrl from "../assets/beach-chart.png";
+import beachChartNightUrl from "../assets/beach-chart-night.png";
+import beachHarborPierUrl from "../assets/beach-harbor-pier.png";
 import tackleAtlasUrl from "../assets/fish-atlas.png";
+import beachBayFishAtlasUrl from "../assets/fish-beach-bay-swim.png";
+import beachReefFishAtlasUrl from "../assets/fish-beach-reef-swim.png";
+import beachSurfFishAtlasUrl from "../assets/fish-beach-surf-swim.png";
 import gloamFishAtlasUrl from "../assets/fish-gloam-swim.png";
 import mosswaterFishAtlasUrl from "../assets/fish-mosswater-swim.png";
 import sunwardFishAtlasUrl from "../assets/fish-sunward-swim.png";
@@ -19,7 +25,8 @@ import {
   FISH,
   FISHING_SPOTS,
   HARBORS,
-  SPOT_RESIDENTS,
+  primarySpeciesForSpot,
+  residentsForSpot,
   regionSurfaceTintAt,
   type FishRarity,
   type FishSpecies,
@@ -48,8 +55,17 @@ import {
   fishingReelSchoolOpacity,
   fishingReelWriggle,
 } from "./fishingReeling";
-import { surfaceFishingCue, surfaceFishPose, type SurfaceFishingCue } from "./fishingSpotEffects";
-import { calculatePanoramaLayout } from "./panorama";
+import {
+  surfaceFishingCue,
+  surfaceFishingLocationVisibility,
+  surfaceFishPose,
+  type SurfaceFishingCue,
+} from "./fishingSpotEffects";
+import {
+  BEACH_AUTHORED_WATERLINE_RATIO,
+  calculatePanoramaLayout,
+  LAKE_AUTHORED_WATERLINE_RATIO,
+} from "./panorama";
 import {
   maxFishingDepth,
   navigationGuidance,
@@ -73,10 +89,13 @@ interface LoadedArt {
   boatSteam: HTMLImageElement;
   lake: HTMLImageElement;
   lakeNight: HTMLImageElement;
+  beach: HTMLImageElement;
+  beachNight: HTMLImageElement;
+  beachPier: HTMLImageElement;
   pier: HTMLImageElement;
   boat: HTMLCanvasElement;
-  fish: Record<SpotId, HTMLCanvasElement>;
-  fishOutlines: Record<FishRarity, Record<SpotId, HTMLCanvasElement>>;
+  fish: Record<FishSheetId, HTMLCanvasElement>;
+  fishOutlines: Record<FishRarity, Record<FishSheetId, HTMLCanvasElement>>;
   fishingEnvironments: Record<SpotId, HTMLImageElement>;
   lineLimitFloat: HTMLImageElement;
   fishingCues: HTMLCanvasElement;
@@ -84,6 +103,8 @@ interface LoadedArt {
   tackle: HTMLCanvasElement;
   world: HTMLCanvasElement;
 }
+
+type FishSheetId = SpotId | "beachSurf" | "beachBay" | "beachReef";
 
 const SURFACE_FISH_CELLS = [
   [0, 0],
@@ -94,7 +115,7 @@ const SURFACE_FISH_CELLS = [
   [1, 1],
 ] as const;
 
-const FISH_SPRITE_CELLS: Record<FishSpecies, { sheet: SpotId; row: number }> = {
+const FISH_SPRITE_CELLS: Record<FishSpecies, { sheet: FishSheetId; row: number }> = {
   bluegill: { sheet: "sunwardShoal", row: 0 },
   yellowPerch: { sheet: "sunwardShoal", row: 1 },
   emeraldShiner: { sheet: "sunwardShoal", row: 2 },
@@ -104,6 +125,15 @@ const FISH_SPRITE_CELLS: Record<FishSpecies, { sheet: SpotId; row: number }> = {
   lakeTrout: { sheet: "outerGloam", row: 0 },
   burbot: { sheet: "outerGloam", row: 1 },
   lakeSturgeon: { sheet: "outerGloam", row: 2 },
+  seaMullet: { sheet: "beachSurf", row: 0 },
+  yellowfinBream: { sheet: "beachSurf", row: 1 },
+  sandWhiting: { sheet: "beachSurf", row: 2 },
+  duskyFlathead: { sheet: "beachBay", row: 0 },
+  luderick: { sheet: "beachBay", row: 1 },
+  easternAustralianSalmon: { sheet: "beachBay", row: 2 },
+  snapper: { sheet: "beachReef", row: 0 },
+  yellowtailKingfish: { sheet: "beachReef", row: 1 },
+  mulloway: { sheet: "beachReef", row: 2 },
 };
 
 // Center of the visible hook-and-arc paint inside each 192 × 256 authored atlas cell.
@@ -139,11 +169,17 @@ export class CanvasRenderer {
       loadImage(boatSteamAtlasUrl),
       loadImage(lakeChartUrl),
       loadImage(lakeChartNightUrl),
+      loadImage(beachChartUrl),
+      loadImage(beachChartNightUrl),
+      loadImage(beachHarborPierUrl),
       loadImage(harborPierUrl),
       loadImage(playerBoatUrl),
       loadImage(sunwardFishAtlasUrl),
       loadImage(mosswaterFishAtlasUrl),
       loadImage(gloamFishAtlasUrl),
+      loadImage(beachSurfFishAtlasUrl),
+      loadImage(beachBayFishAtlasUrl),
+      loadImage(beachReefFishAtlasUrl),
       loadImage(sunwardFishingUrl),
       loadImage(mosswaterFishingUrl),
       loadImage(gloamFishingUrl),
@@ -156,11 +192,17 @@ export class CanvasRenderer {
       boatSteam,
       lake,
       lakeNight,
+      beach,
+      beachNight,
+      beachPier,
       pier,
       boat,
       sunwardFish,
       mosswaterFish,
       gloamFish,
+      beachSurfFish,
+      beachBayFish,
+      beachReefFish,
       sunwardFishing,
       mosswaterFishing,
       gloamFishing,
@@ -170,20 +212,29 @@ export class CanvasRenderer {
       tackle,
       world,
     ]) => {
-      const keyedFish: Record<SpotId, HTMLCanvasElement> = {
+      const keyedFish: Record<FishSheetId, HTMLCanvasElement> = {
         sunwardShoal: keyMagenta(sunwardFish, false, true),
         mosswaterPool: keyMagenta(mosswaterFish, false, true),
         outerGloam: keyMagenta(gloamFish, false, true),
+        beachSurf: keyMagenta(beachSurfFish, false, true),
+        beachBay: keyMagenta(beachBayFish, false, true),
+        beachReef: keyMagenta(beachReefFish, false, true),
       };
-      const tintedFish = (colour: string): Record<SpotId, HTMLCanvasElement> => ({
+      const tintedFish = (colour: string): Record<FishSheetId, HTMLCanvasElement> => ({
         sunwardShoal: tintAlpha(keyedFish.sunwardShoal, colour),
         mosswaterPool: tintAlpha(keyedFish.mosswaterPool, colour),
         outerGloam: tintAlpha(keyedFish.outerGloam, colour),
+        beachSurf: tintAlpha(keyedFish.beachSurf, colour),
+        beachBay: tintAlpha(keyedFish.beachBay, colour),
+        beachReef: tintAlpha(keyedFish.beachReef, colour),
       });
       this.art = {
         boatSteam,
         lake,
         lakeNight,
+        beach,
+        beachNight,
+        beachPier,
         pier,
         boat: keyMagenta(boat, true),
         fish: keyedFish,
@@ -221,6 +272,7 @@ export class CanvasRenderer {
     const width = this.canvas.clientWidth;
     const height = this.canvas.clientHeight;
     this.context.clearRect(0, 0, width, height);
+    this.canvas.dataset.world = simulation.world;
     if (!this.art) {
       this.context.fillStyle = "#0b2630";
       this.context.fillRect(0, 0, width, height);
@@ -252,11 +304,23 @@ export class CanvasRenderer {
     this.canvas.dataset.surfaceCameraCenter = camera.center.toFixed(3);
     this.canvas.dataset.surfaceCameraViewWidth = camera.viewWidth.toFixed(3);
     const nightIntensity = nightVisualIntensity(simulation);
-    const waterline = this.drawPanorama(nightIntensity >= 1 ? art.lakeNight : art.lake, camera, width, height);
+    const dayImage = simulation.world === "beach" ? art.beach : art.lake;
+    const nightImage = simulation.world === "beach" ? art.beachNight : art.lakeNight;
+    const authoredWaterlineRatio =
+      simulation.world === "beach"
+        ? BEACH_AUTHORED_WATERLINE_RATIO
+        : LAKE_AUTHORED_WATERLINE_RATIO;
+    const waterline = this.drawPanorama(
+      nightIntensity >= 1 ? nightImage : dayImage,
+      camera,
+      width,
+      height,
+      authoredWaterlineRatio,
+    );
     if (nightIntensity > 0 && nightIntensity < 1) {
       context.save();
       context.globalAlpha = nightIntensity;
-      this.drawPanorama(art.lakeNight, camera, width, height);
+      this.drawPanorama(nightImage, camera, width, height, authoredWaterlineRatio);
       context.restore();
     }
     context.save();
@@ -275,6 +339,7 @@ export class CanvasRenderer {
         x,
         waterline,
         harbor.id === "gloam",
+        simulation.world === "beach",
         surfaceLayer,
         width,
         height,
@@ -304,6 +369,7 @@ export class CanvasRenderer {
         elapsed: simulation.elapsed,
         reducedMotion: settings.reducedMotion,
         highContrast: settings.highContrast,
+        beach: simulation.world === "beach",
         opacity: 1,
       });
       if (cue.hookVisibility > 0) {
@@ -333,6 +399,7 @@ export class CanvasRenderer {
     x: number,
     waterline: number,
     fromRightShore: boolean,
+    beach: boolean,
     surfaceLayer: HTMLCanvasElement,
     viewportWidth: number,
     viewportHeight: number,
@@ -342,8 +409,11 @@ export class CanvasRenderer {
   ): void {
     const art = this.art;
     if (!art) return;
-    const pierWidth = clamp(this.canvas.clientHeight * 0.53, 300, 495);
-    const pierHeight = pierWidth * (art.pier.naturalHeight / art.pier.naturalWidth);
+    const pier = beach ? art.beachPier : art.pier;
+    const pierWidth = beach
+      ? clamp(this.canvas.clientHeight * 0.64, 340, 585)
+      : clamp(this.canvas.clientHeight * 0.53, 300, 495);
+    const pierHeight = pierWidth * (pier.naturalHeight / pier.naturalWidth);
     const deckTop = waterline - 32;
     const pierLift = clamp(pierHeight * 0.04, 4, 9);
     const drawY = deckTop - pierHeight * 0.43 - pierLift;
@@ -357,9 +427,9 @@ export class CanvasRenderer {
     if (fromRightShore) {
       this.context.translate(x - outboardOverlap, 0);
       this.context.scale(-1, 1);
-      this.context.drawImage(art.pier, -pierWidth, drawY, pierWidth, pierHeight);
+      this.context.drawImage(pier, -pierWidth, drawY, pierWidth, pierHeight);
     } else {
-      this.context.drawImage(art.pier, x + outboardOverlap - pierWidth, drawY, pierWidth, pierHeight);
+      this.context.drawImage(pier, x + outboardOverlap - pierWidth, drawY, pierWidth, pierHeight);
     }
     this.context.restore();
 
@@ -388,12 +458,14 @@ export class CanvasRenderer {
     elapsed: number;
     reducedMotion: boolean;
     highContrast: boolean;
+    beach: boolean;
     opacity: number;
   }): void {
     const { context } = this;
     const shoalWidth = clamp(options.height * 0.55, 250, 480);
     const shoalDepth = clamp((options.height - options.waterline) * 0.82, 130, 290);
-    const lensStrength = options.cue.lensVisibility * (options.locked ? 0.62 : 1);
+    const locationVisibility = surfaceFishingLocationVisibility(options.cue, options.beach);
+    const lensStrength = locationVisibility.lensVisibility * (options.locked ? 0.62 : 1);
 
     if (lensStrength > 0.01) {
       const art = this.art;
@@ -402,7 +474,11 @@ export class CanvasRenderer {
       const lensHeight = Math.min(options.height - options.waterline + 28, shoalDepth * 1.32);
       context.save();
       context.globalCompositeOperation = "screen";
-      context.globalAlpha = lensStrength * (options.highContrast ? 0.96 : 0.84) * options.opacity;
+      context.globalAlpha = clamp(
+        lensStrength * (options.highContrast ? 0.96 : options.beach ? 0.98 : 0.84) * options.opacity,
+        0,
+        1,
+      );
       context.drawImage(
         art.polarizedLens,
         options.x - lensWidth / 2,
@@ -422,10 +498,10 @@ export class CanvasRenderer {
       const cellHeight = cellWidth * 4 / 3;
       const [column, row] = SURFACE_FISH_CELLS[index % SURFACE_FISH_CELLS.length]!;
       context.save();
-      context.globalAlpha = options.cue.fishVisibility
+      context.globalAlpha = clamp(locationVisibility.fishVisibility
         * (options.locked ? 0.58 : 1)
         * (options.highContrast ? 1.28 : 1)
-        * options.opacity;
+        * options.opacity, 0, 1);
       context.translate(fishX, fishY);
       context.scale(pose.direction, 1);
       this.drawSurfaceFishingCueCell(column, row, 0, 0, cellWidth, cellHeight);
@@ -473,9 +549,9 @@ export class CanvasRenderer {
     const spot = FISHING_SPOTS.find((candidate) => candidate.id === fishing.spot);
     if (!spot) return;
     const targetSpecies = simulation.progress.marketTarget
-      && SPOT_RESIDENTS[spot.id].includes(simulation.progress.marketTarget)
+      && residentsForSpot(simulation.world, spot.id).includes(simulation.progress.marketTarget)
       ? simulation.progress.marketTarget
-      : spot.species;
+      : primarySpeciesForSpot(simulation.world, spot.id);
     const maximumDepth = maxFishingDepth(simulation);
     const entryDiveProgress = fishingDiveProgress(simulation.elapsed, fishing.startedAt, settings.reducedMotion);
     const reelProgress = fishing.reeling
@@ -663,6 +739,12 @@ export class CanvasRenderer {
     const motionDelta = this.updateSurfaceMotion(simulation, false, settings.reducedMotion);
     const camera = this.camera(simulation, false, settings.reducedMotion, motionDelta);
     const nightIntensity = nightVisualIntensity(simulation);
+    const dayImage = simulation.world === "beach" ? art.beach : art.lake;
+    const nightImage = simulation.world === "beach" ? art.beachNight : art.lakeNight;
+    const authoredWaterlineRatio =
+      simulation.world === "beach"
+        ? BEACH_AUTHORED_WATERLINE_RATIO
+        : LAKE_AUTHORED_WATERLINE_RATIO;
     const drawSurfaceImage = (
       image: HTMLImageElement,
       alpha: number,
@@ -674,6 +756,7 @@ export class CanvasRenderer {
         camera,
         viewportWidth: width,
         viewportHeight: height,
+        authoredWaterlineRatio,
       });
       context.save();
       context.beginPath();
@@ -699,9 +782,9 @@ export class CanvasRenderer {
     };
     const surfaceBlend = clamp(underwaterReveal, 0, 1);
     if (surfaceBlend > 0) {
-      drawSurfaceImage(art.lake, surfaceBlend, "below");
+      drawSurfaceImage(dayImage, surfaceBlend, "below");
       if (nightIntensity > 0) {
-        drawSurfaceImage(art.lakeNight, surfaceBlend * nightIntensity, "below");
+        drawSurfaceImage(nightImage, surfaceBlend * nightIntensity, "below");
       }
       context.save();
       context.beginPath();
@@ -712,8 +795,8 @@ export class CanvasRenderer {
       context.fillRect(0, surfaceY, width, height - surfaceY);
       context.restore();
     }
-    drawSurfaceImage(art.lake, 1, "above");
-    if (nightIntensity > 0) drawSurfaceImage(art.lakeNight, nightIntensity, "above");
+    drawSurfaceImage(dayImage, 1, "above");
+    if (nightIntensity > 0) drawSurfaceImage(nightImage, nightIntensity, "above");
 
     context.save();
     context.beginPath();
@@ -733,6 +816,7 @@ export class CanvasRenderer {
           x,
           surfaceY,
           harbor.id === "gloam",
+          simulation.world === "beach",
           surfaceLayer,
           width,
           height,
@@ -764,6 +848,7 @@ export class CanvasRenderer {
           elapsed: simulation.elapsed,
           reducedMotion: settings.reducedMotion,
           highContrast: settings.highContrast,
+          beach: simulation.world === "beach",
           opacity: surfaceBlend,
         });
         if (cue.hookVisibility > 0) activeFishingCue = { cue, x };
@@ -889,6 +974,7 @@ export class CanvasRenderer {
     camera: SideScrollCamera,
     width: number,
     height: number,
+    authoredWaterlineRatio: number,
   ): number {
     const layout = calculatePanoramaLayout({
       imageWidth: image.naturalWidth,
@@ -896,6 +982,7 @@ export class CanvasRenderer {
       camera,
       viewportWidth: width,
       viewportHeight: height,
+      authoredWaterlineRatio,
     });
     this.context.drawImage(
       image,
@@ -1317,6 +1404,15 @@ export class CanvasRenderer {
       lakeTrout: [1.34, 0.82],
       burbot: [1.46, 0.76],
       lakeSturgeon: [1.56, 0.7],
+      seaMullet: [1.5, 0.68],
+      yellowfinBream: [1.08, 0.98],
+      sandWhiting: [1.58, 0.62],
+      duskyFlathead: [1.62, 0.6],
+      luderick: [1.08, 0.98],
+      easternAustralianSalmon: [1.45, 0.72],
+      snapper: [1.18, 0.9],
+      yellowtailKingfish: [1.58, 0.66],
+      mulloway: [1.5, 0.72],
     };
     const [widthRatio, heightRatio] = proportions[species];
     return {

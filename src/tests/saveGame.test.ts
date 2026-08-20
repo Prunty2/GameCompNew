@@ -39,6 +39,7 @@ describe("versioned save data", () => {
         money: 999_999,
         upgrades: { cargo: 7, engine: 0, lamp: 1, line: 0 },
         outerUnlocked: false,
+        beachUnlocked: false,
         boostUnlocked: false,
         completedContracts: 0,
         discovered: ["bluegill"],

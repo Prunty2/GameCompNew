@@ -14,9 +14,11 @@ interface PanoramaLayoutInput {
   camera: SideScrollCamera;
   viewportWidth: number;
   viewportHeight: number;
+  authoredWaterlineRatio?: number;
 }
 
-const AUTHORED_WATERLINE_RATIO = 0.61;
+export const LAKE_AUTHORED_WATERLINE_RATIO = 0.61;
+export const BEACH_AUTHORED_WATERLINE_RATIO = 593 / 941;
 const DISPLAYED_WATERLINE_RATIO = 0.78;
 
 export function calculatePanoramaLayout(input: PanoramaLayoutInput): PanoramaLayout {
@@ -24,7 +26,8 @@ export function calculatePanoramaLayout(input: PanoramaLayoutInput): PanoramaLay
   const viewportAspect = input.viewportWidth / input.viewportHeight;
   const sourceHeight = Math.min(input.imageHeight, sourceWidth / viewportAspect);
   const sourceX = input.camera.left * input.imageWidth;
-  const authoredWaterline = input.imageHeight * AUTHORED_WATERLINE_RATIO;
+  const authoredWaterline =
+    input.imageHeight * (input.authoredWaterlineRatio ?? LAKE_AUTHORED_WATERLINE_RATIO);
   const sourceY = clamp(
     authoredWaterline - sourceHeight * DISPLAYED_WATERLINE_RATIO,
     0,

@@ -2,10 +2,11 @@ import {
   FISH,
   FISHING_SPOTS,
   HARBORS,
-  SPOT_RESIDENTS,
+  WORLD_SPOT_RESIDENTS,
   regionById,
   type FishSpecies,
   type HarborId,
+  type WorldId,
 } from "./balance";
 import type { CargoItem } from "./simulation";
 
@@ -85,6 +86,15 @@ const HARBOR_DEMAND: Record<HarborId, Record<FishSpecies, number>> = {
     lakeTrout: 1.08,
     burbot: 0.96,
     lakeSturgeon: 1.06,
+    seaMullet: 1.01,
+    yellowfinBream: 1.05,
+    sandWhiting: 0.98,
+    duskyFlathead: 1.06,
+    luderick: 0.97,
+    easternAustralianSalmon: 1.04,
+    snapper: 1.08,
+    yellowtailKingfish: 0.96,
+    mulloway: 1.07,
   },
   gloam: {
     bluegill: 1.07,
@@ -96,6 +106,15 @@ const HARBOR_DEMAND: Record<HarborId, Record<FishSpecies, number>> = {
     lakeTrout: 0.96,
     burbot: 1.08,
     lakeSturgeon: 1.02,
+    seaMullet: 1.06,
+    yellowfinBream: 0.98,
+    sandWhiting: 1.04,
+    duskyFlathead: 0.97,
+    luderick: 1.06,
+    easternAustralianSalmon: 1.02,
+    snapper: 0.96,
+    yellowtailKingfish: 1.08,
+    mulloway: 1.03,
   },
 };
 
@@ -189,9 +208,18 @@ export function catchSaleValue(wholeFishQuote: number, freshness: number): numbe
 }
 
 export function spotForSpecies(species: FishSpecies): (typeof FISHING_SPOTS)[number] {
-  const spot = FISHING_SPOTS.find((candidate) => SPOT_RESIDENTS[candidate.id].includes(species));
+  const spot = FISHING_SPOTS.find((candidate) => (
+    Object.values(WORLD_SPOT_RESIDENTS).some((residents) => residents[candidate.id].includes(species))
+  ));
   if (!spot) throw new Error(`No fishing ground contains ${species}.`);
   return spot;
+}
+
+export function worldForSpecies(species: FishSpecies): WorldId {
+  const entry = (Object.entries(WORLD_SPOT_RESIDENTS) as [WorldId, Record<string, readonly FishSpecies[]>][])
+    .find(([, residents]) => Object.values(residents).some((residentSpecies) => residentSpecies.includes(species)));
+  if (!entry) throw new Error(`No world contains ${species}.`);
+  return entry[0];
 }
 
 export function marketLocationText(species: FishSpecies): string {

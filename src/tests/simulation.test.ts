@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import {
   BALANCE,
+  BEACH_SPOT_RESIDENTS,
   FISHING_SPOTS,
   SPOT_RESIDENTS,
   boatClassAt,
@@ -10,6 +11,7 @@ import {
   spotById,
 } from "../game/balance";
 import {
+  buyBeachAccess,
   beginFishingExit,
   buyBoost,
   buyPermit,
@@ -34,6 +36,7 @@ import {
   startFishing,
   trackMarketSpecies,
   tutorialPrompt,
+  travelToWorld,
   undock,
   unlockBoostForTesting,
   updateSimulation,
@@ -446,6 +449,36 @@ describe("FSHING side-on simulation", () => {
     expect(FISHING_SPOTS).toHaveLength(3);
   });
 
+  test("unlocks Beach permanently and travels there only from a dock", () => {
+    const simulation = createSimulation(1, { money: BALANCE.beachAccessCost });
+    expect(simulation.world).toBe("lake");
+    expect(travelToWorld(simulation, "beach")).toBe(false);
+    expect(buyBeachAccess(simulation)).toBe(true);
+    expect(simulation.progress.beachUnlocked).toBe(true);
+    expect(simulation.progress.money).toBe(0);
+    expect(buyBeachAccess(simulation)).toBe(false);
+    expect(travelToWorld(simulation, "beach")).toBe(true);
+    expect(simulation.world).toBe("beach");
+    expect(simulation.dockedAt).toBeNull();
+    expect(simulation.progress.marketTarget).toBeNull();
+
+    expect(startFishing(simulation, "sunwardShoal")).toBe(true);
+    expect(new Set(simulation.fishing?.targets.map((target) => target.species))).toEqual(
+      new Set(BEACH_SPOT_RESIDENTS.sunwardShoal),
+    );
+    expect(tutorialPrompt(simulation)).toContain("Sea Mullet");
+    simulation.progress.discovered.push("seaMullet");
+    expect(trackMarketSpecies(simulation, "seaMullet")).toBe(true);
+    expect(trackMarketSpecies(simulation, "bluegill")).toBe(false);
+    simulation.mode = "cruising";
+    simulation.fishing = null;
+
+    moveBoatForTesting(simulation, harborById("brindle"));
+    interact(simulation);
+    expect(travelToWorld(simulation, "lake")).toBe(true);
+    expect(simulation.world).toBe("lake");
+  });
+
   test("rescues at critical damage without making progress unrecoverable", () => {
     const simulation = createSimulation(1, { money: 12 });
     undock(simulation);
@@ -474,6 +507,11 @@ describe("FSHING side-on simulation", () => {
     expect(simulation.progress.learning.surveysCompleted).toBe(3);
     expect(simulation.progress.learning.correctPredictions).toBe(2);
     expect(learningAccuracy(simulation)).toBe(67);
+
+    simulation.world = "beach";
+    const beachSurvey = recordSurvey(simulation, "mosswaterPool", "duskyFlathead");
+    expect(beachSurvey).toMatchObject({ correct: true, expected: "duskyFlathead" });
+    expect(beachSurvey.explanation).toContain("sand, seagrass, and shallow reef");
   });
 
   test("allows repeated catches and releases unneeded cargo", () => {

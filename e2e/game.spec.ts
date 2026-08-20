@@ -18,7 +18,7 @@ test("main menu presents centered play, settings, and credits actions", async ({
   await page.goto("/");
 
   const version = page.locator(".title-build-version");
-  await expect(version).toHaveText("v0.4.1 (PR #79)");
+  await expect(version).toHaveText("v0.4.1 (PR #65)");
   const versionBounds = await version.boundingBox();
   expect(versionBounds).not.toBeNull();
   expect(versionBounds!.x).toBeLessThan(24);
@@ -225,6 +225,54 @@ test("market uses a scrollable fish-card grid and a focused detail view", async 
     (element) => element.scrollWidth <= element.clientWidth,
   );
   expect(panelFitsWidth).toBe(true);
+});
+
+test("Beach market lists, prices, and tracks coastal fish with coastal artwork", async ({ page }) => {
+  await page.goto("/?e2e=1");
+  await page.evaluate(() => {
+    window.localStorage.setItem("gamecomp-new.save", JSON.stringify({
+      version: 10,
+      progress: {
+        money: 0,
+        upgrades: {},
+        beachUnlocked: true,
+        discovered: [
+          "bluegill",
+          "seaMullet",
+          "yellowfinBream",
+          "sandWhiting",
+          "duskyFlathead",
+          "luderick",
+          "easternAustralianSalmon",
+          "snapper",
+          "yellowtailKingfish",
+          "mulloway",
+        ],
+        marketTutorialStep: "done",
+      },
+      settings: {},
+    }));
+  });
+  await page.reload();
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.getByRole("button", { name: "Services", exact: true }).click();
+  await page.getByRole("button", { name: "Travel to Beach" }).click();
+  await expect(page.locator("#game-canvas")).toHaveAttribute("data-world", "beach");
+
+  await page.evaluate(() => window.__FSHING_TEST__?.sailToHarbor("brindle"));
+  await page.getByRole("button", { name: "Dock · Brindle Harbor" }).click();
+  await page.getByRole("button", { name: "Market", exact: true }).click();
+
+  const listings = page.locator(".market-listing");
+  const snapper = page.locator('[data-action="select-market-fish"][data-species="snapper"]');
+  await expect(listings).toHaveCount(9);
+  await expect(page.locator('[data-species="bluegill"]')).toHaveCount(0);
+  await expect(snapper).toBeVisible();
+  await expect(snapper.locator(".market-fish-icon")).toHaveAttribute("style", /fish-beach-atlas-ui/);
+  await snapper.click();
+  await page.getByRole("button", { name: "Track Snapper" }).click();
+  await page.getByRole("button", { name: "Back to market" }).click();
+  await expect(snapper.locator(".market-tracking-badge")).toHaveAttribute("aria-label", "Tracking Snapper");
 });
 
 test("the waterline transition carries title, dock, and lake scene changes", async ({ page }) => {

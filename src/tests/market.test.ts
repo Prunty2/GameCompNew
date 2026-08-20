@@ -8,6 +8,7 @@ import {
   marketQuote,
   salePreview,
   spotForSpecies,
+  worldForSpecies,
 } from "../game/market";
 
 const species = Object.keys(FISH) as FishSpecies[];
@@ -65,5 +66,9 @@ describe("fish market", () => {
     for (const fish of species) expect(spotForSpecies(fish).id).toBeTruthy();
     expect(spotForSpecies("bluegill").id).toBe("sunwardShoal");
     expect(spotForSpecies("lakeSturgeon").id).toBe("outerGloam");
+    expect(spotForSpecies("seaMullet").id).toBe("sunwardShoal");
+    expect(spotForSpecies("mulloway").id).toBe("outerGloam");
+    expect(worldForSpecies("bluegill")).toBe("lake");
+    expect(worldForSpecies("snapper")).toBe("beach");
   });
 });

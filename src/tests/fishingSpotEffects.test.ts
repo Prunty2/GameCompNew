@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { surfaceFishingCue, surfaceFishPose } from "../game/fishingSpotEffects";
+import {
+  surfaceFishingCue,
+  surfaceFishingLocationVisibility,
+  surfaceFishPose,
+} from "../game/fishingSpotEffects";
 
 describe("surface fishing-spot effects", () => {
   it("keeps distant grounds discoverable without showing the hook", () => {
@@ -43,6 +47,16 @@ describe("surface fishing-spot effects", () => {
 
   it("keeps a full visible school at every fishing ground", () => {
     expect(surfaceFishingCue(0, 0.3, 0.027).fishCount).toBe(12);
+  });
+
+  it("brightens Beach fishing locations without changing lake visibility", () => {
+    const cue = surfaceFishingCue(0.1, 0.3, 0.027);
+    const lake = surfaceFishingLocationVisibility(cue, false);
+    const beach = surfaceFishingLocationVisibility(cue, true);
+
+    expect(lake).toEqual({ fishVisibility: 0.3, lensVisibility: 0 });
+    expect(beach.fishVisibility).toBeCloseTo(0.465);
+    expect(beach.lensVisibility).toBe(0.18);
   });
 
   it("produces deterministic bounded poses and freezes them for reduced motion", () => {

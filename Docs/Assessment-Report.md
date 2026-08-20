@@ -197,7 +197,7 @@ Gameplay uses a fixed `1/120`-second simulation step. Random target positions an
 
 ### Save validation
 
-Save version 9 treats stored data as untrusted. Money, upgrade tiers, learning counters, volume, and other numerical values are checked and clamped. Species identifiers are filtered against the real species list, retired fantasy identifiers migrate one-to-one, duplicate discoveries are removed, obsolete population fields are ignored, and malformed JSON falls back to a valid new save.
+Save version 9 treats stored data as untrusted. Money, upgrade tiers, learning counters, volume, and other numerical values are checked and clamped. Species identifiers are filtered against the real species list, retired fantasy identifiers migrate one-to-one, duplicate discoveries are removed, Beach access defaults safely for older saves, obsolete population fields are ignored, and malformed JSON falls back to a valid new save.
 
 ## 6. Interface and accessibility design
 
@@ -370,7 +370,7 @@ Solution: define three scientifically plausible residents per site, spawn two of
 Solution: open planning after the catch and calculate catch-site-to-destination time with the same maximum-speed and freshness model used by the simulation.
 
 **Challenge: existing save files lacked new learning data.**  
-Solution: use versioned migration, validate every field, and supply safe defaults. Version 9 preserves discovery progress while mapping all retired fantasy fish ids to their real-species replacements.
+Solution: use versioned migration, validate every field, and supply safe defaults. Version 9 removes obsolete population and conservation fields, adds safe Beach-access migration, and preserves discovery progress while mapping all retired fantasy fish ids to their real-species replacements.
 
 **Challenge: nine fish based on three atlas cells would not be genuinely distinct.**  
 Solution: produce a new original 3 × 3 atlas and map each typed species to one cell.

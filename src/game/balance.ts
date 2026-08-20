@@ -7,10 +7,20 @@ export type FishSpecies =
   | "bowfin"
   | "lakeTrout"
   | "burbot"
-  | "lakeSturgeon";
+  | "lakeSturgeon"
+  | "seaMullet"
+  | "yellowfinBream"
+  | "sandWhiting"
+  | "duskyFlathead"
+  | "luderick"
+  | "easternAustralianSalmon"
+  | "snapper"
+  | "yellowtailKingfish"
+  | "mulloway";
 export type HarborId = "brindle" | "gloam";
 export type SpotId = "sunwardShoal" | "mosswaterPool" | "outerGloam";
 export type UpgradeId = "cargo" | "engine" | "lamp" | "line";
+export type WorldId = "lake" | "beach";
 export type RegionId = "brindleCoast" | "mosswaterReach" | "violetGloam";
 export type FishRarity = "common" | "uncommon" | "rare" | "legendary";
 
@@ -88,6 +98,7 @@ export const BALANCE = {
   fishingHookDownSpeed: 0.25,
   upgradeCosts: { cargo: 60, engine: 70, lamp: 70, line: 55 },
   permitCost: 85,
+  beachAccessCost: 120,
   boostUnlockCost: 300,
   boostSpeedMultiplier: 1.35,
   boostThrustMultiplier: 1.75,
@@ -120,6 +131,15 @@ export const FISH: Record<FishSpecies, FishDefinition> = {
   lakeTrout: { id: "lakeTrout", name: "Lake Trout", shape: "Pale spots · forked tail", value: 74, depthTier: 3, atlasCell: [0, 2], hue: 0, scale: 1.04, rarity: "rare" },
   burbot: { id: "burbot", name: "Burbot", shape: "Mottled body · chin barbel", value: 94, depthTier: 4, atlasCell: [1, 2], hue: 0, scale: 1.12, rarity: "rare" },
   lakeSturgeon: { id: "lakeSturgeon", name: "Lake Sturgeon", shape: "Bony scutes · four barbels", value: 128, depthTier: 5, atlasCell: [2, 2], hue: 0, scale: 1.24, rarity: "legendary" },
+  seaMullet: { id: "seaMullet", name: "Sea Mullet", shape: "Striped silver body · two dorsal fins", value: 18, depthTier: 0, atlasCell: [0, 0], hue: 0, scale: 0.86, rarity: "common" },
+  yellowfinBream: { id: "yellowfinBream", name: "Yellowfin Bream", shape: "Deep silver body · yellow fins", value: 24, depthTier: 0, atlasCell: [1, 0], hue: 0, scale: 0.9, rarity: "common" },
+  sandWhiting: { id: "sandWhiting", name: "Sand Whiting", shape: "Slender silver body · yellow lower fins", value: 30, depthTier: 0, atlasCell: [2, 0], hue: 0, scale: 0.78, rarity: "uncommon" },
+  duskyFlathead: { id: "duskyFlathead", name: "Dusky Flathead", shape: "Flat wedge head · mottled tail", value: 42, depthTier: 1, atlasCell: [0, 1], hue: 0, scale: 1.04, rarity: "uncommon" },
+  luderick: { id: "luderick", name: "Luderick", shape: "Deep barred body · small mouth", value: 50, depthTier: 2, atlasCell: [1, 1], hue: 0, scale: 0.96, rarity: "uncommon" },
+  easternAustralianSalmon: { id: "easternAustralianSalmon", name: "Eastern Australian Salmon", shape: "Silver body · powerful forked tail", value: 66, depthTier: 2, atlasCell: [2, 1], hue: 0, scale: 1.06, rarity: "rare" },
+  snapper: { id: "snapper", name: "Snapper", shape: "Pink flank · blue spots", value: 78, depthTier: 3, atlasCell: [0, 2], hue: 0, scale: 1.04, rarity: "rare" },
+  yellowtailKingfish: { id: "yellowtailKingfish", name: "Yellowtail Kingfish", shape: "Yellow stripe · forked yellow tail", value: 100, depthTier: 4, atlasCell: [1, 2], hue: 0, scale: 1.16, rarity: "rare" },
+  mulloway: { id: "mulloway", name: "Mulloway", shape: "Bronze-silver flank · pearly spots", value: 136, depthTier: 5, atlasCell: [2, 2], hue: 0, scale: 1.24, rarity: "legendary" },
 };
 
 export const FISHING_SPOTS: readonly FishingSpotDefinition[] = [
@@ -133,6 +153,25 @@ export const SPOT_RESIDENTS: Record<SpotId, readonly FishSpecies[]> = {
   mosswaterPool: ["northernPike", "largemouthBass", "bowfin"],
   outerGloam: ["lakeTrout", "burbot", "lakeSturgeon"],
 };
+
+export const BEACH_SPOT_RESIDENTS: Record<SpotId, readonly FishSpecies[]> = {
+  sunwardShoal: ["seaMullet", "yellowfinBream", "sandWhiting"],
+  mosswaterPool: ["duskyFlathead", "luderick", "easternAustralianSalmon"],
+  outerGloam: ["snapper", "yellowtailKingfish", "mulloway"],
+};
+
+export const WORLD_SPOT_RESIDENTS: Record<WorldId, Record<SpotId, readonly FishSpecies[]>> = {
+  lake: SPOT_RESIDENTS,
+  beach: BEACH_SPOT_RESIDENTS,
+};
+
+export function residentsForSpot(world: WorldId, spotId: SpotId): readonly FishSpecies[] {
+  return WORLD_SPOT_RESIDENTS[world][spotId];
+}
+
+export function primarySpeciesForSpot(world: WorldId, spotId: SpotId): FishSpecies {
+  return world === "lake" ? spotById(spotId).species : residentsForSpot(world, spotId)[0]!;
+}
 
 export const REGIONS: readonly RegionDefinition[] = [
   { id: "brindleCoast", name: "Brindle Coast", startX: 0, endX: 0.4, surfaceTint: "#2d91a0", shallow: "#3d9da4", middle: "#236874", deep: "#0b2c3b" },

@@ -12,7 +12,7 @@ The MVP vertical slice includes:
 - Cargo release, guided help, and an eight-delivery season report
 - Keyboard gameplay controls, pointer/touch interface actions, and pause-on-focus-loss
 - Mute, volume, high-contrast, and reduced-motion settings
-- Version 9 validated persistence with safe fantasy-to-real species migration and a local-safe CrazyGames SDK v3 adapter
+- Version 9 validated persistence with safe Beach access and fantasy-to-real species migration, plus a local-safe CrazyGames SDK v3 adapter
 - GPT Image 2.0-generated runtime art documented in [`Docs/Asset-Manifest.md`](Docs/Asset-Manifest.md)
 
 ## Run locally
