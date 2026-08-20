@@ -5,7 +5,7 @@ import {
   isBindableCode,
   type ControlBindings,
 } from "../game/controls";
-import type { ProgressState } from "../game/simulation";
+import type { MarketTutorialStep, ProgressState } from "../game/simulation";
 import type { SaveStorage } from "./platformService";
 
 const SAVE_KEY = "gamecomp-new.save";
@@ -19,14 +19,14 @@ export interface GameSettings {
 }
 
 export interface SaveData {
-  version: 9;
+  version: 10;
   progress: ProgressState;
   settings: GameSettings;
 }
 
 export function defaultSave(): SaveData {
   return {
-    version: 9,
+    version: 10,
     progress: {
       money: 0,
       upgrades: { cargo: 0, engine: 0, lamp: 0, line: 0 },
@@ -34,12 +34,17 @@ export function defaultSave(): SaveData {
       beachUnlocked: false,
       boostUnlocked: false,
       completedContracts: 0,
-      discovered: [],
+      discovered: ["bluegill"],
       learning: {
         surveysCompleted: 0,
         correctPredictions: 0,
         routePlans: 0,
       },
+      marketDay: 1,
+      marketSales: 0,
+      marketEarnings: 0,
+      marketTarget: null,
+      marketTutorialStep: "inspect",
       seasonCompleted: false,
     },
     settings: {
@@ -63,7 +68,7 @@ export function loadSave(storage: SaveStorage): SaveData {
     const learning = objectValue(progress.learning);
     const settings = objectValue(candidate.settings);
     return {
-      version: 9,
+      version: 10,
       progress: {
         money: finiteInteger(progress.money, 0, 999_999),
         upgrades: readUpgrades(upgrades),
@@ -71,12 +76,20 @@ export function loadSave(storage: SaveStorage): SaveData {
         beachUnlocked: progress.beachUnlocked === true,
         boostUnlocked: progress.boostUnlocked === true,
         completedContracts: finiteInteger(progress.completedContracts, 0, 99_999),
-        discovered: readDiscovered(progress.discovered),
+        discovered: ensureStartingSpecies(readDiscovered(progress.discovered)),
         learning: {
           surveysCompleted: finiteInteger(learning.surveysCompleted, 0, 99_999),
           correctPredictions: finiteInteger(learning.correctPredictions, 0, 99_999),
           routePlans: finiteInteger(learning.routePlans, 0, 99_999),
         },
+        marketDay: finiteInteger(progress.marketDay, 1, 99_999),
+        marketSales: finiteInteger(progress.marketSales, 0, 99_999),
+        marketEarnings: finiteInteger(progress.marketEarnings, 0, 999_999_999),
+        marketTarget: readMarketTarget(progress.marketTarget),
+        marketTutorialStep: readTutorialStep(
+          progress.marketTutorialStep,
+          finiteInteger(progress.completedContracts, 0, 99_999),
+        ),
         seasonCompleted: progress.seasonCompleted === true,
       },
       settings: {
@@ -151,6 +164,26 @@ function readDiscovered(value: unknown): FishSpecies[] {
     return migrated ? [migrated] : [];
   });
   return [...new Set(discovered)];
+}
+
+function ensureStartingSpecies(discovered: FishSpecies[]): FishSpecies[] {
+  return discovered.includes("bluegill") ? discovered : ["bluegill", ...discovered];
+}
+
+function readMarketTarget(value: unknown): FishSpecies | null {
+  return typeof value === "string" && value in FISH ? value as FishSpecies : null;
+}
+
+function readTutorialStep(value: unknown, legacyDeliveries: number): MarketTutorialStep {
+  if (
+    value === "inspect"
+    || value === "track"
+    || value === "catch"
+    || value === "sell"
+    || value === "complete"
+    || value === "done"
+  ) return value;
+  return legacyDeliveries > 0 ? "done" : "inspect";
 }
 
 function objectValue(value: unknown): Record<string, unknown> {
