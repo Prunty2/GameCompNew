@@ -34,19 +34,24 @@ describe("versioned save data", () => {
       },
     }));
     expect(loadSave(storage)).toEqual({
-      version: 9,
+      version: 10,
       progress: {
         money: 999_999,
         upgrades: { cargo: 7, engine: 0, lamp: 1, line: 0 },
         outerUnlocked: false,
         boostUnlocked: false,
         completedContracts: 0,
-        discovered: [],
+        discovered: ["bluegill"],
         learning: {
           surveysCompleted: 0,
           correctPredictions: 0,
           routePlans: 0,
         },
+        marketDay: 1,
+        marketSales: 0,
+        marketEarnings: 0,
+        marketTarget: null,
+        marketTutorialStep: "inspect",
         seasonCompleted: false,
       },
       settings: {
@@ -64,7 +69,7 @@ describe("versioned save data", () => {
     const migrated = loadSave(storage);
     expect(migrated.progress.money).toBe(0);
     expect(migrated.settings.muted).toBe(true);
-    expect(migrated.version).toBe(9);
+    expect(migrated.version).toBe(10);
   });
 
   test("adds a safe line-depth default to older saves", () => {
@@ -79,9 +84,10 @@ describe("versioned save data", () => {
       settings: defaultSave().settings,
     }));
     const migrated = loadSave(storage);
-    expect(migrated.version).toBe(9);
+    expect(migrated.version).toBe(10);
     expect(migrated.progress.upgrades).toEqual({ cargo: 2, engine: 1, lamp: 2, line: 0 });
     expect(migrated.progress.money).toBe(140);
+    expect(migrated.progress.marketTutorialStep).toBe("done");
   });
 
   test("migrates removed boost and brake bindings to the W and S hook defaults", () => {
@@ -103,7 +109,7 @@ describe("versioned save data", () => {
     }));
 
     const migrated = loadSave(storage);
-    expect(migrated.version).toBe(9);
+    expect(migrated.version).toBe(10);
     expect(migrated.settings.controls).toEqual(DEFAULT_CONTROL_BINDINGS);
   });
 
