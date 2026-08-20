@@ -1,4 +1,17 @@
-# AGENTS.md
+# Grok Build project rules
+
+This is the Grok-native copy of the repo agent contract. Grok Build always loads `*.md` files from `.grok/rules/` at each directory from the repo root to the working directory. Grok also loads repo-root `AGENTS.md`, which remains the shared Codex/team file.
+
+Keep the shared rules in this file aligned with `AGENTS.md`. Put Grok-only operating notes in the Grok Build section. Confirm both files appear under Project Instructions with `grok inspect`.
+
+## Grok Build
+
+- Use branch names such as `liam/fishing-input` or `grok/save-validation`. Do not reuse a branch or work directly on `main`.
+- For nested Grok-only guidance, add `*.md` files under `<dir>/.grok/rules/`. Deeper files take precedence when instructions conflict.
+- Subagents inherit a compacted copy of these project instructions. Keep this file concise and actionable.
+- When generating game art, load the matching Grok asset skills (`game-asset-core`, plus animation, tileset, character, or UI skills as needed).
+- When UI, layout, styling, routing, or rendered data changes, verify the change in the browser before finishing. If browser tools are unavailable, say what was not verified.
+- Do not treat `/Users/liam/Documents/Crazy Games` as a source of gameplay, theme, art, names, economy, balance, or large modules. Architecture reference only.
 
 ## Purpose
 
@@ -6,9 +19,7 @@ This repository is a new CrazyGames-ready browser game, not a continuation or re
 
 The theme and game design belong in `Docs/Game-Brief.md`. Read and update that brief before implementing theme-specific gameplay or assets.
 
-These instructions apply to the entire repository. If a subdirectory later needs more specific guidance, add a nested `AGENTS.md`; the nearest file takes precedence for files below it.
-
-Grok Build loads this file automatically. A Grok-native copy lives in `.grok/rules/project.md`. Update both files when these shared rules change. Put Grok-only notes in the Grok file. Confirm loaded files with `grok inspect`.
+These instructions apply to the entire repository. If a subdirectory later needs more specific guidance, add a nested `AGENTS.md` or `<dir>/.grok/rules/*.md`; the nearest or deeper file takes precedence for files below it.
 
 ## Collaboration rules
 
@@ -18,10 +29,10 @@ Every repository change, including documentation and configuration updates, must
 
 ### Before starting
 
-1. Read this file, `README.md`, and the relevant sections of `Docs/Game-Brief.md`.
+1. Read `AGENTS.md`, this file, `README.md`, and the relevant sections of `Docs/Game-Brief.md`.
 2. Run `git status --short` and inspect current changes before editing. Treat every pre-existing change as another person's work.
 3. Agree on one owner, a narrow scope, affected files, and an acceptance check for the task. Record this in the issue, task, pull request, or team chat.
-4. Create a new short-lived branch from an up-to-date `main` for every change. Use a descriptive name such as `liam/fishing-input` or `codex/save-validation`; do not reuse a branch or work directly on `main`.
+4. Create a new short-lived branch from an up-to-date `main` for every change. Use a descriptive name such as `liam/fishing-input` or `grok/save-validation`; do not reuse a branch or work directly on `main`.
 5. Check whether someone else owns the same files or system. Coordinate before changing a shared hotspot.
 
 Do not begin a broad refactor as part of an unrelated feature. If the requested work depends on a refactor, separate it into its own agreed task or commit.
