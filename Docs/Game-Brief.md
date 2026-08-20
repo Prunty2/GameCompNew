@@ -242,14 +242,13 @@ The handling should feel smooth, measured, and forgiving rather than physically 
 - Temporary testing — B: grant the boost unlock for the current run without saving it
 - Development builds only — G: jump to the start of the dusk transition; H: jump to full night
 
-**Pointer and touch**
+**Pointer and touch interface**
 
-- On-screen left and right controls during navigation in landscape viewports; portrait viewports omit the mobile control overlay
-- On-screen hold control for boost after it is unlocked in landscape viewports
 - Tap prominent interaction buttons to dock, accept contracts, and cast
-- Drag or virtual-stick input to steer the hook while fishing
+- Navigate menus and activate contextual interactions with pointer or touch
+- No on-screen movement, boost, fishing, or leave-fishing controls are shown; gameplay steering uses the keyboard bindings above
 
-All essential actions must work without hover. Touch targets must be large enough for mobile play, and the interface must respect display safe areas.
+All interface actions must work without hover. Touch targets must remain large enough for responsive layouts, and the interface must respect display safe areas.
 
 Keyboard actions can be rebound from the Controls submenu within Settings. Controls uses the same centered, panel-free lake treatment as its parent, with bindings arranged as a compact two-column input map on wide and landscape screens and one column on narrow portrait screens. Bindings persist with the rest of the validated settings; assigning an occupied key swaps the two actions, and Escape remains an always-available pause fallback outside fishing.
 
@@ -338,7 +337,7 @@ The visual design must communicate fish type, freshness, damage, navigation land
 ### Technical art constraints
 
 - Render the horizontally scrolling side-on lake, parallax layers, and moving game objects with Canvas 2D.
-- Use HTML/CSS overlays for contracts, shops, dialogue, settings, tutorials, and touch controls.
+- Use HTML/CSS overlays for contracts, shops, dialogue, settings, and tutorials.
 - Design around responsive landscape play, while retaining a functional mobile layout.
 - Explicitly import runtime assets so source and authoring files do not enter the production build.
 - Prefer reusable layered sprites and procedural effects over large frame-by-frame animations.
@@ -392,7 +391,7 @@ Save data is versioned, validated, clamped, and migrated. CrazyGames data storag
 
 ## Accessibility and browser requirements
 
-- Keyboard, pointer, and touch support
+- Keyboard gameplay controls and pointer/touch interface support
 - Pause when focus is lost
 - Mute and volume controls
 - Reduced-motion option
@@ -424,7 +423,7 @@ Save data is versioned, validated, clamped, and migrated. CrazyGames data storag
 - Boat damage, repair, and rescue
 - Brief tutorial and lightweight dialogue
 - Persistent progression and settings
-- Keyboard, pointer, and touch controls
+- Keyboard gameplay controls and pointer/touch interface actions
 - CrazyGames SDK integration
 - Unit and browser tests for the complete gameplay loop
 
@@ -478,7 +477,7 @@ The two-month schedule requires an eight-week plan. The minimum viable game take
 
 - Build the first lake region, two harbors, docking, and world boundaries.
 - Implement harbor interaction and contract interface shells.
-- Establish minimal contextual prompts and responsive touch controls.
+- Establish minimal contextual prompts and responsive interface layouts.
 - Define the daytime visual and audio baseline.
 
 **Milestone:** The player can travel reliably between two functional harbors.
@@ -488,7 +487,7 @@ The two-month schedule requires an eight-week plan. The minimum viable game take
 - Implement fishing spots, casting, hook steering, and catching.
 - Add three fish types with distinct silhouettes or movement.
 - Implement cargo capacity and cargo UI.
-- Test the full input scheme with keyboard, pointer, and touch.
+- Test keyboard gameplay controls and pointer/touch interface actions.
 
 **Milestone:** The player can catch a requested fish and carry it back to harbor.
 
@@ -579,7 +578,7 @@ The two-month schedule requires an eight-week plan. The minimum viable game take
 - Purchase and retain an upgrade after reload
 - Recover from critical boat damage
 - Navigate menus with keyboard and pointer
-- Verify touch controls at a mobile viewport
+- Verify mobile button controls remain absent at responsive viewports
 - Pause safely on focus loss
 - Run locally when the CrazyGames SDK is blocked
 
@@ -605,7 +604,7 @@ The release is successful when:
 - A player can identify the requested fish without relying on colour alone.
 - Delivery success and its resulting shell balance are visible within the delivery loop.
 - The delivery loop remains understandable after returning to the game later.
-- Boat handling is responsive on keyboard and touch.
+- Boat handling is responsive on keyboard.
 - Night changes player behavior and creates tension without unavoidable failure.
 - Progress survives refreshes and invalid save data fails safely.
 - Every core upgrade and region can be reached without excessive repetition.
@@ -634,7 +633,7 @@ The tutorial is action-based and a new player should complete the first delivery
 - Three widely separated, water-connected fishing grounds and nine silhouette-and-color-distinct fish across the Brindle Coast, Mosswater Reach, and Violet Gloam.
 - Authored tutorial contract followed by seeded repeatable contracts selected from unlocked fish.
 - Cargo freshness, payment scaling, limited capacity, upgrades, repair, critical-damage rescue, fog, and day/night pressure.
-- Direct left/right keyboard and touch travel controls plus direct two-axis hook steering.
+- Direct left/right keyboard travel controls plus direct two-axis keyboard hook steering.
 - Quiet title, harbor, contract, pause, settings, help, contextual prompt, and result overlays using a completely new image-generated visual system.
 
 ### Initial balance
@@ -704,6 +703,6 @@ Surface fishing grounds use two dedicated GPT Image runtime assets: `surface-fis
 - Camera tracking, left/right facing, braking, and off-screen objective indication are readable at desktop and mobile landscape sizes.
 - Wrong fish, full cargo, spoiled cargo, repair, rescue, and a locked fishing ground have readable outcomes.
 - Progression and accessibility settings survive reload; malformed save data is validated and clamped.
-- Keyboard, pointer, and touch controls can travel, interact, fish, pause, and navigate overlays.
+- Keyboard controls can travel, interact, fish, pause, and navigate overlays; pointer and touch can navigate overlays and activate contextual interactions.
 - Focus loss pauses simulation and reports the gameplay lifecycle stop through `PlatformService`.
 - The local game remains playable when the CrazyGames SDK is blocked.
