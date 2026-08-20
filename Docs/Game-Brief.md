@@ -167,7 +167,30 @@ Fish sales are the main source of income and player-selected direction. There ar
 
 While travelling, a high-contrast edge badge uses a thick directional arrow plus the destination name so the next harbor or fishing ground remains unmistakable against every panorama. The badge points down when its destination is visible and left or right when it lies beyond the viewport; reduced-motion mode keeps the emphasis static.
 
-Each species has a central base value tied to its catch difficulty and required line depth. Each harbor applies a small species-specific demand bias. A seeded daily demand term and one readable lake condition then move the quote. The new quote is mean-reverting and clamped so it changes by no more than 6% from the previous day. The same save seed, market day, species, and harbor must always produce the same current quote and seven-day history. A quote remains fixed for the whole market day.
+Each species has a central base value tied to its required line depth, with rarity separating fish that share a depth band. Beach species use the same depth and rarity structure at roughly 20% above their Lake peers, rewarding the Beach chart unlock. Each harbor applies a small species-specific demand bias. A seeded daily demand term and one readable lake condition then move the quote. The new quote is mean-reverting and clamped so it changes by no more than 6% from the previous day. The same save seed, market day, species, and harbor must always produce the same current quote and seven-day history. A quote remains fixed for the whole market day.
+
+| Species | World | Depth tier | Base value (shells) |
+| --- | --- | --- | --- |
+| Bluegill | Lake | 0 | 18 |
+| Yellow Perch | Lake | 0 | 22 |
+| Emerald Shiner | Lake | 0 | 28 |
+| Northern Pike | Lake | 1 | 40 |
+| Largemouth Bass | Lake | 2 | 52 |
+| Bowfin | Lake | 2 | 64 |
+| Lake Trout | Lake | 3 | 80 |
+| Burbot | Lake | 4 | 100 |
+| Lake Sturgeon | Lake | 5 | 130 |
+| Sea Mullet | Beach | 0 | 22 |
+| Yellowfin Bream | Beach | 0 | 26 |
+| Sand Whiting | Beach | 0 | 34 |
+| Dusky Flathead | Beach | 1 | 48 |
+| Luderick | Beach | 2 | 62 |
+| Eastern Australian Salmon | Beach | 2 | 76 |
+| Snapper | Beach | 3 | 96 |
+| Yellowtail Kingfish | Beach | 4 | 120 |
+| Mulloway | Beach | 5 | 156 |
+
+Within each world, every fish at a deeper line tier is worth more than every fish at a shallower tier. Beach counterparts stay about 18–22% above their Lake peers at the same depth and roster slot.
 
 The current lake condition remains part of the deterministic quote model but is not repeated in the streamlined market catalogue. Conditions such as warm shallows, cold water, clear weather, or fog affect related habitat groups by a small documented amount. Conditions also affect real travel and species availability through existing weather, region, depth, and permit systems. The model must not claim that a condition changes a catch if the simulation does not enforce that relationship.
 
@@ -175,7 +198,7 @@ The sale value of each catch is its local whole-fish quote multiplied by a fresh
 
 This makes every requested interaction part of the same decision:
 
-- **Catch difficulty and depth:** deeper species have higher base values and require line upgrades.
+- **Catch difficulty, depth, and world:** deeper species have higher base values and require line upgrades; Beach fish pay a premium over Lake peers at the same depth.
 - **Species availability:** all species occupy a board position, but only discovered fish reveal their identity, quote, and detail view. Habitat, resident set, depth, permit, and current lake condition determine where they can be caught.
 - **Harbor demand and distance:** the two harbors can quote different values, making a longer crossing potentially more profitable.
 - **Freshness, time, and weather:** every second in cargo reduces realised value; darkness and fog affect the safety and readability of a crossing.
@@ -678,6 +701,7 @@ All durations use simulation seconds; horizontal positions use normalized world 
 | Line-depth upgrade | 55 shells base; six tiers unlock progressively deeper water |
 | Outer Gloam permit | 85 shells |
 | Beach chart unlock | 120 shells; one-time permanent location access |
+| Fish base values | Depth-led ladder from 18–130 shells on the lake and 22–156 shells on Beach; Beach peers sit ~20% above Lake |
 | Repair price | 1 shell per 2 damage, rounded up |
 | Full day/night cycle | 210 seconds; final 70 seconds are night |
 | Night visual fade | 25 seconds into night and 25 seconds before morning |

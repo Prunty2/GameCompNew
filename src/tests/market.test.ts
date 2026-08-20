@@ -71,4 +71,55 @@ describe("fish market", () => {
     expect(worldForSpecies("bluegill")).toBe("lake");
     expect(worldForSpecies("snapper")).toBe("beach");
   });
+
+  test("prices fish by required depth within each world", () => {
+    const byWorld = {
+      lake: species.filter((fish) => worldForSpecies(fish) === "lake"),
+      beach: species.filter((fish) => worldForSpecies(fish) === "beach"),
+    };
+
+    for (const worldSpecies of Object.values(byWorld)) {
+      const maxByDepth = new Map<number, number>();
+      for (const fish of worldSpecies) {
+        const depth = FISH[fish].depthTier;
+        maxByDepth.set(depth, Math.max(maxByDepth.get(depth) ?? 0, FISH[fish].value));
+      }
+      const depths = [...maxByDepth.keys()].sort((a, b) => a - b);
+      for (let index = 1; index < depths.length; index += 1) {
+        const shallower = depths[index - 1]!;
+        const deeper = depths[index]!;
+        const shallowMax = maxByDepth.get(shallower) ?? 0;
+        const deepMin = Math.min(
+          ...worldSpecies.filter((fish) => FISH[fish].depthTier === deeper).map((fish) => FISH[fish].value),
+        );
+        expect(deepMin).toBeGreaterThan(shallowMax);
+      }
+    }
+  });
+
+  test("gives Beach fish a depth-matched premium over Lake peers", () => {
+    const peers: Array<readonly [FishSpecies, FishSpecies]> = [
+      ["bluegill", "seaMullet"],
+      ["yellowPerch", "yellowfinBream"],
+      ["emeraldShiner", "sandWhiting"],
+      ["northernPike", "duskyFlathead"],
+      ["largemouthBass", "luderick"],
+      ["bowfin", "easternAustralianSalmon"],
+      ["lakeTrout", "snapper"],
+      ["burbot", "yellowtailKingfish"],
+      ["lakeSturgeon", "mulloway"],
+    ];
+
+    for (const [lakeFish, beachFish] of peers) {
+      expect(FISH[lakeFish].depthTier).toBe(FISH[beachFish].depthTier);
+      const premium = FISH[beachFish].value / FISH[lakeFish].value;
+      expect(premium).toBeGreaterThanOrEqual(1.15);
+      expect(premium).toBeLessThanOrEqual(1.25);
+    }
+
+    expect(FISH.bluegill.value).toBe(18);
+    expect(FISH.lakeSturgeon.value).toBe(130);
+    expect(FISH.seaMullet.value).toBe(22);
+    expect(FISH.mulloway.value).toBe(156);
+  });
 });
