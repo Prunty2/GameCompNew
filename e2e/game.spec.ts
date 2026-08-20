@@ -18,7 +18,7 @@ test("main menu presents centered play, settings, and credits actions", async ({
   await page.goto("/");
 
   const version = page.locator(".title-build-version");
-  await expect(version).toHaveText("v0.4.1 (PR #81)");
+  await expect(version).toHaveText("v0.4.1 (PR #79)");
   const versionBounds = await version.boundingBox();
   expect(versionBounds).not.toBeNull();
   expect(versionBounds!.x).toBeLessThan(24);
@@ -571,7 +571,6 @@ test("Escape leaves fishing without opening the pause menu", async ({ page }) =>
   await page.keyboard.press("Escape");
 
   await expect(canvas).toHaveAttribute("data-fishing-state", "exiting");
-  await expect(page.locator(".fishing-controls")).toBeHidden();
   await expect.poll(async () => Number(await canvas.getAttribute("data-fishing-surface-blend"))).toBeGreaterThan(0.05);
   await expect.poll(async () => Number(await canvas.getAttribute("data-fishing-dive-progress"))).toBeLessThan(startingDiveProgress - 0.05);
   await expect(page.getByRole("heading", { name: "Paused" })).toHaveCount(0);
@@ -654,7 +653,6 @@ test("reels a hooked fish to the boat before securing the catch", async ({ page 
   expect(reelMidpoint.schoolOpacity + reelMidpoint.surfaceBlend).toBeCloseTo(1, 2);
   expect(reelStart.surfaceSpriteOpacity).toBeCloseTo(reelStart.surfaceBlend, 2);
   expect(reelMidpoint.surfaceSpriteOpacity).toBeCloseTo(reelMidpoint.surfaceBlend, 2);
-  await expect(page.locator(".fishing-controls")).toBeHidden();
   await expect.poll(async () => page.evaluate(() => window.__FSHING_TEST__?.mode())).toBe("cruising");
   await expect(canvas).not.toHaveAttribute("data-fishing-state");
   await expect(canvas).not.toHaveAttribute("data-fishing-school-opacity");
@@ -752,26 +750,17 @@ test("how to play instructions advance one card at a time", async ({ page }) => 
   await expect(page.getByRole("heading", { name: "Brindle Harbor" })).toBeVisible();
 });
 
-test("touch controls are available at a mobile landscape viewport", async ({ page }) => {
+test("mobile button controls are absent at responsive viewports", async ({ page }) => {
   await page.setViewportSize({ width: 844, height: 390 });
   await page.goto("/");
   await page.getByRole("button", { name: "Play", exact: true }).click();
   await page.locator('[data-action="undock"]').click();
-  await expect(page.getByRole("button", { name: "Move right" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Move left" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Brake", exact: true })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Engine boost" })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Interact or cast" })).toBeVisible();
-});
+  await expect(page.locator(".touch-controls, [data-hook-pad]")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /Move left|Move right|Hold boost|Interact or cast|Leave fishing/ })).toHaveCount(0);
 
-test("touch controls stay hidden at a portrait viewport", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/");
-  await page.getByRole("button", { name: "Play", exact: true }).click();
-  await page.locator('[data-action="undock"]').click();
-  await expect(page.getByRole("button", { name: "Move right" })).toBeHidden();
-  await expect(page.getByRole("button", { name: "Move left" })).toBeHidden();
-  await expect(page.getByRole("button", { name: "Interact or cast" })).toBeHidden();
+  await expect(page.locator(".touch-controls, [data-hook-pad]")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /Move left|Move right|Hold boost|Interact or cast|Leave fishing/ })).toHaveCount(0);
 });
 
 test("dock interaction starts on pointer press", async ({ page }) => {

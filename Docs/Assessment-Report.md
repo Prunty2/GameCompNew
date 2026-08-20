@@ -22,7 +22,7 @@ The completed vertical slice contains:
 - nine original fish with different silhouettes, habitat profiles, values, and depth tiers;
 - four upgrade paths with six tiers each and seven visible boat classes;
 - water surveys, route mathematics, freshness, contracts, hazards, cargo release, and a mastery report;
-- keyboard, pointer, and touch controls;
+- keyboard gameplay controls and pointer/touch interface actions;
 - mute, volume, high-contrast, reduced-motion, remappable controls, and pause on focus loss;
 - deterministic gameplay tests, browser interaction tests, and versioned validated saves.
 
@@ -67,7 +67,7 @@ The primary audience is Year 7–10 students. The secondary audience is casual b
 | Recognise fish without colour | Distinct silhouettes, shape descriptions, names, and depth tiers |
 | Manage limited cargo | Release an unneeded catch at harbor to free a slot |
 | Recover from mistakes | Rescue keeps the save and contracts remain repeatable |
-| Use different devices or needs | Keyboard, pointer, touch, remapping, high contrast, reduced motion, mute |
+| Use different devices or needs | Keyboard gameplay, pointer/touch interface actions, remapping, high contrast, reduced motion, mute |
 
 ## 3. Research, inspiration, and originality
 
@@ -227,7 +227,7 @@ Colour is redundant. Hazards include a symbol and name. Fish use names and silho
 
 - Keyboard navigation and gameplay controls
 - Remappable action bindings with collision-safe swapping
-- Pointer and touch controls with large targets
+- Pointer and touch interface actions with large targets
 - Pause on focus loss or hidden tab
 - High-contrast mode
 - Reduced-motion mode
@@ -311,7 +311,7 @@ Browser tests cover:
 - route choice and displayed equation;
 - settings, remapping, pause, high contrast, reduced motion, and SDK fallback;
 - six-step help navigation;
-- touch controls at mobile landscape size;
+- absence of mobile button controls at responsive viewport sizes;
 - horizontal keyboard movement and facing;
 - removed field-guide menu and buttons.
 
@@ -412,7 +412,7 @@ Fish currently share a general swimming algorithm; silhouette, depth, and speed 
 - [x] Strict TypeScript and all 23 unit/model tests pass.
 - [x] Create and verify the production build.
 - [x] Pass all 6 Playwright Chromium tests.
-- [x] Verify desktop and mobile-landscape interaction paths.
+- [x] Verify desktop interaction and responsive interface paths.
 - [x] Confirm CrazyGames SDK failure still falls back locally.
 - [x] Confirm a refresh retains field-guide and upgrade progress.
 - [x] Capture final screenshots of title, survey, underwater depth, route plan, and field guide.

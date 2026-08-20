@@ -10,7 +10,7 @@ The MVP vertical slice includes:
 - Catch-to-harbor distance–speed–time route planning with predicted-versus-actual freshness feedback
 - Six tiers each of boat/cargo, engine, lamp, and line upgrades; seven visible boat classes
 - Cargo release, guided help, and an eight-delivery season report
-- Keyboard, pointer, and touch controls plus pause-on-focus-loss
+- Keyboard gameplay controls, pointer/touch interface actions, and pause-on-focus-loss
 - Mute, volume, high-contrast, and reduced-motion settings
 - Version 9 validated persistence with safe fantasy-to-real species migration and a local-safe CrazyGames SDK v3 adapter
 - GPT Image 2.0-generated runtime art documented in [`Docs/Asset-Manifest.md`](Docs/Asset-Manifest.md)

@@ -34,6 +34,11 @@ import {
   type ControlAction,
 } from "./controls";
 import { InputController } from "./input";
+import {
+  captureRenderMotion,
+  interpolateSimulationForRender,
+  type RenderMotionSnapshot,
+} from "./renderInterpolation";
 import { CanvasRenderer } from "./renderer";
 import { marketBoardMarkup } from "./marketView";
 import {
@@ -130,6 +135,7 @@ export class Game {
   private readonly input: InputController;
   private readonly feedback: FeedbackService;
   private readonly simulation: Simulation;
+  private previousRenderMotion: RenderMotionSnapshot;
   private lastTime = 0;
   private accumulator = 0;
   private lastUiRefresh = 0;
@@ -179,6 +185,7 @@ export class Game {
     this.input = new InputController(save.settings.controls);
     this.feedback = new FeedbackService(save.settings);
     this.simulation = createSimulation(7, save.progress);
+    this.previousRenderMotion = captureRenderMotion(this.simulation);
   }
 
   async prepare(): Promise<void> {
@@ -227,6 +234,7 @@ export class Game {
 
     if (this.started && this.overlay === null && !this.sceneTransitioning) {
       while (this.accumulator >= FIXED_STEP) {
+        this.previousRenderMotion = captureRenderMotion(this.simulation);
         updateSimulation(this.simulation, this.input.read(), FIXED_STEP);
         this.accumulator -= FIXED_STEP;
       }
@@ -234,6 +242,7 @@ export class Game {
       this.handleSimulationEvents();
     } else {
       this.accumulator = 0;
+      this.previousRenderMotion = captureRenderMotion(this.simulation);
       this.input.consumeAction();
     }
 
@@ -242,7 +251,13 @@ export class Game {
       Math.abs(this.simulation.boat.speed) / engineMaximum,
       this.started && this.overlay === null && !this.sceneTransitioning && this.simulation.mode === "cruising",
     );
-    this.renderer.render(this.simulation, {
+    const renderSimulation = interpolateSimulationForRender(
+      this.simulation,
+      this.previousRenderMotion,
+      this.accumulator / FIXED_STEP,
+      FIXED_STEP,
+    );
+    this.renderer.render(renderSimulation, {
       ...this.save.settings,
       cinematic: this.overlay === "title"
         || (this.overlay === "settings" || this.overlay === "controls" || this.overlay === "credits") && this.overlayReturn === "title",
@@ -280,20 +295,6 @@ export class Game {
 
         <button class="context-action" id="context-action" type="button" data-action="interact" data-control="action" hidden>Interact</button>
 
-        <section class="touch-controls navigation-controls" aria-label="Touch boat controls">
-          <div class="travel-controls">
-            <button type="button" data-control="left" aria-label="Move left"><span>←</span><small>LEFT</small></button>
-            <button class="touch-boost" type="button" data-control="boost" aria-label="Hold boost"><span>⚡</span><small>BOOST</small></button>
-            <button type="button" data-control="right" aria-label="Move right"><span>→</span><small>RIGHT</small></button>
-          </div>
-          <button class="touch-action" type="button" data-control="action" aria-label="Interact or cast"><span>E</span><small>ACT</small></button>
-        </section>
-
-        <section class="touch-controls fishing-controls" aria-label="Touch hook controls" hidden>
-          <div class="hook-pad" data-hook-pad aria-label="Drag to steer the hook"><span></span></div>
-          <button class="leave-fishing" type="button" data-action="leave-fishing">Leave fishing</button>
-        </section>
-
         <div class="overlay-host" id="overlay-host"></div>
         <div class="scene-transition" id="scene-transition" aria-hidden="true">
           <span class="scene-transition-panel scene-transition-panel-top"></span>
@@ -306,7 +307,7 @@ export class Game {
     this.uiRoot.addEventListener("change", this.onChange);
     window.addEventListener("blur", this.onFocusLost);
     document.addEventListener("visibilitychange", this.onVisibilityChanged);
-    this.input.bindVirtualControls(this.uiRoot);
+    this.input.bindPointerAction(this.uiRoot);
     this.renderOverlay();
     this.refreshHud();
   }
@@ -424,13 +425,6 @@ export class Game {
     this.refreshContextAction();
     this.refreshMarketTutorial();
 
-    const navigation = this.uiRoot.querySelector<HTMLElement>(".navigation-controls");
-    const fishing = this.uiRoot.querySelector<HTMLElement>(".fishing-controls");
-    if (navigation) navigation.hidden = this.overlay !== null || simulation.mode === "fishing";
-    if (fishing) fishing.hidden = this.overlay !== null
-      || simulation.mode !== "fishing"
-      || simulation.fishing?.reeling !== null
-      || simulation.fishing.exitingAt !== null;
     const showNightIndicator = shouldShowNightIndicator(simulation);
     document.body.classList.toggle("show-night-indicator", showNightIndicator);
     this.uiRoot.querySelector<HTMLElement>(".night-indicator")
@@ -795,8 +789,8 @@ export class Game {
         body: `Track a listing, then use <kbd>${formatKey(this.save.settings.controls.left)}</kbd> and <kbd>${formatKey(this.save.settings.controls.right)}</kbd> to follow its marker. When the hook appears, press <kbd>${formatKey(this.save.settings.controls.action)}</kbd>.`,
       },
       {
-        title: "Protect freshness",
-        body: "Fresh fish earn more. Engine speed shortens the trip, fog slows your decisions, and the farther harbor may not remain the better sale after freshness loss.",
+        title: "Catch and protect",
+        body: "Drop the line and steer the hook with the movement keys. Once caught, faster travel protects freshness and can change which harbor gives the better realised sale.",
       },
       {
         title: "Sell and invest",
@@ -1288,9 +1282,6 @@ export class Game {
         });
         break;
       }
-      case "leave-fishing":
-        this.exitFishing();
-        break;
     }
   };
 
