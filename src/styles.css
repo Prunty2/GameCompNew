@@ -644,129 +644,6 @@ input:focus-visible {
   transition: none;
 }
 
-.touch-controls {
-  position: absolute;
-  z-index: 5;
-  right: max(14px, env(safe-area-inset-right));
-  bottom: max(14px, env(safe-area-inset-bottom));
-  left: max(14px, env(safe-area-inset-left));
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  pointer-events: none;
-}
-
-.travel-controls {
-  display: flex;
-  gap: 8px;
-  pointer-events: auto;
-}
-
-.navigation-controls > button {
-  pointer-events: auto;
-}
-
-.navigation-controls button,
-.leave-fishing {
-  width: 74px;
-  height: 64px;
-  display: grid;
-  place-content: center;
-  gap: 0;
-  border: 0;
-  border-radius: 6px;
-  background-image: var(--button-art);
-  background-size: 100% 100%;
-  color: var(--ink);
-  touch-action: none;
-  font-weight: 1000;
-  box-shadow: 0 5px 0 rgb(71 37 26 / 48%), 0 10px 20px rgb(1 10 18 / 24%);
-  transition: filter 90ms ease, transform 70ms ease, box-shadow 70ms ease;
-}
-
-.navigation-controls button:active,
-.navigation-controls button.is-pressed,
-.leave-fishing:active {
-  filter: brightness(1.12) saturate(1.08);
-  transform: translateY(4px) scale(0.97);
-  box-shadow: 0 1px 0 rgb(71 37 26 / 48%), 0 4px 10px rgb(1 10 18 / 18%);
-}
-
-.navigation-controls button span {
-  font-size: 1.3rem;
-  line-height: 1;
-}
-
-.navigation-controls button small {
-  font-size: 0.56rem;
-  letter-spacing: 0.11em;
-}
-
-.touch-action {
-  width: 78px !important;
-}
-
-.navigation-controls .touch-boost {
-  background-image: linear-gradient(rgb(6 26 42 / 22%), rgb(6 26 42 / 22%)), var(--button-art);
-}
-
-.fishing-controls {
-  align-items: flex-end;
-}
-
-.hook-pad {
-  position: relative;
-  width: 140px;
-  height: 140px;
-  border: 2px solid rgb(244 230 197 / 72%);
-  border-radius: 50%;
-  pointer-events: auto;
-  background-image: var(--panel-art);
-  background-size: 145% 145%;
-  touch-action: none;
-}
-
-.hook-pad::before,
-.hook-pad::after {
-  content: "";
-  position: absolute;
-  background: rgb(244 230 197 / 22%);
-}
-
-.hook-pad::before {
-  top: 12px;
-  bottom: 12px;
-  left: 50%;
-  width: 1px;
-}
-
-.hook-pad::after {
-  top: 50%;
-  right: 12px;
-  left: 12px;
-  height: 1px;
-}
-
-.hook-pad span {
-  position: absolute;
-  top: calc(50% - 21px);
-  left: calc(50% - 21px);
-  z-index: 1;
-  width: 42px;
-  height: 42px;
-  transform: translate(var(--stick-x, 0), var(--stick-y, 0));
-  border-radius: 50%;
-  background: var(--orange);
-  box-shadow: inset 0 0 0 3px var(--ink);
-}
-
-.leave-fishing {
-  width: auto;
-  min-width: 130px;
-  padding: 0 18px;
-  pointer-events: auto;
-}
-
 .overlay-host,
 .screen-overlay {
   position: absolute;
@@ -2137,16 +2014,9 @@ kbd {
     animation: button-click-wobble 170ms ease-out;
   }
 
-  .touch-controls {
-    display: none !important;
-  }
 }
 
 @media (max-width: 980px) {
-  .touch-controls:not([hidden]) {
-    display: flex !important;
-  }
-
   .boost-gauge {
     top: auto;
     right: auto;
@@ -2154,12 +2024,6 @@ kbd {
     left: 50%;
     width: min(230px, 38vw);
     transform: translateX(-50%);
-  }
-}
-
-@media (orientation: portrait) {
-  .touch-controls:not([hidden]) {
-    display: none !important;
   }
 }
 
@@ -2323,15 +2187,6 @@ kbd {
     margin-top: 10px;
   }
 
-  .navigation-controls button {
-    width: 64px;
-    height: 54px;
-  }
-
-  .hook-pad {
-    width: 112px;
-    height: 112px;
-  }
 }
 
 @media (max-width: 720px) {
