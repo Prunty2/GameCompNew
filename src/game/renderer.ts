@@ -6,6 +6,9 @@ import tackleAtlasUrl from "../assets/fish-atlas.png";
 import beachBayFishAtlasUrl from "../assets/fish-beach-bay-swim.png";
 import beachReefFishAtlasUrl from "../assets/fish-beach-reef-swim.png";
 import beachSurfFishAtlasUrl from "../assets/fish-beach-surf-swim.png";
+import beachBayFishingUrl from "../assets/fishing-beach-bay.jpg";
+import beachReefFishingUrl from "../assets/fishing-beach-reef.jpg";
+import beachSurfFishingUrl from "../assets/fishing-beach-surf.jpg";
 import gloamFishAtlasUrl from "../assets/fish-gloam-swim.png";
 import mosswaterFishAtlasUrl from "../assets/fish-mosswater-swim.png";
 import sunwardFishAtlasUrl from "../assets/fish-sunward-swim.png";
@@ -96,6 +99,7 @@ interface LoadedArt {
   fish: Record<FishSheetId, HTMLCanvasElement>;
   fishOutlines: Record<FishRarity, Record<FishSheetId, HTMLCanvasElement>>;
   fishingEnvironments: Record<SpotId, HTMLImageElement>;
+  beachFishingEnvironments: Record<SpotId, HTMLImageElement>;
   lineLimitFloat: HTMLImageElement;
   fishingCues: HTMLCanvasElement;
   polarizedLens: HTMLImageElement;
@@ -179,6 +183,9 @@ export class CanvasRenderer {
       loadImage(beachSurfFishAtlasUrl),
       loadImage(beachBayFishAtlasUrl),
       loadImage(beachReefFishAtlasUrl),
+      loadImage(beachSurfFishingUrl),
+      loadImage(beachBayFishingUrl),
+      loadImage(beachReefFishingUrl),
       loadImage(sunwardFishingUrl),
       loadImage(mosswaterFishingUrl),
       loadImage(gloamFishingUrl),
@@ -202,6 +209,9 @@ export class CanvasRenderer {
       beachSurfFish,
       beachBayFish,
       beachReefFish,
+      beachSurfFishing,
+      beachBayFishing,
+      beachReefFishing,
       sunwardFishing,
       mosswaterFishing,
       gloamFishing,
@@ -247,6 +257,11 @@ export class CanvasRenderer {
           sunwardShoal: sunwardFishing,
           mosswaterPool: mosswaterFishing,
           outerGloam: gloamFishing,
+        },
+        beachFishingEnvironments: {
+          sunwardShoal: beachSurfFishing,
+          mosswaterPool: beachBayFishing,
+          outerGloam: beachReefFishing,
         },
         lineLimitFloat,
         fishingCues: keyMagenta(fishingCues, false),
@@ -573,7 +588,10 @@ export class CanvasRenderer {
         ? `Fishing at ${spot.name}. Reeling ${FISH[fishing.reeling.species].name} to the boat.`
         : `Fishing at ${spot.name}. Target ${FISH[targetSpecies].name}, ${FISH[targetSpecies].rarity} rarity.`,
     );
-    this.drawFishingEnvironment(art.fishingEnvironments[spot.id], layout, width, height, settings.highContrast);
+    const fishingEnvironments = simulation.world === "beach"
+      ? art.beachFishingEnvironments
+      : art.fishingEnvironments;
+    this.drawFishingEnvironment(fishingEnvironments[spot.id], layout, width, height, settings.highContrast);
     this.drawFishingSurfaceBand(
       simulation,
       settings,
