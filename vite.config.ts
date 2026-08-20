@@ -5,7 +5,7 @@ export default defineConfig({
   publicDir: false,
   define: {
     __APP_VERSION__: JSON.stringify(packageJson.version),
-    __PR_NUMBER__: JSON.stringify("84"),
+    __PR_NUMBER__: JSON.stringify("85"),
   },
   build: {
     outDir: "dist",
