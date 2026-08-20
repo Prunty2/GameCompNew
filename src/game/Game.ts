@@ -36,6 +36,11 @@ import {
   type ControlAction,
 } from "./controls";
 import { InputController } from "./input";
+import {
+  captureRenderMotion,
+  interpolateSimulationForRender,
+  type RenderMotionSnapshot,
+} from "./renderInterpolation";
 import { CanvasRenderer } from "./renderer";
 import {
   acceptAvailableContract,
@@ -128,6 +133,7 @@ export class Game {
   private readonly input: InputController;
   private readonly feedback: FeedbackService;
   private readonly simulation: Simulation;
+  private previousRenderMotion: RenderMotionSnapshot;
   private lastTime = 0;
   private accumulator = 0;
   private lastUiRefresh = 0;
@@ -176,6 +182,7 @@ export class Game {
     this.input = new InputController(save.settings.controls);
     this.feedback = new FeedbackService(save.settings);
     this.simulation = createSimulation(7, save.progress);
+    this.previousRenderMotion = captureRenderMotion(this.simulation);
   }
 
   async prepare(): Promise<void> {
@@ -224,6 +231,7 @@ export class Game {
 
     if (this.started && this.overlay === null && !this.sceneTransitioning) {
       while (this.accumulator >= FIXED_STEP) {
+        this.previousRenderMotion = captureRenderMotion(this.simulation);
         updateSimulation(this.simulation, this.input.read(), FIXED_STEP);
         this.accumulator -= FIXED_STEP;
       }
@@ -231,6 +239,7 @@ export class Game {
       this.handleSimulationEvents();
     } else {
       this.accumulator = 0;
+      this.previousRenderMotion = captureRenderMotion(this.simulation);
       this.input.consumeAction();
     }
 
@@ -239,7 +248,13 @@ export class Game {
       Math.abs(this.simulation.boat.speed) / engineMaximum,
       this.started && this.overlay === null && !this.sceneTransitioning && this.simulation.mode === "cruising",
     );
-    this.renderer.render(this.simulation, {
+    const renderSimulation = interpolateSimulationForRender(
+      this.simulation,
+      this.previousRenderMotion,
+      this.accumulator / FIXED_STEP,
+      FIXED_STEP,
+    );
+    this.renderer.render(renderSimulation, {
       ...this.save.settings,
       cinematic: this.overlay === "title"
         || (this.overlay === "settings" || this.overlay === "controls" || this.overlay === "credits") && this.overlayReturn === "title",
