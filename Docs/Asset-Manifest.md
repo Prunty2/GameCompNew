@@ -124,6 +124,19 @@ The boat, harbor pier, fish atlas, and world atlas were requested on a uniform `
 - Mosswater Pool direction: greener lower-visibility water, mossy vegetation, hanging roots, silt pockets, and a darker central pool.
 - Outer Gloam direction: cold violet-blue near-black water, poor visibility, sparse pale reeds, rock shelves, faint mineral or silt glow, and restrained ambiguous distant scenery.
 
+### Beach fishing environment backgrounds
+
+- Runtime files: `fishing-beach-surf.jpg`, `fishing-beach-bay.jpg`, and `fishing-beach-reef.jpg`
+- Runtime role: three Beach-only background paintings selected for the surf/estuary, sand/seagrass/shallow-reef, and lighthouse-reef/deeper-water fishing sites. The lake continues to use its original three paintings. Fish, hook, line, target treatment, line-limit boundary, surface band, and UI remain separate shared layers.
+- Authoring sources: matching `output/imagegen/fishing-beach-*-source.png` files.
+- Generated on: 20 August 2026 with OpenAI's built-in image-generation tool.
+- Generated and runtime dimensions: 1536 × 1024 each. Runtime copies use quality-82 JPEG compression; authoring sources retain the generated PNGs.
+- Generation mode: new image generation using the corresponding lake underwater painting as the composition, open-play-space, and texture reference, plus `beach-chart.png` as the Beach palette, coastal identity, and aged-paper reference.
+- Shared prompt direction: a strict side-on, background-only temperate south-eastern Australian coastal environment in restrained editorial gouache and screen print, with the rippled water surface across the top and a broad open central corridor. Habitat detail stays mainly at the lower corners and side edges. No fish, animals, hook, line, floats, boat, people, structures, UI, text, labels, icons, reticles, borders, logo, or watermark; no tropical coral or freshwater forest imagery.
+- Surf direction: shallow pale sea-glass water, warm cream caustics, rippled sand, sparse eelgrass and estuary vegetation, small shell patches, restrained driftwood, and faint suspended sand.
+- Bay direction: greener water with slightly lower visibility, pale sand and silt pockets, low seagrass meadows, rounded sandstone ledges, and sparse kelp holdfasts.
+- Reef direction: deeper cold desaturated blue water, dark sandstone shelves and boulders, sparse pale sponge and short kelp growth, a distant open channel, and faint mineral or suspended-silt glow; mysterious but readable rather than horrific.
+
 ### Dock menu backgrounds
 
 - Runtime files: `dock-brindle-day.jpg`, `dock-brindle-night.jpg`, `dock-gloam-day.jpg`, and `dock-gloam-night.jpg`
