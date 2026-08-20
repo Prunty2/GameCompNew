@@ -42,12 +42,17 @@ export function marketBoardMarkup(
       </div>`;
     }
     const quote = marketQuote(species, harborId, simulation.progress.marketDay, simulation.seed);
+    const cargoCount = simulation.cargo.filter((item) => item.species === species).length;
     const tutorialTarget = (
       simulation.progress.marketTutorialStep === "inspect"
       || simulation.progress.marketTutorialStep === "sell"
     ) && species === "bluegill";
-    return `<button class="market-listing ${tutorialTarget ? "is-tutorial-target" : ""}" type="button" data-action="select-market-fish" data-species="${species}" aria-label="${FISH[species].name}, ${quote.price} shells" style="--market-card-index: ${index}">
-      ${fishIcon(species, fishAtlasUrl, "market-listing-fish")}
+    const cargoLabel = cargoCount > 0 ? `, ${cargoCount} in cargo` : "";
+    const cargoBadge = cargoCount > 0
+      ? `<span class="market-cargo-count" aria-label="${cargoCount} ${FISH[species].name} in cargo">×${cargoCount}</span>`
+      : "";
+    return `<button class="market-listing ${tutorialTarget ? "is-tutorial-target" : ""}" type="button" data-action="select-market-fish" data-species="${species}" aria-label="${FISH[species].name}, ${quote.price} shells${cargoLabel}" style="--market-card-index: ${index}">
+      <span class="market-listing-fish-wrap">${fishIcon(species, fishAtlasUrl, "market-listing-fish")}${cargoBadge}</span>
       <span class="market-listing-copy"><strong>${FISH[species].name}</strong><span class="market-price-pill"><span class="ui-icon icon-shells" aria-hidden="true"></span>${quote.price}</span></span>
     </button>`;
   }).join("");

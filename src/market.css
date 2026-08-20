@@ -137,6 +137,33 @@
   filter: drop-shadow(0 7px 6px rgb(0 9 14 / 48%));
 }
 
+.market-listing-fish-wrap {
+  position: relative;
+  display: grid;
+  min-height: 96px;
+  place-items: center;
+}
+
+.market-cargo-count {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 2px solid #071824;
+  border-radius: 50%;
+  background: var(--menu-paper);
+  color: #071824;
+  font-family: system-ui, sans-serif;
+  font-size: 0.74rem;
+  font-weight: 950;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  box-shadow: 0 4px 10px rgb(0 8 13 / 42%);
+}
+
 .market-locked-fish-wrap {
   position: relative;
   display: grid;

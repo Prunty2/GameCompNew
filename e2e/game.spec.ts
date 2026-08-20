@@ -153,7 +153,10 @@ test("first assignment teaches the complete market sale loop", async ({ page }) 
 test("market uses a scrollable fish-card grid and a focused detail view", async ({ page }) => {
   await page.goto("/?e2e=1");
   await page.getByRole("button", { name: "Play", exact: true }).click();
-  await page.evaluate(() => window.__FSHING_TEST__?.discoverAllFish());
+  await page.evaluate(() => {
+    for (let index = 0; index < 3; index += 1) window.__FSHING_TEST__?.catchSpecies("bluegill");
+    window.__FSHING_TEST__?.discoverAllFish();
+  });
 
   const list = page.locator(".market-list");
   const listings = list.locator(".market-listing");
@@ -162,6 +165,9 @@ test("market uses a scrollable fish-card grid and a focused detail view", async 
   await expect(listings.first().locator(".market-listing-fish")).toBeVisible();
   await expect(listings.first().locator(".market-listing-copy > strong")).not.toBeEmpty();
   await expect(listings.first().locator(".market-price-pill")).toHaveText(/^\d+$/);
+  await expect(listings.first().locator(".market-cargo-count")).toHaveText("×3");
+  await expect(listings.first().locator(".market-cargo-count")).toHaveAttribute("aria-label", "3 Bluegill in cargo");
+  await expect(listings.nth(1).locator(".market-cargo-count")).toHaveCount(0);
   await expect(page.locator(".market-board-heading .panel-eyebrow")).toHaveCount(0);
   await expect(page.locator(".market-info-pill")).toHaveCount(0);
   const scrollState = await list.evaluate((element) => ({
