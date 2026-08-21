@@ -34,6 +34,7 @@ test("main menu presents centered play, settings, and credits actions", async ({
   await page.waitForTimeout(250);
   await expect(page.getByRole("button", { name: "Settings" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Credits" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Reset save" })).toBeVisible();
   await expect(page.getByRole("button", { name: "How to play" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Field guide" })).toHaveCount(0);
   await expect(page.locator(".title-tagline, .title-controls")).toHaveCount(0);
@@ -107,18 +108,27 @@ test("first assignment teaches the complete market sale loop", async ({ page }) 
   await expect(page.locator(".market-listing.is-locked").first().locator(".market-lock-question")).toHaveText("?");
   await expect(page.locator(".market-listing.is-locked").first().locator(".market-listing-fish")).toHaveCSS("filter", /brightness\(0\)/);
   await expect(page.locator(".market-listing.is-locked").first()).not.toHaveAttribute("data-action");
-  await expect(tutorial).toContainText("FIRST ASSIGNMENT · 1 of 5");
+  await expect(tutorial).toContainText("Tutorial");
+  await expect(tutorial).toContainText("Choose Bluegill");
+  await expect(tutorial.locator(".market-tutorial-step")).toHaveText("1");
   await expect(bluegillListing).toHaveClass(/is-tutorial-target/);
-  await expect(bluegillListing).toHaveCSS("animation-name", "tutorial-target-pulse");
+  const questGlow = page.locator("#quest-glow");
+  const questArrow = page.locator("#quest-arrow");
+  await expect(questGlow).toBeVisible();
+  await expect(questGlow).toHaveCSS("animation-name", "tutorial-target-pulse");
+  await expect(questArrow).toBeVisible();
+  await expect(page.locator(".quest-arrow-mark")).toHaveCSS("animation-name", "quest-arrow-bob");
 
   await bluegillListing.click();
-  await expect(tutorial).toContainText("FIRST ASSIGNMENT · 2 of 5");
+  await expect(tutorial).toContainText("Track catch");
+  await expect(tutorial.locator(".market-tutorial-step")).toHaveText("2");
   const trackButton = page.locator('[data-action="track-market-fish"][data-species="bluegill"]');
   await expect(trackButton).toHaveClass(/is-tutorial-target/);
   await expect(page.getByRole("img", { name: /Bluegill price history/ })).toBeVisible();
 
   await trackButton.click();
-  await expect(tutorial).toContainText("FIRST ASSIGNMENT · 3 of 5");
+  await expect(tutorial).toContainText("Catch Bluegill");
+  await expect(tutorial.locator(".market-tutorial-step")).toHaveText("3");
   await expect(page.getByRole("button", { name: "Back to market" })).toHaveClass(/is-tutorial-target/);
   await page.getByRole("button", { name: "Back to market" }).click();
   await expect(bluegillListing.locator(".market-tracking-badge")).toHaveText("!");
@@ -131,9 +141,12 @@ test("first assignment teaches the complete market sale loop", async ({ page }) 
   await expect(page.locator('[data-action="undock"]')).toHaveClass(/is-tutorial-target/);
   await page.locator('[data-action="undock"]').click();
   await expect(page.locator(".navigation-status")).toContainText("FISH AT Sunward Shoal");
+  await expect(questArrow).toBeHidden();
+  await expect(page.locator("#game-canvas")).toHaveAttribute("data-quest-follow", /[1-9]\d*/);
 
   await page.evaluate(() => window.__FSHING_TEST__?.catchSpecies("bluegill"));
-  await expect(tutorial).toContainText("FIRST ASSIGNMENT · 4 of 5");
+  await expect(tutorial).toContainText("Sell catch");
+  await expect(tutorial.locator(".market-tutorial-step")).toHaveText("4");
   await expect(page.locator(".navigation-status")).toContainText("SELL AT Gloam Ferry");
 
   await page.evaluate(() => window.__FSHING_TEST__?.sailToHarbor("gloam"));
@@ -146,8 +159,9 @@ test("first assignment teaches the complete market sale loop", async ({ page }) 
   await sellButton.click();
 
   await expect(page.locator("#delivery-notification")).toContainText("Sold, 1 fish");
-  await expect(tutorial).toContainText("FIRST ASSIGNMENT · 5 of 5");
-  await page.locator('[data-action="finish-market-tutorial"]').click({ force: true });
+  await expect(tutorial).toContainText("Sale complete");
+  await expect(tutorial.locator(".market-tutorial-step")).toHaveText("5");
+  await page.getByRole("button", { name: "Close tutorial" }).click();
   await expect(tutorial).toBeHidden();
   await expect(page.locator(".shell-balance strong")).toHaveText(/^[1-9]\d*$/);
 
@@ -155,6 +169,24 @@ test("first assignment teaches the complete market sale loop", async ({ page }) 
   await page.getByRole("button", { name: "Play", exact: true }).click();
   await expect(tutorial).toBeHidden();
   await expect(page.locator(".shell-balance strong")).toHaveText(/^[1-9]\d*$/);
+});
+
+test("title reset save restores the first assignment", async ({ page }) => {
+  await page.goto("/?e2e=1");
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.getByRole("button", { name: "Close tutorial" }).click();
+  await expect(page.locator("#market-tutorial")).toBeHidden();
+
+  await page.locator('[data-action="undock"]').click();
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "Title screen" }).click();
+  await expect(page.getByRole("button", { name: "Play", exact: true })).toBeVisible();
+
+  await page.getByRole("button", { name: "Reset save" }).click();
+  await expect(page.locator("#toast")).toContainText("Save reset");
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await expect(page.locator("#market-tutorial")).toContainText("Choose Bluegill");
+  await expect(page.locator('[data-action="select-market-fish"][data-species="bluegill"]')).toHaveClass(/is-tutorial-target/);
 });
 
 test("market uses a scrollable fish-card grid and a focused detail view", async ({ page }) => {

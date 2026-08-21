@@ -70,6 +70,11 @@ import {
   LAKE_AUTHORED_WATERLINE_RATIO,
 } from "./panorama";
 import {
+  questFollowArrows,
+  questHookTargetIndex,
+  type QuestFollowArrow,
+} from "./quest";
+import {
   maxFishingDepth,
   navigationGuidance,
   nightVisualIntensity,
@@ -283,6 +288,8 @@ export class CanvasRenderer {
 
   render(simulation: Simulation, settings: RenderSettings): void {
     this.interactionAnchor = null;
+    delete this.canvas.dataset.questFollow;
+    delete this.canvas.dataset.questHookFollow;
     this.resize();
     const width = this.canvas.clientWidth;
     const height = this.canvas.clientHeight;
@@ -405,6 +412,7 @@ export class CanvasRenderer {
       this.interactionAnchor = { x: activeFishingCue.x, y: hookY };
     }
 
+    this.drawQuestFollowArrows(simulation, camera, width, waterline, settings, 1);
     this.drawObjective(simulation, camera, width, height, settings, 1);
     this.drawWeather(simulation, camera, width, height, settings);
 
@@ -643,7 +651,15 @@ export class CanvasRenderer {
       if (target.species === targetSpecies) {
         context.save();
         context.globalAlpha = schoolOpacity;
-        this.drawFishingTargetChevron(animatedPoint, target.species, width, height, settings.highContrast);
+        this.drawFishingTargetChevron(
+          animatedPoint,
+          target.species,
+          width,
+          height,
+          settings,
+          simulation.elapsed,
+          simulation.progress.marketTutorialStep === "catch",
+        );
         context.restore();
       }
     }
@@ -686,6 +702,7 @@ export class CanvasRenderer {
       context.restore();
     }
     this.drawTackleCell(1, 1, hook.x, hook.y, hookSize, hookSize);
+    this.drawQuestHookGuide(simulation, fishing, hook, width, layout, maximumDepth, settings);
 
     this.drawFishingTargetGuide(targetSpecies, width, height, settings.highContrast, layout.surfaceY);
     if (fishing.reeling) {
@@ -895,6 +912,7 @@ export class CanvasRenderer {
             fishing: null,
           }
         : simulation;
+      this.drawQuestFollowArrows(surfaceSimulation, camera, width, surfaceY, settings, surfaceBlend);
       this.drawObjective(surfaceSimulation, camera, width, height, settings, surfaceBlend);
     }
 
@@ -1163,6 +1181,131 @@ export class CanvasRenderer {
     this.context.restore();
   }
 
+  private drawQuestFollowArrows(
+    simulation: Simulation,
+    camera: SideScrollCamera,
+    width: number,
+    waterline: number,
+    settings: RenderSettings,
+    opacityMultiplier: number,
+  ): void {
+    if (opacityMultiplier <= 0) return;
+    const arrows = questFollowArrows(simulation);
+    this.canvas.dataset.questFollow = String(arrows.length);
+    if (arrows.length === 0) return;
+    for (const arrow of arrows) {
+      const x = worldToScreenX(arrow.x, camera, width);
+      if (!isNearScreen(x, width, 40)) continue;
+      this.drawGlowingFollowArrow(x, waterline - 54, arrow, simulation.elapsed, settings, opacityMultiplier);
+    }
+  }
+
+  private drawGlowingFollowArrow(
+    x: number,
+    y: number,
+    arrow: QuestFollowArrow,
+    elapsed: number,
+    settings: RenderSettings,
+    opacity: number,
+  ): void {
+    const pulse = settings.reducedMotion ? 0.55 : (Math.sin(elapsed * 4.2 + arrow.x * 36) + 1) / 2;
+    const slide = settings.reducedMotion ? 0 : (Math.sin(elapsed * 4.4) + 1) / 2 * 12;
+    const { context } = this;
+    context.save();
+    context.translate(x + arrow.direction * (10 + slide), y);
+    context.scale(arrow.direction, 1);
+    context.globalAlpha = opacity * (0.55 + pulse * 0.45);
+    context.shadowColor = settings.highContrast ? "#fff4cf" : "#f1ac50";
+    context.shadowBlur = 18 + pulse * 10;
+    context.strokeStyle = settings.highContrast ? "#ffffff" : "#ffe08a";
+    context.lineWidth = 7;
+    context.lineCap = "round";
+    context.lineJoin = "round";
+    context.beginPath();
+    context.moveTo(-16, 0);
+    context.lineTo(14, 0);
+    context.moveTo(2, -12);
+    context.lineTo(16, 0);
+    context.lineTo(2, 12);
+    context.stroke();
+    context.shadowBlur = 0;
+    context.globalAlpha = opacity;
+    context.strokeStyle = settings.highContrast ? "#fff8e6" : "#f7f1e3";
+    context.lineWidth = 3.5;
+    context.beginPath();
+    context.moveTo(-16, 0);
+    context.lineTo(14, 0);
+    context.moveTo(2, -12);
+    context.lineTo(16, 0);
+    context.lineTo(2, 12);
+    context.stroke();
+    context.restore();
+  }
+
+  private drawQuestHookGuide(
+    simulation: Simulation,
+    fishing: NonNullable<Simulation["fishing"]>,
+    hook: WorldPoint,
+    width: number,
+    layout: FishingViewLayout,
+    maximumDepth: number,
+    settings: RenderSettings,
+  ): void {
+    const targetIndex = questHookTargetIndex(simulation);
+    this.canvas.dataset.questHookFollow = targetIndex === null ? "0" : "1";
+    if (targetIndex === null) return;
+    const target = fishing.targets[targetIndex];
+    if (!target) return;
+    const point = fishingPointToScreen(target, width, layout, maximumDepth);
+    const pose = fishingFishPose(target.species, simulation.elapsed, target.phase, settings.reducedMotion);
+    const to = {
+      x: point.x,
+      y: point.y + pose.verticalOffsetRatio * layout.underwaterHeight,
+    };
+    const dx = to.x - hook.x;
+    const dy = to.y - hook.y;
+    const length = Math.hypot(dx, dy);
+    if (length < 28) return;
+    const nx = dx / length;
+    const ny = dy / length;
+    const start = { x: hook.x + nx * 18, y: hook.y + ny * 18 };
+    const tip = { x: hook.x + nx * (length * 0.72), y: hook.y + ny * (length * 0.72) };
+    const pulse = settings.reducedMotion ? 0.5 : (Math.sin(simulation.elapsed * 5.2) + 1) / 2;
+    const { context } = this;
+    context.save();
+    context.globalAlpha = 0.45 + pulse * 0.4;
+    context.shadowColor = settings.highContrast ? "#fff4cf" : "#f1ac50";
+    context.shadowBlur = 16 + pulse * 8;
+    context.strokeStyle = settings.highContrast ? "#ffffff" : "#ffe08a";
+    context.lineWidth = 6;
+    context.lineCap = "round";
+    context.lineJoin = "round";
+    context.beginPath();
+    context.moveTo(start.x, start.y);
+    context.lineTo(tip.x, tip.y);
+    context.stroke();
+    const head = 14;
+    const px = -ny;
+    const py = nx;
+    context.beginPath();
+    context.moveTo(tip.x + px * 9 - nx * 2, tip.y + py * 9 - ny * 2);
+    context.lineTo(tip.x + nx * head, tip.y + ny * head);
+    context.lineTo(tip.x - px * 9 - nx * 2, tip.y - py * 9 - ny * 2);
+    context.stroke();
+    context.shadowBlur = 0;
+    context.globalAlpha = 1;
+    context.strokeStyle = settings.highContrast ? "#fff8e6" : "#f7f1e3";
+    context.lineWidth = 3;
+    context.beginPath();
+    context.moveTo(start.x, start.y);
+    context.lineTo(tip.x, tip.y);
+    context.moveTo(tip.x + px * 9 - nx * 2, tip.y + py * 9 - ny * 2);
+    context.lineTo(tip.x + nx * head, tip.y + ny * head);
+    context.lineTo(tip.x - px * 9 - nx * 2, tip.y - py * 9 - ny * 2);
+    context.stroke();
+    context.restore();
+  }
+
   private drawObjective(
     simulation: Simulation,
     camera: SideScrollCamera,
@@ -1354,18 +1497,33 @@ export class CanvasRenderer {
     species: FishSpecies,
     width: number,
     height: number,
-    highContrast: boolean,
+    settings: RenderSettings,
+    elapsed: number,
+    questGlow: boolean,
   ): void {
     const { fishHeight } = this.fishDimensions(species, width, height);
     const { context } = this;
     const y = point.y + fishHeight * 0.46;
     const size = clamp(Math.min(width, height) * 0.016, 10, 15);
+    const pulse = settings.reducedMotion || !questGlow ? 0 : (Math.sin(elapsed * 5.2) + 1) / 2;
     context.save();
-    context.strokeStyle = highContrast ? "#ffffff" : "#e8a44d";
-    context.lineWidth = highContrast ? 4 : 3;
+    if (questGlow) {
+      context.shadowColor = settings.highContrast ? "#fff4cf" : "#f1ac50";
+      context.shadowBlur = 14 + pulse * 10;
+      context.strokeStyle = settings.highContrast ? "#ffffff" : "rgba(241, 172, 80, 0.55)";
+      context.lineWidth = 8;
+      context.lineCap = "round";
+      context.beginPath();
+      context.moveTo(point.x - size, y);
+      context.lineTo(point.x, y + size * 0.7);
+      context.lineTo(point.x + size, y);
+      context.stroke();
+    }
+    context.strokeStyle = settings.highContrast ? "#ffffff" : "#e8a44d";
+    context.lineWidth = settings.highContrast ? 4 : 3;
     context.lineCap = "round";
     context.shadowColor = "rgba(2, 10, 18, 0.82)";
-    context.shadowBlur = 5;
+    context.shadowBlur = questGlow ? 10 : 5;
     context.beginPath();
     context.moveTo(point.x - size, y);
     context.lineTo(point.x, y + size * 0.7);

@@ -14,7 +14,7 @@ import uiIconsUrl from "../assets/ui-icons.png";
 import uiPanelUrl from "../assets/ui-panel.png";
 import { FeedbackService, type FeedbackCue } from "../services/feedbackService";
 import type { PlatformService } from "../services/platformService";
-import { saveGame, type SaveData } from "../services/saveGame";
+import { defaultSave, saveGame, type SaveData } from "../services/saveGame";
 import {
   BALANCE,
   FISH,
@@ -45,6 +45,13 @@ import {
 } from "./renderInterpolation";
 import { CanvasRenderer } from "./renderer";
 import { marketBoardMarkup } from "./marketView";
+import {
+  chooseQuestArrowSide,
+  questPresentation,
+  questUiArrowLayout,
+  type QuestPresentation,
+  type QuestViewContext,
+} from "./quest";
 import {
   beginFishingExit,
   buyBoost,
@@ -141,7 +148,7 @@ export class Game {
   private readonly renderer: CanvasRenderer;
   private readonly input: InputController;
   private readonly feedback: FeedbackService;
-  private readonly simulation: Simulation;
+  private simulation: Simulation;
   private previousRenderMotion: RenderMotionSnapshot;
   private lastTime = 0;
   private accumulator = 0;
@@ -166,6 +173,8 @@ export class Game {
   private sceneTransitionTarget: OverlayScreen | undefined;
   private queuedOverlay: { next: OverlayScreen; useSceneTransition: boolean } | null = null;
   private seasonReportQueued = false;
+  private questGuide: QuestPresentation | null = null;
+  private lastQuestMarkup = "";
   private readonly visualTestSpot = import.meta.env.DEV
     ? new URLSearchParams(window.location.search).get("e2eSpot") as SpotId | null
     : null;
@@ -301,6 +310,12 @@ export class Game {
         </section>
         <div class="feedback-flash" id="feedback-flash" aria-hidden="true"></div>
         <aside class="market-tutorial" id="market-tutorial" role="status" aria-live="polite" hidden></aside>
+        <div class="quest-glow" id="quest-glow" hidden aria-hidden="true"></div>
+        <div class="quest-arrow" id="quest-arrow" hidden aria-hidden="true">
+          <svg class="quest-arrow-mark" viewBox="0 0 64 48" focusable="false">
+            <path d="M6 24h38M32 8l22 16-22 16" />
+          </svg>
+        </div>
 
         <button class="context-action" id="context-action" type="button" data-action="interact" data-control="action" hidden>Interact</button>
 
@@ -437,7 +452,7 @@ export class Game {
     }
 
     this.refreshContextAction();
-    this.refreshMarketTutorial();
+    this.refreshQuestGuide();
 
     const showNightIndicator = shouldShowNightIndicator(simulation);
     document.body.classList.toggle("show-night-indicator", showNightIndicator);
@@ -470,36 +485,96 @@ export class Game {
       action.setAttribute("aria-label", prompt?.label ?? "Interact");
       action.title = prompt?.label ?? "";
       action.classList.toggle("is-fishing-cue", fishingCue);
-      const tutorialFishingTarget = this.simulation.progress.marketTutorialStep === "catch"
-        && fishingCue
-        && prompt?.spot === "sunwardShoal";
-      action.classList.toggle("is-tutorial-target", tutorialFishingTarget);
       this.syncContextActionAnchor(action);
     }
   }
 
-  private refreshMarketTutorial(): void {
+  private questViewContext(): QuestViewContext {
+    return {
+      started: this.started,
+      overlay: this.overlay,
+      harborSection: this.harborSection,
+      marketDetailOpen: this.marketDetailOpen,
+    };
+  }
+
+  private refreshQuestGuide(): void {
     const tutorial = this.uiRoot.querySelector<HTMLElement>("#market-tutorial");
     if (!tutorial) return;
-    const step = this.simulation.progress.marketTutorialStep;
-    const hiddenByScreen = !this.started
-      || this.overlay === "title"
-      || this.overlay === "settings"
-      || this.overlay === "credits"
-      || this.overlay === "controls"
-      || this.overlay === "help"
-      || this.overlay === "seasonReport";
-    tutorial.hidden = step === "done" || hiddenByScreen;
-    if (tutorial.hidden) return;
-    const copy = {
-      inspect: ["1 of 5", "Choose Bluegill", "Select the glowing Bluegill listing to read today's price."],
-      track: ["2 of 5", "Track the catch", "Review Bluegill, then choose Track Bluegill."],
-      catch: ["3 of 5", "Catch a Bluegill", "Follow Fish at Sunward Shoal. Slow down, drop the line, and hook a Bluegill."],
-      sell: ["4 of 5", "Sell while fresh", "Follow Sell at, open the Bluegill card, then sell your catch."],
-      complete: ["5 of 5", "First sale complete", "You earned shells at the live market price. Prices change when a new day begins."],
-      done: ["", "", ""],
-    }[step];
-    tutorial.innerHTML = `<div><span>FIRST ASSIGNMENT · ${copy[0]}</span><strong>${copy[1]}</strong><p>${copy[2]}</p></div><div class="market-tutorial-actions">${step === "complete" ? `<button type="button" data-action="finish-market-tutorial">Finish</button>` : ""}<button type="button" data-action="skip-market-tutorial">Skip tutorial</button></div>`;
+    const presentation = questPresentation(this.simulation, this.questViewContext());
+    this.questGuide = presentation;
+    tutorial.hidden = presentation.hidden;
+    tutorial.dataset.questStep = presentation.step;
+    tutorial.setAttribute(
+      "aria-label",
+      presentation.hidden ? "Tutorial" : `Tutorial, ${presentation.title}, step ${presentation.index} of 5`,
+    );
+    if (presentation.hidden) {
+      this.lastQuestMarkup = "";
+      tutorial.innerHTML = "";
+      this.clearQuestUiTargets();
+      this.syncQuestArrow();
+      return;
+    }
+    const markup = `<span class="market-tutorial-step" aria-hidden="true">${presentation.index}</span><div class="market-tutorial-copy"><span>${presentation.heading}</span><strong>${presentation.title}</strong></div><button class="market-tutorial-close" type="button" data-action="skip-market-tutorial" aria-label="Close tutorial"><span aria-hidden="true">×</span></button>`;
+    if (markup !== this.lastQuestMarkup) {
+      tutorial.innerHTML = markup;
+      this.lastQuestMarkup = markup;
+    }
+    this.applyQuestUiTarget(presentation.uiTargetSelector);
+    this.syncQuestArrow();
+  }
+
+  private applyQuestUiTarget(selector: string | null): void {
+    for (const element of this.uiRoot.querySelectorAll(".is-tutorial-target")) {
+      if (selector && element.matches(selector)) continue;
+      element.classList.remove("is-tutorial-target");
+    }
+    if (!selector) return;
+    const target = this.uiRoot.querySelector<HTMLElement>(selector);
+    target?.classList.add("is-tutorial-target");
+  }
+
+  private clearQuestUiTargets(): void {
+    for (const element of this.uiRoot.querySelectorAll(".is-tutorial-target")) {
+      element.classList.remove("is-tutorial-target");
+    }
+  }
+
+  private syncQuestArrow(): void {
+    const arrow = this.uiRoot.querySelector<HTMLElement>("#quest-arrow");
+    const glow = this.uiRoot.querySelector<HTMLElement>("#quest-glow");
+    const selector = this.questGuide?.uiTargetSelector;
+    const target = selector ? this.uiRoot.querySelector<HTMLElement>(selector) : null;
+    const targetRect = target?.getClientRects()[0];
+    if (!arrow || !glow) return;
+    if (!selector || !target || !targetRect) {
+      arrow.hidden = true;
+      glow.hidden = true;
+      return;
+    }
+    const radius = getComputedStyle(target).borderRadius;
+    glow.hidden = false;
+    glow.style.width = `${targetRect.width}px`;
+    glow.style.height = `${targetRect.height}px`;
+    glow.style.borderRadius = radius;
+    glow.style.transform = `translate(${targetRect.left}px, ${targetRect.top}px)`;
+    if (target.closest("#market-tutorial")) {
+      arrow.hidden = true;
+      return;
+    }
+    const tutorial = this.uiRoot.querySelector<HTMLElement>("#market-tutorial");
+    const avoidBox = tutorial && !tutorial.hidden ? tutorial.getBoundingClientRect() : null;
+    const avoid = avoidBox
+      ? { left: avoidBox.left, top: avoidBox.top, width: avoidBox.width, height: avoidBox.height }
+      : null;
+    const viewport = { width: window.innerWidth, height: window.innerHeight };
+    const targetBox = { left: targetRect.left, top: targetRect.top, width: targetRect.width, height: targetRect.height };
+    const side = chooseQuestArrowSide(targetBox, viewport, avoid);
+    const layout = questUiArrowLayout(targetBox, side);
+    arrow.hidden = false;
+    arrow.dataset.side = side;
+    arrow.style.transform = `translate(${layout.left}px, ${layout.top}px) rotate(${layout.rotation}deg)`;
   }
 
   private syncContextActionAnchor(
@@ -517,6 +592,7 @@ export class Game {
         action.style.removeProperty("top");
       }
     }
+    this.syncQuestArrow();
   }
 
   private renderOverlay(): void {
@@ -524,6 +600,7 @@ export class Game {
     if (!host) return;
     if (this.overlay === null) {
       host.innerHTML = "";
+      this.refreshQuestGuide();
       return;
     }
     switch (this.overlay) {
@@ -552,6 +629,7 @@ export class Game {
         host.innerHTML = this.seasonReportScreen();
         break;
     }
+    this.refreshQuestGuide();
   }
 
   private titleScreen(): string {
@@ -574,6 +652,7 @@ export class Game {
           </div>
         </div>
         <small class="title-build-version">v${__APP_VERSION__} (PR #${__PR_NUMBER__})</small>
+        <button class="title-reset-save" type="button" data-action="reset-save">Reset save</button>
       </section>`;
   }
 
@@ -612,8 +691,8 @@ export class Game {
         : `<section class="services" aria-label="Dock services"><div class="service-grid">${this.upgradeCard("cargo", "Cargo", "+1 cargo slot")}${this.upgradeCard("engine", "Engine", "+11% speed")}${this.upgradeCard("lamp", "Lamp", "Wider night view")}${this.upgradeCard("line", "Line depth", "Next depth tier")}${this.boostCard()}${this.beachCard()}${harborId === "gloam" ? this.permitCard() : ""}</div></section>`;
     const tabs = `<nav class="harbor-tabs has-3-tabs" aria-label="Harbor sections" style="--harbor-tab-count: 3">${availableSections.map((section) => `<button class="harbor-tab ${activeSection === section ? "is-active" : ""}" type="button" data-action="harbor-section" data-harbor-section="${section}" aria-label="${capitalise(section)}" aria-pressed="${activeSection === section}"><span class="ui-icon icon-${HARBOR_SECTION_ICON[section]}" aria-hidden="true"></span><span>${capitalise(section)}</span></button>`).join("")}</nav>`;
     const mainFooterAction = activeSection === "market" && this.marketDetailOpen
-      ? `<button class="leave-button market-footer-back ${this.simulation.progress.marketTutorialStep === "catch" ? "is-tutorial-target" : ""}" type="button" data-action="close-market-fish-detail" aria-label="Back to market"><span class="harbor-back-arrow" aria-hidden="true">←</span><strong>Back to market</strong></button>`
-      : `<button class="leave-button ${this.simulation.progress.marketTutorialStep === "catch" ? "is-tutorial-target" : ""}" type="button" data-action="undock" aria-label="Back to ${this.simulation.world}"><span class="ui-icon icon-hull" aria-hidden="true"></span><strong>Return to ${capitalise(this.simulation.world)}</strong></button>`;
+      ? `<button class="leave-button market-footer-back" type="button" data-action="close-market-fish-detail" aria-label="Back to market"><span class="harbor-back-arrow" aria-hidden="true">←</span><strong>Back to market</strong></button>`
+      : `<button class="leave-button" type="button" data-action="undock" aria-label="Back to ${this.simulation.world}"><span class="ui-icon icon-hull" aria-hidden="true"></span><strong>Return to ${capitalise(this.simulation.world)}</strong></button>`;
     return `<section class="screen-overlay harbor-screen is-first-voyage is-expanded-harbor is-harbor-${activeSection} is-dock-${harborId}" ${this.dockBackdropAttributes(harborId)} role="dialog" aria-labelledby="harbor-title">
       <div class="art-panel harbor-panel side-sheet market-harbor-panel">
         <header class="panel-heading harbor-header"><div class="harbor-title-block"><img class="wordmark harbor-wordmark" src="${wordmarkUrl}" alt="FSHING" /><span class="harbor-title-divider" aria-hidden="true"></span><div><h2 id="harbor-title">${harbor.name}</h2></div></div><span class="shell-balance" aria-label="${this.simulation.progress.money} shells"><span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${this.simulation.progress.money}</strong></span></header>
@@ -972,6 +1051,22 @@ export class Game {
     }
   }
 
+  private resetSave(): void {
+    this.save.progress = defaultSave().progress;
+    saveGame(this.platform.saveStorage, this.save);
+    this.simulation = createSimulation(7, this.save.progress);
+    this.previousRenderMotion = captureRenderMotion(this.simulation);
+    this.started = false;
+    this.harborSection = "market";
+    this.selectedMarketSpecies = "bluegill";
+    this.marketDetailOpen = false;
+    this.seasonReportQueued = false;
+    this.pendingCargoRelease = null;
+    this.questGuide = null;
+    this.lastQuestMarkup = "";
+    this.showToast("Save reset. Play to start the first assignment.");
+  }
+
   private beginVoyage(): void {
     this.started = true;
     this.harborSection = "market";
@@ -1140,6 +1235,9 @@ export class Game {
         this.dismissDeliveryNotification();
         break;
       case "start": this.beginVoyage(); break;
+      case "reset-save":
+        this.resetSave();
+        break;
       case "interact": this.handleInteract(); break;
       case "resume": this.setOverlay(null); break;
       case "open-settings": this.overlayReturn = this.overlay; this.setOverlay("settings"); break;
@@ -1207,7 +1305,7 @@ export class Game {
         inspectMarketSpecies(this.simulation, species);
         this.syncSave();
         this.renderOverlay();
-        this.refreshMarketTutorial();
+        this.refreshQuestGuide();
         requestAnimationFrame(() => {
           this.uiRoot.querySelector<HTMLButtonElement>(`[data-action="track-market-fish"][data-species="${species}"]`)?.focus({ preventScroll: true });
         });
@@ -1227,7 +1325,7 @@ export class Game {
         this.selectedMarketSpecies = species;
         this.syncSave();
         this.renderOverlay();
-        this.refreshMarketTutorial();
+        this.refreshQuestGuide();
         this.showToast(`${FISH[species].name} tracked. The navigation marker now points to its fishing ground.`);
         break;
       }
@@ -1237,20 +1335,20 @@ export class Game {
         if (sellSpeciesAtMarket(this.simulation, species)) {
           this.handleSimulationEvents();
           this.renderOverlay();
-          this.refreshMarketTutorial();
+          this.refreshQuestGuide();
         }
         break;
       }
       case "finish-market-tutorial":
         finishMarketTutorial(this.simulation);
         this.syncSave();
-        this.refreshMarketTutorial();
+        this.refreshQuestGuide();
         break;
       case "skip-market-tutorial":
         skipMarketTutorial(this.simulation);
         this.syncSave();
         this.renderOverlay();
-        this.refreshMarketTutorial();
+        this.refreshQuestGuide();
         break;
       case "open-cargo-upgrades": {
         const openCargoUpgrade = (): void => {

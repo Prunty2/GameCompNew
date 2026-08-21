@@ -46,10 +46,6 @@ export function marketBoardMarkup(
     }
     const quote = marketQuote(species, harborId, simulation.progress.marketDay, simulation.seed);
     const cargoCount = simulation.cargo.filter((item) => item.species === species).length;
-    const tutorialTarget = (
-      simulation.progress.marketTutorialStep === "inspect"
-      || simulation.progress.marketTutorialStep === "sell"
-    ) && species === "bluegill";
     const isTracked = simulation.progress.marketTarget === species;
     const cargoLabel = cargoCount > 0 ? `, ${cargoCount} in cargo` : "";
     const cargoBadge = cargoCount > 0
@@ -58,7 +54,7 @@ export function marketBoardMarkup(
     const trackingBadge = isTracked
       ? `<span class="market-tracking-badge" aria-label="Tracking ${FISH[species].name}">!</span>`
       : "";
-    return `<button class="market-listing ${tutorialTarget ? "is-tutorial-target" : ""}" type="button" data-action="select-market-fish" data-species="${species}" aria-label="${FISH[species].name}, ${quote.price} shells${cargoLabel}${isTracked ? ", tracked" : ""}" style="--market-card-index: ${index}">
+    return `<button class="market-listing" type="button" data-action="select-market-fish" data-species="${species}" aria-label="${FISH[species].name}, ${quote.price} shells${cargoLabel}${isTracked ? ", tracked" : ""}" style="--market-card-index: ${index}">
       <span class="market-listing-fish-wrap">${trackingBadge}${fishIcon(species, fishAtlasUrl, beachFishAtlasUrl, "market-listing-fish")}${cargoBadge}</span>
       <span class="market-listing-copy"><strong>${FISH[species].name}</strong><span class="market-price-pill"><span class="ui-icon icon-shells" aria-hidden="true"></span>${quote.price}</span></span>
     </button>`;
@@ -84,8 +80,6 @@ function marketDetailMarkup(
   const history = marketHistory(species, harborId, simulation.progress.marketDay, simulation.seed);
   const sale = salePreview(simulation.cargo, species, quote.price);
   const isTracked = simulation.progress.marketTarget === species;
-  const trackTarget = simulation.progress.marketTutorialStep === "track" && species === "bluegill";
-  const sellTarget = simulation.progress.marketTutorialStep === "sell" && species === "bluegill";
   return `<article class="market-detail" aria-labelledby="market-detail-title">
     <div class="market-detail-layout">
       <section class="market-fish-summary" aria-label="${fish.name} sale summary">
@@ -94,8 +88,8 @@ function marketDetailMarkup(
         <div class="market-summary-pills">
           <span class="market-price-pill is-large"><span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${quote.price}</strong><small>each</small></span>
         </div>
-        <button class="market-track-button ${isTracked ? "is-tracked" : ""} ${trackTarget ? "is-tutorial-target" : ""}" type="button" data-action="track-market-fish" data-species="${species}" aria-pressed="${isTracked}">${isTracked ? "✓ Tracking this fish" : `Track ${fish.name}`}</button>
-        <button class="primary-button market-sell-button ${sellTarget ? "is-tutorial-target" : ""}" type="button" data-action="sell-market-fish" data-species="${species}" ${sale.quantity === 0 ? "disabled" : ""}>${sale.quantity === 0 ? "No fresh fish to sell" : `Sell ${sale.quantity} fish · ${sale.total} shells`}</button>
+        <button class="market-track-button ${isTracked ? "is-tracked" : ""}" type="button" data-action="track-market-fish" data-species="${species}" aria-pressed="${isTracked}">${isTracked ? "✓ Tracking this fish" : `Track ${fish.name}`}</button>
+        <button class="primary-button market-sell-button" type="button" data-action="sell-market-fish" data-species="${species}" ${sale.quantity === 0 ? "disabled" : ""}>${sale.quantity === 0 ? "No fresh fish to sell" : `Sell ${sale.quantity} fish · ${sale.total} shells`}</button>
       </section>
       <section class="market-chart-shell" aria-labelledby="price-history-title">
         <div class="market-chart-heading">

@@ -635,6 +635,14 @@ input:focus-visible {
     0 8px 20px rgb(2 15 21 / 24%);
 }
 
+.context-action.is-tutorial-target {
+  z-index: 6;
+}
+
+.high-contrast .quest-glow {
+  outline-color: #fff4cf;
+}
+
 .high-contrast .context-action:not(.is-fishing-cue) {
   outline: 2px solid #fff;
   outline-offset: 0;
@@ -4385,6 +4393,31 @@ kbd {
   line-height: 1;
   text-shadow: 0 1px 3px rgb(2 15 21 / 80%);
   user-select: none;
+}
+
+.title-screen button.title-reset-save {
+  position: absolute;
+  right: max(14px, env(safe-area-inset-right));
+  bottom: max(10px, env(safe-area-inset-bottom));
+  min-height: 36px;
+  padding: 6px 11px;
+  border: 1px solid rgb(247 241 227 / 24%);
+  border-radius: 8px;
+  background: rgb(4 20 27 / 42%);
+  color: rgb(247 241 227 / 78%);
+  cursor: pointer;
+  font: inherit;
+  font-size: clamp(0.64rem, 1.4vw, 0.72rem);
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  text-shadow: 0 1px 3px rgb(2 15 21 / 80%);
+}
+
+.title-screen button.title-reset-save:hover,
+.title-screen button.title-reset-save:focus-visible {
+  border-color: rgb(241 172 80 / 70%);
+  color: #f7f1e3;
 }
 
 @media (max-height: 650px) {
