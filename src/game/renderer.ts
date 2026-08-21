@@ -979,14 +979,15 @@ export class CanvasRenderer {
     context.lineWidth = 1;
     context.font = "900 13px system-ui, sans-serif";
     context.textBaseline = "middle";
-    for (const [index, key] of ["W", "S"].entries()) {
+    const movementKeys = ["W", "A", "S", "D"];
+    for (const [index, key] of movementKeys.entries()) {
       const keyX = x + index * 28;
       context.strokeRect(keyX, y - 12, 22, 22);
       context.textAlign = "center";
       context.fillText(key, keyX + 11, y - 1);
     }
     context.textAlign = "left";
-    context.fillText("MOVE HOOK", x + 67, y - 1);
+    context.fillText("MOVE HOOK", x + movementKeys.length * 28 + 11, y - 1);
     context.restore();
   }
 
