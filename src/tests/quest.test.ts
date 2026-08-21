@@ -8,12 +8,15 @@ import {
   questUiArrowLayout,
 } from "../game/quest";
 import {
+  buyUpgrade,
   createSimulation,
   inspectMarketSpecies,
   interact,
   moveBoatForTesting,
   resolveCatch,
+  skipMarketTutorial,
   startFishing,
+  syncUpgradeTutorial,
   trackMarketSpecies,
   undock,
 } from "../game/simulation";
@@ -143,16 +146,10 @@ describe("first-assignment quest prototype", () => {
     expect(sell.uiTargetSelector).toBe('[data-action="sell-market-fish"][data-species="bluegill"]');
   });
 
-  test("shows a closeable sale-complete step, then hides after the assignment ends", () => {
+  test("hides the tutorial after the first sale, including leftover complete steps", () => {
     const simulation = createSimulation();
     simulation.progress.marketTutorialStep = "complete";
-    const complete = questPresentation(simulation, harborView);
-    expect(complete).toMatchObject({
-      heading: "Tutorial",
-      title: "Sale complete",
-      index: 5,
-      uiTargetSelector: null,
-    });
+    expect(questPresentation(simulation, harborView).hidden).toBe(true);
 
     simulation.progress.marketTutorialStep = "done";
     expect(questPresentation(simulation, harborView).hidden).toBe(true);
@@ -190,5 +187,47 @@ describe("first-assignment quest prototype", () => {
     const low = { left: 500, top: 640, width: 80, height: 80 };
     expect(chooseQuestArrowSide(low, { width: 1280, height: 800 })).toBe("above");
     expect(questUiArrowLayout(low, "above").rotation).toBe(90);
+  });
+
+  test("starts an upgrade walkthrough when the player can afford Dock Services", () => {
+    const simulation = createSimulation();
+    skipMarketTutorial(simulation);
+    expect(questPresentation(simulation, harborView).hidden).toBe(true);
+
+    simulation.progress.money = 55;
+    syncUpgradeTutorial(simulation);
+    const open = questPresentation(simulation, harborView);
+    expect(open).toMatchObject({
+      hidden: false,
+      heading: "Tutorial",
+      title: "Open services",
+      index: 1,
+      uiTargetSelector: '[data-action="harbor-section"][data-harbor-section="services"]',
+    });
+
+    const buy = questPresentation(simulation, { ...harborView, harborSection: "services" });
+    expect(buy).toMatchObject({
+      title: "Buy upgrade",
+      index: 2,
+      uiTargetSelector: '[data-action="buy-upgrade"][data-upgrade="line"]',
+    });
+
+    expect(buyUpgrade(simulation, "line")).toBe(true);
+    expect(questPresentation(simulation, { ...harborView, harborSection: "services" }).hidden).toBe(true);
+  });
+
+  test("guides an upgrade run back to harbor from the lake", () => {
+    const simulation = createSimulation();
+    skipMarketTutorial(simulation);
+    simulation.progress.money = 55;
+    syncUpgradeTutorial(simulation);
+    undock(simulation);
+    simulation.boat.x = 0.42;
+    const travel = questPresentation(simulation, playView);
+    expect(travel).toMatchObject({
+      title: "Dock harbor",
+      worldFollow: true,
+    });
+    expect(questFollowArrows(simulation)[0]?.direction).toBe(-1);
   });
 });

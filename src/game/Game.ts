@@ -66,6 +66,7 @@ import {
   getInteractionPrompt,
   finishMarketTutorial,
   inspectMarketSpecies,
+  noteUpgradeServicesOpened,
   interact,
   leaveFishing,
   moveBoatForTesting,
@@ -78,6 +79,7 @@ import {
   shouldShowNightIndicator,
   skipMarketTutorial,
   startFishing,
+  syncUpgradeTutorial,
   travelToWorld,
   trackMarketSpecies,
   undock,
@@ -131,6 +133,7 @@ declare global {
       sailToHarbor(id: HarborId): void;
       previewFishing(id: SpotId, species: FishSpecies): void;
       catchSpecies(species: FishSpecies): void;
+      grantMoney(amount: number): void;
       discoverAllFish(): void;
       hookSpecies(species: FishSpecies): void;
       damage(amount: number): void;
@@ -175,6 +178,7 @@ export class Game {
   private seasonReportQueued = false;
   private questGuide: QuestPresentation | null = null;
   private lastQuestMarkup = "";
+  private resetConfirming = false;
   private readonly visualTestSpot = import.meta.env.DEV
     ? new URLSearchParams(window.location.search).get("e2eSpot") as SpotId | null
     : null;
@@ -501,13 +505,21 @@ export class Game {
   private refreshQuestGuide(): void {
     const tutorial = this.uiRoot.querySelector<HTMLElement>("#market-tutorial");
     if (!tutorial) return;
+    const previousUpgradeStep = this.simulation.progress.upgradeTutorialStep;
+    syncUpgradeTutorial(this.simulation);
+    if (this.overlay === "harbor" && this.harborSection === "services") {
+      noteUpgradeServicesOpened(this.simulation);
+    }
+    if (previousUpgradeStep !== this.simulation.progress.upgradeTutorialStep) this.syncSave();
     const presentation = questPresentation(this.simulation, this.questViewContext());
     this.questGuide = presentation;
     tutorial.hidden = presentation.hidden;
     tutorial.dataset.questStep = presentation.step;
     tutorial.setAttribute(
       "aria-label",
-      presentation.hidden ? "Tutorial" : `Tutorial, ${presentation.title}, step ${presentation.index} of 5`,
+      presentation.hidden
+        ? "Tutorial"
+        : `Tutorial, ${presentation.title}, step ${presentation.index} of ${presentation.totalSteps}`,
     );
     if (presentation.hidden) {
       this.lastQuestMarkup = "";
@@ -652,7 +664,6 @@ export class Game {
           </div>
         </div>
         <small class="title-build-version">v${__APP_VERSION__} (PR #${__PR_NUMBER__})</small>
-        <button class="title-reset-save" type="button" data-action="reset-save">Reset save</button>
       </section>`;
   }
 
@@ -768,6 +779,22 @@ export class Game {
       </section>`;
   }
 
+  private resetSaveSettingMarkup(): string {
+    if (this.resetConfirming) {
+      return `<div class="setting-option setting-reset is-confirming">
+              <span class="setting-copy"><strong>Reset save?</strong><small>This clears progress and cannot be undone.</small></span>
+              <div class="setting-reset-actions">
+                <button type="button" data-action="cancel-reset-save">Cancel</button>
+                <button type="button" data-action="reset-save">Reset</button>
+              </div>
+            </div>`;
+    }
+    return `<button class="setting-option settings-link setting-reset" type="button" data-action="confirm-reset-save">
+              <span class="setting-copy"><strong>Reset save</strong><small>Clear progress and restart the tutorial.</small></span>
+              <span class="menu-arrow" aria-hidden="true">→</span>
+            </button>`;
+  }
+
   private settingsScreen(): string {
     const settings = this.save.settings;
     const entryClass = this.overlaySource === "title" ? " is-title-entry" : "";
@@ -802,6 +829,7 @@ export class Game {
               <span class="setting-copy"><strong>Controls</strong><small>Review or rebind every action.</small></span>
               <span class="menu-arrow" aria-hidden="true">→</span>
             </button>
+            ${this.resetSaveSettingMarkup()}
           </div>
           <button class="primary-button settings-done" type="button" data-action="back">
             <strong>Done</strong><span class="menu-arrow" aria-hidden="true">→</span>
@@ -1042,6 +1070,7 @@ export class Game {
     const willPlay = this.started && next === null;
     this.overlaySource = this.overlay;
     this.overlay = next;
+    if (next !== "settings") this.resetConfirming = false;
     if (wasPlaying && !willPlay) this.platform.gameplayStop();
     if (!wasPlaying && willPlay) this.platform.gameplayStart();
     this.renderOverlay();
@@ -1052,6 +1081,7 @@ export class Game {
   }
 
   private resetSave(): void {
+    this.resetConfirming = false;
     this.save.progress = defaultSave().progress;
     saveGame(this.platform.saveStorage, this.save);
     this.simulation = createSimulation(7, this.save.progress);
@@ -1064,6 +1094,7 @@ export class Game {
     this.pendingCargoRelease = null;
     this.questGuide = null;
     this.lastQuestMarkup = "";
+    this.setOverlay("title");
     this.showToast("Save reset. Play to start the first assignment.");
   }
 
@@ -1081,6 +1112,11 @@ export class Game {
     const nextIndex = sectionOrder.indexOf(section);
     this.harborSection = section;
     this.marketDetailOpen = false;
+    if (section === "services") {
+      const previousUpgradeStep = this.simulation.progress.upgradeTutorialStep;
+      noteUpgradeServicesOpened(this.simulation);
+      if (previousUpgradeStep !== this.simulation.progress.upgradeTutorialStep) this.syncSave();
+    }
     this.renderOverlay();
 
     const content = this.uiRoot.querySelector<HTMLElement>(".harbor-content");
@@ -1107,6 +1143,7 @@ export class Game {
       marketEarnings: this.simulation.progress.marketEarnings,
       marketTarget: this.simulation.progress.marketTarget,
       marketTutorialStep: this.simulation.progress.marketTutorialStep,
+      upgradeTutorialStep: this.simulation.progress.upgradeTutorialStep,
       seasonCompleted: this.simulation.progress.seasonCompleted,
     };
     saveGame(this.platform.saveStorage, this.save);
@@ -1235,7 +1272,16 @@ export class Game {
         this.dismissDeliveryNotification();
         break;
       case "start": this.beginVoyage(); break;
+      case "confirm-reset-save":
+        this.resetConfirming = true;
+        this.renderOverlay();
+        break;
+      case "cancel-reset-save":
+        this.resetConfirming = false;
+        this.renderOverlay();
+        break;
       case "reset-save":
+        if (!this.resetConfirming) break;
         this.resetSave();
         break;
       case "interact": this.handleInteract(); break;
@@ -1487,6 +1533,13 @@ export class Game {
         resolveCatch(this.simulation, species);
         this.handleSimulationEvents();
         this.refreshHud();
+      },
+      grantMoney: (amount) => {
+        this.simulation.progress.money = Math.max(0, this.simulation.progress.money + Math.max(0, Math.floor(amount)));
+        syncUpgradeTutorial(this.simulation);
+        this.syncSave();
+        this.refreshHud();
+        if (this.overlay === "harbor") this.renderOverlay();
       },
       discoverAllFish: () => {
         for (const species of Object.keys(FISH) as FishSpecies[]) {

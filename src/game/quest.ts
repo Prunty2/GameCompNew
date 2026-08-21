@@ -1,6 +1,8 @@
 import { BALANCE } from "./balance";
 import {
+  cheapestAffordableUpgrade,
   getInteractionPrompt,
+  isUpgradeTutorialActive,
   navigationGuidance,
   type MarketTutorialStep,
   type Simulation,
@@ -34,13 +36,16 @@ export interface QuestRect {
   height: number;
 }
 
+export type QuestGuideStep = MarketTutorialStep | "upgrade-open" | "upgrade-buy";
+
 export interface QuestPresentation {
   active: boolean;
   hidden: boolean;
-  step: MarketTutorialStep;
+  step: QuestGuideStep;
   heading: string;
   title: string;
   index: number;
+  totalSteps: number;
   uiTargetSelector: string | null;
   worldFollow: boolean;
   hookFollow: boolean;
@@ -78,42 +83,70 @@ export function questPresentation(
   simulation: Simulation,
   view: QuestViewContext,
 ): QuestPresentation {
-  const step = simulation.progress.marketTutorialStep;
-  const hidden = step === "done" || isQuestScreenHidden(view);
-  if (step === "done") {
-    return idlePresentation("done", true);
-  }
-
-  const copy = QUEST_COPY[step];
-  if (hidden) {
+  const assignmentStep = simulation.progress.marketTutorialStep;
+  const screenHidden = isQuestScreenHidden(view);
+  if (
+    assignmentStep === "inspect"
+    || assignmentStep === "track"
+    || assignmentStep === "catch"
+    || assignmentStep === "sell"
+  ) {
+    const copy = QUEST_COPY[assignmentStep];
+    if (screenHidden) {
+      return {
+        active: false,
+        hidden: true,
+        step: assignmentStep,
+        heading: "Tutorial",
+        title: copy.title,
+        index: copy.index,
+        totalSteps: 4,
+        uiTargetSelector: null,
+        worldFollow: false,
+        hookFollow: false,
+      };
+    }
     return {
-      active: false,
-      hidden: true,
-      step,
+      active: true,
+      hidden: false,
+      step: assignmentStep,
       heading: "Tutorial",
       title: copy.title,
       index: copy.index,
-      uiTargetSelector: null,
-      worldFollow: false,
-      hookFollow: false,
+      totalSteps: 4,
+      uiTargetSelector: questUiTargetSelector(simulation, view, assignmentStep),
+      worldFollow: shouldFollowWorld(simulation, view),
+      hookFollow: shouldFollowHook(simulation),
     };
   }
 
+  if (!isUpgradeTutorialActive(simulation) || screenHidden) {
+    return idlePresentation("done", true);
+  }
+
+  const upgrade = cheapestAffordableUpgrade(simulation);
+  const onServices = view.overlay === "harbor" && view.harborSection === "services";
+  const step: QuestGuideStep = onServices || simulation.progress.upgradeTutorialStep === "buy"
+    ? "upgrade-buy"
+    : "upgrade-open";
+  const onLake = view.overlay === null;
   return {
     active: true,
     hidden: false,
     step,
     heading: "Tutorial",
-    title: copy.title,
-    index: copy.index,
-    uiTargetSelector: questUiTargetSelector(simulation, view, step),
-    worldFollow: shouldFollowWorld(simulation, view, step),
-    hookFollow: shouldFollowHook(simulation, step),
+    title: step === "upgrade-buy" ? "Buy upgrade" : onLake ? "Dock harbor" : "Open services",
+    index: step === "upgrade-buy" ? 2 : 1,
+    totalSteps: 2,
+    uiTargetSelector: upgradeUiTargetSelector(simulation, view, step, upgrade),
+    worldFollow: shouldFollowWorld(simulation, view),
+    hookFollow: false,
   };
 }
 
 export function questFollowArrows(simulation: Simulation): QuestFollowArrow[] {
-  if (!isWorldFollowStep(simulation.progress.marketTutorialStep) || simulation.dockedAt) {
+  if (simulation.dockedAt) return [];
+  if (!isUpgradeTutorialActive(simulation) && !isWorldFollowStep(simulation.progress.marketTutorialStep)) {
     return [];
   }
   if (simulation.mode !== "cruising") return [];
@@ -140,7 +173,7 @@ export function questFollowArrows(simulation: Simulation): QuestFollowArrow[] {
 }
 
 export function questHookTargetIndex(simulation: Simulation): number | null {
-  if (!shouldFollowHook(simulation, simulation.progress.marketTutorialStep)) return null;
+  if (!shouldFollowHook(simulation)) return null;
   const fishing = simulation.fishing;
   if (!fishing) return null;
   const targetSpecies = simulation.progress.marketTarget ?? "bluegill";
@@ -243,13 +276,33 @@ function questUiTargetSelector(
   return null;
 }
 
-function shouldFollowWorld(
+function upgradeUiTargetSelector(
   simulation: Simulation,
   view: QuestViewContext,
-  step: MarketTutorialStep,
-): boolean {
+  step: QuestGuideStep,
+  upgrade: ReturnType<typeof cheapestAffordableUpgrade>,
+): string | null {
+  if (view.overlay === "harbor") {
+    if (step === "upgrade-buy" && upgrade) {
+      return `[data-action="buy-upgrade"][data-upgrade="${upgrade}"]`;
+    }
+    if (view.harborSection !== "services") {
+      return '[data-action="harbor-section"][data-harbor-section="services"]';
+    }
+  }
+  if (view.overlay === null && simulation.mode === "cruising") {
+    const prompt = getInteractionPrompt(simulation);
+    if (prompt?.kind === "harbor") return "#context-action";
+  }
+  return null;
+}
+
+function shouldFollowWorld(simulation: Simulation, view: QuestViewContext): boolean {
   if (view.overlay !== null || simulation.mode !== "cruising" || simulation.dockedAt) return false;
-  if (!isWorldFollowStep(step)) return false;
+  if (isUpgradeTutorialActive(simulation)) {
+    return Math.abs(navigationGuidance(simulation).point.x - simulation.boat.x) > worldArrivalRadius(simulation);
+  }
+  if (!isWorldFollowStep(simulation.progress.marketTutorialStep)) return false;
   return Math.abs(navigationGuidance(simulation).point.x - simulation.boat.x) > worldArrivalRadius(simulation);
 }
 
@@ -259,8 +312,8 @@ function worldArrivalRadius(simulation: Simulation): number {
   return radius + WORLD_ARRIVAL_PADDING;
 }
 
-function shouldFollowHook(simulation: Simulation, step: MarketTutorialStep): boolean {
-  return step === "catch"
+function shouldFollowHook(simulation: Simulation): boolean {
+  return simulation.progress.marketTutorialStep === "catch"
     && simulation.mode === "fishing"
     && simulation.fishing !== null
     && simulation.fishing.reeling === null
@@ -282,7 +335,7 @@ function isQuestScreenHidden(view: QuestViewContext): boolean {
     || view.overlay === "seasonReport";
 }
 
-function idlePresentation(step: MarketTutorialStep, hidden: boolean): QuestPresentation {
+function idlePresentation(step: QuestGuideStep, hidden: boolean): QuestPresentation {
   return {
     active: false,
     hidden,
@@ -290,6 +343,7 @@ function idlePresentation(step: MarketTutorialStep, hidden: boolean): QuestPrese
     heading: "",
     title: "",
     index: 0,
+    totalSteps: 0,
     uiTargetSelector: null,
     worldFollow: false,
     hookFollow: false,

@@ -4395,31 +4395,6 @@ kbd {
   user-select: none;
 }
 
-.title-screen button.title-reset-save {
-  position: absolute;
-  right: max(14px, env(safe-area-inset-right));
-  bottom: max(10px, env(safe-area-inset-bottom));
-  min-height: 36px;
-  padding: 6px 11px;
-  border: 1px solid rgb(247 241 227 / 24%);
-  border-radius: 8px;
-  background: rgb(4 20 27 / 42%);
-  color: rgb(247 241 227 / 78%);
-  cursor: pointer;
-  font: inherit;
-  font-size: clamp(0.64rem, 1.4vw, 0.72rem);
-  font-weight: 750;
-  letter-spacing: 0.04em;
-  line-height: 1;
-  text-shadow: 0 1px 3px rgb(2 15 21 / 80%);
-}
-
-.title-screen button.title-reset-save:hover,
-.title-screen button.title-reset-save:focus-visible {
-  border-color: rgb(241 172 80 / 70%);
-  color: #f7f1e3;
-}
-
 @media (max-height: 650px) {
   .title-panel {
     transform: translateY(-2vh);
@@ -4851,10 +4826,48 @@ kbd {
   width: min(132px, 15vw);
 }
 
-.settings-panel.settings-menu .settings-link {
+.settings-panel.settings-menu .settings-link,
+.settings-panel.settings-menu .setting-reset {
   grid-column: 1 / -1;
   min-height: 52px;
   border-radius: 12px;
+}
+
+.settings-panel.settings-menu .setting-reset-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.settings-panel.settings-menu .setting-reset-actions button {
+  min-height: 36px;
+  padding: 6px 14px;
+  border: 1px solid rgb(247 241 227 / 48%);
+  border-radius: 10px;
+  background: rgb(3 15 24 / 70%);
+  color: var(--menu-paper);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.settings-panel.settings-menu .setting-reset-actions button:hover,
+.settings-panel.settings-menu .setting-reset-actions button:focus-visible {
+  border-color: var(--menu-paper);
+}
+
+.settings-panel.settings-menu .setting-reset-actions [data-action="reset-save"] {
+  border-color: var(--menu-signal);
+  background: var(--menu-signal);
+  color: #071824;
+}
+
+.settings-panel.settings-menu .setting-reset-actions [data-action="reset-save"]:hover,
+.settings-panel.settings-menu .setting-reset-actions [data-action="reset-save"]:focus-visible {
+  border-color: #ffd27a;
+  background: #ffd27a;
 }
 
 .settings-panel.settings-menu .settings-done {
@@ -4907,6 +4920,7 @@ kbd {
   }
 
   .settings-panel.settings-menu .settings-link,
+  .settings-panel.settings-menu .setting-reset,
   .settings-panel.settings-menu .settings-done {
     min-height: 46px;
   }

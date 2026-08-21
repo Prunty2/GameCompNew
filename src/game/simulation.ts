@@ -88,10 +88,14 @@ export interface ProgressState {
   marketEarnings: number;
   marketTarget: FishSpecies | null;
   marketTutorialStep: MarketTutorialStep;
+  upgradeTutorialStep: UpgradeTutorialStep;
   seasonCompleted: boolean;
 }
 
 export type MarketTutorialStep = "inspect" | "track" | "catch" | "sell" | "complete" | "done";
+export type UpgradeTutorialStep = "locked" | "open-services" | "buy" | "done";
+
+const CORE_UPGRADES: UpgradeId[] = ["line", "cargo", "engine", "lamp"];
 
 export interface MarketSaleResult {
   species: FishSpecies;
@@ -232,6 +236,11 @@ export function createSimulation(seed = 1, progress?: Partial<ProgressState>): S
       : progress?.completedContracts && progress.completedContracts > 0
         ? "done"
         : "inspect",
+    upgradeTutorialStep: isUpgradeTutorialStep(progress?.upgradeTutorialStep)
+      ? progress.upgradeTutorialStep
+      : hasPurchasedProgression(progress)
+        ? "done"
+        : "locked",
     seasonCompleted: progress?.seasonCompleted === true,
   };
   const simulation: Simulation = {
@@ -499,7 +508,8 @@ export function sellSpeciesAtMarket(
     simulation.progress.marketTutorialStep === "sell"
     && simulation.progress.marketTarget === species
   ) {
-    simulation.progress.marketTutorialStep = "complete";
+    simulation.progress.marketTutorialStep = "done";
+    syncUpgradeTutorial(simulation);
   }
   simulation.events.push({ type: "sold", result });
   if (!simulation.progress.seasonCompleted && simulation.progress.marketSales >= SEASON_SALES) {
@@ -511,10 +521,62 @@ export function sellSpeciesAtMarket(
 
 export function finishMarketTutorial(simulation: Simulation): void {
   simulation.progress.marketTutorialStep = "done";
+  syncUpgradeTutorial(simulation);
 }
 
 export function skipMarketTutorial(simulation: Simulation): void {
-  simulation.progress.marketTutorialStep = "done";
+  if (!isFirstAssignmentFinished(simulation)) {
+    simulation.progress.marketTutorialStep = "done";
+    syncUpgradeTutorial(simulation);
+    return;
+  }
+  if (isUpgradeTutorialActive(simulation)) {
+    simulation.progress.upgradeTutorialStep = "done";
+  }
+}
+
+export function syncUpgradeTutorial(simulation: Simulation): void {
+  if (simulation.progress.upgradeTutorialStep === "done") return;
+  if (!isFirstAssignmentFinished(simulation)) return;
+  if (simulation.progress.upgradeTutorialStep === "buy") return;
+  if (!cheapestAffordableUpgrade(simulation)) return;
+  if (simulation.progress.upgradeTutorialStep === "locked") {
+    simulation.progress.upgradeTutorialStep = "open-services";
+  }
+}
+
+export function noteUpgradeServicesOpened(simulation: Simulation): void {
+  if (simulation.progress.upgradeTutorialStep === "open-services") {
+    simulation.progress.upgradeTutorialStep = "buy";
+  }
+}
+
+export function cheapestAffordableUpgrade(simulation: Simulation): UpgradeId | null {
+  let best: { id: UpgradeId; cost: number } | null = null;
+  for (const id of CORE_UPGRADES) {
+    const tier = simulation.progress.upgrades[id];
+    if (tier >= upgradeTierCap(id)) continue;
+    const cost = upgradeCost(id, tier);
+    if (simulation.progress.money < cost) continue;
+    if (!best || cost < best.cost) best = { id, cost };
+  }
+  return best?.id ?? null;
+}
+
+export function isFirstAssignmentFinished(simulation: Simulation): boolean {
+  return simulation.progress.marketTutorialStep === "done"
+    || simulation.progress.marketTutorialStep === "complete";
+}
+
+export function isUpgradeTutorialActive(simulation: Simulation): boolean {
+  return simulation.progress.upgradeTutorialStep === "open-services"
+    || simulation.progress.upgradeTutorialStep === "buy";
+}
+
+function completeUpgradeTutorial(simulation: Simulation): void {
+  if (isUpgradeTutorialActive(simulation)) {
+    simulation.progress.upgradeTutorialStep = "done";
+  }
 }
 
 export function acceptAvailableContract(simulation: Simulation): boolean {
@@ -608,6 +670,7 @@ export function buyUpgrade(simulation: Simulation, upgrade: UpgradeId): boolean 
   if (tier >= upgradeTierCap(upgrade) || simulation.progress.money < cost || !simulation.dockedAt) return false;
   simulation.progress.money -= cost;
   simulation.progress.upgrades[upgrade] += 1;
+  completeUpgradeTutorial(simulation);
   simulation.events.push({ type: "upgrade", upgrade });
   return true;
 }
@@ -616,6 +679,7 @@ export function buyPermit(simulation: Simulation): boolean {
   if (!simulation.dockedAt || simulation.progress.outerUnlocked || simulation.progress.money < BALANCE.permitCost) return false;
   simulation.progress.money -= BALANCE.permitCost;
   simulation.progress.outerUnlocked = true;
+  completeUpgradeTutorial(simulation);
   simulation.events.push({ type: "permit" });
   return true;
 }
@@ -624,6 +688,7 @@ export function buyBeachAccess(simulation: Simulation): boolean {
   if (!simulation.dockedAt || simulation.progress.beachUnlocked || simulation.progress.money < BALANCE.beachAccessCost) return false;
   simulation.progress.money -= BALANCE.beachAccessCost;
   simulation.progress.beachUnlocked = true;
+  completeUpgradeTutorial(simulation);
   simulation.events.push({ type: "beach-unlocked" });
   return true;
 }
@@ -643,6 +708,7 @@ export function buyBoost(simulation: Simulation): boolean {
   if (!simulation.dockedAt || simulation.progress.boostUnlocked || simulation.progress.money < BALANCE.boostUnlockCost) return false;
   simulation.progress.money -= BALANCE.boostUnlockCost;
   simulation.progress.boostUnlocked = true;
+  completeUpgradeTutorial(simulation);
   simulation.events.push({ type: "boost-unlocked", temporary: false });
   return true;
 }
@@ -749,6 +815,16 @@ export function navigationGuidance(simulation: Simulation): NavigationGuidance {
     };
   }
 
+  if (isUpgradeTutorialActive(simulation)) {
+    const harbor = closestHarbor(simulation);
+    return {
+      point: harbor,
+      label: harbor.name,
+      kicker: "UPGRADE AT",
+      instruction: harborInstruction(simulation, harbor, "open Dock Services and buy an upgrade"),
+    };
+  }
+
   if (!target) {
     const harbor = closestHarbor(simulation);
     return {
@@ -796,7 +872,7 @@ export function navigationGuidance(simulation: Simulation): NavigationGuidance {
 }
 
 export function tutorialPrompt(simulation: Simulation): string | null {
-  if (simulation.progress.marketTutorialStep === "done") return null;
+  if (simulation.progress.marketTutorialStep === "done" || simulation.progress.marketTutorialStep === "complete") return null;
   if (simulation.mode === "fishing" && simulation.fishing) {
     if (simulation.fishing.reeling) {
       return `Reeling the ${FISH[simulation.fishing.reeling.species].name} to the boat.`;
@@ -811,7 +887,6 @@ export function tutorialPrompt(simulation: Simulation): string | null {
   }
   if (simulation.progress.marketTutorialStep === "inspect") return "Select Bluegill on the market board.";
   if (simulation.progress.marketTutorialStep === "track") return "Read the Bluegill details, then track it.";
-  if (simulation.progress.marketTutorialStep === "complete") return "First sale complete. Close the assignment when you are ready.";
   return navigationGuidance(simulation).instruction;
 }
 
@@ -1094,6 +1169,25 @@ function isMarketTutorialStep(value: unknown): value is MarketTutorialStep {
     || value === "sell"
     || value === "complete"
     || value === "done";
+}
+
+function isUpgradeTutorialStep(value: unknown): value is UpgradeTutorialStep {
+  return value === "locked"
+    || value === "open-services"
+    || value === "buy"
+    || value === "done";
+}
+
+function hasPurchasedProgression(progress: Partial<ProgressState> | undefined): boolean {
+  if (!progress) return false;
+  const upgrades = progress.upgrades;
+  return (upgrades?.cargo ?? 0) > 0
+    || (upgrades?.engine ?? 0) > 0
+    || (upgrades?.lamp ?? 0) > 0
+    || (upgrades?.line ?? 0) > 0
+    || progress.boostUnlocked === true
+    || progress.beachUnlocked === true
+    || progress.outerUnlocked === true;
 }
 
 function pushEventOnce(simulation: Simulation, event: SimulationEvent): void {
