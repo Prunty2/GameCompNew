@@ -11,6 +11,13 @@ async function bootstrap(): Promise<void> {
   const uiRoot = document.querySelector<HTMLElement>("#ui-root");
   if (!canvas || !uiRoot) throw new Error("The game shell is missing required elements.");
 
+  if (import.meta.env.DEV && new URLSearchParams(window.location.search).has("cargoPrototype")) {
+    const { mountCargoPrototype } = await import("./prototypes/cargoPrototype");
+    canvas.hidden = true;
+    mountCargoPrototype(uiRoot);
+    return;
+  }
+
   uiRoot.innerHTML = `<div class="loading" role="status">Loading game…</div>`;
   const platform = new PlatformService();
   await platform.initialize();
