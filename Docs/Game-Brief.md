@@ -183,7 +183,9 @@ Saved as `marketTutorialStep`. Skip is always available. The prompt is a top-cen
 
 The sale ends the assignment. Older saves with `completedContracts > 0` or leftover `complete` load as `done`.
 
-When the player can afford the cheapest dock upgrade (Line depth at 55 shells), `upgradeTutorialStep` opens a second pill: **Open services**, then **Buy upgrade**. Closing it skips only this lesson. Settings **Reset save** asks for confirmation, clears progress, and stays on Settings.
+If the player returns from the Bluegill detail before tracking it, the assignment returns to **Choose Bluegill** so the visible directions always match the available action. Untracking Bluegill before catching it likewise returns the assignment to **Track the catch**.
+
+When the player can afford the cheapest dock upgrade (Line depth at 55 shells), `upgradeTutorialStep` opens a second five-step pill: **Open services**, **Buy line depth**, **Return to lake**, **Sail to Mosswater**, then **Drop the line** at Mosswater Pool. The final three steps demonstrate that line tier 1 unlocks fishing at the middle spot. Closing the pill skips only this lesson. Settings **Reset save** asks for confirmation, clears progress, and stays on Settings.
 
 ## Controls
 

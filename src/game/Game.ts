@@ -59,6 +59,7 @@ import {
   buyPermit,
   buyUpgrade,
   cargoCapacity,
+  closeMarketSpeciesDetail,
   consumeEvents,
   createSimulation,
   damageBoat,
@@ -1387,8 +1388,13 @@ export class Game {
         break;
       }
       case "close-market-fish-detail": {
+        if (this.selectedMarketSpecies) {
+          closeMarketSpeciesDetail(this.simulation, this.selectedMarketSpecies);
+          this.syncSave();
+        }
         this.marketDetailOpen = false;
         this.renderOverlay();
+        this.refreshQuestGuide();
         requestAnimationFrame(() => {
           this.uiRoot.querySelector<HTMLButtonElement>(`[data-action="select-market-fish"][data-species="${this.selectedMarketSpecies}"]`)?.focus({ preventScroll: true });
         });

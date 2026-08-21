@@ -207,13 +207,37 @@ describe("first-assignment quest prototype", () => {
 
     const buy = questPresentation(simulation, { ...harborView, harborSection: "services" });
     expect(buy).toMatchObject({
-      title: "Buy upgrade",
+      title: "Buy line depth",
       index: 2,
       uiTargetSelector: '[data-action="buy-upgrade"][data-upgrade="line"]',
     });
 
     expect(buyUpgrade(simulation, "line")).toBe(true);
-    expect(questPresentation(simulation, { ...harborView, harborSection: "services" }).hidden).toBe(true);
+    expect(questPresentation(simulation, { ...harborView, harborSection: "services" })).toMatchObject({
+      title: "Return to lake",
+      index: 3,
+      totalSteps: 5,
+      uiTargetSelector: '[data-action="undock"]',
+    });
+
+    undock(simulation);
+    expect(questPresentation(simulation, playView)).toMatchObject({
+      title: "Sail to Mosswater",
+      index: 4,
+      totalSteps: 5,
+      worldFollow: true,
+    });
+
+    moveBoatForTesting(simulation, spotById("mosswaterPool"));
+    expect(questPresentation(simulation, playView)).toMatchObject({
+      title: "Drop the line",
+      index: 5,
+      totalSteps: 5,
+      uiTargetSelector: "#context-action",
+    });
+
+    expect(startFishing(simulation, "mosswaterPool")).toBe(true);
+    expect(questPresentation(simulation, playView).hidden).toBe(true);
   });
 
   test("guides an upgrade run back to harbor from the lake", () => {
