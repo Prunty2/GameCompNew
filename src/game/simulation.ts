@@ -463,6 +463,10 @@ export function inspectMarketSpecies(simulation: Simulation, species: FishSpecie
 export function trackMarketSpecies(simulation: Simulation, species: FishSpecies): boolean {
   const worldSpecies = Object.values(WORLD_SPOT_RESIDENTS[simulation.world]).flat();
   if (!simulation.progress.discovered.includes(species) || !worldSpecies.includes(species)) return false;
+  if (simulation.progress.marketTarget === species) {
+    simulation.progress.marketTarget = null;
+    return true;
+  }
   simulation.progress.marketTarget = species;
   if (simulation.progress.marketTutorialStep === "track" && species === "bluegill") {
     simulation.progress.marketTutorialStep = "catch";
@@ -737,8 +741,11 @@ export function fogIntensity(simulation: Simulation): number {
   return Math.min(0.9, Math.max(0, Math.sin((phase - 0.18) * Math.PI * 2)) * 0.72 * condition.fogMultiplier);
 }
 
-export function navigationGuidance(simulation: Simulation): NavigationGuidance {
+export function navigationGuidance(simulation: Simulation): NavigationGuidance | null {
   const target = simulation.progress.marketTarget;
+  const tutorialActive = simulation.progress.marketTutorialStep !== "done";
+  if (!target && !tutorialActive) return null;
+
   if (simulation.cargo.length >= cargoCapacity(simulation)) {
     const harbor = closestHarbor(simulation);
     return {
@@ -812,7 +819,7 @@ export function tutorialPrompt(simulation: Simulation): string | null {
   if (simulation.progress.marketTutorialStep === "inspect") return "Select Bluegill on the market board.";
   if (simulation.progress.marketTutorialStep === "track") return "Read the Bluegill details, then track it.";
   if (simulation.progress.marketTutorialStep === "complete") return "First sale complete. Close the assignment when you are ready.";
-  return navigationGuidance(simulation).instruction;
+  return navigationGuidance(simulation)?.instruction ?? null;
 }
 
 export function consumeEvents(simulation: Simulation): SimulationEvent[] {

@@ -1173,6 +1173,7 @@ export class CanvasRenderer {
   ): void {
     if (opacityMultiplier <= 0) return;
     const goal = navigationGuidance(simulation);
+    if (!goal) return;
     const distance = Math.abs(goal.point.x - simulation.boat.x);
     const opacity = objectiveIndicatorOpacity(distance, BALANCE.fishingRadius);
     if (opacity <= 0) return;

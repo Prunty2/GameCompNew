@@ -133,7 +133,7 @@ describe("FSHING side-on simulation", () => {
     undock(spoiled);
     spoiled.cargo = [{ species: "bluegill", freshness: 0 }];
     expect(navigationGuidance(spoiled)).toMatchObject({ kicker: "FISH AT", label: "Sunward Shoal" });
-    expect(navigationGuidance(spoiled).instruction).toContain("catch a Bluegill");
+    expect(navigationGuidance(spoiled)?.instruction).toContain("catch a Bluegill");
 
     const full = createSimulation();
     trackMarketSpecies(full, "bluegill");
@@ -144,16 +144,49 @@ describe("FSHING side-on simulation", () => {
       { species: "northernPike", freshness: 100 },
     ];
     expect(navigationGuidance(full)).toMatchObject({ kicker: "MANAGE CARGO", label: "Brindle Harbor" });
-    expect(navigationGuidance(full).instruction).toContain("sell or release a catch");
+    expect(navigationGuidance(full)?.instruction).toContain("sell or release a catch");
   });
 
-  test("uses the nearest harbor when no species is tracked", () => {
+  test("uses the nearest harbor when the first assignment is active and no species is tracked", () => {
     const simulation = createSimulation();
     simulation.availableContract = null;
     undock(simulation);
     simulation.boat.x = 0.89;
     expect(navigationGuidance(simulation)).toMatchObject({ kicker: "MARKET AT", label: "Gloam Ferry" });
-    expect(navigationGuidance(simulation).instruction).toContain("choose a fish to track");
+    expect(navigationGuidance(simulation)?.instruction).toContain("choose a fish to track");
+  });
+
+  test("hides navigation guidance after the tutorial unless a fish is tracked", () => {
+    const simulation = createSimulation(1, { marketTutorialStep: "done" });
+    undock(simulation);
+    expect(navigationGuidance(simulation)).toBeNull();
+
+    const full = createSimulation(1, { marketTutorialStep: "done" });
+    undock(full);
+    full.cargo = [
+      { species: "yellowPerch", freshness: 100 },
+      { species: "emeraldShiner", freshness: 100 },
+      { species: "northernPike", freshness: 100 },
+    ];
+    expect(navigationGuidance(full)).toBeNull();
+
+    expect(trackMarketSpecies(simulation, "bluegill")).toBe(true);
+    expect(navigationGuidance(simulation)).toMatchObject({ kicker: "FISH AT", label: "Sunward Shoal" });
+  });
+
+  test("untracks a market species when it is tracked again", () => {
+    const simulation = createSimulation(1, {
+      marketTutorialStep: "done",
+      discovered: ["bluegill", "yellowPerch"],
+    });
+    expect(trackMarketSpecies(simulation, "bluegill")).toBe(true);
+    expect(simulation.progress.marketTarget).toBe("bluegill");
+    expect(trackMarketSpecies(simulation, "yellowPerch")).toBe(true);
+    expect(simulation.progress.marketTarget).toBe("yellowPerch");
+    expect(trackMarketSpecies(simulation, "yellowPerch")).toBe(true);
+    expect(simulation.progress.marketTarget).toBeNull();
+    undock(simulation);
+    expect(navigationGuidance(simulation)).toBeNull();
   });
 
   test("blends region surface tints across ecosystem boundaries", () => {

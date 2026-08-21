@@ -429,7 +429,7 @@ export class Game {
 
     const guidance = navigationGuidance(simulation);
     const navigationStatus = this.uiRoot.querySelector<HTMLElement>(".navigation-status");
-    const navigationStatusText = this.overlay === null && simulation.mode === "cruising"
+    const navigationStatusText = this.overlay === null && simulation.mode === "cruising" && guidance
       ? `${guidance.kicker} ${guidance.label}. ${guidance.instruction}`
       : "";
     if (navigationStatus && navigationStatus.textContent !== navigationStatusText) {
@@ -1223,12 +1223,15 @@ export class Game {
       }
       case "track-market-fish": {
         const species = target.dataset.species as FishSpecies | undefined;
+        const untracking = species !== undefined && this.simulation.progress.marketTarget === species;
         if (!species || !(species in FISH) || !trackMarketSpecies(this.simulation, species)) break;
         this.selectedMarketSpecies = species;
         this.syncSave();
         this.renderOverlay();
         this.refreshMarketTutorial();
-        this.showToast(`${FISH[species].name} tracked. The navigation marker now points to its fishing ground.`);
+        this.showToast(untracking
+          ? `${FISH[species].name} untracked.`
+          : `${FISH[species].name} tracked. The navigation marker now points to its fishing ground.`);
         break;
       }
       case "sell-market-fish": {
