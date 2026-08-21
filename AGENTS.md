@@ -33,6 +33,8 @@ Files that commonly affect many systems require explicit coordination before edi
 - `Docs/Game-Brief.md`
 - `src/game/Game.ts`
 - `src/game/simulation.ts`
+- `src/game/balance.ts`
+- `src/game/market.ts`
 - `src/game/input.ts`
 - `src/game/renderer.ts`
 - `src/styles.css`
@@ -116,14 +118,16 @@ Run `npm run check` before finishing code changes. Also run `npm run build` for 
 ## Architecture
 
 - `src/main.ts` owns startup and dependency wiring only.
-- `src/game/Game.ts` coordinates lifecycle and high-level state; keep rules out of this file.
+- `src/game/Game.ts` coordinates lifecycle, overlays, and HUD; keep rules out of this file.
 - `src/game/simulation.ts` owns deterministic world state and fixed-step updates.
-- `src/game/input.ts` translates browser input into game-level intent.
-- `src/game/renderer.ts` draws state but must not change it.
+- `src/game/balance.ts` owns species, spots, harbors, costs, and motion constants.
+- `src/game/market.ts` owns quotes, history, and freshness sale math; `src/game/marketView.ts` owns market HTML.
+- `src/game/input.ts` and `src/game/controls.ts` translate browser input into game-level intent.
+- `src/game/renderer.ts` draws state but must not change it. Surface framing lives in `camera.ts` and `panorama.ts`; fishing presentation lives in `fishingMovement.ts`, `fishingPresentation.ts`, and `fishingReeling.ts`.
 - `src/services/platformService.ts` is the only CrazyGames SDK boundary.
 - `src/services/saveGame.ts` owns versioned, validated persistence.
 - `src/tests/` contains model and simulation tests; `e2e/` contains user-flow tests.
-- `Docs/` is the source of truth for product, balance, and technical decisions.
+- `Docs/Game-Brief.md` is the source of truth for the playable product and balance. `Docs/` also holds the asset manifest and assessment portfolio.
 
 Split new systems by responsibility as the design becomes concrete. Avoid recreating the oversized all-in-one coordinator, renderer, simulation, or stylesheet modules found in the reference project.
 

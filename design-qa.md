@@ -1,109 +1,44 @@
-# Fishing Cross-Section Refinement — Design QA
+# FSHING visual and interface notes
 
-## Visual truth and state
+This file describes the playable presentation in `v0.4.3`. It replaces earlier QA logs that documented delivery-job route cards, water surveys, the field guide, and fantasy species names (Reedfin, Sun Perch, and the rest of that set).
 
-- Source visual truth: `/Users/liam/.codex/generated_images/019fd968-1e5a-7d93-8ae7-eb2d82bb84b8/exec-4d585b59-3cb4-4e4a-aa81-88ea61a82a6a.png`.
-- Desktop implementation: `/Users/liam/.codex/visualizations/2026/08/07/fishing-species-movement/implementation-desktop.png`.
-- Mobile implementation: `/Users/liam/.codex/visualizations/2026/08/07/fishing-species-movement/implementation-mobile.png`.
-- Full comparison: `/Users/liam/.codex/visualizations/2026/08/07/fishing-species-movement/full-comparison.png`.
-- Focused movement comparison: `/Users/liam/.codex/visualizations/2026/08/07/fishing-species-movement/movement-frames.png`.
-- Source size: 1586 × 992 pixels, normalized to 1440 × 900 for the desktop comparison.
-- Implementation sizes: 1440 × 900 and 844 × 390 CSS pixels at DPR 1.
-- State: settled Sunward Shoal fishing view, Reedfin common-rarity target, normal contrast and motion, tutorial and status toast dismissed. Desktop was captured in daytime; the supplementary mobile view was captured after the same running simulation reached night.
+## Screens that exist
 
-## Findings
+- **Title.** Centred wordmark, Play, Settings, Credits, build label `v0.4.3 (PR #85)` in the corner. No tagline, no How to play, no control summary. The lake panorama runs behind the panel in cinematic mode.
+- **Harbor.** Dock photograph for Brindle or Gloam (day/night plates). Beach docks use the Beach panorama instead. Three tabs: Market, Cargo, Services. Footer: Help, Return to Lake or Beach.
+- **Market catalogue.** Nine cards. Undiscovered cards are darkened with a `?`. Discovered cards show species art, name, price, optional cargo count, and a tracking badge.
+- **Market detail.** Species art, current-harbor price, Track, Sell, 7-day graph. No “Found at”, no supply pill, no second-harbor column.
+- **Cargo.** Up to ten slots. Occupied slots can be released. Locked slots open Services.
+- **Services.** Cargo, Engine, Lamp, Line, Engine boost, Beach, and Outer permit at Gloam only.
+- **Pause.** Compact centred menu: Resume, Settings, How to play, Title screen. Lake behind the menu is blurred.
+- **Settings / Controls.** Mute, volume, high contrast, reduced motion, seven remappable actions.
+- **Credits.** Liam, Saxon, Harrison, David, each with a decorative flag on hover.
+- **How to play.** Four cards on the harbor sheet.
+- **On water.** Destination badge, context dock/fish button, night moon, boost gauge after unlock. No HTML money HUD.
 
-No actionable P0, P1, or P2 issues remain in the refined state.
+## Fishing view
 
-## Comparison history
+- Dive lasts 0.85 s. Settled waterline sits near 31% of the viewport; sailing waterline sits near 78%.
+- Each site uses its own underwater painting. Beach maps surf / bay / reef art onto the same three spot ids.
+- Four line-limit floats and a short “upgrade line” label mark unreachable depth. There is no centre depth ruler.
+- The tracked fish (or the site's primary resident) gets a rarity-coloured outline and a specimen cue that is name-only.
+- Escape reels out and returns to sailing. It does not open pause.
+- Reduced motion skips dive/reel camera motion and body flex; fish still translate.
 
-1. **P2 — static fish:** the first build translated every fish along the same horizontal route and only added cosmetic bob, pitch, and body flex. All nine species now change their real simulation speed and depth using distinct deterministic profiles. The two-frame comparison shows Reedfin, Sun Perch, and Silver Dart changing both horizontal spacing and vertical position; reduced-motion mode removes only the secondary body flex.
-2. **P2 — camera settled too low:** the first build placed the waterline at 22% of the viewport, making the surface feel incidental. The settled waterline now sits at 31%, close to the selected mockup's upper-third framing, with the live boat and harbor remaining readable.
-3. **P2 — depth barrier too dense:** the first build repeated marker floats across the full width, creating a decorative bead row. The final boundary is a quieter low-opacity line with four small generated survey floats and a shortened mobile label.
-4. **P2 — redundant shape copy:** the specimen cue and fishing instruction repeated `Round body · fan fins`. The settled cue now shows only the fish sprite and `REEDFIN`, and the fishing instruction is reduced to `Guide the hook toward the Reedfin.` Shape language remains only in the preceding survey choice where it supports the prediction mechanic.
-5. **P2 — unnecessary depth meter:** the vertical ruler and `1 m`, `3 m`, and `6 m` labels added central clutter and implied precision the interaction does not use. The ruler is removed; the existing lower boundary remains the sole line-depth affordance.
+## Surface fishing grounds
 
-## Required fidelity surfaces
+Fishing spots are not labelled landmarks. Distant water shows faint school sprites. Approaching strengthens a polarized-water lens. The hook cue and the HTML drop-line button appear only inside the true interaction radius and follow the boat. Current captures: `Docs/screenshots/07-sailing.png`, `Docs/screenshots/09-fishing-cue.png`, `Docs/screenshots/08-fishing.png`.
 
-### Fonts and typography
+## Accessibility presentation
 
-The specimen name, boundary label, and movement hint retain the game's condensed, high-weight display treatment. Removing the specimen's secondary line and the three ruler labels restores a sparse hierarchy. Desktop copy remains legible without wrapping; mobile uses `UPGRADE LINE` to avoid collision with the leave control.
+- High contrast strengthens shoals, outlines, and night/fishing strokes.
+- Reduced motion kills menu wobble, scene-transition motion, decorative pulses, and boost camera pull.
+- Mobile and compact viewports have no on-screen move/boost/cast pads. Menus and the context action remain the pointer/touch path.
+- Colour is never the only signal for locked cards, depth gates, tracking, or sales.
 
-### Spacing and layout rhythm
+## Intentional mismatches with older mockups
 
-The waterline settles near the upper third, preserving the surface-world context while leaving a broad underwater play field. Removing the center ruler opens a clear route between the hook and moving fish. Hook, fish, sparse line boundary, and corner controls remain separated at 1440 × 900 and 844 × 390. No persistent control clips or overlaps.
-
-### Colors and visual tokens
-
-The live harbor and generated Sunward environment retain the reference's desaturated teal, cream, ink-navy, and restrained amber palette. Common target outlines remain warm ivory, and the quieter boundary no longer competes with that state color.
-
-### Image quality and asset fidelity
-
-The environment, boat, fish, hook, and four line markers are production raster assets with appropriate cropping and transparency. No visible matte edges, rectangular sprite bounds, scaling blur, or placeholder art appears in the verified views.
-
-### Copy and content
-
-The specimen cue contains only the species name, as requested. Fishing guidance no longer repeats the shape description. The survey retains shape language because it is evidence used by the species-prediction interaction rather than persistent fishing-screen chrome.
-
-### Motion, interaction, and accessibility
-
-Each species uses a deterministic movement profile that changes real horizontal speed, burst timing, and depth path. Reedfin cruise, Sun Perch climb in short darts, Silver Dart burst, Needle Pike glide level, Mossback drift, Lantern Eel weave, Gloam Gill hover and surge, Violet Ray arc broadly, and Abyss Crown lunge rarely. Target outlines and chevrons follow the moving state. Reduced-motion mode suppresses body flex but preserves gameplay movement. Keyboard and touch controls remain unchanged, and the Canvas accessible label still communicates site, target, and rarity.
-
-## Intentional differences
-
-- The implementation uses the live sailing panorama and camera, so the boat remains larger than the static concept boat.
-- Species, school positions, and animation phases are simulation-driven instead of baked into the background.
-- Four boundary floats replace the concept's longer float row in response to the refinement request.
-- The concept's depth ruler is intentionally absent in response to the latest refinement request.
-
-## Verification evidence
-
-- Full-view source and implementation comparison at 1440 × 900.
-- Two focused desktop frames captured 1.2 seconds apart to verify real horizontal and vertical fish displacement.
-- Mobile landscape capture at 844 × 390 with touch and leave controls visible.
-- Primary flow tested: play, accept contract, open survey, select Reedfin, enter fishing, dismiss instruction.
-- In-app browser console checked for warnings and errors.
-
-## Final severity audit
-
-- P0 blockers: none.
-- P1 fidelity or usability issues: none.
-- P2 polish issues: none.
-- P3 note: the live simulation can briefly cluster fish as their deterministic routes cross; this is transient and does not obscure the target cue.
-
-## Final result
-
-passed
-
----
-
-# Harbor Menu Target — Design QA
-
-## Visual truth and state
-
-- Primary target: `/var/folders/hz/w64bxygn6737j0hwh56pl0cw0000gn/T/codex-clipboard-77426b12-21bb-4d8b-a807-a89af80ea928.png`.
-- Latest correction source: `/var/folders/hz/w64bxygn6737j0hwh56pl0cw0000gn/T/TemporaryItems/NSIRD_screencaptureui_kzSt7Z/Screenshot 2026-08-12 at 10.15.45 am.png`.
-- Safari correction capture: `/var/folders/hz/w64bxygn6737j0hwh56pl0cw0000gn/T/com.openai.sky.CUAService/Safari Screenshot 2026-08-12 at 10.21.11 am.jpeg`.
-- Combined correction comparison: `/tmp/harbor-layout-comparison.png` (latest correction source on the left, final implementation on the right).
-- Verified state: Brindle Harbor First Assignment at the fresh-save first-job offer.
-
-## Verification evidence
-
-- The three route cards have a measured 16 px gap.
-- The Reedfin art is 100 × 100 px and optically centered with a 6 px horizontal correction.
-- Both footer controls clear the primary CTA by at least 12 px.
-- The title-to-stage-marker clearance remains at least 20 px, so the route does not collide with the title.
-- The corrected state was captured in Safari in a private window and compared directly with the latest annotated screenshot in a single side-by-side image.
-- The focused first-job layout browser test passes.
-- After the comparison, the panel gained a final 10 px height allowance for short desktop viewports; the full browser suite verifies the resulting ticket-to-footer and CTA-to-button clearances.
-- The latest in-app preview confirms that the two route connector arrows are absent while the 16 px card gaps remain intact.
-- The Reedfin target art is raised 8 px within the desktop route card, correcting the top-heavy transparent spacing called out in the browser annotation.
-- The generic shield/check is replaced by an original generated fish-and-leaf pictogram with authored alpha; the final in-app capture shows the freshness meaning clearly at runtime size.
-
-## Findings
-
-No actionable P0, P1, or P2 issues remain in the annotated areas. The Reedfin is vertically balanced, Freshness uses a specific fish-and-leaf symbol, the route cards are visibly separated without connector arrows, and neither footer button overlaps the CTA.
-
-## Final result
-
-passed
+- No three-stage job route, no freshness/deliver pictograms, no survey prediction sheet, no field guide.
+- Boat class names are not shown when cargo is upgraded.
+- Beach fishing grounds keep the lake names Sunward Shoal, Mosswater Pool, and Outer Gloam.
+- Help text mentions comparing both harbors; the live detail card shows only the docked harbor's quote.
