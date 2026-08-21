@@ -179,6 +179,7 @@ export class Game {
   private questGuide: QuestPresentation | null = null;
   private lastQuestMarkup = "";
   private resetConfirming = false;
+  private overlayEntering = false;
   private readonly visualTestSpot = import.meta.env.DEV
     ? new URLSearchParams(window.location.search).get("e2eSpot") as SpotId | null
     : null;
@@ -797,9 +798,12 @@ export class Game {
 
   private settingsScreen(): string {
     const settings = this.save.settings;
-    const entryClass = this.overlaySource === "title" ? " is-title-entry" : "";
+    const entryClass = [
+      this.overlayEntering ? " is-entering" : "",
+      this.overlayEntering && this.overlaySource === "title" ? " is-title-entry" : "",
+    ].join("");
     return `
-      <section class="screen-overlay settings-overlay${entryClass}" role="dialog" aria-labelledby="settings-title">
+      <section class="screen-overlay settings-overlay${entryClass}" role="dialog" aria-labelledby="settings-title" tabindex="-1">
         <div class="settings-panel settings-menu">
           <img class="wordmark settings-wordmark" src="${wordmarkUrl}" alt="FSHING" />
           <header class="settings-heading">
@@ -1070,14 +1074,34 @@ export class Game {
     const willPlay = this.started && next === null;
     this.overlaySource = this.overlay;
     this.overlay = next;
+    this.overlayEntering = true;
     if (next !== "settings") this.resetConfirming = false;
     if (wasPlaying && !willPlay) this.platform.gameplayStop();
     if (!wasPlaying && willPlay) this.platform.gameplayStart();
     this.renderOverlay();
+    this.overlayEntering = false;
     this.refreshHud();
     if (next !== null) {
-      requestAnimationFrame(() => this.uiRoot.querySelector<HTMLElement>("#overlay-host button")?.focus({ preventScroll: true }));
+      requestAnimationFrame(() => {
+        if (next === "settings") {
+          this.uiRoot.querySelector<HTMLElement>(".settings-overlay")?.focus({ preventScroll: true });
+          return;
+        }
+        this.uiRoot.querySelector<HTMLElement>("#overlay-host button")?.focus({ preventScroll: true });
+      });
     }
+  }
+
+  private replaceResetSaveSetting(): void {
+    const current = this.uiRoot.querySelector(".setting-reset");
+    if (!current) {
+      this.renderOverlay();
+      return;
+    }
+    const template = document.createElement("template");
+    template.innerHTML = this.resetSaveSettingMarkup().trim();
+    const next = template.content.firstElementChild;
+    if (next) current.replaceWith(next);
   }
 
   private resetSave(): void {
@@ -1094,7 +1118,10 @@ export class Game {
     this.pendingCargoRelease = null;
     this.questGuide = null;
     this.lastQuestMarkup = "";
-    this.setOverlay("title");
+    this.overlayReturn = "title";
+    this.replaceResetSaveSetting();
+    this.refreshHud();
+    this.refreshQuestGuide();
     this.showToast("Save reset. Play to start the first assignment.");
   }
 
@@ -1274,11 +1301,11 @@ export class Game {
       case "start": this.beginVoyage(); break;
       case "confirm-reset-save":
         this.resetConfirming = true;
-        this.renderOverlay();
+        this.replaceResetSaveSetting();
         break;
       case "cancel-reset-save":
         this.resetConfirming = false;
-        this.renderOverlay();
+        this.replaceResetSaveSetting();
         break;
       case "reset-save":
         if (!this.resetConfirming) break;

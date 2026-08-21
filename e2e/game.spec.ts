@@ -185,6 +185,9 @@ test("settings reset save asks for confirmation before restoring the first assig
   await page.getByRole("button", { name: "Reset save" }).click();
   await page.getByRole("button", { name: "Reset", exact: true }).click();
   await expect(page.locator("#toast")).toContainText("Save reset");
+  await expect(page.locator(".settings-panel")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Play", exact: true })).toHaveCount(0);
+  await page.getByRole("button", { name: "Done" }).click();
   await expect(page.getByRole("button", { name: "Play", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Play", exact: true }).click();
   await expect(page.locator("#market-tutorial")).toContainText("Choose Bluegill");
@@ -770,6 +773,7 @@ test("settings, keyboard pause, and local SDK fallback remain usable", async ({ 
   const titleLakeFrame = await page.locator("#game-canvas").evaluate((element) => (element as HTMLCanvasElement).toDataURL());
   await page.getByRole("button", { name: "Settings" }).click();
   await expect(page.locator(".settings-panel")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Controls" })).not.toBeFocused();
   await expect(page.locator(".settings-overlay")).toHaveClass(/is-title-entry/);
   await expect(page.locator(".settings-overlay")).toHaveCSS("animation-name", "settings-backdrop-in");
   const settingsLakeFrame = await page.locator("#game-canvas").evaluate((element) => (element as HTMLCanvasElement).toDataURL());

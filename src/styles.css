@@ -4733,6 +4733,10 @@ kbd {
   animation: pause-menu-out 220ms cubic-bezier(0.55, 0.06, 0.78, 0.45) both;
 }
 
+.settings-overlay.is-entering .settings-panel.settings-menu {
+  animation: settings-menu-in 220ms cubic-bezier(0.18, 0.82, 0.24, 1) both;
+}
+
 .settings-panel.settings-menu {
   display: flex;
   width: min(640px, 92vw);
@@ -4747,7 +4751,6 @@ kbd {
   background-image: none;
   box-shadow: none;
   color: var(--menu-paper);
-  animation: settings-menu-in 220ms cubic-bezier(0.18, 0.82, 0.24, 1) both;
 }
 
 .settings-wordmark {
@@ -4790,7 +4793,8 @@ kbd {
 }
 
 .settings-panel.settings-menu .setting-option:hover,
-.settings-panel.settings-menu .setting-option:focus-within {
+.settings-panel.settings-menu .setting-option:focus-visible,
+.settings-panel.settings-menu .setting-option:has(:focus-visible) {
   border-color: var(--menu-signal);
   background: rgb(7 31 40 / 88%);
 }
