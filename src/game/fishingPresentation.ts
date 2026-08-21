@@ -24,6 +24,12 @@ export interface FishingFishPose {
   heading: -1 | 1;
 }
 
+export interface FishingFocusPresentation {
+  backgroundFishOpacity: number;
+  backgroundPoseElapsed: number;
+  showTargetGuides: boolean;
+}
+
 export const FISHING_DIVE_DURATION = 0.85;
 
 export const FISHING_RARITY_COLOURS: Record<FishRarity, string> = {
@@ -52,6 +58,19 @@ export function fishingReelCameraProgress(
 ): number {
   if (reducedMotion) return 0;
   return clamp(diveProgress, 0, 1) * (1 - clamp(reelProgress, 0, 1));
+}
+
+export function fishingFocusPresentation(
+  elapsed: number,
+  schoolOpacity: number,
+  hookedAt: number | null,
+): FishingFocusPresentation {
+  const fightActive = hookedAt !== null;
+  return {
+    backgroundFishOpacity: clamp(schoolOpacity, 0, 1) * (fightActive ? 0.68 : 1),
+    backgroundPoseElapsed: fightActive ? hookedAt : elapsed,
+    showTargetGuides: !fightActive,
+  };
 }
 
 export function fishingViewLayout(height: number, lineTier: number, diveProgress: number): FishingViewLayout {

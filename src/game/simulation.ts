@@ -978,7 +978,7 @@ export function tutorialPrompt(simulation: Simulation): string | null {
       if (simulation.fishing.reeling.landingAt !== null) {
         return `Landing the ${FISH[simulation.fishing.reeling.species].name}.`;
       }
-      return `Hold Reel to pull in the ${FISH[simulation.fishing.reeling.species].name}; release before line tension stays critical.`;
+      return `Hold left click or Reel to pull in the ${FISH[simulation.fishing.reeling.species].name}; release before line tension stays critical.`;
     }
     if (simulation.fishing.exitingAt !== null) return "Reeling in the line and returning to the surface.";
     const target = fishingHighlightSpecies(

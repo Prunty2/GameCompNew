@@ -628,42 +628,20 @@ input:focus-visible {
   filter: none;
 }
 
-.context-action.is-reel-control {
-  right: max(16px, env(safe-area-inset-right));
-  bottom: max(22px, calc(env(safe-area-inset-bottom) + 12px));
-  left: auto;
-  width: clamp(132px, 21vw, 190px);
-  padding: 10px 16px;
-  color: #fff8e9;
-  background: #bd4e25;
-  box-shadow:
-    0 4px 0 #71301d,
-    0 12px 24px rgb(2 15 21 / 32%);
-  transform: none;
-  touch-action: none;
-}
-
-.context-action.is-reel-control::before {
-  display: none;
-}
-
-.context-action.is-reel-control:hover:not(:disabled),
-.context-action.is-reel-control:focus-visible:not(:disabled) {
-  transform: translateY(-1px);
-}
-
-.context-action.is-reel-control:active:not(:disabled),
-.context-action.is-reel-control.is-pressed {
-  background: #e9692f;
-  box-shadow: 0 2px 0 #71301d, 0 8px 18px rgb(2 15 21 / 26%);
-  transform: translateY(3px) scale(0.99);
-}
-
 .context-action:active:not(:disabled) {
   transform: translateX(-50%) translateY(3px) scale(0.99);
   box-shadow:
     0 2px 0 #9d3514,
     0 8px 20px rgb(2 15 21 / 24%);
+}
+
+#game-canvas[data-fishing-state="fighting"] {
+  cursor: pointer;
+  touch-action: none;
+}
+
+#game-canvas[data-fishing-state="fighting"].is-reeling-input {
+  cursor: grabbing;
 }
 
 .context-action.is-tutorial-target {

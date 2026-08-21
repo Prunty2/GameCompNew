@@ -46,6 +46,7 @@ import {
   FISHING_RARITY_COLOURS,
   fishingDiveProgress,
   fishingFishPose,
+  fishingFocusPresentation,
   fishingHighlightSpecies,
   fishingPointToScreen,
   fishingReelCameraProgress,
@@ -305,6 +306,8 @@ export class CanvasRenderer {
     } else {
       delete this.canvas.dataset.fishingDiveProgress;
       delete this.canvas.dataset.fishingSchoolOpacity;
+      delete this.canvas.dataset.fishingBackgroundFishOpacity;
+      delete this.canvas.dataset.fishingBackgroundPoseElapsed;
       delete this.canvas.dataset.fishingSurfaceSpriteOpacity;
       delete this.canvas.dataset.fishingSurfaceBlend;
       delete this.canvas.dataset.fishingSpot;
@@ -589,12 +592,19 @@ export class CanvasRenderer {
     const surfaceProgress = fishing.reeling?.landingAt != null ? reelProgress : exitProgress;
     const surfacing = fishing.reeling?.landingAt != null || fishing.exitingAt !== null;
     const schoolOpacity = surfacing ? fishingReelSchoolOpacity(surfaceProgress) : 1;
+    const focus = fishingFocusPresentation(
+      simulation.elapsed,
+      schoolOpacity,
+      fishing.reeling?.hookedAt ?? null,
+    );
     const diveProgress = surfacing
       ? fishingReelCameraProgress(entryDiveProgress, surfaceProgress, settings.reducedMotion)
       : entryDiveProgress;
     const layout = fishingViewLayout(height, simulation.progress.upgrades.line, diveProgress);
     this.canvas.dataset.fishingDiveProgress = diveProgress.toFixed(3);
     this.canvas.dataset.fishingSchoolOpacity = schoolOpacity.toFixed(3);
+    this.canvas.dataset.fishingBackgroundFishOpacity = focus.backgroundFishOpacity.toFixed(3);
+    this.canvas.dataset.fishingBackgroundPoseElapsed = focus.backgroundPoseElapsed.toFixed(3);
     this.canvas.dataset.fishingSurfaceSpriteOpacity = reelProgress.toFixed(3);
     this.canvas.dataset.fishingSurfaceBlend = surfaceProgress.toFixed(3);
     this.canvas.dataset.fishingSpot = spot.id;
@@ -618,7 +628,7 @@ export class CanvasRenderer {
     this.canvas.setAttribute(
       "aria-label",
       fishing.reeling
-        ? `Fishing at ${spot.name}. Fighting ${FISH[fishing.reeling.species].name}. Reel progress ${Math.round(fishing.reeling.progress * 100)} percent. Line tension ${Math.round(fishing.reeling.tension * 100)} percent.`
+        ? `Fishing at ${spot.name}. Fighting ${FISH[fishing.reeling.species].name}. Hold left click, touch, or the Reel key to pull. Reel progress ${Math.round(fishing.reeling.progress * 100)} percent. Line tension ${Math.round(fishing.reeling.tension * 100)} percent.`
         : fishing.exitingAt !== null
           ? `Leaving ${spot.name} and returning to the lake surface.`
         : targetSpecies
@@ -651,7 +661,7 @@ export class CanvasRenderer {
     for (const [targetIndex, target] of fishing.targets.entries()) {
       if (fishing.reeling?.targetIndex === targetIndex) continue;
       const point = fishingPointToScreen(target, width, layout, maximumDepth);
-      const pose = fishingFishPose(target.species, simulation.elapsed, target.phase, settings.reducedMotion);
+      const pose = fishingFishPose(target.species, focus.backgroundPoseElapsed, target.phase, settings.reducedMotion);
       const heading = target.direction === pose.heading ? 1 : -1;
       const animatedPoint = {
         x: point.x,
@@ -659,16 +669,17 @@ export class CanvasRenderer {
       };
       const reachable = FISH[target.species].depthTier <= simulation.progress.upgrades.line;
       context.save();
-      context.globalAlpha = (reachable ? 1 : 0.3) * schoolOpacity;
+      context.globalAlpha = (reachable ? 1 : 0.3) * focus.backgroundFishOpacity;
+      if (!focus.showTargetGuides) context.filter = "grayscale(1) brightness(0.35) contrast(1.15)";
       context.translate(animatedPoint.x, animatedPoint.y);
       context.rotate(pose.rotation * heading);
       context.scale(pose.scaleX, pose.scaleY);
-      if (targetSpecies && target.species === targetSpecies) {
+      if (focus.showTargetGuides && targetSpecies && target.species === targetSpecies) {
         this.drawFishOutline(target.species, pose.animationFrame, { x: 0, y: 0 }, heading, width, height, settings.highContrast);
       }
       this.drawFish(target.species, pose.animationFrame, { x: 0, y: 0 }, heading, width, height, settings.highContrast);
       context.restore();
-      if (targetSpecies && target.species === targetSpecies) {
+      if (focus.showTargetGuides && targetSpecies && target.species === targetSpecies) {
         context.save();
         context.globalAlpha = schoolOpacity;
         this.drawFishingTargetChevron(
@@ -728,9 +739,13 @@ export class CanvasRenderer {
       context.restore();
     }
     this.drawTackleCell(1, 1, hook.x, hook.y, hookSize, hookSize);
-    this.drawQuestHookGuide(simulation, fishing, hook, width, layout, maximumDepth, settings);
+    if (focus.showTargetGuides) {
+      this.drawQuestHookGuide(simulation, fishing, hook, width, layout, maximumDepth, settings);
+    } else {
+      this.canvas.dataset.questHookFollow = "0";
+    }
 
-    if (targetSpecies) {
+    if (focus.showTargetGuides && targetSpecies) {
       this.drawFishingTargetGuide(targetSpecies, width, height, settings.highContrast, layout.surfaceY);
     }
     if (fishing.reeling) {
@@ -755,10 +770,10 @@ export class CanvasRenderer {
     const status = fight.landingAt !== null
       ? "LANDING CATCH"
       : critical
-        ? "LINE STRAIN · RELEASE"
+        ? "LINE STRAIN · RELEASE LEFT CLICK"
         : fight.struggle >= 0.55
-          ? "FISH PULLING · EASE OFF"
-          : "HOLD REEL · RELEASE TO REST";
+          ? "FISH PULLING · RELEASE LEFT CLICK"
+          : "HOLD LEFT CLICK · RELEASE TO REST";
     context.save();
     context.textAlign = "left";
     context.textBaseline = "bottom";
