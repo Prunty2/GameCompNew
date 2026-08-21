@@ -232,19 +232,22 @@ test("upgrade tutorial walks through Upgrades after the player can afford one", 
   await expect(featureCards.locator(".upgrade-feature-icon")).toHaveCount(2);
   const regularLayout = await page.locator(".service-grid .service-card").evaluateAll((cards) => cards.map((card) => {
     const box = card.getBoundingClientRect();
-    return { x: box.x, y: box.y };
+    return { x: box.x, y: box.y, height: box.height };
   }));
   expect(regularLayout).toHaveLength(3);
   expect(Math.abs(regularLayout[0]!.x - regularLayout[1]!.x)).toBeLessThan(2);
   expect(Math.abs(regularLayout[1]!.x - regularLayout[2]!.x)).toBeLessThan(2);
   expect(regularLayout[1]!.y).toBeGreaterThan(regularLayout[0]!.y);
   expect(regularLayout[2]!.y).toBeGreaterThan(regularLayout[1]!.y);
+  expect(regularLayout[1]!.y - regularLayout[0]!.y - regularLayout[0]!.height).toBeGreaterThanOrEqual(10);
+  expect(regularLayout[2]!.y - regularLayout[1]!.y - regularLayout[1]!.height).toBeGreaterThanOrEqual(10);
   const featureLayout = await featureCards.evaluateAll((cards) => cards.map((card) => {
     const box = card.getBoundingClientRect();
     return { x: box.x, y: box.y, height: box.height };
   }));
   expect(Math.abs(featureLayout[0]!.y - featureLayout[1]!.y)).toBeLessThan(2);
   expect(featureLayout[1]!.x).toBeGreaterThan(featureLayout[0]!.x);
+  expect(featureLayout[0]!.y - regularLayout[2]!.y - regularLayout[2]!.height).toBeGreaterThanOrEqual(14);
   const regularCardHeight = await page.locator(".service-grid .service-card").first().evaluate(
     (card) => card.getBoundingClientRect().height,
   );

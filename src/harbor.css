@@ -1734,7 +1734,7 @@
 .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .upgrades {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: clamp(12px, 2vh, 18px);
   min-height: 0;
   padding: 0 4px;
   overflow-y: auto;
@@ -1742,7 +1742,7 @@
 
 .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .service-grid {
   grid-template-columns: 1fr;
-  gap: 8px;
+  gap: clamp(8px, 1.5vh, 14px);
 }
 
 .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .service-grid .service-card {
