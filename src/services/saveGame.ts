@@ -5,7 +5,7 @@ import {
   isBindableCode,
   type ControlBindings,
 } from "../game/controls";
-import type { MarketTutorialStep, ProgressState } from "../game/simulation";
+import type { MarketTutorialStep, ProgressState, UpgradeTutorialStep } from "../game/simulation";
 import type { SaveStorage } from "./platformService";
 
 const SAVE_KEY = "gamecomp-new.save";
@@ -45,6 +45,7 @@ export function defaultSave(): SaveData {
       marketEarnings: 0,
       marketTarget: null,
       marketTutorialStep: "inspect",
+      upgradeTutorialStep: "locked",
       seasonCompleted: false,
     },
     settings: {
@@ -90,6 +91,7 @@ export function loadSave(storage: SaveStorage): SaveData {
           progress.marketTutorialStep,
           finiteInteger(progress.completedContracts, 0, 99_999),
         ),
+        upgradeTutorialStep: readUpgradeTutorialStep(progress),
         seasonCompleted: progress.seasonCompleted === true,
       },
       settings: {
@@ -175,15 +177,28 @@ function readMarketTarget(value: unknown): FishSpecies | null {
 }
 
 function readTutorialStep(value: unknown, legacyDeliveries: number): MarketTutorialStep {
+  if (value === "complete" || value === "done") return "done";
   if (
     value === "inspect"
     || value === "track"
     || value === "catch"
     || value === "sell"
-    || value === "complete"
-    || value === "done"
   ) return value;
   return legacyDeliveries > 0 ? "done" : "inspect";
+}
+
+function readUpgradeTutorialStep(progress: Record<string, unknown>): UpgradeTutorialStep {
+  const value = progress.upgradeTutorialStep;
+  if (value === "locked" || value === "open-services" || value === "buy" || value === "done") return value;
+  const upgrades = objectValue(progress.upgrades);
+  const purchased = finiteInteger(upgrades.cargo, 0, 99) > 0
+    || finiteInteger(upgrades.engine, 0, 99) > 0
+    || finiteInteger(upgrades.lamp, 0, 99) > 0
+    || finiteInteger(upgrades.line, 0, 99) > 0
+    || progress.boostUnlocked === true
+    || progress.beachUnlocked === true
+    || progress.outerUnlocked === true;
+  return purchased ? "done" : "locked";
 }
 
 function objectValue(value: unknown): Record<string, unknown> {

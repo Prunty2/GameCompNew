@@ -13,7 +13,7 @@ FSHING is a single-player side-on fishing market game for desktop and mobile bro
 5. Freshness falls while the simulation is running. Dock at the harbor that currently pays more and sell every fresh catch of that species.
 6. Spend shells on cargo, engine, lamp, line, boost, the Outer Gloam permit, or Beach access.
 
-A new save starts docked at Brindle Harbor on the lake with Bluegill already discovered. The first run is a five-step **First Assignment** that walks through inspect → track → catch → sell → finish.
+A new save starts docked at Brindle Harbor on the lake with Bluegill already discovered. The first run is a four-step **First Assignment** that walks through inspect → track → catch → sell. The sale ends that assignment. When the player can afford a dock upgrade, a second tutorial walks through Services.
 
 After eight market sales the game shows a season report, then returns to the same market. Trading does not stop.
 
@@ -29,7 +29,7 @@ Market → Track → Sail → Fish → Reel → Sell while fresh → Upgrade →
 | Harbor | Play from a docked start, or docking | Market / Cargo / Services tabs, shell balance, Help, Return to Lake or Beach |
 | Market detail | Selecting a discovered listing | Species art, current-harbor price, Track, Sell, 7-day graph |
 | Pause | Escape or Pause on the water | Resume, Settings, How to play, Title screen |
-| Settings | Title or pause | Mute, volume, high contrast, reduced motion, Controls |
+| Settings | Title or pause | Mute, volume, high contrast, reduced motion, Controls, Reset save |
 | Controls | Settings | Seven remappable actions, Reset defaults |
 | Credits | Title | Liam, Saxon, Harrison, David |
 | How to play | Harbor Help or pause | Four cards: read the market, track and catch, catch and protect, sell and invest |
@@ -37,7 +37,7 @@ Market → Track → Sail → Fish → Reel → Sell while fresh → Upgrade →
 
 There is no field guide, no title How to play button, no on-water money HUD, and no on-screen movement pads.
 
-On-water chrome is the night moon indicator, the boost gauge after unlock, the context action (dock or drop line), toasts, the sale popup, and the First Assignment card until it is finished or skipped. A destination badge on the canvas points at the current market, fishing ground, or sell harbor. Screen-reader status repeats that guidance.
+On-water chrome is the night moon indicator, the boost gauge after unlock, the context action (dock or drop line), toasts, the sale popup, and the tutorial pill until it is finished or skipped. A destination badge on the canvas points at the current market, fishing ground, or sell harbor. Screen-reader status repeats that guidance. After the first assignment, that badge is hidden unless a fish is tracked.
 
 Scene changes between title, harbor, and the water use a waterline cover/reveal.
 
@@ -172,17 +172,18 @@ Cargo can be released from an occupied slot. An undo toast restores that catch f
 
 ## First Assignment
 
-Saved as `marketTutorialStep`. Skip is always available.
+Saved as `marketTutorialStep`. Skip is always available. The prompt is a top-centre pill: step number, a small **Tutorial** label, a short action title, and a close control. One target at a time gets the amber glow. Lake arrows mark the route while travelling; a hook arrow leads to Bluegill while fishing.
 
 | Step | Prompt |
 | --- | --- |
-| 1 of 5 | Choose Bluegill |
-| 2 of 5 | Track the catch |
-| 3 of 5 | Catch a Bluegill at Sunward Shoal |
-| 4 of 5 | Sell while fresh |
-| 5 of 5 | First sale complete |
+| 1 of 4 | Choose Bluegill |
+| 2 of 4 | Track the catch |
+| 3 of 4 | Catch a Bluegill at Sunward Shoal |
+| 4 of 4 | Sell while fresh |
 
-Older saves with `completedContracts > 0` and no tutorial field load as `done`.
+The sale ends the assignment. Older saves with `completedContracts > 0` or leftover `complete` load as `done`.
+
+When the player can afford the cheapest dock upgrade (Line depth at 55 shells), `upgradeTutorialStep` opens a second pill: **Open services**, then **Buy upgrade**. Closing it skips only this lesson. Settings **Reset save** asks for confirmation, clears progress, and stays on Settings.
 
 ## Controls
 
@@ -219,7 +220,7 @@ The in-fishing “W / S MOVE HOOK” cue is hardcoded and does not follow rebind
 
 Save key `gamecomp-new.save`. Schema version **10**. Storage is CrazyGames `sdk.data` when the SDK initializes, otherwise `localStorage`. Malformed JSON becomes a new save.
 
-Saved: money, upgrade tiers, outer/beach/boost unlocks, discovered species, market day/sales/earnings/target, tutorial step, season-complete flag, leftover learning counters, and settings (mute, volume, contrast, reduced motion, bindings).
+Saved: money, upgrade tiers, outer/beach/boost unlocks, discovered species, market day/sales/earnings/target, first-assignment and upgrade tutorial steps, season-complete flag, leftover learning counters, and settings (mute, volume, contrast, reduced motion, bindings).
 
 Not saved: world, cargo, elapsed time, boat pose, damage, boost heat, docked harbor.
 
@@ -255,6 +256,7 @@ CrazyGames HTML5 SDK v3 is loaded from the page. Local play works if the script 
 | `src/game/fishingMovement.ts` / `fishingPresentation.ts` / `fishingReeling.ts` | Underwater motion and camera |
 | `src/game/fishingSpotEffects.ts` / `surfaceEffects.ts` / `boatSteam.ts` | Surface presentation |
 | `src/game/objectiveIndicator.ts` | Destination badge layout |
+| `src/game/quest.ts` | First-assignment and upgrade tutorial presentation |
 | `src/game/stem.ts` | Habitat readings and leftover survey/route helpers |
 | `src/services/saveGame.ts` | Version 10 validation and migration |
 | `src/services/platformService.ts` | CrazyGames boundary |

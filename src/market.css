@@ -538,19 +538,22 @@
   position: fixed;
   z-index: 80;
   top: max(18px, env(safe-area-inset-top));
-  right: max(18px, env(safe-area-inset-right));
+  left: 50%;
   display: grid;
   box-sizing: border-box;
-  width: min(390px, calc(100vw - 36px));
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 15px;
-  padding: 15px 16px;
-  border: 1px solid rgb(241 172 80 / 72%);
-  border-left-width: 4px;
-  border-radius: 13px;
-  background: rgb(4 23 31 / 97%);
-  color: var(--menu-paper);
-  box-shadow: 0 16px 34px rgb(1 10 16 / 42%);
+  width: min(340px, calc(100vw - 28px));
+  min-height: 64px;
+  grid-template-columns: 42px minmax(0, 1fr) 40px;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 9px 8px 12px;
+  border: 1px solid rgb(247 241 227 / 52%);
+  border-radius: 999px;
+  background: rgb(7 31 40 / 90%);
+  color: var(--menu-paper, var(--cream));
+  box-shadow: 0 5px 0 rgb(2 15 21 / 58%), 0 14px 30px rgb(2 15 21 / 36%);
+  backdrop-filter: blur(5px);
+  transform: translateX(-50%);
   pointer-events: auto;
 }
 
@@ -558,22 +561,19 @@
   display: none;
 }
 
-.game-ui:has(.harbor-screen):has(.market-tutorial:not([hidden])) .market-tutorial {
-  top: max(12px, env(safe-area-inset-top));
-  right: auto;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
 .game-ui:has(.market-tutorial:not([hidden])) .harbor-screen.is-first-voyage {
-  padding-top: calc(max(18px, env(safe-area-inset-top)) + 118px);
+  padding-top: calc(max(18px, env(safe-area-inset-top)) + 70px);
 }
 
 .game-ui:has(.market-tutorial:not([hidden])) .harbor-screen.is-first-voyage .harbor-panel,
 .game-ui:has(.market-tutorial:not([hidden])) .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-panel,
 .game-ui:has(.market-tutorial:not([hidden])) .harbor-screen.is-harbor-market .market-harbor-panel {
-  height: min(760px, calc(100dvh - 150px));
-  max-height: calc(100dvh - 150px);
+  height: min(760px, calc(100dvh - 118px));
+  max-height: calc(100dvh - 118px);
+}
+
+.game-ui:has(#delivery-notification:not([hidden])) .market-tutorial {
+  top: calc(max(18px, env(safe-area-inset-top)) + 76px);
 }
 
 @media (max-height: 720px) and (min-width: 701px) {
@@ -589,69 +589,150 @@
   }
 }
 
-.market-tutorial > div:first-child {
+.market-tutorial-step {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 2px solid #f1ac50;
+  border-radius: 50%;
+  background: rgb(241 172 80 / 10%);
+  color: #f1ac50;
+  font-size: 1.05rem;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.market-tutorial-copy {
   display: flex;
   min-width: 0;
   flex-direction: column;
+  gap: 2px;
 }
 
-.market-tutorial span {
-  color: #f1ac50;
-  font-size: 0.66rem;
-  font-weight: 900;
-  letter-spacing: 0.08em;
+.market-tutorial-copy span {
+  color: rgb(247 241 227 / 62%);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  line-height: 1;
 }
 
-.market-tutorial strong {
-  margin-top: 3px;
-  font-size: 1rem;
+.market-tutorial-copy strong {
+  overflow: hidden;
+  font-family: var(--display-face);
+  font-size: clamp(1.05rem, 3.2vw, 1.22rem);
+  font-weight: 850;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.market-tutorial p {
-  margin: 5px 0 0;
-  color: #c4d3d4;
-  font-size: 0.76rem;
-  line-height: 1.35;
-}
-
-.market-tutorial-actions {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  justify-content: center;
-  gap: 7px;
-}
-
-.market-tutorial button {
-  min-height: 34px;
-  padding: 5px 9px;
-  border: 1px solid rgb(145 169 176 / 35%);
-  border-radius: 8px;
-  background: transparent;
-  color: #dbe5e3;
+.market-tutorial-close {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  place-items: center;
+  border: 1px solid rgb(247 241 227 / 32%);
+  border-radius: 50%;
+  background: rgb(255 255 255 / 4%);
+  color: var(--menu-paper, var(--cream));
   cursor: pointer;
   font: inherit;
-  font-size: 0.68rem;
-  font-weight: 800;
+  font-size: 1.5rem;
+  line-height: 1;
 }
 
-.market-tutorial button:first-child:not(:last-child) {
+.market-tutorial-close:hover,
+.market-tutorial-close:focus-visible {
   border-color: #f1ac50;
-  background: #f1ac50;
-  color: #071824;
+  background: rgb(241 172 80 / 12%);
 }
 
 @keyframes tutorial-target-pulse {
-  0%, 100% { box-shadow: 0 0 0 2px #f1ac50, 0 0 0 5px rgb(241 172 80 / 16%); }
-  50% { box-shadow: 0 0 0 2px #f1ac50, 0 0 0 10px rgb(241 172 80 / 4%); }
+  0%, 100% {
+    box-shadow:
+      0 0 0 2px #f1ac50,
+      0 0 18px 4px rgb(241 172 80 / 58%),
+      0 0 0 9px rgb(241 172 80 / 18%);
+  }
+  50% {
+    box-shadow:
+      0 0 0 3px #ffd27a,
+      0 0 32px 10px rgb(255 210 122 / 46%),
+      0 0 0 14px rgb(241 172 80 / 8%);
+  }
 }
 
-.is-tutorial-target:not(:disabled) {
+.is-tutorial-target:not(.context-action) {
   position: relative;
   z-index: 2;
+}
+
+.market-listing.is-tutorial-target {
+  overflow: visible;
+  border-color: #f1ac50;
+}
+
+.is-tutorial-target:disabled:not(.context-action) {
+  border-color: inherit;
+}
+
+.quest-glow {
+  position: fixed;
+  z-index: 74;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  pointer-events: none;
   outline: 2px solid #f1ac50;
-  outline-offset: 2px;
+  outline-offset: 3px;
   animation: tutorial-target-pulse 1.35s ease-in-out infinite;
+}
+
+.quest-glow[hidden] {
+  display: none;
+}
+
+.quest-arrow {
+  position: fixed;
+  z-index: 75;
+  top: 0;
+  left: 0;
+  display: grid;
+  width: 56px;
+  height: 56px;
+  place-items: center;
+  pointer-events: none;
+  filter:
+    drop-shadow(0 0 8px rgb(241 172 80 / 88%))
+    drop-shadow(0 0 18px rgb(241 172 80 / 55%));
+}
+
+.quest-arrow[hidden] {
+  display: none;
+}
+
+.quest-arrow-mark {
+  width: 52px;
+  height: 40px;
+  overflow: visible;
+  animation: quest-arrow-bob 0.9s ease-in-out infinite;
+}
+
+.quest-arrow-mark path {
+  fill: none;
+  stroke: #ffe08a;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 6;
+}
+
+@keyframes quest-arrow-bob {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(8px); }
 }
 
 .high-contrast .market-listing,
@@ -662,15 +743,23 @@
 
 .reduced-motion .market-listing,
 .reduced-motion .market-detail,
-.reduced-motion .is-tutorial-target {
+.reduced-motion .quest-glow,
+.reduced-motion .quest-arrow-mark {
   animation: none;
   transition: none;
+}
+
+.reduced-motion .quest-glow {
+  box-shadow:
+    0 0 0 2px #f1ac50,
+    0 0 18px 4px rgb(241 172 80 / 48%);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .market-listing,
   .market-detail,
-  .is-tutorial-target {
+  .quest-glow,
+  .quest-arrow-mark {
     animation: none !important;
     transition: none;
   }
@@ -714,6 +803,7 @@
 
   .market-tutorial {
     top: 10px;
+    width: min(320px, calc(100vw - 20px));
   }
 }
 
@@ -798,8 +888,7 @@
 
   .market-tutorial {
     top: 10px;
-    right: 10px;
-    width: calc(100vw - 20px);
+    width: min(300px, calc(100vw - 20px));
   }
 
   .game-ui:has(.harbor-screen):has(.market-tutorial:not([hidden])) .market-tutorial {
@@ -862,13 +951,13 @@
   }
 
   .market-tutorial {
-    grid-template-columns: 1fr;
+    width: min(280px, calc(100vw - 16px));
+    min-height: 56px;
     gap: 8px;
-    padding: 12px;
+    padding: 6px 7px 6px 10px;
   }
 
-  .market-tutorial-actions {
-    flex-direction: row;
-    justify-content: flex-end;
+  .market-tutorial-copy strong {
+    font-size: 1rem;
   }
 }

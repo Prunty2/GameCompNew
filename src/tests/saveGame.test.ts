@@ -53,6 +53,7 @@ describe("versioned save data", () => {
         marketEarnings: 0,
         marketTarget: null,
         marketTutorialStep: "inspect",
+        upgradeTutorialStep: "done",
         seasonCompleted: false,
       },
       settings: {
@@ -89,6 +90,16 @@ describe("versioned save data", () => {
     expect(migrated.progress.upgrades).toEqual({ cargo: 2, engine: 1, lamp: 2, line: 0 });
     expect(migrated.progress.money).toBe(140);
     expect(migrated.progress.marketTutorialStep).toBe("done");
+  });
+
+  test("closes leftover sale-complete tutorial steps on load", () => {
+    const baseline = defaultSave();
+    const storage = memoryStorage(JSON.stringify({
+      version: 10,
+      progress: { ...baseline.progress, marketTutorialStep: "complete", marketSales: 1 },
+      settings: baseline.settings,
+    }));
+    expect(loadSave(storage).progress.marketTutorialStep).toBe("done");
   });
 
   test("migrates removed boost and brake bindings to the W and S hook defaults", () => {

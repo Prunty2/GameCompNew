@@ -34,7 +34,9 @@ import {
   sellAllFishAtMarket,
   sellSpeciesAtMarket,
   shouldShowNightIndicator,
+  skipMarketTutorial,
   startFishing,
+  syncUpgradeTutorial,
   trackMarketSpecies,
   tutorialPrompt,
   travelToWorld,
@@ -362,10 +364,24 @@ describe("FSHING side-on simulation", () => {
     interact(simulation);
     const result = sellSpeciesAtMarket(simulation, "bluegill");
     expect(result?.payment).toBeGreaterThan(0);
-    expect(simulation.progress.marketTutorialStep).toBe("complete");
+    expect(simulation.progress.marketTutorialStep).toBe("done");
+    expect(simulation.progress.upgradeTutorialStep).toBe("locked");
     expect(simulation.progress.marketSales).toBe(1);
     expect(simulation.progress.marketEarnings).toBe(result?.payment);
     expect(simulation.cargo).toEqual([]);
+  });
+
+  test("opens the upgrade tutorial once the player can afford a dock upgrade", () => {
+    const simulation = createSimulation();
+    skipMarketTutorial(simulation);
+    expect(simulation.progress.upgradeTutorialStep).toBe("locked");
+    simulation.progress.money = 55;
+    syncUpgradeTutorial(simulation);
+    expect(simulation.progress.upgradeTutorialStep).toBe("open-services");
+    expect(navigationGuidance(simulation)).toMatchObject({ kicker: "UPGRADE AT", label: "Brindle Harbor" });
+    expect(buyUpgrade(simulation, "line")).toBe(true);
+    expect(simulation.progress.upgradeTutorialStep).toBe("done");
+    expect(navigationGuidance(simulation)?.kicker).not.toBe("UPGRADE AT");
   });
 
   test("catches a fish when the steered hook reaches its side-view silhouette", () => {
@@ -594,7 +610,7 @@ describe("FSHING side-on simulation", () => {
     expect(simulation.progress.money).toBe(moneyBefore + result!.payment);
     expect(simulation.progress.marketSales).toBe(3);
     expect(simulation.progress.marketEarnings).toBe(10 + result!.payment);
-    expect(simulation.progress.marketTutorialStep).toBe("complete");
+    expect(simulation.progress.marketTutorialStep).toBe("done");
     expect(simulation.cargo).toEqual([{ species: "lakeTrout", freshness: 0 }]);
     expect(simulation.events).toContainEqual({ type: "sold", result });
   });
