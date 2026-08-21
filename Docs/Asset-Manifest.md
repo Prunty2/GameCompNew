@@ -1,10 +1,59 @@
 # FSHING asset manifest
 
+This file is the generation and runtime record for art used by the current build. Prompts below are historical. The **Current runtime set** table is the live import list.
+
 The initial authored visual set was generated with GPT Image 2.0 on 24 July 2026. The original fantasy-fish atlas was generated with OpenAI's built-in image-generation tool on 31 July 2026 and was superseded by the real-species sheets on 14 August 2026. The surface-school cue atlas and polarized-water lens were generated with the built-in GPT Image tool on 5 August 2026. The tugboat steam atlas was generated with the built-in GPT Image tool on 6 August 2026. The square FSHING logo was generated with the built-in image-generation tool on 14 August 2026. No bitmap, SVG, icon, texture, panel, button, logo, scenery plate, or game sprite was created with drawing code.
 
-Authoring originals are preserved outside the production bundle. Runtime copies live in `src/assets/` and are explicitly imported by TypeScript or CSS. HTML and CSS arrange and label the generated interface surfaces. Canvas draws the simulation, camera, line, wake, water movement, visibility, and accessibility indicators; it does not manufacture replacement UI art.
+Authoring originals are preserved outside the production bundle. Runtime copies live in `src/assets/` and are explicitly imported by TypeScript, CSS, or `index.html`. HTML and CSS arrange and label the generated interface surfaces. Canvas draws the simulation, camera, line, wake, water movement, visibility, and accessibility indicators; it does not manufacture replacement UI art.
 
 The boat, harbor pier, fish atlas, and world atlas were requested on a uniform `#FF00FF` matte. The renderer removes the atlas and boat mattes in memory; the harbor pier matte is removed during authoring so its long shoreline edge can be tightly cropped without changing the generated subject.
+
+## Current runtime set
+
+Vite `publicDir` is `false`. Only these files are imported.
+
+**Canvas (`src/game/renderer.ts`)**
+
+| File | Role |
+| --- | --- |
+| `lake-chart.png` / `lake-chart-night.png` | Lake panorama |
+| `beach-chart.png` / `beach-chart-night.png` | Beach panorama (also Beach dock CSS backdrops) |
+| `harbor-pier.png` | Lake piers, mirrored at Gloam |
+| `beach-harbor-pier.png` | Beach piers, mirrored at the right shore |
+| `player-boat.png` | Player vessel |
+| `boat-steam-atlas.png` | Exhaust puffs |
+| `fish-sunward-swim.png` / `fish-mosswater-swim.png` / `fish-gloam-swim.png` | Lake swim sheets |
+| `fish-beach-surf-swim.png` / `fish-beach-bay-swim.png` / `fish-beach-reef-swim.png` | Beach swim sheets |
+| `fishing-sunward-shoal.jpg` / `fishing-mosswater-pool.jpg` / `fishing-outer-gloam.jpg` | Lake underwater environments |
+| `fishing-beach-surf.jpg` / `fishing-beach-bay.jpg` / `fishing-beach-reef.jpg` | Beach underwater environments |
+| `fishing-line-limit-float.png` | Line-depth boundary floats |
+| `surface-fishing-cues.png` | Surface school poses and hook cue |
+| `polarized-lens.png` | Clear-water reveal under the boat |
+| `fish-atlas.png` | Hook cell only |
+| `world-atlas.png` | Night wake cell only |
+
+**UI (`src/game/Game.ts`, `src/styles.css`, `index.html`)**
+
+| File | Role |
+| --- | --- |
+| `fshing-wordmark.png` | Title and overlay identity |
+| `fshing-logo.png` | Favicon and apple-touch icon |
+| `fish-atlas-ui.png` | Lake market species icons |
+| `fish-beach-atlas-ui.png` | Beach market species icons |
+| `dock-brindle-day.jpg` / `dock-brindle-night.jpg` | Brindle harbor backdrops |
+| `dock-gloam-day.jpg` / `dock-gloam-night.jpg` | Gloam harbor backdrops |
+| `ui-panel.png` / `ui-button.png` / `ui-icons.png` | Panel, primary button, 13 pictograms |
+| `bin-icon.png` | Cargo release |
+| `padlock-icon.png` | Locked cargo slots |
+
+**Present in `src/assets/` but not imported**
+
+| File | Status |
+| --- | --- |
+| `fish-atlas-v2.png` | Superseded fantasy nine-species atlas |
+| `fishing-spots-atlas.png` | Retired surface landmarks |
+| `job-freshness-fish.png` / `job-deliver-beacon.png` | Retired job-route pictograms |
+| `fshing-wordmark copy.png` | Unused duplicate |
 
 ## Generation record
 
@@ -64,7 +113,7 @@ The boat, harbor pier, fish atlas, and world atlas were requested on a uniform `
 
 ### `fish-atlas-ui.png`
 
-- Runtime role: transparent 3 × 3 neutral-pose derivative of the three real-species swim sheets for target-fish art in the harbor job route
+- Runtime role: transparent 3 × 3 neutral-pose derivative of the three real-species swim sheets for lake market listings and detail art
 - Runtime size: 768 × 768 with authored alpha
 - Processing: frame zero from each species row was mechanically cropped, chroma-keyed, proportionally resized with Lanczos filtering, and arranged in `SPOT_RESIDENTS` row-major order. Fish artwork and colours were not redrawn.
 
@@ -93,7 +142,7 @@ The boat, harbor pier, fish atlas, and world atlas were requested on a uniform `
 - Surf prompt rows: Sea Mullet (*Mugil cephalus*) with a streamlined striped silver-grey body, two separated dorsal fins, forked tail, and quick schooling motion; Yellowfin Bream (*Acanthopagrus australis*) with a deep silver body, spiny dorsal, yellow lower fins, pectoral sculling, and gentle tail flex; Sand Whiting (*Sillago ciliata*) with a slender silver-grey body, pointed snout, two-part dorsal profile, yellow lower fins, and compact tail beats over sand.
 - Bay prompt rows: Dusky Flathead (*Platycephalus fuscus*) with a depressed wedge head, long mottled sandy body, mostly rigid ambush posture, and short-burst rear flex; Luderick (*Girella tricuspidata*) with a deep bluish-grey body, narrow vertical bars, pectoral sculling, and gentle reef-grazing turns; Eastern Australian Salmon (*Arripis trutta*) with an elongated silver body, large forked tail, and fast schooling tail beats.
 - Reef prompt rows: Snapper (*Chrysophrys auratus*, also commonly recorded as *Pagrus auratus*) with a pinkish-silver body, blue spots, spiny dorsal, and measured posterior beats; Yellowtail Kingfish (*Seriola lalandi*) with a fusiform silver body, yellow stripe and forked tail, rigid head, and strong carangiform flex; Mulloway (*Argyrosomus japonicus*) with a silver-bronze body, pearly lateral spots, steady cruising, and occasional stronger surges.
-- `fish-beach-atlas-ui.png`: transparent 768 × 768 neutral-pose derivative, mechanically cropped from frame zero, chroma-keyed, proportionally resized, and arranged in `BEACH_SPOT_RESIDENTS` row-major order for harbor contract art. The fish artwork was not redrawn.
+- `fish-beach-atlas-ui.png`: transparent 768 × 768 neutral-pose derivative, mechanically cropped from frame zero, chroma-keyed, proportionally resized, and arranged in `BEACH_SPOT_RESIDENTS` row-major order for Beach market listings and detail art. The fish artwork was not redrawn.
 
 ### `surface-fishing-cues.png`
 
@@ -106,7 +155,7 @@ The boat, harbor pier, fish atlas, and world atlas were requested on a uniform `
 
 ### `polarized-lens.png`
 
-- Runtime role: additive clear-water reveal beneath the boat, including its soft feathered column, painted refraction texture, and three incomplete caustic trails
+- Runtime role: additive clear-water reveal beneath the boat when approaching a fishing ground, including its soft feathered column, painted refraction texture, and three incomplete caustic trails
 - Generated size: 1024 × 1536
 - Runtime size: 512 × 768, downscaled uniformly for gameplay
 - Generation mode: OpenAI built-in GPT Image generation, using the approved polarized-lens and shoal mockups plus `lake-chart.png` as visual references
@@ -150,7 +199,7 @@ The boat, harbor pier, fish atlas, and world atlas were requested on a uniform `
 
 ### `fishing-line-limit-float.png`
 
-- Runtime role: repeated round survey-float sprite along the reachable fishing-depth boundary
+- Runtime role: repeated round float sprite along the reachable fishing-depth boundary
 - Generated source size: 1254 × 1254; runtime size: 512 × 512 with authored alpha
 - Generation mode: OpenAI built-in image generation using the approved revised fishing mockup and `world-atlas.png` as visual references
 - Prompt direction: one compact circular weathered cream survey housing with a small amber center, rope fastenings, and a tiny bottom mount; restrained FSHING gouache and screen-print texture; isolated on a uniform chroma-magenta matte; no line, fish, hook, boat, water, scenery, UI, text, shadow, or extra object
@@ -203,13 +252,13 @@ The boat, harbor pier, fish atlas, and world atlas were requested on a uniform `
 
 ### `ui-panel.png`
 
-- Runtime role: title, harbor, pause, settings, help, tutorial, and toast surface
+- Runtime role: title, harbor, pause, settings, credits, help, tutorial, and toast surface
 - Generated size: 1536 × 1024
 - Prompt: “Use GPT Image 2.0. Create a seamless-looking full-bleed interface panel surface for a restrained side-on 2D lake game. Edge-to-edge deep ink-navy painted paper with subtle coarse screen-print grain, a very thin inset warm-cream keyline, and one tiny safety-orange registration-mark accent in a corner. Minimal editorial design, quiet and practical. No text, no icons, no buttons, no sections, no ornate metal, no wood, no rivets, no bevel, no glowing, no transparency, no checkerboard, no external margin. The artwork must fill the entire rectangular canvas so it can be directly stretched as a dark UI panel.”
 
 ### `ui-button.png`
 
-- Runtime role: primary actions and touch-control surfaces
+- Runtime role: primary action button surface for menus and the dock/fish context control
 - Generated size: 1536 × 1024
 - Prompt: “Use GPT Image 2.0. Create a full-bleed primary action button surface for a restrained side-on 2D lake game. Edge-to-edge warm safety-orange and ochre painted rectangle, minimal screen-print texture, subtly darker bottom edge and a thin deep ink-navy inner keyline. Confident, practical, high-contrast, slightly worn but clean. No text, no icon, no arrow, no label, no ornate frame, no metal, no wood, no rivets, no detached shadow, no transparency, no checkerboard, no external margin. The colored surface must fill the entire canvas and remain readable when stretched behind HTML button text.”
 
@@ -228,10 +277,9 @@ The boat, harbor pier, fish atlas, and world atlas were requested on a uniform `
 - Prompt: “Use case: stylized-concept. Asset type: game UI padlock icon for the FSHING browser game. Create one original closed padlock pictogram for locked cargo inventory slots: front-facing and symmetrical, with a thick rounded shackle, compact rectangular lock body, and one small keyhole. Restrained bold hand-painted screen-print treatment; warm cream main shape, sparse safety-orange keyhole, very limited ink-navy contour detail; crisp silhouette readable at 30–50 pixels. Exactly one centered icon with generous equal padding on a perfectly flat solid #00FF00 chroma-key background. No navy tile, circle, medallion, border, frame, label, text, extra object, shadow, reflection, or watermark.”
 - Processing: The flat chroma key was removed with a soft matte and despill. The full generated source is retained as `output/imagegen/padlock-icon-source.png`; the runtime alpha PNG was reduced to 256 × 256 to avoid shipping unused resolution.
 
-### Job route icons
+### Job route icons (retired)
 
-- Runtime files: `job-freshness-fish.png` and `job-deliver-beacon.png`
-- Runtime role: the Freshness and Deliver pictograms in the three-stage harbor job route
+- Runtime role: none. `job-freshness-fish.png` and `job-deliver-beacon.png` remain in `src/assets/` as an authoring record of the removed delivery-job route. They are not imported by TypeScript, CSS, or HTML. The live harbor uses the fish market instead.
 - Freshness source size: 1254 × 1254; optimized runtime size: 256 × 256 with authored alpha
 - Freshness generation mode: OpenAI built-in GPT Image 2.0 generation followed by local chroma-key removal and Lanczos downscaling
 - Freshness prompt: “Create one unmistakable freshness pictogram: a lively side-profile fish paired with a crisp fresh leaf and two tiny sparkle accents, reading instantly as fresh fish rather than protection, approval, or a shield. Use a restrained bold screen-printed nautical game UI treatment matching FSHING: warm cream fish, safety-orange leaf and accents, dark navy internal linework, subtle printed texture, and a strong silhouette at 64–96 px. Center it with generous equal padding on a flat solid green chroma-key background. No shield, check mark, thermometer, clock, text, tile, badge, frame, shadow, reflection, or watermark.”
@@ -239,7 +287,7 @@ The boat, harbor pier, fish atlas, and world atlas were requested on a uniform `
 - Deliver generation mode: OpenAI built-in GPT Image 2.0 generation followed by local chroma-key removal and Lanczos downscaling
 - Deliver prompt: “Use case: stylized-concept. Asset type: standalone game UI pictogram for the FSHING browser game. Create one original freshwater harbor delivery beacon: a compact wooden navigation tower with a small roof, warm lantern window, short platform rails, and two restrained water strokes at its base. Bold hand-painted screen-print treatment matching the supplied FSHING menu: warm cream body, safety-orange light and accents, limited deep ink-navy outline, slightly irregular crafted edges, crisp silhouette readable at 50–90 pixels. Front-facing with a very slight three-quarter angle, centered with generous equal padding on a perfectly flat solid #FF00FF chroma-key background. No tile, circle, medallion, label, text, extra objects, boat, fish, shadow, reflection, border, frame, watermark, or checkerboard.”
 - Processing: the flat chroma key was removed with a soft matte and despill. The full generated source is retained as `output/imagegen/job-deliver-beacon-source.png`.
-- Presentation: imported as external image assets so the job route uses real artwork rather than procedural CSS shapes
+- Presentation: retained only as an authoring record; the job-route markup is no longer emitted
 
 ### `bin-icon.png`
 
@@ -261,7 +309,7 @@ FSHING bundles no external audio files. `src/services/feedbackService.ts` create
 | Catch | Noise transient plus two rising tones | Confirm a secured fish | Catch toast, flash, cargo update |
 | Collision | Low noise plus descending sawtooth | Communicate hull damage | Named hazard and damage toast |
 | Dock | Two descending triangle tones | Confirm arrival | Harbor overlay |
-| Delivery | Three-tone rising sequence | Confirm job completion | Delivery result and payment |
+| Delivery | Three-tone rising sequence | Confirm a market sale | Sale popup (`Sold, N fish`) |
 | Deny | Descending square tone | Mark an unavailable action | Written reason and disabled state |
 | Upgrade | Two rising tones | Confirm permanent progression | New tier/class text |
 | Haptics | Optional `navigator.vibrate` patterns per cue | Reinforce action category | Never required to understand state |
