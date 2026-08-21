@@ -504,6 +504,37 @@
   display: none;
 }
 
+.game-ui:has(.harbor-screen):has(.market-tutorial:not([hidden])) .market-tutorial {
+  top: max(12px, env(safe-area-inset-top));
+  right: auto;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.game-ui:has(.market-tutorial:not([hidden])) .harbor-screen.is-first-voyage {
+  padding-top: calc(max(18px, env(safe-area-inset-top)) + 118px);
+}
+
+.game-ui:has(.market-tutorial:not([hidden])) .harbor-screen.is-first-voyage .harbor-panel,
+.game-ui:has(.market-tutorial:not([hidden])) .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-panel,
+.game-ui:has(.market-tutorial:not([hidden])) .harbor-screen.is-harbor-market .market-harbor-panel {
+  height: min(760px, calc(100dvh - 150px));
+  max-height: calc(100dvh - 150px);
+}
+
+@media (max-height: 720px) and (min-width: 701px) {
+  .game-ui:has(.market-tutorial:not([hidden])) .harbor-screen.is-first-voyage {
+    padding-top: 16px;
+  }
+
+  .game-ui:has(.market-tutorial:not([hidden])) .harbor-screen.is-first-voyage .harbor-panel,
+  .game-ui:has(.market-tutorial:not([hidden])) .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-panel,
+  .game-ui:has(.market-tutorial:not([hidden])) .harbor-screen.is-harbor-market .market-harbor-panel {
+    height: min(760px, calc(100dvh - 32px));
+    max-height: calc(100dvh - 32px);
+  }
+}
+
 .market-tutorial > div:first-child {
   display: flex;
   min-width: 0;
@@ -710,6 +741,30 @@
     top: 10px;
     right: 10px;
     width: calc(100vw - 20px);
+  }
+
+  .game-ui:has(.harbor-screen):has(.market-tutorial:not([hidden])) .market-tutorial {
+    right: 10px;
+    left: 10px;
+    width: calc(100vw - 20px);
+    transform: none;
+  }
+
+  .game-ui:has(.market-tutorial:not([hidden])) .harbor-screen.is-first-voyage {
+    padding-top: 128px;
+  }
+
+  .game-ui:has(.market-tutorial:not([hidden])) .harbor-screen.is-first-voyage .harbor-panel,
+  .game-ui:has(.market-tutorial:not([hidden])) .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-panel,
+  .game-ui:has(.market-tutorial:not([hidden])) .harbor-screen.is-harbor-market .market-harbor-panel {
+    height: calc(100dvh - 148px);
+    max-height: calc(100dvh - 148px);
+  }
+
+  .game-ui:has(.market-tutorial:not([hidden])) .toast {
+    top: auto;
+    right: max(12px, env(safe-area-inset-right));
+    bottom: max(12px, env(safe-area-inset-bottom));
   }
 }
 

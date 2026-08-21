@@ -689,7 +689,6 @@
 }
 
 .cargo-slot.is-empty {
-  border-style: dashed;
   background: rgb(247 241 227 / 1.5%);
 }
 
@@ -698,6 +697,7 @@
 }
 
 .cargo-slot.is-occupied {
+  padding-top: 28px;
   border-color: var(--menu-signal);
   background: rgb(232 164 77 / 8%);
 }
@@ -825,7 +825,6 @@
 }
 
 .cargo-slot.is-locked {
-  border-style: dashed;
   background: rgb(1 14 21 / 34%);
   cursor: pointer;
 }
@@ -1012,7 +1011,6 @@
   margin: auto 0 0;
   padding: 12px 0 0;
   border: 0;
-  border-top: 1px solid rgb(145 169 176 / 29%);
 }
 
 .harbor-screen.is-first-voyage .panel-actions > div,
@@ -1439,6 +1437,10 @@
   .cargo-slot-copy strong {
     max-width: 66px;
     font-size: 0.7rem;
+  }
+
+  .cargo-slot-copy small {
+    white-space: nowrap;
   }
 
   .cargo-padlock {
