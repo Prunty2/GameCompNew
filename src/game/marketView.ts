@@ -108,7 +108,7 @@ function marketDetailMarkup(
   </article>`;
 }
 
-function fishIcon(
+export function fishIcon(
   species: FishSpecies,
   fishAtlasUrl: string,
   beachFishAtlasUrl: string,
