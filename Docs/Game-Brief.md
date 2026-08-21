@@ -165,7 +165,7 @@ Costs are `base + currentTier × 55` shells.
 | Beach | 120 | one-time | Unlock travel to the coastal map |
 | Outer permit | 85 | one-time | Outer Gloam access. Gloam Ferry only |
 
-Beach and Engine boost are presented as two larger feature cards side by side beneath the tiered upgrades. Each uses unique generated artwork so the destination and ability read distinctly at a glance.
+Cargo, Engine, and Line depth are stacked vertically as compact tier cards. Beach and Engine boost are presented as two larger feature cards side by side beneath them. Each uses a unique generated pictogram matching the rest of the harbor icon set so the destination and ability read distinctly at a glance.
 
 Boat class names (Skiff through Lakebreaker) exist in balance data and are not shown in the harbor UI. Repair is not sold. The hull starts at 18 damage; reaching 100 damage would rescue to the nearest harbor, charge up to 20 shells, and dump cargo, but nothing in the live loop applies collision damage.
 
