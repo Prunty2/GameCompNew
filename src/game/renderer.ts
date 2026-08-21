@@ -28,8 +28,6 @@ import {
   FISH,
   FISHING_SPOTS,
   HARBORS,
-  primarySpeciesForSpot,
-  residentsForSpot,
   regionSurfaceTintAt,
   type FishRarity,
   type FishSpecies,
@@ -48,6 +46,7 @@ import {
   FISHING_RARITY_COLOURS,
   fishingDiveProgress,
   fishingFishPose,
+  fishingHighlightSpecies,
   fishingPointToScreen,
   fishingReelCameraProgress,
   fishingViewLayout,
@@ -571,10 +570,11 @@ export class CanvasRenderer {
     const { context } = this;
     const spot = FISHING_SPOTS.find((candidate) => candidate.id === fishing.spot);
     if (!spot) return;
-    const targetSpecies = simulation.progress.marketTarget
-      && residentsForSpot(simulation.world, spot.id).includes(simulation.progress.marketTarget)
-      ? simulation.progress.marketTarget
-      : primarySpeciesForSpot(simulation.world, spot.id);
+    const targetSpecies = fishingHighlightSpecies(
+      simulation.progress.marketTarget,
+      simulation.world,
+      spot.id,
+    );
     const maximumDepth = maxFishingDepth(simulation);
     const entryDiveProgress = fishingDiveProgress(simulation.elapsed, fishing.startedAt, settings.reducedMotion);
     const reelProgress = fishing.reeling
@@ -595,7 +595,11 @@ export class CanvasRenderer {
     this.canvas.dataset.fishingSurfaceSpriteOpacity = reelProgress.toFixed(3);
     this.canvas.dataset.fishingSurfaceBlend = surfaceProgress.toFixed(3);
     this.canvas.dataset.fishingSpot = spot.id;
-    this.canvas.dataset.targetRarity = FISH[targetSpecies].rarity;
+    if (targetSpecies) {
+      this.canvas.dataset.targetRarity = FISH[targetSpecies].rarity;
+    } else {
+      delete this.canvas.dataset.targetRarity;
+    }
     this.canvas.dataset.fishingState = fishing.reeling ? "reeling" : fishing.exitingAt !== null ? "exiting" : "steering";
     this.canvas.setAttribute(
       "aria-label",
@@ -603,7 +607,9 @@ export class CanvasRenderer {
         ? `Fishing at ${spot.name}. Reeling ${FISH[fishing.reeling.species].name} to the boat.`
         : fishing.exitingAt !== null
           ? `Leaving ${spot.name} and returning to the lake surface.`
-        : `Fishing at ${spot.name}. Target ${FISH[targetSpecies].name}, ${FISH[targetSpecies].rarity} rarity.`,
+        : targetSpecies
+          ? `Fishing at ${spot.name}. Target ${FISH[targetSpecies].name}, ${FISH[targetSpecies].rarity} rarity.`
+          : `Fishing at ${spot.name}.`,
     );
     const fishingEnvironments = simulation.world === "beach"
       ? art.beachFishingEnvironments
@@ -643,12 +649,12 @@ export class CanvasRenderer {
       context.translate(animatedPoint.x, animatedPoint.y);
       context.rotate(pose.rotation * heading);
       context.scale(pose.scaleX, pose.scaleY);
-      if (target.species === targetSpecies) {
+      if (targetSpecies && target.species === targetSpecies) {
         this.drawFishOutline(target.species, pose.animationFrame, { x: 0, y: 0 }, heading, width, height, settings.highContrast);
       }
       this.drawFish(target.species, pose.animationFrame, { x: 0, y: 0 }, heading, width, height, settings.highContrast);
       context.restore();
-      if (target.species === targetSpecies) {
+      if (targetSpecies && target.species === targetSpecies) {
         context.save();
         context.globalAlpha = schoolOpacity;
         this.drawFishingTargetChevron(
@@ -704,7 +710,9 @@ export class CanvasRenderer {
     this.drawTackleCell(1, 1, hook.x, hook.y, hookSize, hookSize);
     this.drawQuestHookGuide(simulation, fishing, hook, width, layout, maximumDepth, settings);
 
-    this.drawFishingTargetGuide(targetSpecies, width, height, settings.highContrast, layout.surfaceY);
+    if (targetSpecies) {
+      this.drawFishingTargetGuide(targetSpecies, width, height, settings.highContrast, layout.surfaceY);
+    }
     if (fishing.reeling) {
       this.drawReelingCue(fishing.reeling.species, reelProgress, width, height, settings.highContrast);
     } else {

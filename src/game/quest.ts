@@ -209,7 +209,8 @@ export function questHookTargetIndex(simulation: Simulation): number | null {
   if (!shouldFollowHook(simulation)) return null;
   const fishing = simulation.fishing;
   if (!fishing) return null;
-  const targetSpecies = simulation.progress.marketTarget ?? "bluegill";
+  const targetSpecies = simulation.progress.marketTarget;
+  if (!targetSpecies) return null;
   let best: { index: number; distance: number } | null = null;
   for (const [index, target] of fishing.targets.entries()) {
     if (target.species !== targetSpecies) continue;

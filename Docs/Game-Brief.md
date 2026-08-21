@@ -150,7 +150,7 @@ Simulation step is `1/120` s. Gameplay RNG is seeded. The boat travels only on t
 
 Hook depth is `min(0.94, 0.3 + lineTier × 0.125)`. Fish below the line limit are visible and dimmed but cannot be hooked. Escape while fishing reels the empty line and returns to sailing; it does not pause.
 
-Each species has a deterministic swim gait. The tracked species (or the site's primary resident if nothing tracked is present) gets a rarity outline and a hook-guidance cue.
+Each species has a deterministic swim gait. The tracked species gets a rarity outline, a hook-guidance cue, and a named specimen in the fishing HUD, but only when that fish lives at the current site. Nothing is highlighted while no fish is tracked.
 
 ## Upgrades and services
 
@@ -213,7 +213,7 @@ Development shortcuts: `B` grants a temporary boost. In `npm run dev`, `G` jumps
 - Pause when the window blurs or the tab hides
 - Keyboard menus with focus outlines
 - Live regions for toasts, sales, tutorial, and navigation
-- Fishing canvas `aria-label` includes site, target, and rarity
+- Fishing canvas `aria-label` includes the site, and the tracked target and rarity when a fish is tracked
 - Locked market cards and disabled actions have text, not colour alone
 
 The in-fishing “W / S MOVE HOOK” cue is hardcoded and does not follow rebinds.

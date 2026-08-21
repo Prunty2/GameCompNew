@@ -406,6 +406,7 @@ describe("FSHING side-on simulation", () => {
     const simulation = createSimulation(9);
     undock(simulation);
     expect(startFishing(simulation, "sunwardShoal")).toBe(true);
+    expect(tutorialPrompt(simulation)).toBe("Steer the hook onto a reachable fish.");
     const target = simulation.fishing?.targets[0];
     if (!simulation.fishing || !target) throw new Error("Expected a fishing target.");
     simulation.fishing.hook = { x: target.x, y: target.y };
@@ -534,9 +535,10 @@ describe("FSHING side-on simulation", () => {
     expect(new Set(simulation.fishing?.targets.map((target) => target.species))).toEqual(
       new Set(BEACH_SPOT_RESIDENTS.sunwardShoal),
     );
-    expect(tutorialPrompt(simulation)).toContain("Sea Mullet");
+    expect(tutorialPrompt(simulation)).toBe("Steer the hook onto a reachable fish.");
     simulation.progress.discovered.push("seaMullet");
     expect(trackMarketSpecies(simulation, "seaMullet")).toBe(true);
+    expect(tutorialPrompt(simulation)).toContain("Sea Mullet");
     expect(trackMarketSpecies(simulation, "bluegill")).toBe(false);
     simulation.mode = "cruising";
     simulation.fishing = null;
