@@ -146,7 +146,12 @@ function priceGraph(history: MarketHistoryPoint[], fishName: string): string {
   const dots = points.map((point) => {
     const daysAgo = currentDay - point.day;
     const dayLabel = daysAgo === 0 ? "Today" : `${daysAgo} ${daysAgo === 1 ? "day" : "days"} ago`;
-    return `<circle cx="${point.x}" cy="${point.y}" r="5"><title>${dayLabel}: ${point.price} shells</title></circle>`;
+    return `<g class="graph-point">
+      <circle class="graph-point-hit" cx="${point.x}" cy="${point.y}" r="14"></circle>
+      <circle class="graph-point-dot" cx="${point.x}" cy="${point.y}" r="5"></circle>
+      <text class="graph-point-price" x="${point.x}" y="${point.y - 12}" text-anchor="middle" aria-hidden="true">${point.price}</text>
+      <title>${dayLabel}: ${point.price} shells</title>
+    </g>`;
   }).join("");
   const description = history.map((point) => {
     const daysAgo = currentDay - point.day;

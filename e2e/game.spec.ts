@@ -296,6 +296,14 @@ test("market uses a scrollable fish-card grid and a focused detail view", async 
   const detail = page.locator(".market-detail");
   await expect(detail.getByRole("heading", { name: "Lake Sturgeon" })).toBeVisible();
   await expect(detail.getByRole("img", { name: /Lake Sturgeon price history/ })).toBeVisible();
+  const firstGraphPoint = detail.locator(".graph-point").first();
+  const hoveredPrice = firstGraphPoint.locator(".graph-point-price");
+  await expect(hoveredPrice).toHaveCSS("opacity", "0");
+  await firstGraphPoint.locator(".graph-point-hit").hover();
+  await expect(hoveredPrice).toHaveText(/^\d+$/);
+  await expect(hoveredPrice).toHaveCSS("opacity", "1");
+  await detail.getByRole("heading", { name: "Lake Sturgeon" }).hover();
+  await expect(hoveredPrice).toHaveCSS("opacity", "0");
   await expect(detail.locator(".market-hold-pill")).toHaveCount(0);
   await expect(detail.locator(".panel-eyebrow")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Back to market" })).toBeVisible();

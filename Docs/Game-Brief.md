@@ -110,7 +110,7 @@ else: max(1, round(quote × (0.25 + 0.75 × freshness / 100)))
 
 Selling a listing sells every fresh catch of that species at the current harbor. Spoiled fish stay in cargo until released.
 
-The detail view shows the **docked harbor's** price, trend, and seven-day graph. It does not list the other harbor. After a tracked catch, on-water guidance points at whichever harbor currently quotes higher.
+The detail view shows the **docked harbor's** price, trend, and seven-day graph. Hovering a graph point shows that day's price as a number. It does not list the other harbor. After a tracked catch, on-water guidance points at whichever harbor currently quotes higher.
 
 Hidden market conditions still change quotes, availability, and fog math:
 

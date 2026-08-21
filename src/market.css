@@ -521,6 +521,17 @@
   stroke-width: 2.5;
 }
 
+.market-price-graph .graph-point-hit {
+  cursor: crosshair;
+  fill: transparent;
+  stroke: transparent;
+}
+
+.market-price-graph .graph-point-dot,
+.market-price-graph .graph-point-price {
+  pointer-events: none;
+}
+
 .market-price-graph text {
   fill: #9eb7ba;
   font-family: inherit;
@@ -532,6 +543,21 @@
   fill: #f7f1e3;
   font-size: 11px;
   font-weight: 900;
+}
+
+.market-price-graph .graph-point-price {
+  fill: #f7f1e3;
+  font-size: 14px;
+  font-weight: 950;
+  opacity: 0;
+  paint-order: stroke;
+  stroke: #071f29;
+  stroke-linejoin: round;
+  stroke-width: 5px;
+}
+
+.market-price-graph .graph-point:hover .graph-point-price {
+  opacity: 1;
 }
 
 .market-tutorial {
