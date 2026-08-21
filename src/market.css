@@ -38,6 +38,8 @@
   display: flex;
   min-height: 54px;
   align-items: center;
+  justify-content: space-between;
+  gap: 16px;
   padding: 2px 3px 11px;
 }
 
@@ -45,6 +47,15 @@
   margin-top: 4px;
   font-size: clamp(1.35rem, 2.5vw, 1.75rem);
   line-height: 1;
+}
+
+.market-sell-all-button {
+  min-height: 44px;
+  padding: 9px 18px;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 0.76rem;
+  white-space: nowrap;
 }
 
 .market-summary-pills {
@@ -657,6 +668,11 @@
     font-size: 1.22rem;
   }
 
+  .market-sell-all-button {
+    padding-inline: 13px;
+    font-size: 0.66rem;
+  }
+
   .market-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
@@ -714,6 +730,16 @@
 }
 
 @media (max-width: 460px) {
+  .market-board-heading {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .market-sell-all-button {
+    width: 100%;
+  }
+
   .market-listing-copy > strong {
     font-size: 0.74rem;
   }

@@ -6,6 +6,7 @@ import {
   type HarborId,
 } from "./balance";
 import {
+  bulkSalePreview,
   marketHistory,
   marketQuote,
   salePreview,
@@ -64,9 +65,20 @@ export function marketBoardMarkup(
     </button>`;
   }).join("");
 
+  const bulkSale = bulkSalePreview(
+    simulation.cargo,
+    harborId,
+    simulation.progress.marketDay,
+    simulation.seed,
+  );
+  const sellAllLabel = bulkSale.quantity === 0
+    ? "No fresh fish to sell"
+    : `Sell all ${bulkSale.quantity} fish · ${bulkSale.total} shells`;
+
   return `<section class="market-board is-catalogue-view" aria-label="Fish market">
     <header class="market-board-heading">
       <h3>Fish market</h3>
+      <button class="primary-button market-sell-all-button" type="button" data-action="sell-all-market-fish" ${bulkSale.quantity === 0 ? "disabled" : ""}>${sellAllLabel}</button>
     </header>
     <div class="market-list" role="list" aria-label="Fish prices and locked discoveries">${listings}</div>
   </section>`;

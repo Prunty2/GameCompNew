@@ -27,6 +27,7 @@ import {
   type SurveyResult,
 } from "./stem";
 import {
+  bulkSalePreview,
   marketCondition,
   marketQuote,
   residentCountForMarket,
@@ -103,6 +104,12 @@ export interface MarketSaleResult {
   payment: number;
 }
 
+export interface MarketBulkSaleResult {
+  harbor: HarborId;
+  quantity: number;
+  payment: number;
+}
+
 export interface FishingTarget extends WorldPoint {
   species: FishSpecies;
   direction: -1 | 1;
@@ -139,7 +146,7 @@ export interface DeliveryResult {
 export type SimulationEvent =
   | { type: "caught"; species: FishSpecies }
   | { type: "delivered"; payment: number }
-  | { type: "sold"; result: MarketSaleResult }
+  | { type: "sold"; result: Pick<MarketSaleResult, "quantity" | "payment"> }
   | { type: "market-day"; day: number }
   | { type: "docked"; harbor: HarborId }
   | { type: "full-cargo" }
@@ -499,6 +506,40 @@ export function sellSpeciesAtMarket(
     simulation.progress.marketTutorialStep === "sell"
     && simulation.progress.marketTarget === species
   ) {
+    simulation.progress.marketTutorialStep = "complete";
+  }
+  simulation.events.push({ type: "sold", result });
+  if (!simulation.progress.seasonCompleted && simulation.progress.marketSales >= SEASON_SALES) {
+    simulation.progress.seasonCompleted = true;
+    simulation.events.push({ type: "season-complete" });
+  }
+  return result;
+}
+
+export function sellAllFishAtMarket(simulation: Simulation): MarketBulkSaleResult | null {
+  const harbor = simulation.dockedAt;
+  if (!harbor) return null;
+  const preview = bulkSalePreview(
+    simulation.cargo,
+    harbor,
+    simulation.progress.marketDay,
+    simulation.seed,
+  );
+  if (preview.quantity === 0) return null;
+  const soldTarget = simulation.progress.marketTarget !== null
+    && simulation.cargo.some((item) => (
+      item.species === simulation.progress.marketTarget && item.freshness > 0
+    ));
+  simulation.cargo = simulation.cargo.filter((item) => item.freshness <= 0);
+  const result: MarketBulkSaleResult = {
+    harbor,
+    quantity: preview.quantity,
+    payment: preview.total,
+  };
+  simulation.progress.money += result.payment;
+  simulation.progress.marketSales += 1;
+  simulation.progress.marketEarnings += result.payment;
+  if (simulation.progress.marketTutorialStep === "sell" && soldTarget) {
     simulation.progress.marketTutorialStep = "complete";
   }
   simulation.events.push({ type: "sold", result });

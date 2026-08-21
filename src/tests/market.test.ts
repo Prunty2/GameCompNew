@@ -3,6 +3,7 @@ import { FISH, type FishSpecies, type HarborId } from "../game/balance";
 import {
   MARKET_HISTORY_DAYS,
   MARKET_MAX_DAILY_CHANGE,
+  bulkSalePreview,
   catchSaleValue,
   marketHistory,
   marketQuote,
@@ -59,6 +60,21 @@ describe("fish market", () => {
       wholeFishValue: 40,
       freshnessLoss: 7,
       total: 33,
+    });
+  });
+
+  test("previews every fresh cargo item at its species quote", () => {
+    const cargo = [
+      { species: "bluegill" as const, freshness: 100 },
+      { species: "yellowPerch" as const, freshness: 50 },
+      { species: "lakeTrout" as const, freshness: 0 },
+    ];
+    const preview = bulkSalePreview(cargo, "brindle", 3, 11);
+
+    expect(preview).toEqual({
+      quantity: 2,
+      total: catchSaleValue(marketQuote("bluegill", "brindle", 3, 11).price, 100)
+        + catchSaleValue(marketQuote("yellowPerch", "brindle", 3, 11).price, 50),
     });
   });
 

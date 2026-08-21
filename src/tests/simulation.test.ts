@@ -31,6 +31,7 @@ import {
   releaseCargo,
   restoreCargo,
   resolveCatch,
+  sellAllFishAtMarket,
   sellSpeciesAtMarket,
   shouldShowNightIndicator,
   startFishing,
@@ -542,6 +543,27 @@ describe("FSHING side-on simulation", () => {
     expect(sellSpeciesAtMarket(simulation, "bluegill")).not.toBeNull();
     expect(simulation.progress.seasonCompleted).toBe(true);
     expect(simulation.events.some((event) => event.type === "season-complete")).toBe(true);
+  });
+
+  test("sells every fresh fish in one market transaction and keeps spoiled cargo", () => {
+    const simulation = createSimulation(9, { marketSales: 2, marketEarnings: 10 });
+    simulation.progress.marketTarget = "yellowPerch";
+    simulation.progress.marketTutorialStep = "sell";
+    simulation.cargo = [
+      { species: "bluegill", freshness: 100 },
+      { species: "yellowPerch", freshness: 50 },
+      { species: "lakeTrout", freshness: 0 },
+    ];
+    const moneyBefore = simulation.progress.money;
+    const result = sellAllFishAtMarket(simulation);
+
+    expect(result).toMatchObject({ harbor: "brindle", quantity: 2 });
+    expect(simulation.progress.money).toBe(moneyBefore + result!.payment);
+    expect(simulation.progress.marketSales).toBe(3);
+    expect(simulation.progress.marketEarnings).toBe(10 + result!.payment);
+    expect(simulation.progress.marketTutorialStep).toBe("complete");
+    expect(simulation.cargo).toEqual([{ species: "lakeTrout", freshness: 0 }]);
+    expect(simulation.events).toContainEqual({ type: "sold", result });
   });
 
 });
