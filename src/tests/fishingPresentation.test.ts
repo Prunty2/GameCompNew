@@ -6,6 +6,7 @@ import {
   FISHING_RARITY_COLOURS,
   fishingDiveProgress,
   fishingFishPose,
+  fishingFocusPresentation,
   fishingHighlightSpecies,
   fishingPointToScreen,
   fishingReelCameraProgress,
@@ -29,6 +30,20 @@ describe("fishing presentation", () => {
     expect(fishingReelCameraProgress(1, 0.5, false)).toBe(0.5);
     expect(fishingReelCameraProgress(1, 1, false)).toBe(0);
     expect(fishingReelCameraProgress(1, 0, true)).toBe(0);
+  });
+
+  test("freezes and zones out the background school during a fight", () => {
+    expect(fishingFocusPresentation(12, 1, null)).toEqual({
+      backgroundFishOpacity: 1,
+      backgroundPoseElapsed: 12,
+      showTargetGuides: true,
+    });
+    expect(fishingFocusPresentation(15, 1, 12)).toEqual({
+      backgroundFishOpacity: 0.16,
+      backgroundPoseElapsed: 12,
+      showTargetGuides: false,
+    });
+    expect(fishingFocusPresentation(16, 0.5, 12).backgroundFishOpacity).toBeCloseTo(0.08);
   });
 
   test("gives each fish a deterministic swim cycle and respects reduced motion", () => {

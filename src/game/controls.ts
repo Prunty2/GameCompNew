@@ -20,7 +20,7 @@ export const CONTROL_LABELS: Record<ControlAction, { label: string; detail: stri
   up: { label: "Hook up", detail: "Steer the hook up while fishing." },
   down: { label: "Hook down", detail: "Steer the hook down while fishing." },
   boost: { label: "Boost", detail: "Hold while sailing to overclock the engine." },
-  action: { label: "Interact / reel", detail: "Dock or cast, then hold to reel a hooked fish." },
+  action: { label: "Interact / reel", detail: "Dock or cast; keyboard players hold this to reel." },
   pause: { label: "Pause", detail: "Pause or resume while on the lake." },
 };
 

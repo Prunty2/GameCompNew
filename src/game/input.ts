@@ -12,6 +12,8 @@ export class InputController {
   private debugBoostUnlockQueued = false;
   private pointerActionHeld = false;
   private bindings = new AbortController();
+  private fishingSurfaceBindings = new AbortController();
+  private fishingSurface: HTMLElement | null = null;
   private pendingRebind: { action: ControlAction; callback: (code: string | null) => void } | null = null;
 
   constructor(private controlBindings: ControlBindings) {
@@ -57,6 +59,29 @@ export class InputController {
     }
   }
 
+  bindFishingSurface(surface: HTMLElement): void {
+    this.fishingSurfaceBindings.abort();
+    this.fishingSurface?.classList.remove("is-reeling-input");
+    this.fishingSurface = surface;
+    this.fishingSurfaceBindings = new AbortController();
+    const { signal } = this.fishingSurfaceBindings;
+    const release = (event: PointerEvent): void => {
+      if (surface.hasPointerCapture(event.pointerId)) surface.releasePointerCapture(event.pointerId);
+      surface.classList.remove("is-reeling-input");
+      this.pointerActionHeld = false;
+    };
+    surface.addEventListener("pointerdown", (event) => {
+      if (!event.isPrimary || event.button !== 0) return;
+      event.preventDefault();
+      surface.setPointerCapture(event.pointerId);
+      surface.classList.add("is-reeling-input");
+      this.pointerActionHeld = true;
+    }, { signal });
+    surface.addEventListener("pointerup", release, { signal });
+    surface.addEventListener("pointercancel", release, { signal });
+    surface.addEventListener("contextmenu", (event) => event.preventDefault(), { signal });
+  }
+
   consumeAction(): boolean {
     const queued = this.actionQueued;
     this.actionQueued = false;
@@ -99,6 +124,7 @@ export class InputController {
 
   destroy(): void {
     this.bindings.abort();
+    this.fishingSurfaceBindings.abort();
     window.removeEventListener("keydown", this.onKeyDown);
     window.removeEventListener("keyup", this.onKeyUp);
     window.removeEventListener("blur", this.onBlur);
@@ -145,6 +171,7 @@ export class InputController {
   private readonly onBlur = (): void => {
     this.pressed.clear();
     this.pointerActionHeld = false;
+    this.fishingSurface?.classList.remove("is-reeling-input");
   };
 }
 

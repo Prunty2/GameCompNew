@@ -18,7 +18,7 @@ test("main menu presents centered play, settings, and credits actions", async ({
   await page.goto("/");
 
   const version = page.locator(".title-build-version");
-  await expect(version).toHaveText("v0.5.0 (PR #100)");
+  await expect(version).toHaveText("v0.5.1 (PR #TBD)");
   const versionBounds = await version.boundingBox();
   expect(versionBounds).not.toBeNull();
   expect(versionBounds!.x).toBeLessThan(24);
@@ -184,17 +184,19 @@ test("hooked fish require active reel and release tension control", async ({ pag
   await page.evaluate(() => window.__FSHING_TEST__?.hookSpecies("bluegill"));
 
   const canvas = page.locator("#game-canvas");
-  const reelButton = page.getByRole("button", { name: /Hold E to reel/ });
   await expect(canvas).toHaveAttribute("data-fishing-state", "fighting");
-  await expect(reelButton).toBeVisible();
+  await expect(page.locator("#context-action")).toBeHidden();
+  await expect(canvas).toHaveAttribute("data-fishing-background-fish-opacity", "0.160");
+  const frozenPoseTime = await canvas.getAttribute("data-fishing-background-pose-elapsed");
   const startingProgress = Number(await canvas.getAttribute("data-fishing-reel-progress"));
 
-  await reelButton.dispatchEvent("pointerdown", { pointerId: 1 });
+  await canvas.dispatchEvent("pointerdown", { pointerId: 1, button: 0, isPrimary: true });
   await page.waitForTimeout(900);
-  await reelButton.dispatchEvent("pointerup", { pointerId: 1 });
+  await canvas.dispatchEvent("pointerup", { pointerId: 1, button: 0, isPrimary: true });
   const pulledProgress = Number(await canvas.getAttribute("data-fishing-reel-progress"));
   const pulledTension = Number(await canvas.getAttribute("data-fishing-line-tension"));
   expect(pulledProgress).toBeGreaterThan(startingProgress);
+  await expect(canvas).toHaveAttribute("data-fishing-background-pose-elapsed", frozenPoseTime ?? "");
 
   await page.waitForTimeout(500);
   const restedTension = Number(await canvas.getAttribute("data-fishing-line-tension"));

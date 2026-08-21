@@ -246,6 +246,7 @@ export class Game {
   ) {
     this.renderer = new CanvasRenderer(canvas);
     this.input = new InputController(save.settings.controls);
+    this.input.bindFishingSurface(canvas);
     this.feedback = new FeedbackService(save.settings);
     this.simulation = createSimulation(7, save.progress);
     this.previousRenderMotion = captureRenderMotion(this.simulation);
@@ -419,7 +420,7 @@ export class Game {
     if (critical && !this.lineWasCritical) {
       this.feedback.cue("line-strain");
       this.pulseFeedback("collision");
-      this.showToast("LINE STRAIN — release Reel before the line breaks.");
+      this.showToast("LINE STRAIN — release left click or Reel before the line breaks.");
     }
     this.lineWasCritical = critical;
   }
@@ -544,19 +545,13 @@ export class Game {
     const prompt = getInteractionPrompt(this.simulation);
     if (action) {
       const fishingCue = prompt?.kind === "fishing";
-      const fight = this.simulation.fishing?.reeling;
-      const showReelControl = this.overlay === null && fight !== null && fight !== undefined && fight.landingAt === null;
-      const label = showReelControl ? "Hold to reel" : prompt?.label ?? "Interact";
-      action.hidden = !showReelControl && (!prompt || this.overlay !== null || this.simulation.mode === "fishing");
-      action.disabled = showReelControl ? false : prompt ? !prompt.enabled : true;
-      action.textContent = showReelControl ? "HOLD TO REEL" : label;
-      action.setAttribute(
-        "aria-label",
-        showReelControl ? `Hold ${formatKey(this.save.settings.controls.action)} to reel; release to lower tension` : label,
-      );
-      action.title = showReelControl ? `Hold ${formatKey(this.save.settings.controls.action)} to reel` : label;
+      const label = prompt?.label ?? "Interact";
+      action.hidden = !prompt || this.overlay !== null || this.simulation.mode === "fishing";
+      action.disabled = prompt ? !prompt.enabled : true;
+      action.textContent = label;
+      action.setAttribute("aria-label", label);
+      action.title = label;
       action.classList.toggle("is-fishing-cue", fishingCue);
-      action.classList.toggle("is-reel-control", showReelControl);
       this.syncContextActionAnchor(action);
     }
   }
@@ -1003,7 +998,7 @@ export class Game {
       },
       {
         title: "Catch and protect",
-        body: `Drop the line and steer onto a fish. Hold <kbd>${formatKey(this.save.settings.controls.action)}</kbd> to reel, then release during struggle bursts or critical tension. Tired fish become easier to land.`,
+        body: `Drop the line and steer onto a fish. Hold the left mouse button on the water to reel, then release during struggle bursts or critical tension. Keyboard players can hold <kbd>${formatKey(this.save.settings.controls.action)}</kbd>.`,
       },
       {
         title: "Sell and invest",

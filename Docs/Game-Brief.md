@@ -1,6 +1,6 @@
 # FSHING — game brief
 
-This brief is the product source of truth. It describes the playable game in `v0.5.0` (build label `v0.5.0 (PR #100)`), not leftover simulation APIs.
+This brief is the product source of truth. It describes the playable game in `v0.5.1` (build label pending the current pull request number), not leftover simulation APIs.
 
 FSHING is a single-player side-on fishing market game for desktop and mobile browsers. The player pilots a working boat across a lake, and later an unlockable Beach, then sells catches at two harbors whose prices move each in-game day.
 
@@ -9,7 +9,7 @@ FSHING is a single-player side-on fishing market game for desktop and mobile bro
 1. Dock at a harbor and open the **Fish market**.
 2. Inspect a discovered species, read today's local quote and its seven-day graph, then **Track** it.
 3. Sail to that species' fishing ground. Slow down until the hook cue appears, then drop the line.
-4. Steer the hook onto a reachable fish. Hold Reel to pull it closer, then release during struggle bursts or critical line tension. Landed catches reach the boat at 100% freshness.
+4. Steer the hook onto a reachable fish. Hold left click on the water (or touch / the Reel key) to pull it closer, then release during struggle bursts or critical line tension. Landed catches reach the boat at 100% freshness.
 5. Freshness falls while the simulation is running. Dock at the harbor that currently pays more and sell every fresh catch of that species.
 6. Spend shells on cargo, engine, line, boost, the Outer Gloam permit, or Beach access.
 
@@ -25,7 +25,7 @@ Market → Track → Sail → Fish → Reel → Sell while fresh → Upgrade →
 
 | Screen | How it opens | What it contains |
 | --- | --- | --- |
-| Title | Launch, or Title screen from pause | Wordmark, Play, Settings, Credits, `v0.5.0 (PR #100)` |
+| Title | Launch, or Title screen from pause | Wordmark, Play, Settings, Credits, the current `vX.Y.Z (PR #N)` build label |
 | Harbor | Play from a docked start, or docking | Market / Cargo / Upgrades tabs, shell balance, Help, Return to Lake or Beach |
 | Market detail | Selecting a discovered listing | Species art, current-harbor price, Track, Sell, 7-day graph |
 | Pause | Escape or Pause on the water | Resume, Settings, How to play, Title screen |
@@ -153,7 +153,9 @@ Simulation step is `1/120` s. Gameplay RNG is seeded. The boat travels only on t
 
 Hook depth is `min(0.94, 0.3 + lineTier × 0.125)`. Fish below the line limit are visible and dimmed but cannot be hooked. Escape while fishing reels the empty line and returns to sailing; it does not pause.
 
-Hooking a fish begins a deterministic line fight. Holding Interact reels; releasing it lowers tension but lets the fish slip backwards slightly and recover a little stamina. Reeling actively tires the fish, so waiting without engaging is not optimal. Fish struggle in readable pulses that raise tension and reduce reel speed. The HUD presents reel progress, line tension, fish condition, non-colour warning text, sound, and vibration. Keeping tension at or above 90% for 0.7 seconds breaks the line, returns the hook to the top, and leaves the player at the same fishing ground for an immediate retry. It does not remove cargo or money.
+Hooking a fish begins a deterministic line fight. Holding the primary mouse button directly on the fishing canvas reels; touch hold and the remappable Reel key remain equivalent accessibility inputs. Releasing lowers tension but lets the fish slip backwards slightly and recover a little stamina. Reeling actively tires the fish, so waiting without engaging is not optimal. Fish struggle in readable pulses that raise tension and reduce reel speed. The HUD explicitly says **HOLD LEFT CLICK** and presents reel progress, line tension, fish condition, non-colour warning text, sound, and vibration. There is no separate on-screen Reel button.
+
+During a fight, every non-hooked fish freezes on its current animation frame, fades to 16% opacity, and becomes desaturated. Tracked-fish outlines, chevrons, tutorial hook arrows, and the large species portrait are hidden until the fight ends so the hooked fish remains the sole visual focus. Keeping tension at or above 90% for 0.7 seconds breaks the line, returns the hook to the top, and leaves the player at the same fishing ground for an immediate retry. It does not remove cargo or money.
 
 Fight profiles scale by rarity: common fish have faster reel progress, quicker fatigue, shorter struggle windows, and more forgiving tension recovery; uncommon, rare, and legendary fish progressively reel more slowly, pull harder, slip farther, and struggle more often. Line tiers reduce tension gain by 12% per tier as well as extending maximum depth. After reel progress fills, the existing 1.15-second landing transition completes the catch.
 
@@ -206,10 +208,10 @@ Defaults:
 | Hook up | W | Steer the hook up |
 | Hook down | S | Steer the hook down |
 | Boost | Left Shift | Hold while sailing after unlock |
-| Interact / reel | E | Dock or drop the line; hold to reel a hooked fish and release to lower tension |
+| Interact / reel | E | Dock or drop the line; keyboard fallback for holding and releasing the reel |
 | Pause | P | Pause or resume on the water |
 
-Escape always pauses on the water, and always leaves fishing. Occupied rebinds swap. Pointer and touch operate menus, the dock/fish context button, and cargo release. There are no on-screen movement buttons.
+Escape always pauses on the water, and always leaves fishing. Occupied rebinds swap. Pointer and touch operate menus, the dock/fish context button, cargo release, and direct hold-to-reel input on the fishing canvas. There are no on-screen movement or Reel buttons.
 
 Development shortcuts: `B` grants a temporary boost. In `npm run dev`, `G` jumps to dusk and `H` jumps to full night.
 
