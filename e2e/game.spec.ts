@@ -186,7 +186,7 @@ test("hooked fish require active reel and release tension control", async ({ pag
   const canvas = page.locator("#game-canvas");
   await expect(canvas).toHaveAttribute("data-fishing-state", "fighting");
   await expect(page.locator("#context-action")).toBeHidden();
-  await expect(canvas).toHaveAttribute("data-fishing-background-fish-opacity", "0.160");
+  await expect(canvas).toHaveAttribute("data-fishing-background-fish-opacity", "0.680");
   const frozenPoseTime = await canvas.getAttribute("data-fishing-background-pose-elapsed");
   const startingProgress = Number(await canvas.getAttribute("data-fishing-reel-progress"));
 
@@ -1015,7 +1015,13 @@ test("how to play instructions advance one card at a time", async ({ page }) => 
   await page.getByRole("button", { name: "Previous" }).click();
   await expect(page.getByText("Step 1 of 4")).toBeVisible();
 
-  for (let step = 1; step < 4; step += 1) {
+  await page.getByRole("button", { name: "Next" }).click();
+  await page.getByRole("button", { name: "Next" }).click();
+  await expect(page.getByRole("heading", { name: "Catch and protect" })).toBeVisible();
+  await expect(page.locator(".help-card")).toContainText("hold the left mouse button anywhere on the water");
+  await expect(page.locator(".help-card")).toContainText("TENSION · CRITICAL");
+
+  for (let step = 3; step < 4; step += 1) {
     await page.getByRole("button", { name: "Next" }).click();
   }
   await expect(page.getByText("Step 4 of 4")).toBeVisible();

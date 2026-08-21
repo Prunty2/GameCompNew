@@ -32,18 +32,18 @@ describe("fishing presentation", () => {
     expect(fishingReelCameraProgress(1, 0, true)).toBe(0);
   });
 
-  test("freezes and zones out the background school during a fight", () => {
+  test("freezes and shadows the background school during a fight", () => {
     expect(fishingFocusPresentation(12, 1, null)).toEqual({
       backgroundFishOpacity: 1,
       backgroundPoseElapsed: 12,
       showTargetGuides: true,
     });
     expect(fishingFocusPresentation(15, 1, 12)).toEqual({
-      backgroundFishOpacity: 0.16,
+      backgroundFishOpacity: 0.68,
       backgroundPoseElapsed: 12,
       showTargetGuides: false,
     });
-    expect(fishingFocusPresentation(16, 0.5, 12).backgroundFishOpacity).toBeCloseTo(0.08);
+    expect(fishingFocusPresentation(16, 0.5, 12).backgroundFishOpacity).toBeCloseTo(0.34);
   });
 
   test("gives each fish a deterministic swim cycle and respects reduced motion", () => {

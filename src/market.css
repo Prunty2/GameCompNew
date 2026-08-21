@@ -567,14 +567,14 @@
   left: 50%;
   display: grid;
   box-sizing: border-box;
-  width: min(340px, calc(100vw - 28px));
-  min-height: 64px;
+  width: min(560px, calc(100vw - 28px));
+  min-height: 78px;
   grid-template-columns: 42px minmax(0, 1fr) 40px;
   align-items: center;
   gap: 10px;
   padding: 8px 9px 8px 12px;
   border: 1px solid rgb(247 241 227 / 52%);
-  border-radius: 999px;
+  border-radius: 28px;
   background: rgb(7 31 40 / 90%);
   color: var(--menu-paper, var(--cream));
   box-shadow: 0 5px 0 rgb(2 15 21 / 58%), 0 14px 30px rgb(2 15 21 / 36%);
@@ -653,6 +653,13 @@
   line-height: 1;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.market-tutorial-copy small {
+  color: rgb(247 241 227 / 78%);
+  font-size: 0.68rem;
+  font-weight: 650;
+  line-height: 1.25;
 }
 
 .market-tutorial-close {
@@ -829,7 +836,7 @@
 
   .market-tutorial {
     top: 10px;
-    width: min(320px, calc(100vw - 20px));
+    width: min(520px, calc(100vw - 20px));
   }
 }
 
@@ -977,7 +984,7 @@
   }
 
   .market-tutorial {
-    width: min(280px, calc(100vw - 16px));
+    width: min(360px, calc(100vw - 16px));
     min-height: 56px;
     gap: 8px;
     padding: 6px 7px 6px 10px;
@@ -985,5 +992,9 @@
 
   .market-tutorial-copy strong {
     font-size: 1rem;
+  }
+
+  .market-tutorial-copy small {
+    font-size: 0.62rem;
   }
 }

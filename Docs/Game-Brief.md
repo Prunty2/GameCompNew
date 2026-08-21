@@ -13,7 +13,7 @@ FSHING is a single-player side-on fishing market game for desktop and mobile bro
 5. Freshness falls while the simulation is running. Dock at the harbor that currently pays more and sell every fresh catch of that species.
 6. Spend shells on cargo, engine, line, boost, the Outer Gloam permit, or Beach access.
 
-A new save starts docked at Brindle Harbor on the lake with Bluegill already discovered. The first run is a four-step **First Assignment** that walks through inspect → track → catch → sell. The sale ends that assignment. When the player can afford a dock upgrade, a second tutorial walks through Upgrades.
+A new save starts docked at Brindle Harbor on the lake with Bluegill already discovered. The first run is a four-step **First Assignment** that walks through inspect → track → catch → sell. Each tutorial pill includes a short instruction that changes with the player's current screen and, during the catch, explains left-click reeling, releasing on fish pulls or critical tension, and resuming after tension falls. The sale ends that assignment. When the player can afford a dock upgrade, a second tutorial walks through Upgrades.
 
 After eight market sales the game shows a season report, then returns to the same market. Trading does not stop.
 
@@ -155,7 +155,7 @@ Hook depth is `min(0.94, 0.3 + lineTier × 0.125)`. Fish below the line limit ar
 
 Hooking a fish begins a deterministic line fight. Holding the primary mouse button directly on the fishing canvas reels; touch hold and the remappable Reel key remain equivalent accessibility inputs. Releasing lowers tension but lets the fish slip backwards slightly and recover a little stamina. Reeling actively tires the fish, so waiting without engaging is not optimal. Fish struggle in readable pulses that raise tension and reduce reel speed. The HUD explicitly says **HOLD LEFT CLICK** and presents reel progress, line tension, fish condition, non-colour warning text, sound, and vibration. There is no separate on-screen Reel button.
 
-During a fight, every non-hooked fish freezes on its current animation frame, fades to 16% opacity, and becomes desaturated. Tracked-fish outlines, chevrons, tutorial hook arrows, and the large species portrait are hidden until the fight ends so the hooked fish remains the sole visual focus. Keeping tension at or above 90% for 0.7 seconds breaks the line, returns the hook to the top, and leaves the player at the same fishing ground for an immediate retry. It does not remove cargo or money.
+During a fight, every non-hooked fish freezes on its current animation frame and becomes a clearly visible dark silhouette at 68% opacity. Tracked-fish outlines, chevrons, tutorial hook arrows, and the large species portrait are hidden until the fight ends so the hooked fish remains the sole visual focus. Keeping tension at or above 90% for 0.7 seconds breaks the line, returns the hook to the top, and leaves the player at the same fishing ground for an immediate retry. It does not remove cargo or money.
 
 Fight profiles scale by rarity: common fish have faster reel progress, quicker fatigue, shorter struggle windows, and more forgiving tension recovery; uncommon, rare, and legendary fish progressively reel more slowly, pull harder, slip farther, and struggle more often. Line tiers reduce tension gain by 12% per tier as well as extending maximum depth. After reel progress fills, the existing 1.15-second landing transition completes the catch.
 

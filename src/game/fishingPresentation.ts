@@ -67,7 +67,7 @@ export function fishingFocusPresentation(
 ): FishingFocusPresentation {
   const fightActive = hookedAt !== null;
   return {
-    backgroundFishOpacity: clamp(schoolOpacity, 0, 1) * (fightActive ? 0.16 : 1),
+    backgroundFishOpacity: clamp(schoolOpacity, 0, 1) * (fightActive ? 0.68 : 1),
     backgroundPoseElapsed: fightActive ? hookedAt : elapsed,
     showTargetGuides: !fightActive,
   };

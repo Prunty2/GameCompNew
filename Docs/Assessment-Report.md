@@ -49,7 +49,7 @@ By the end of a season of eight sales, a player should be able to:
 
 Primary: Year 7–10 students and casual browser players who like collection, upgrades, and short objectives. Secondary: players on CrazyGames who need the game to boot without an SDK and remain usable on a keyboard or a touch menu.
 
-A first run does not assume specialist vocabulary. First Assignment names the Bluegill, the Sunward Shoal, and the sell action in plain language.
+A first run does not assume specialist vocabulary. First Assignment names the Bluegill, the Sunward Shoal, and the sell action in plain language. Its instruction line adapts during the catch to explain left-click reeling and when to release for tension recovery.
 
 ### User needs
 

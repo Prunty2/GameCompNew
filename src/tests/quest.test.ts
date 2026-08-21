@@ -110,7 +110,28 @@ describe("first-assignment quest prototype", () => {
     const fishing = questPresentation(simulation, playView);
     expect(fishing.hookFollow).toBe(true);
     expect(fishing.title).toBe("Catch Bluegill");
-    expect(questHookTargetIndex(simulation)).toBeGreaterThanOrEqual(0);
+    expect(fishing.instruction).toContain("Steer the hook onto Bluegill");
+    const targetIndex = questHookTargetIndex(simulation);
+    expect(targetIndex).toBeGreaterThanOrEqual(0);
+    if (targetIndex === null) throw new Error("Expected the tutorial to select a Bluegill target");
+    const target = simulation.fishing?.targets[targetIndex];
+    expect(target).toBeDefined();
+    if (!simulation.fishing || !target) throw new Error("Expected a Bluegill fishing target");
+    simulation.fishing.reeling = {
+      species: target.species,
+      targetIndex,
+      hookedAt: simulation.elapsed,
+      direction: target.direction,
+      progress: 0,
+      tension: 0.12,
+      stamina: 1,
+      criticalSeconds: 0,
+      struggle: 0,
+      landingAt: null,
+    };
+    expect(questPresentation(simulation, playView).instruction).toBe(
+      "Hold left click to reel. Release when the fish pulls or tension is critical; hold again after tension falls.",
+    );
   });
 
   test("leads a fresh catch to the stronger harbor and the Sell button", () => {

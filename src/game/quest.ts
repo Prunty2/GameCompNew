@@ -50,6 +50,7 @@ export interface QuestPresentation {
   step: QuestGuideStep;
   heading: string;
   title: string;
+  instruction: string;
   index: number;
   totalSteps: number;
   uiTargetSelector: string | null;
@@ -105,6 +106,7 @@ export function questPresentation(
         step: assignmentStep,
         heading: "Tutorial",
         title: copy.title,
+        instruction: questInstruction(simulation, assignmentStep),
         index: copy.index,
         totalSteps: 4,
         uiTargetSelector: null,
@@ -118,6 +120,7 @@ export function questPresentation(
       step: assignmentStep,
       heading: "Tutorial",
       title: copy.title,
+      instruction: questInstruction(simulation, assignmentStep),
       index: copy.index,
       totalSteps: 4,
       uiTargetSelector: questUiTargetSelector(simulation, view, assignmentStep),
@@ -148,6 +151,11 @@ export function questPresentation(
         : step === "upgrade-fish"
           ? "Drop the line"
           : "Sail to Mosswater",
+      instruction: step === "upgrade-return"
+        ? "Leave the harbor to test the deeper fishing line."
+        : step === "upgrade-fish"
+          ? "Drop the line to finish the upgrade lesson."
+          : "Follow the marker to Mosswater Pool.",
       index: step === "upgrade-return" ? 3 : step === "upgrade-sail" ? 4 : 5,
       totalSteps: 5,
       uiTargetSelector: upgradeUiTargetSelector(simulation, view, step, null),
@@ -168,6 +176,11 @@ export function questPresentation(
     step,
     heading: "Tutorial",
     title: step === "upgrade-buy" ? "Buy line depth" : onLake ? "Dock harbor" : "Open upgrades",
+    instruction: step === "upgrade-buy"
+      ? "Buy tier 1 line depth to reach Mosswater fish."
+      : onLake
+        ? "Dock at a harbor to open its upgrade services."
+        : "Open Upgrades to improve the fishing line.",
     index: step === "upgrade-buy" ? 2 : 1,
     totalSteps: 5,
     uiTargetSelector: upgradeUiTargetSelector(simulation, view, step, upgrade),
@@ -382,12 +395,41 @@ function idlePresentation(step: QuestGuideStep, hidden: boolean): QuestPresentat
     step,
     heading: "",
     title: "",
+    instruction: "",
     index: 0,
     totalSteps: 0,
     uiTargetSelector: null,
     worldFollow: false,
     hookFollow: false,
   };
+}
+
+function questInstruction(simulation: Simulation, step: Exclude<MarketTutorialStep, "done">): string {
+  switch (step) {
+    case "inspect":
+      return "Open Bluegill on the market board to see its price and habitat.";
+    case "track":
+      return "Choose Track so the lake marker leads you to its fishing ground.";
+    case "catch": {
+      const fight = simulation.fishing?.reeling;
+      if (fight && fight.landingAt !== null) {
+        return "The fish is landed; get ready to sell it while fresh.";
+      }
+      if (fight) {
+        return "Hold left click to reel. Release when the fish pulls or tension is critical; hold again after tension falls.";
+      }
+      if (simulation.mode === "fishing") {
+        return "Steer the hook onto Bluegill. The other fish will become dark silhouettes once it is hooked.";
+      }
+      return simulation.dockedAt
+        ? "Return to the lake, then follow the marker to Sunward Shoal."
+        : "Follow the marker to Sunward Shoal, slow down, and drop the line.";
+    }
+    case "sell":
+      return "Follow SELL AT, dock, open Bluegill, and sell the fresh catch.";
+    case "complete":
+      return "The first market loop is complete.";
+  }
 }
 
 function isOnscreen(rect: QuestRect, viewport: { width: number; height: number }, inset: number): boolean {

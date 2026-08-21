@@ -582,7 +582,7 @@ export class Game {
       "aria-label",
       presentation.hidden
         ? "Tutorial"
-        : `Tutorial, ${presentation.title}, step ${presentation.index} of ${presentation.totalSteps}`,
+        : `Tutorial, ${presentation.title}, ${presentation.instruction}, step ${presentation.index} of ${presentation.totalSteps}`,
     );
     if (presentation.hidden) {
       this.lastQuestMarkup = "";
@@ -591,7 +591,7 @@ export class Game {
       this.syncQuestArrow();
       return;
     }
-    const markup = `<span class="market-tutorial-step" aria-hidden="true">${presentation.index}</span><div class="market-tutorial-copy"><span>${presentation.heading}</span><strong>${presentation.title}</strong></div><button class="market-tutorial-close" type="button" data-action="skip-market-tutorial" aria-label="Close tutorial"><span aria-hidden="true">×</span></button>`;
+    const markup = `<span class="market-tutorial-step" aria-hidden="true">${presentation.index}</span><div class="market-tutorial-copy"><span>${presentation.heading}</span><strong>${presentation.title}</strong><small>${presentation.instruction}</small></div><button class="market-tutorial-close" type="button" data-action="skip-market-tutorial" aria-label="Close tutorial"><span aria-hidden="true">×</span></button>`;
     if (markup !== this.lastQuestMarkup) {
       tutorial.innerHTML = markup;
       this.lastQuestMarkup = markup;
@@ -998,7 +998,7 @@ export class Game {
       },
       {
         title: "Catch and protect",
-        body: `Drop the line and steer onto a fish. Hold the left mouse button on the water to reel, then release during struggle bursts or critical tension. Keyboard players can hold <kbd>${formatKey(this.save.settings.controls.action)}</kbd>.`,
+        body: `Hook a fish, then hold the left mouse button anywhere on the water to reel. Watch TENSION: release when FISH PULLING or TENSION · CRITICAL appears, wait for the meter to fall, then hold again. Repeat until REEL fills. Keyboard players can hold <kbd>${formatKey(this.save.settings.controls.action)}</kbd>; touch players hold the water.`,
       },
       {
         title: "Sell and invest",

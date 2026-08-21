@@ -670,7 +670,7 @@ export class CanvasRenderer {
       const reachable = FISH[target.species].depthTier <= simulation.progress.upgrades.line;
       context.save();
       context.globalAlpha = (reachable ? 1 : 0.3) * focus.backgroundFishOpacity;
-      if (!focus.showTargetGuides) context.filter = "grayscale(0.85) blur(0.6px)";
+      if (!focus.showTargetGuides) context.filter = "grayscale(1) brightness(0.35) contrast(1.15)";
       context.translate(animatedPoint.x, animatedPoint.y);
       context.rotate(pose.rotation * heading);
       context.scale(pose.scaleX, pose.scaleY);
