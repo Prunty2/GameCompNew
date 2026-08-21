@@ -67,6 +67,7 @@ import {
   releaseCargo,
   restoreCargo,
   resolveCatch,
+  sellAllFishAtMarket,
   sellSpeciesAtMarket,
   shouldShowNightIndicator,
   skipMarketTutorial,
@@ -1244,6 +1245,13 @@ export class Game {
         }
         break;
       }
+      case "sell-all-market-fish":
+        if (sellAllFishAtMarket(this.simulation)) {
+          this.handleSimulationEvents();
+          this.renderOverlay();
+          this.refreshMarketTutorial();
+        }
+        break;
       case "finish-market-tutorial":
         finishMarketTutorial(this.simulation);
         this.syncSave();
