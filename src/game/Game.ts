@@ -12,6 +12,8 @@ import padlockIconUrl from "../assets/padlock-icon.png";
 import uiButtonUrl from "../assets/ui-button.png";
 import uiIconsUrl from "../assets/ui-icons.png";
 import uiPanelUrl from "../assets/ui-panel.png";
+import upgradeBeachUrl from "../assets/upgrade-beach.png";
+import upgradeEngineBoostUrl from "../assets/upgrade-engine-boost.png";
 import { FeedbackService, type FeedbackCue } from "../services/feedbackService";
 import type { PlatformService } from "../services/platformService";
 import { defaultSave, saveGame, type SaveData } from "../services/saveGame";
@@ -67,7 +69,7 @@ import {
   getInteractionPrompt,
   finishMarketTutorial,
   inspectMarketSpecies,
-  noteUpgradeServicesOpened,
+  noteUpgradePanelOpened,
   interact,
   leaveFishing,
   moveBoatForTesting,
@@ -120,12 +122,12 @@ type OverlayScreen =
   | "seasonReport"
   | null;
 
-type HarborSection = "market" | "cargo" | "services";
+type HarborSection = "market" | "cargo" | "upgrades";
 
 const HARBOR_SECTION_ICON: Record<HarborSection, string> = {
   market: "objective",
   cargo: "cargo",
-  services: "repair",
+  upgrades: "repair",
 };
 
 declare global {
@@ -198,6 +200,8 @@ export class Game {
     preloadImage(uiButtonUrl),
     preloadImage(uiIconsUrl),
     preloadImage(uiPanelUrl),
+    preloadImage(upgradeBeachUrl),
+    preloadImage(upgradeEngineBoostUrl),
   ]);
 
   constructor(
@@ -423,12 +427,12 @@ export class Game {
         break;
       case "permit":
         this.feedback.cue("upgrade");
-        this.showToast("Outer Gloam permit granted. Keep your lamp close.");
+        this.showToast("Outer Gloam permit granted. Watch the night water.");
         break;
       case "beach-unlocked":
         this.feedback.cue("upgrade");
         this.pulseFeedback("upgrade");
-        this.showToast("Beach unlocked. Travel there from Dock Services.");
+        this.showToast("Beach unlocked. Travel there from Upgrades.");
         break;
       case "boost-unlocked":
         this.feedback.cue("upgrade");
@@ -510,8 +514,8 @@ export class Game {
     if (!tutorial) return;
     const previousUpgradeStep = this.simulation.progress.upgradeTutorialStep;
     syncUpgradeTutorial(this.simulation);
-    if (this.overlay === "harbor" && this.harborSection === "services") {
-      noteUpgradeServicesOpened(this.simulation);
+    if (this.overlay === "harbor" && this.harborSection === "upgrades") {
+      noteUpgradePanelOpened(this.simulation);
     }
     if (previousUpgradeStep !== this.simulation.progress.upgradeTutorialStep) this.syncSave();
     const presentation = questPresentation(this.simulation, this.questViewContext());
@@ -677,7 +681,7 @@ export class Game {
   private marketHarborScreen(): string {
     const harborId = this.simulation.dockedAt ?? "brindle";
     const harbor = harborById(harborId);
-    const availableSections: HarborSection[] = ["market", "cargo", "services"];
+    const availableSections: HarborSection[] = ["market", "cargo", "upgrades"];
     const activeSection = availableSections.includes(this.harborSection) ? this.harborSection : "market";
     const availableCargoSlots = cargoCapacity(this.simulation);
     const cargoMarkup = Array.from({ length: BALANCE.maxCargoSlots }, (_, index) => {
@@ -703,7 +707,7 @@ export class Game {
         )
       : activeSection === "cargo"
         ? `<aside class="cargo-section" aria-labelledby="cargo-heading"><div class="cargo-inventory-heading"><h3 id="cargo-heading">Fish inventory</h3><span>${this.simulation.cargo.length} carried · ${availableCargoSlots} unlocked</span></div><div class="cargo-slot-grid" aria-label="Cargo inventory">${cargoMarkup}</div></aside>`
-        : `<section class="services" aria-label="Dock services"><div class="service-grid">${this.upgradeCard("cargo", "Cargo", "+1 cargo slot")}${this.upgradeCard("engine", "Engine", "+11% speed")}${this.upgradeCard("lamp", "Lamp", "Wider night view")}${this.upgradeCard("line", "Line depth", "Next depth tier")}${this.boostCard()}${this.beachCard()}${harborId === "gloam" ? this.permitCard() : ""}</div></section>`;
+        : `<section class="upgrades" aria-label="Upgrades"><div class="service-grid">${this.upgradeCard("cargo", "Cargo", "+1 cargo slot")}${this.upgradeCard("engine", "Engine", "+11% speed")}${this.upgradeCard("line", "Line depth", "Next depth tier")}${harborId === "gloam" ? this.permitCard() : ""}</div><div class="upgrade-feature-grid">${this.boostCard()}${this.beachCard()}</div></section>`;
     const tabs = `<nav class="harbor-tabs has-3-tabs" aria-label="Harbor sections" style="--harbor-tab-count: 3">${availableSections.map((section) => `<button class="harbor-tab ${activeSection === section ? "is-active" : ""}" type="button" data-action="harbor-section" data-harbor-section="${section}" aria-label="${capitalise(section)}" aria-pressed="${activeSection === section}"><span class="ui-icon icon-${HARBOR_SECTION_ICON[section]}" aria-hidden="true"></span><span>${capitalise(section)}</span></button>`).join("")}</nav>`;
     const mainFooterAction = activeSection === "market" && this.marketDetailOpen
       ? `<button class="leave-button market-footer-back" type="button" data-action="close-market-fish-detail" aria-label="Back to market"><span class="harbor-back-arrow" aria-hidden="true">←</span><strong>Back to market</strong></button>`
@@ -747,14 +751,14 @@ export class Game {
     const destinationName = capitalise(destination);
     if (unlocked) {
       const activeJob = this.simulation.activeContract !== null;
-      return `<article class="service-card"><span class="ui-icon icon-objective" aria-hidden="true"></span><div class="service-copy"><h4>Beach</h4><p>${activeJob ? "Finish the active job before travelling" : "Surf club · pier · lighthouse"}</p></div><span class="service-owned" aria-label="Beach location unlocked">UNLOCKED</span><button class="service-purchase" type="button" data-action="travel-world" data-world="${destination}" aria-label="Travel to ${destinationName}" ${activeJob ? "disabled" : ""}><strong>${destination === "beach" ? "VISIT" : "RETURN"}</strong></button></article>`;
+      return `<article class="service-card upgrade-feature-card"><img class="upgrade-feature-icon" src="${upgradeBeachUrl}" alt="" aria-hidden="true" /><div class="service-copy"><h4>Beach</h4><p>${activeJob ? "Finish the active job before travelling" : "Surf club · pier · lighthouse"}</p></div><span class="service-owned" aria-label="Beach location unlocked">UNLOCKED</span><button class="service-purchase" type="button" data-action="travel-world" data-world="${destination}" aria-label="Travel to ${destinationName}" ${activeJob ? "disabled" : ""}><strong>${destination === "beach" ? "VISIT" : "RETURN"}</strong></button></article>`;
     }
-    return `<article class="service-card"><span class="ui-icon icon-objective" aria-hidden="true"></span><div class="service-copy"><h4>Beach</h4><p>Unlock the seaside town</p></div><span class="service-owned" aria-label="One-time location unlock">LOCATION</span><button class="service-purchase" type="button" data-action="buy-beach" aria-label="Unlock Beach for ${BALANCE.beachAccessCost} shells" ${this.simulation.progress.money < BALANCE.beachAccessCost ? "disabled" : ""}><span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${BALANCE.beachAccessCost}</strong></button></article>`;
+    return `<article class="service-card upgrade-feature-card"><img class="upgrade-feature-icon" src="${upgradeBeachUrl}" alt="" aria-hidden="true" /><div class="service-copy"><h4>Beach</h4><p>Unlock the seaside town</p></div><span class="service-owned" aria-label="One-time location unlock">LOCATION</span><button class="service-purchase" type="button" data-action="buy-beach" aria-label="Unlock Beach for ${BALANCE.beachAccessCost} shells" ${this.simulation.progress.money < BALANCE.beachAccessCost ? "disabled" : ""}><span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${BALANCE.beachAccessCost}</strong></button></article>`;
   }
 
   private boostCard(): string {
     const unlocked = this.simulation.progress.boostUnlocked;
-    return `<article class="service-card"><span class="ui-icon icon-engine" aria-hidden="true"></span><div class="service-copy"><h4>Engine boost</h4><p>${unlocked ? "Hold Shift to overclock" : "+35% speed until heat builds"}</p></div><span class="service-owned" aria-label="${unlocked ? "Engine boost owned" : "One-time unlock"}">${unlocked ? "OWNED" : "ABILITY"}</span><button class="service-purchase" type="button" data-action="buy-boost" aria-label="${unlocked ? "Engine boost owned" : `Unlock Engine boost for ${BALANCE.boostUnlockCost} shells`}" ${unlocked || this.simulation.progress.money < BALANCE.boostUnlockCost ? "disabled" : ""}>${unlocked ? "<strong>OWNED</strong>" : `<span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${BALANCE.boostUnlockCost}</strong>`}</button></article>`;
+    return `<article class="service-card upgrade-feature-card"><img class="upgrade-feature-icon" src="${upgradeEngineBoostUrl}" alt="" aria-hidden="true" /><div class="service-copy"><h4>Engine boost</h4><p>${unlocked ? "Hold Shift to overclock" : "+35% speed until heat builds"}</p></div><span class="service-owned" aria-label="${unlocked ? "Engine boost owned" : "One-time unlock"}">${unlocked ? "OWNED" : "ABILITY"}</span><button class="service-purchase" type="button" data-action="buy-boost" aria-label="${unlocked ? "Engine boost owned" : `Unlock Engine boost for ${BALANCE.boostUnlockCost} shells`}" ${unlocked || this.simulation.progress.money < BALANCE.boostUnlockCost ? "disabled" : ""}>${unlocked ? "<strong>OWNED</strong>" : `<span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${BALANCE.boostUnlockCost}</strong>`}</button></article>`;
   }
 
   private upgradeMeter(label: string, level: number, tierCap: number): string {
@@ -1137,14 +1141,14 @@ export class Game {
   }
 
   private openHarborSection(section: HarborSection): void {
-    const sectionOrder: HarborSection[] = ["market", "cargo", "services"];
+    const sectionOrder: HarborSection[] = ["market", "cargo", "upgrades"];
     const previousIndex = sectionOrder.indexOf(this.harborSection);
     const nextIndex = sectionOrder.indexOf(section);
     this.harborSection = section;
     this.marketDetailOpen = false;
-    if (section === "services") {
+    if (section === "upgrades") {
       const previousUpgradeStep = this.simulation.progress.upgradeTutorialStep;
-      noteUpgradeServicesOpened(this.simulation);
+      noteUpgradePanelOpened(this.simulation);
       if (previousUpgradeStep !== this.simulation.progress.upgradeTutorialStep) this.syncSave();
     }
     this.renderOverlay();
@@ -1369,7 +1373,7 @@ export class Game {
       case "title": this.started = false; this.setOverlay("title", true); break;
       case "harbor-section": {
         const section = target.dataset.harborSection as HarborSection | undefined;
-        if (!section || !(["market", "cargo", "services"] as HarborSection[]).includes(section)) break;
+        if (!section || !(["market", "cargo", "upgrades"] as HarborSection[]).includes(section)) break;
         this.openHarborSection(section);
         break;
       }
@@ -1444,7 +1448,7 @@ export class Game {
       case "open-cargo-upgrades": {
         const openCargoUpgrade = (): void => {
           if (this.overlay !== "harbor" || !this.simulation.dockedAt) return;
-          this.openHarborSection("services");
+          this.openHarborSection("upgrades");
         };
         window.clearTimeout(this.cargoUpgradeTransitionTimer);
         if (this.save.settings.reducedMotion) {
@@ -1620,7 +1624,7 @@ export class Game {
 }
 
 function upgradeName(upgrade: UpgradeId): string {
-  return { cargo: "Boat and cargo", engine: "Engine", lamp: "Lamp", line: "Line depth" }[upgrade];
+  return { cargo: "Boat and cargo", engine: "Engine", line: "Line depth" }[upgrade];
 }
 
 function capitalise(value: string): string {

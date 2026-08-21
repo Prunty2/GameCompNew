@@ -11,9 +11,9 @@ FSHING is a single-player side-on fishing market game for desktop and mobile bro
 3. Sail to that species' fishing ground. Slow down until the hook cue appears, then drop the line.
 4. Steer the hook onto a reachable fish. A catch is reeled to the boat at 100% freshness.
 5. Freshness falls while the simulation is running. Dock at the harbor that currently pays more and sell every fresh catch of that species.
-6. Spend shells on cargo, engine, lamp, line, boost, the Outer Gloam permit, or Beach access.
+6. Spend shells on cargo, engine, line, boost, the Outer Gloam permit, or Beach access.
 
-A new save starts docked at Brindle Harbor on the lake with Bluegill already discovered. The first run is a four-step **First Assignment** that walks through inspect → track → catch → sell. The sale ends that assignment. When the player can afford a dock upgrade, a second tutorial walks through Services.
+A new save starts docked at Brindle Harbor on the lake with Bluegill already discovered. The first run is a four-step **First Assignment** that walks through inspect → track → catch → sell. The sale ends that assignment. When the player can afford a dock upgrade, a second tutorial walks through Upgrades.
 
 After eight market sales the game shows a season report, then returns to the same market. Trading does not stop.
 
@@ -26,7 +26,7 @@ Market → Track → Sail → Fish → Reel → Sell while fresh → Upgrade →
 | Screen | How it opens | What it contains |
 | --- | --- | --- |
 | Title | Launch, or Title screen from pause | Wordmark, Play, Settings, Credits, `v0.4.3 (PR #85)` |
-| Harbor | Play from a docked start, or docking | Market / Cargo / Services tabs, shell balance, Help, Return to Lake or Beach |
+| Harbor | Play from a docked start, or docking | Market / Cargo / Upgrades tabs, shell balance, Help, Return to Lake or Beach |
 | Market detail | Selecting a discovered listing | Species art, current-harbor price, Track, Sell, 7-day graph |
 | Pause | Escape or Pause on the water | Resume, Settings, How to play, Title screen |
 | Settings | Title or pause | Mute, volume, high contrast, reduced motion, Controls, Reset save |
@@ -51,7 +51,7 @@ Side-on freshwater chart with Brindle Harbor at the left and Gloam Ferry at the 
 
 ### Beach
 
-Paid unlock (120 shells) from Dock Services. Travel is immediate and undocks the boat. The Beach reuses lake spot names and layout, and swaps panorama, pier, underwater paintings, fish, and market art.
+Paid unlock (120 shells) from Upgrades. Travel is immediate and undocks the boat. The Beach reuses lake spot names and layout, and swaps panorama, pier, underwater paintings, fish, and market art.
 
 | Spot id | Display name | x | Line tier | Permit | Lake residents | Beach residents |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -152,19 +152,20 @@ Hook depth is `min(0.94, 0.3 + lineTier × 0.125)`. Fish below the line limit ar
 
 Each species has a deterministic swim gait. The tracked species (or the site's primary resident if nothing tracked is present) gets a rarity outline and a hook-guidance cue.
 
-## Upgrades and services
+## Upgrades
 
 Costs are `base + currentTier × 55` shells.
 
-| Service | Base | Cap | Player-facing effect |
+| Upgrade | Base | Cap | Player-facing effect |
 | --- | --- | --- | --- |
 | Cargo | 60 | 7 | +1 slot per tier. Start 3, max 10 |
 | Engine | 70 | 6 | Faster travel, so less freshness loss |
-| Lamp | 70 | 6 | Wider night vignette |
 | Line depth | 55 | 6 | Deeper hook limit; Mosswater needs tier 1, Outer Gloam needs tier 3 |
 | Engine boost | 300 | one-time | Hold Boost while moving. Overheats, then cools |
 | Beach | 120 | one-time | Unlock travel to the coastal map |
 | Outer permit | 85 | one-time | Outer Gloam access. Gloam Ferry only |
+
+Beach and Engine boost are presented as two larger feature cards side by side beneath the tiered upgrades. Each uses unique generated artwork so the destination and ability read distinctly at a glance.
 
 Boat class names (Skiff through Lakebreaker) exist in balance data and are not shown in the harbor UI. Repair is not sold. The hull starts at 18 damage; reaching 100 damage would rescue to the nearest harbor, charge up to 20 shells, and dump cargo, but nothing in the live loop applies collision damage.
 
@@ -185,7 +186,7 @@ The sale ends the assignment. Older saves with `completedContracts > 0` or lefto
 
 If the player returns from the Bluegill detail before tracking it, the assignment returns to **Choose Bluegill** so the visible directions always match the available action. Untracking Bluegill before catching it likewise returns the assignment to **Track the catch**.
 
-When the player can afford the cheapest dock upgrade (Line depth at 55 shells), `upgradeTutorialStep` opens a second five-step pill: **Open services**, **Buy line depth**, **Return to lake**, **Sail to Mosswater**, then **Drop the line** at Mosswater Pool. The final three steps demonstrate that line tier 1 unlocks fishing at the middle spot. Closing the pill skips only this lesson. Settings **Reset save** asks for confirmation, clears progress, and stays on Settings.
+When the player can afford the cheapest dock upgrade (Line depth at 55 shells), `upgradeTutorialStep` opens a second five-step pill: **Open upgrades**, **Buy line depth**, **Return to lake**, **Sail to Mosswater**, then **Drop the line** at Mosswater Pool. The final three steps demonstrate that line tier 1 unlocks fishing at the middle spot. Closing the pill skips only this lesson. Settings **Reset save** asks for confirmation, clears progress, and stays on Settings.
 
 ## Controls
 

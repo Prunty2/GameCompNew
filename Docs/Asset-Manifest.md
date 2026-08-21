@@ -40,6 +40,8 @@ Vite `publicDir` is `false`. Only these files are imported.
 | `fshing-logo.png` | Favicon and apple-touch icon |
 | `fish-atlas-ui.png` | Lake market species icons |
 | `fish-beach-atlas-ui.png` | Beach market species icons |
+| `upgrade-beach.png` | Large Beach unlock/travel card icon |
+| `upgrade-engine-boost.png` | Large Engine boost unlock card icon |
 | `dock-brindle-day.jpg` / `dock-brindle-night.jpg` | Brindle harbor backdrops |
 | `dock-gloam-day.jpg` / `dock-gloam-night.jpg` | Gloam harbor backdrops |
 | `ui-panel.png` / `ui-button.png` / `ui-icons.png` | Panel, primary button, 13 pictograms |
@@ -267,6 +269,15 @@ Vite `publicDir` is `false`. Only these files are imported.
 - Runtime role: thirteen status, objective, upgrade, setting, and pause pictograms
 - Generated size: 1448 × 1448
 - Prompt: “Use GPT Image 2.0. Regenerate the complete menu icon set. Preserve these pictogram meanings: cargo crate; fish freshness shown by fish plus leaf; damaged boat hull; clock/time; shell currency; objective compass arrow; engine; boat lamp; line depth shown by a fishing line descending through depth marks to a hook; stamped permit paper; repair wrench; speaker/sound; pause bars. Use restrained bold screen-printed game UI pictograms, warm cream shapes with sparse safety-orange details, crisp high-contrast silhouettes, matching the existing FSHING interface. Use one icon per cell, consistent apparent scale, generous equal safe padding, and no artwork crossing a cell boundary. Place the icons on a perfectly flat solid chroma-key background for removal. No navy or colored tiles, circles, medallions, labels, letters, numbers, borders, grid lines, frames, shadows, reflections, watermark, or checkerboard.”
+
+### Upgrade feature icons
+
+- Files: `upgrade-beach.png`, `upgrade-engine-boost.png`
+- Runtime role: unique large-card illustrations for the Beach destination and rechargeable Engine boost unlock
+- Runtime size: transparent 512 × 512 PNGs, reduced from 1254 × 1254 generation output
+- Generation mode: OpenAI built-in image generation on 21 August 2026; each subject was generated independently so neither reuses a generic atlas pictogram
+- Beach prompt: “Create one production-ready square UI icon for the 2D browser game FSHING. Subject: BEACH LOCATION — a compact coastal emblem combining one small weathered cream lighthouse on a low sandy dune, a single teal wave, and a small warm amber sun accent. The silhouette must remain instantly readable at 64 px. Match the supplied game's existing UI-icon aesthetic described here: flat restrained editorial gouache/screen-print, weathered cream #F7F1E3 main shapes, warm amber/orange #EE9E41 accent, muted sea teal secondary accent, very thin dark navy ink details, subtle aged-paper texture inside the painted shapes. Strict front/side emblem view, centered with generous transparent padding. Transparent background, no square tile, no border, no shadow, no text, no letters, no logo, no people, no boat, no fish, no photorealism, no glossy 3D. Output exactly one isolated icon, 1:1 square.”
+- Engine boost prompt: “Create one production-ready square UI icon for the 2D browser game FSHING. Subject: ENGINE BOOST — a unique compact marine turbo/propeller emblem: a small cream boat-engine turbine housing with a clearly visible three-blade propeller, one warm amber lightning bolt across the hub, and two short muted-teal speed streaks trailing behind. Do not make it look like a generic car engine and do not use a gauge. The silhouette must remain instantly readable at 64 px. Match the game's existing UI-icon aesthetic: flat restrained editorial gouache/screen-print, weathered cream #F7F1E3 main shapes, warm amber/orange #EE9E41 accent, muted sea teal secondary accent, very thin dark navy ink details, subtle aged-paper texture inside painted shapes. Strict side emblem view, centered with generous transparent padding. Transparent background, no square tile, no border, no shadow, no text, no letters, no logo, no people, no boat hull, no fish, no photorealism, no glossy 3D. Output exactly one isolated icon, 1:1 square.”
 - Processing: The flat keys were removed to alpha, then the generated pictogram bounds were mechanically packed into the first thirteen cells of a 4 × 4 atlas with three transparent unused cells. Every alpha-bound centre is within 0.5 px of its 362 × 362 cell centre; the artwork itself was not redrawn during packing.
 
 ### `padlock-icon.png`

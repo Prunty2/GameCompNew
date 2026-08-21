@@ -189,7 +189,7 @@ describe("first-assignment quest prototype", () => {
     expect(questUiArrowLayout(low, "above").rotation).toBe(90);
   });
 
-  test("starts an upgrade walkthrough when the player can afford Dock Services", () => {
+  test("starts an upgrade walkthrough when the player can afford Upgrades", () => {
     const simulation = createSimulation();
     skipMarketTutorial(simulation);
     expect(questPresentation(simulation, harborView).hidden).toBe(true);
@@ -200,12 +200,12 @@ describe("first-assignment quest prototype", () => {
     expect(open).toMatchObject({
       hidden: false,
       heading: "Tutorial",
-      title: "Open services",
+      title: "Open upgrades",
       index: 1,
-      uiTargetSelector: '[data-action="harbor-section"][data-harbor-section="services"]',
+      uiTargetSelector: '[data-action="harbor-section"][data-harbor-section="upgrades"]',
     });
 
-    const buy = questPresentation(simulation, { ...harborView, harborSection: "services" });
+    const buy = questPresentation(simulation, { ...harborView, harborSection: "upgrades" });
     expect(buy).toMatchObject({
       title: "Buy line depth",
       index: 2,
@@ -213,7 +213,7 @@ describe("first-assignment quest prototype", () => {
     });
 
     expect(buyUpgrade(simulation, "line")).toBe(true);
-    expect(questPresentation(simulation, { ...harborView, harborSection: "services" })).toMatchObject({
+    expect(questPresentation(simulation, { ...harborView, harborSection: "upgrades" })).toMatchObject({
       title: "Return to lake",
       index: 3,
       totalSteps: 5,

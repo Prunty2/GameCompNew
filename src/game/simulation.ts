@@ -75,9 +75,14 @@ export interface LearningProgress {
   routePlans: number;
 }
 
+export interface UpgradeProgress extends Record<UpgradeId, number> {
+  /** Retained only so version 10 saves containing the removed Lamp tier still round-trip safely. */
+  lamp: number;
+}
+
 export interface ProgressState {
   money: number;
-  upgrades: Record<UpgradeId, number>;
+  upgrades: UpgradeProgress;
   outerUnlocked: boolean;
   beachUnlocked: boolean;
   boostUnlocked: boolean;
@@ -96,7 +101,7 @@ export interface ProgressState {
 export type MarketTutorialStep = "inspect" | "track" | "catch" | "sell" | "complete" | "done";
 export type UpgradeTutorialStep = "locked" | "open-services" | "buy" | "done";
 
-const CORE_UPGRADES: UpgradeId[] = ["line", "cargo", "engine", "lamp"];
+const CORE_UPGRADES: UpgradeId[] = ["line", "cargo", "engine"];
 
 export interface MarketSaleResult {
   species: FishSpecies;
@@ -603,7 +608,7 @@ export function syncUpgradeTutorial(simulation: Simulation): void {
   }
 }
 
-export function noteUpgradeServicesOpened(simulation: Simulation): void {
+export function noteUpgradePanelOpened(simulation: Simulation): void {
   if (simulation.progress.upgradeTutorialStep === "open-services") {
     simulation.progress.upgradeTutorialStep = "buy";
   }
@@ -907,7 +912,7 @@ export function navigationGuidance(simulation: Simulation): NavigationGuidance |
       point: harbor,
       label: harbor.name,
       kicker: "UPGRADE AT",
-      instruction: harborInstruction(simulation, harbor, "open Dock Services and buy an upgrade"),
+      instruction: harborInstruction(simulation, harbor, "open Upgrades and buy an upgrade"),
     };
   }
 

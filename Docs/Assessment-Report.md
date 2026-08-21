@@ -20,7 +20,7 @@ The completed vertical slice contains:
 
 - one lake and one unlockable Beach, each with two harbors and three fishing grounds
 - eighteen real species (nine freshwater, nine south-eastern Australian coastal)
-- cargo, engine, lamp, and line upgrades, plus a rechargeable boost, Outer Gloam permit, and Beach access
+- cargo, engine, and line upgrades, plus a rechargeable boost, Outer Gloam permit, and Beach access
 - seeded daily quotes, seven-day history, and freshness-adjusted sales
 - a five-step First Assignment, four-card How to play, credits, and an eight-sale season report
 - keyboard sailing and hook steering, pointer/touch menus, remappable controls, mute, high contrast, reduced motion, and pause on focus loss
@@ -108,7 +108,6 @@ Beach reuses the same spot names and world X positions. Reloading always restore
 | --- | --- |
 | Cargo (7 tiers, 3→10 slots) | Carry more before docking |
 | Engine (6 tiers) | Faster crossings, less freshness loss |
-| Lamp (6 tiers) | Wider night vignette |
 | Line (6 tiers) | Reach the next underwater band |
 | Engine boost (300 shells) | Hold Boost for a short overclock that overheats |
 | Outer permit (85 shells, Gloam only) | Fish Outer Gloam |
@@ -170,7 +169,7 @@ Save version 10 treats stored data as untrusted. Money, upgrade tiers, volume, a
 The title is a centred panel. **Play** is the largest action. Settings and Credits are secondary. The harbor is a dock-side sheet:
 
 1. harbor name and shell balance
-2. Market / Cargo / Services
+2. Market / Cargo / Upgrades
 3. Help and Return to Lake (or Beach)
 
 Market catalogue is a scrollable grid of nine cards. Detail is a focused view: art, price, Track, Sell, and the graph.
@@ -218,9 +217,9 @@ Captures in `Docs/screenshots/` were taken from the current build on 21 August 2
 | --- | --- |
 | ![Centred FSHING title with Play, Settings, and Credits](screenshots/01-title.png) | ![Brindle Harbor fish market grid with First Assignment](screenshots/02-market.png) |
 
-| Market detail | Dock services |
+| Market detail | Upgrades |
 | --- | --- |
-| ![Bluegill detail with 7-day price graph, Track, and Sell](screenshots/03-market-detail.png) | ![Harbor services for cargo, engine, lamp, line, boost, and Beach](screenshots/04-services.png) |
+| ![Bluegill detail with 7-day price graph, Track, and Sell](screenshots/03-market-detail.png) | ![Harbor upgrades for cargo, engine, line, boost, and Beach](screenshots/04-services.png) |
 
 | Credits | Cargo |
 | --- | --- |
@@ -243,7 +242,7 @@ Surface fishing grounds use a faint school, then a polarized lens, then a hook c
 | Fishing spots should feel alive | Resident schools, polarized lens on approach, hook only inside the interaction radius |
 | Lots of fish | Eighteen named real species with distinct swim gaits |
 | Water deeper only with upgrades | Six line tiers and a labelled underwater boundary |
-| Larger boats / more upgrades | Seven cargo tiers, six engine/lamp/line tiers, boost, permit, Beach |
+| Larger boats / more upgrades | Seven cargo tiers, six engine/line tiers, boost, permit, Beach |
 | Different worlds | Lake and Beach palettes, piers, underwater plates, and fish sets |
 
 Delivery contracts, water surveys, and the field guide were removed from the player-facing loop after the market replaced jobs. Simulation helpers for surveys and contracts remain for tests and must not be treated as live UI.
@@ -322,7 +321,6 @@ Solution: per-harbor demand, a 6% daily cap, and freshness so a longer crossing 
 - Season report copy still says "Research season complete" from an earlier STEM framing.
 - Help card 1 says the player can compare both harbors on one card; the detail view shows only the docked harbor. The other quote is seen by docking there, or inferred from the sell badge.
 - Fish share a hook-contact rule; gait, depth, and speed vary more than bite behaviour.
-- The lamp only widens the night vignette.
 - Time, cargo, and world are not saved, so a refresh is always morning at Brindle.
 - The human playtest table is pending.
 
@@ -357,6 +355,6 @@ Solution: per-harbor demand, a 6% daily cap, and freshness so a longer crossing 
 - [ ] Run `npm run check`, `npm run build`, and `npm run test:e2e` on the submission machine.
 - [x] Confirm CrazyGames SDK failure still falls back locally (browser suite aborts the SDK).
 - [x] Confirm a refresh retains money, unlocks, discoveries, and tutorial completion.
-- [x] Capture current screenshots of title, market, detail, services, credits, cargo, sailing, and fishing.
+- [x] Capture current screenshots of title, market, detail, upgrades, credits, cargo, sailing, and fishing.
 - [ ] Export this report to the teacher's required format.
 - [ ] Submit the report and ZIP or hosted link before the deadline.
