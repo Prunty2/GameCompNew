@@ -73,12 +73,15 @@ export function marketBoardMarkup(
   );
   const sellAllLabel = bulkSale.quantity === 0
     ? "No fresh fish to sell"
-    : `Sell all ${bulkSale.quantity} fish · ${bulkSale.total} shells`;
+    : `Sell all ${bulkSale.quantity} fish for ${bulkSale.total} shells`;
+  const sellAllContent = bulkSale.quantity === 0
+    ? sellAllLabel
+    : `Sell all ${bulkSale.quantity} fish <span aria-hidden="true">·</span> <span class="market-sell-all-total">${bulkSale.total}<span class="ui-icon icon-shells" aria-hidden="true"></span></span>`;
 
   return `<section class="market-board is-catalogue-view" aria-label="Fish market">
     <header class="market-board-heading">
       <h3>Fish market</h3>
-      <button class="primary-button market-sell-all-button" type="button" data-action="sell-all-market-fish" ${bulkSale.quantity === 0 ? "disabled" : ""}>${sellAllLabel}</button>
+      <button class="market-sell-all-button ${bulkSale.quantity > 0 ? "is-active" : ""}" type="button" data-action="sell-all-market-fish" aria-label="${sellAllLabel}" ${bulkSale.quantity === 0 ? "disabled" : ""}>${sellAllContent}</button>
     </header>
     <div class="market-list" role="list" aria-label="Fish prices and locked discoveries">${listings}</div>
   </section>`;

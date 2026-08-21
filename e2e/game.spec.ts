@@ -178,8 +178,11 @@ test("market uses a scrollable fish-card grid and a focused detail view", async 
   await expect(listings.nth(1).locator(".market-cargo-count")).toHaveCount(0);
   await expect(page.locator(".market-board-heading .panel-eyebrow")).toHaveCount(0);
   await expect(page.locator(".market-info-pill")).toHaveCount(0);
-  const sellAllButton = page.getByRole("button", { name: /Sell all 3 fish · \d+ shells/ });
+  const sellAllButton = page.getByRole("button", { name: /Sell all 3 fish for \d+ shells/ });
   await expect(sellAllButton).toBeVisible();
+  await expect(sellAllButton).toHaveCSS("border-radius", "15px");
+  await expect(sellAllButton.locator(".market-sell-all-total .icon-shells")).toBeVisible();
+  await expect(sellAllButton).not.toContainText("shells");
   await sellAllButton.click();
   await expect(page.locator("#delivery-notification")).toContainText("Sold, 3 fish");
   await expect(page.locator(".market-cargo-count")).toHaveCount(0);

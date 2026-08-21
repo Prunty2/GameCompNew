@@ -49,13 +49,56 @@
   line-height: 1;
 }
 
-.market-sell-all-button {
-  min-height: 44px;
-  padding: 9px 18px;
-  border-radius: 999px;
-  font: inherit;
-  font-size: 0.76rem;
+.harbor-screen .market-sell-all-button {
+  display: flex;
+  min-height: 54px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 6px 18px;
+  border: 1px solid rgb(145 169 176 / 38%);
+  border-radius: 15px;
+  background: rgb(5 24 33 / 82%);
+  color: var(--menu-paper);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  box-shadow: none;
+  transform: none;
   white-space: nowrap;
+}
+
+.market-sell-all-button.is-active {
+  border-color: #ffbd61;
+  background: linear-gradient(#f3aa48, #e89532);
+  color: #071824;
+  box-shadow: inset 0 -3px 0 #b96f20, 0 3px 8px rgb(2 12 18 / 18%);
+}
+
+.market-sell-all-button:hover:not(:disabled),
+.market-sell-all-button:focus-visible {
+  border-color: var(--menu-signal);
+  outline: 2px solid var(--menu-paper);
+  outline-offset: 2px;
+  transform: none;
+}
+
+.market-sell-all-button:disabled {
+  color: rgb(247 241 227 / 55%);
+  cursor: not-allowed;
+}
+
+.market-sell-all-total {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.market-sell-all-total .ui-icon {
+  width: 22px;
+  height: 22px;
 }
 
 .market-summary-pills {
@@ -670,7 +713,7 @@
 
   .market-sell-all-button {
     padding-inline: 13px;
-    font-size: 0.66rem;
+    font-size: 0.72rem;
   }
 
   .market-list {
