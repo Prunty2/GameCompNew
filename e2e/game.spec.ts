@@ -157,6 +157,39 @@ test("first assignment teaches the complete market sale loop", async ({ page }) 
   await expect(page.locator(".shell-balance strong")).toHaveText(/^[1-9]\d*$/);
 });
 
+test("hides direction guidance unless a fish is tracked or the first assignment is active", async ({ page }) => {
+  await page.goto("/?e2e=1");
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await expect(page.locator("#market-tutorial")).toBeVisible();
+  await page.locator('[data-action="skip-market-tutorial"]').click({ force: true });
+  await expect(page.locator("#market-tutorial")).toBeHidden();
+  await page.locator('[data-action="undock"]').click();
+  await expect(page.getByRole("heading", { name: "Brindle Harbor" })).toHaveCount(0);
+  await expect(page.locator(".navigation-status")).toHaveText("");
+
+  await page.evaluate(() => window.__FSHING_TEST__?.sailToHarbor("brindle"));
+  await page.getByRole("button", { name: "Dock · Brindle Harbor" }).click();
+  await page.locator('[data-action="select-market-fish"][data-species="bluegill"]').click();
+  await page.locator('[data-action="track-market-fish"][data-species="bluegill"]').click();
+  await page.getByRole("button", { name: "Back to market" }).click();
+  await page.locator('[data-action="undock"]').click();
+  await expect(page.locator(".navigation-status")).toContainText("FISH AT Sunward Shoal");
+
+  await page.evaluate(() => window.__FSHING_TEST__?.sailToHarbor("brindle"));
+  await page.getByRole("button", { name: "Dock · Brindle Harbor" }).click();
+  await page.locator('[data-action="select-market-fish"][data-species="bluegill"]').click();
+  const trackButton = page.locator('[data-action="track-market-fish"][data-species="bluegill"]');
+  await expect(trackButton).toHaveAttribute("aria-pressed", "true");
+  await trackButton.click();
+  await expect(trackButton).toHaveAttribute("aria-pressed", "false");
+  await expect(trackButton).toHaveText("Track Bluegill");
+  await page.getByRole("button", { name: "Back to market" }).click();
+  await expect(page.locator(".market-tracking-badge")).toHaveCount(0);
+  await page.locator('[data-action="undock"]').click();
+  await expect(page.getByRole("heading", { name: "Brindle Harbor" })).toHaveCount(0);
+  await expect(page.locator(".navigation-status")).toHaveText("");
+});
+
 test("market uses a scrollable fish-card grid and a focused detail view", async ({ page }) => {
   await page.goto("/?e2e=1");
   await page.getByRole("button", { name: "Play", exact: true }).click();
