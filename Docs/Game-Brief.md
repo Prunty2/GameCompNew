@@ -1,6 +1,6 @@
 # FSHING — game brief
 
-This brief is the product source of truth. It describes the playable game in `v0.4.3` (build label `v0.4.3 (PR #85)`), not leftover simulation APIs.
+This brief is the product source of truth. It describes the playable game in `v0.5.0` (build label pending the current pull request number), not leftover simulation APIs.
 
 FSHING is a single-player side-on fishing market game for desktop and mobile browsers. The player pilots a working boat across a lake, and later an unlockable Beach, then sells catches at two harbors whose prices move each in-game day.
 
@@ -9,7 +9,7 @@ FSHING is a single-player side-on fishing market game for desktop and mobile bro
 1. Dock at a harbor and open the **Fish market**.
 2. Inspect a discovered species, read today's local quote and its seven-day graph, then **Track** it.
 3. Sail to that species' fishing ground. Slow down until the hook cue appears, then drop the line.
-4. Steer the hook onto a reachable fish. A catch is reeled to the boat at 100% freshness.
+4. Steer the hook onto a reachable fish. Hold Reel to pull it closer, then release during struggle bursts or critical line tension. Landed catches reach the boat at 100% freshness.
 5. Freshness falls while the simulation is running. Dock at the harbor that currently pays more and sell every fresh catch of that species.
 6. Spend shells on cargo, engine, line, boost, the Outer Gloam permit, or Beach access.
 
@@ -25,7 +25,7 @@ Market → Track → Sail → Fish → Reel → Sell while fresh → Upgrade →
 
 | Screen | How it opens | What it contains |
 | --- | --- | --- |
-| Title | Launch, or Title screen from pause | Wordmark, Play, Settings, Credits, `v0.4.3 (PR #85)` |
+| Title | Launch, or Title screen from pause | Wordmark, Play, Settings, Credits, the current `vX.Y.Z (PR #N)` build label |
 | Harbor | Play from a docked start, or docking | Market / Cargo / Upgrades tabs, shell balance, Help, Return to Lake or Beach |
 | Market detail | Selecting a discovered listing | Species art, current-harbor price, Track, Sell, 7-day graph |
 | Pause | Escape or Pause on the water | Resume, Settings, How to play, Title screen |
@@ -142,13 +142,20 @@ Simulation step is `1/120` s. Gameplay RNG is seeded. The boat travels only on t
 | Freshness lifetime | 150 | seconds from 100% to 0% |
 | Catch radius | 0.058 | fishing space |
 | Hook speeds | 0.25 horizontal, 0.35 up, 0.25 down | fishing space / s |
-| Reel / exit duration | 1.15 | seconds |
+| Landing / exit duration | 1.15 | seconds |
+| Critical line tension | 90% | meter threshold |
+| Break grace | 0.7 | seconds continuously at critical tension |
+| Line strength per tier | +12% | tension resistance |
 | Dive duration | 0.85 | seconds |
 | Day length | 210 | seconds |
 | Night start | 140 | seconds into the day |
 | Night fade | 25 | seconds |
 
 Hook depth is `min(0.94, 0.3 + lineTier × 0.125)`. Fish below the line limit are visible and dimmed but cannot be hooked. Escape while fishing reels the empty line and returns to sailing; it does not pause.
+
+Hooking a fish begins a deterministic line fight. Holding Interact reels; releasing it lowers tension but lets the fish slip backwards slightly and recover a little stamina. Reeling actively tires the fish, so waiting without engaging is not optimal. Fish struggle in readable pulses that raise tension and reduce reel speed. The HUD presents reel progress, line tension, fish condition, non-colour warning text, sound, and vibration. Keeping tension at or above 90% for 0.7 seconds breaks the line, returns the hook to the top, and leaves the player at the same fishing ground for an immediate retry. It does not remove cargo or money.
+
+Fight profiles scale by rarity: common fish have faster reel progress, quicker fatigue, shorter struggle windows, and more forgiving tension recovery; uncommon, rare, and legendary fish progressively reel more slowly, pull harder, slip farther, and struggle more often. Line tiers reduce tension gain by 12% per tier as well as extending maximum depth. After reel progress fills, the existing 1.15-second landing transition completes the catch.
 
 Each species has a deterministic swim gait. The tracked species gets a rarity outline, a hook-guidance cue, and a named specimen in the fishing HUD, but only when that fish lives at the current site. Nothing is highlighted while no fish is tracked.
 
@@ -160,7 +167,7 @@ Costs are `base + currentTier × 55` shells.
 | --- | --- | --- | --- |
 | Cargo | 60 | 7 | +1 slot per tier. Start 3, max 10 |
 | Engine | 70 | 6 | Faster travel, so less freshness loss |
-| Line depth | 55 | 6 | Deeper hook limit; Mosswater needs tier 1, Outer Gloam needs tier 3 |
+| Fishing line | 55 | 6 | Deeper hook limit and +12% fight strength per tier; Mosswater needs tier 1, Outer Gloam needs tier 3 |
 | Engine boost | 300 | one-time | Hold Boost while moving. Overheats, then cools |
 | Beach | 120 | one-time | Unlock travel to the coastal map |
 | Outer permit | 85 | one-time | Outer Gloam access. Gloam Ferry only |
@@ -199,7 +206,7 @@ Defaults:
 | Hook up | W | Steer the hook up |
 | Hook down | S | Steer the hook down |
 | Boost | Left Shift | Hold while sailing after unlock |
-| Interact | E | Dock or drop the line |
+| Interact / reel | E | Dock or drop the line; hold to reel a hooked fish and release to lower tension |
 | Pause | P | Pause or resume on the water |
 
 Escape always pauses on the water, and always leaves fishing. Occupied rebinds swap. Pointer and touch operate menus, the dock/fish context button, and cargo release. There are no on-screen movement buttons.
@@ -216,6 +223,7 @@ Development shortcuts: `B` grants a temporary boost. In `npm run dev`, `G` jumps
 - Live regions for toasts, sales, tutorial, and navigation
 - Fishing canvas `aria-label` includes the site, and the tracked target and rarity when a fish is tracked
 - Locked market cards and disabled actions have text, not colour alone
+- Line strain uses meter position, explicit status text, sound, vibration, and a live-region warning rather than colour alone
 
 The in-fishing “W A S D MOVE HOOK” cue presents all four movement keys in one horizontal row. It is hardcoded and does not follow rebinds.
 
@@ -256,7 +264,7 @@ CrazyGames HTML5 SDK v3 is loaded from the page. Local play works if the script 
 | `src/game/renderer.ts` | Canvas draw only |
 | `src/game/input.ts` / `controls.ts` | Browser input and remapping |
 | `src/game/camera.ts` / `panorama.ts` | Surface framing |
-| `src/game/fishingMovement.ts` / `fishingPresentation.ts` / `fishingReeling.ts` | Underwater motion and camera |
+| `src/game/fishingMovement.ts` / `fishingFight.ts` / `fishingPresentation.ts` / `fishingReeling.ts` | Underwater motion, deterministic line fights, and camera |
 | `src/game/fishingSpotEffects.ts` / `surfaceEffects.ts` / `boatSteam.ts` | Surface presentation |
 | `src/game/objectiveIndicator.ts` | Destination badge layout |
 | `src/game/quest.ts` | First-assignment and upgrade tutorial presentation |

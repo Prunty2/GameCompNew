@@ -6,6 +6,7 @@ export type FeedbackCue =
   | "dock"
   | "delivery"
   | "deny"
+  | "line-strain"
   | "upgrade";
 
 export interface FeedbackSettings {
@@ -79,6 +80,10 @@ export class FeedbackService {
         break;
       case "deny":
         this.tone(now, 0.12, 145, 105, 0.045, "square");
+        break;
+      case "line-strain":
+        this.tone(now, 0.16, 240, 150, 0.055, "sawtooth");
+        this.tone(now + 0.18, 0.16, 240, 150, 0.055, "sawtooth");
         break;
       case "upgrade":
         this.tone(now, 0.13, 220, 440, 0.045, "triangle");
@@ -187,6 +192,7 @@ export class FeedbackService {
       dock: 16,
       delivery: [18, 35, 18],
       deny: [10, 30, 10],
+      "line-strain": [24, 35, 24],
       upgrade: [12, 25, 20],
     };
     navigator.vibrate(pattern[cue]);

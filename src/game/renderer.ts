@@ -55,8 +55,8 @@ import {
 import {
   fishingReelProgress,
   fishingReelSchoolOpacity,
-  fishingReelWriggle,
 } from "./fishingReeling";
+import { fishingFightWriggle } from "./fishingFight";
 import {
   surfaceFishingCue,
   surfaceFishingLocationVisibility,
@@ -309,6 +309,9 @@ export class CanvasRenderer {
       delete this.canvas.dataset.fishingSurfaceBlend;
       delete this.canvas.dataset.fishingSpot;
       delete this.canvas.dataset.fishingState;
+      delete this.canvas.dataset.fishingReelProgress;
+      delete this.canvas.dataset.fishingLineTension;
+      delete this.canvas.dataset.fishingFishStamina;
       delete this.canvas.dataset.targetRarity;
       this.canvas.setAttribute("aria-label", "Game area");
       this.renderSurface(simulation, settings, width, height);
@@ -577,14 +580,14 @@ export class CanvasRenderer {
     );
     const maximumDepth = maxFishingDepth(simulation);
     const entryDiveProgress = fishingDiveProgress(simulation.elapsed, fishing.startedAt, settings.reducedMotion);
-    const reelProgress = fishing.reeling
-      ? fishingReelProgress(simulation.elapsed, fishing.reeling.hookedAt)
+    const reelProgress = fishing.reeling && fishing.reeling.landingAt !== null
+      ? fishingReelProgress(simulation.elapsed, fishing.reeling.landingAt)
       : 0;
     const exitProgress = fishing.exitingAt === null
       ? 0
       : fishingReelProgress(simulation.elapsed, fishing.exitingAt);
-    const surfaceProgress = fishing.reeling ? reelProgress : exitProgress;
-    const surfacing = fishing.reeling !== null || fishing.exitingAt !== null;
+    const surfaceProgress = fishing.reeling?.landingAt != null ? reelProgress : exitProgress;
+    const surfacing = fishing.reeling?.landingAt != null || fishing.exitingAt !== null;
     const schoolOpacity = surfacing ? fishingReelSchoolOpacity(surfaceProgress) : 1;
     const diveProgress = surfacing
       ? fishingReelCameraProgress(entryDiveProgress, surfaceProgress, settings.reducedMotion)
@@ -600,11 +603,22 @@ export class CanvasRenderer {
     } else {
       delete this.canvas.dataset.targetRarity;
     }
-    this.canvas.dataset.fishingState = fishing.reeling ? "reeling" : fishing.exitingAt !== null ? "exiting" : "steering";
+    this.canvas.dataset.fishingState = fishing.reeling
+      ? fishing.reeling.landingAt === null ? "fighting" : "landing"
+      : fishing.exitingAt !== null ? "exiting" : "steering";
+    if (fishing.reeling) {
+      this.canvas.dataset.fishingReelProgress = fishing.reeling.progress.toFixed(3);
+      this.canvas.dataset.fishingLineTension = fishing.reeling.tension.toFixed(3);
+      this.canvas.dataset.fishingFishStamina = fishing.reeling.stamina.toFixed(3);
+    } else {
+      delete this.canvas.dataset.fishingReelProgress;
+      delete this.canvas.dataset.fishingLineTension;
+      delete this.canvas.dataset.fishingFishStamina;
+    }
     this.canvas.setAttribute(
       "aria-label",
       fishing.reeling
-        ? `Fishing at ${spot.name}. Reeling ${FISH[fishing.reeling.species].name} to the boat.`
+        ? `Fishing at ${spot.name}. Fighting ${FISH[fishing.reeling.species].name}. Reel progress ${Math.round(fishing.reeling.progress * 100)} percent. Line tension ${Math.round(fishing.reeling.tension * 100)} percent.`
         : fishing.exitingAt !== null
           ? `Leaving ${spot.name} and returning to the lake surface.`
         : targetSpecies
@@ -671,10 +685,15 @@ export class CanvasRenderer {
     }
 
     const restingHook = fishingPointToScreen(fishing.hook, width, layout, maximumDepth);
-    const hook = surfacing
+    const fightPull = fishing.reeling
+      ? fishing.reeling.landingAt === null
+        ? fishing.reeling.progress * 0.72
+        : 0.72 + reelProgress * 0.28
+      : exitProgress;
+    const hook = fishing.reeling || fishing.exitingAt !== null
       ? {
-          x: restingHook.x + (width * 0.5 - restingHook.x) * surfaceProgress,
-          y: restingHook.y + (layout.surfaceY + 10 - restingHook.y) * surfaceProgress,
+          x: restingHook.x + (width * 0.5 - restingHook.x) * fightPull,
+          y: restingHook.y + (layout.surfaceY + 10 - restingHook.y) * fightPull,
         }
       : restingHook;
     context.strokeStyle = settings.highContrast ? "#ffffff" : "#f4e2b9";
@@ -685,9 +704,10 @@ export class CanvasRenderer {
     context.stroke();
     const hookSize = clamp(Math.min(width, height) * 0.076, 46, 68);
     if (fishing.reeling) {
-      const wriggle = fishingReelWriggle(
+      const wriggle = fishingFightWriggle(
         simulation.elapsed,
         fishing.reeling.hookedAt,
+        fishing.reeling.struggle,
         settings.reducedMotion,
       );
       const fishOffset = fishing.reeling.direction * hookSize * 0.24;
@@ -714,7 +734,7 @@ export class CanvasRenderer {
       this.drawFishingTargetGuide(targetSpecies, width, height, settings.highContrast, layout.surfaceY);
     }
     if (fishing.reeling) {
-      this.drawReelingCue(fishing.reeling.species, reelProgress, width, height, settings.highContrast);
+      this.drawReelingCue(fishing.reeling, width, height, settings.highContrast);
     } else {
       this.drawFishingControlCue(width, height, settings.highContrast);
     }
@@ -722,27 +742,67 @@ export class CanvasRenderer {
   }
 
   private drawReelingCue(
-    species: FishSpecies,
-    progress: number,
+    fight: NonNullable<NonNullable<Simulation["fishing"]>["reeling"]>,
     width: number,
     height: number,
     highContrast: boolean,
   ): void {
     const { context } = this;
-    const barWidth = clamp(width * 0.23, 180, 300);
-    const x = (width - barWidth) / 2;
-    const y = height - clamp(height * 0.09, 44, 72);
+    const barWidth = clamp(width * 0.3, 170, 280);
+    const x = clamp(width * 0.035, 14, 36);
+    const y = height - clamp(height * 0.16, 92, 126);
+    const critical = fight.tension >= BALANCE.fishingCriticalTension;
+    const status = fight.landingAt !== null
+      ? "LANDING CATCH"
+      : critical
+        ? "LINE STRAIN · RELEASE"
+        : fight.struggle >= 0.55
+          ? "FISH PULLING · EASE OFF"
+          : "HOLD REEL · RELEASE TO REST";
     context.save();
-    context.textAlign = "center";
+    context.textAlign = "left";
     context.textBaseline = "bottom";
     context.fillStyle = highContrast ? "#ffffff" : "#f4e6c5";
     context.font = `900 ${clamp(height * 0.021, 14, 19)}px system-ui, sans-serif`;
-    context.fillText(`REELING ${fishShortName(species)}`, width / 2, y - 9);
-    context.fillStyle = "rgba(3, 12, 21, 0.72)";
-    context.fillRect(x, y, barWidth, 6);
-    context.fillStyle = highContrast ? "#ffffff" : "#e8a44d";
-    context.fillRect(x, y, barWidth * progress, 6);
+    context.fillText(`${fishShortName(fight.species)} · ${status}`, x, y - 14);
+    this.drawFightMeter(x, y, barWidth, fight.progress, highContrast ? "#ffffff" : "#e8a44d", "REEL", highContrast);
+    this.drawFightMeter(
+      x,
+      y + 25,
+      barWidth,
+      fight.tension,
+      critical ? "#ffebe0" : highContrast ? "#ffffff" : "#62c9b4",
+      critical ? "TENSION · CRITICAL" : "TENSION",
+      highContrast,
+    );
+    const fishState = fight.stamina <= 0.25 ? "TIRED" : fight.stamina <= 0.6 ? "WEAKENING" : "STRONG";
+    context.fillStyle = highContrast ? "#ffffff" : "#d9c9a5";
+    context.font = `800 ${clamp(height * 0.015, 11, 14)}px system-ui, sans-serif`;
+    context.fillText(`FISH ${fishState}`, x, y + 65);
     context.restore();
+  }
+
+  private drawFightMeter(
+    x: number,
+    y: number,
+    width: number,
+    value: number,
+    colour: string,
+    label: string,
+    highContrast: boolean,
+  ): void {
+    const { context } = this;
+    context.fillStyle = "rgba(3, 12, 21, 0.72)";
+    context.fillRect(x, y, width, 10);
+    context.fillStyle = colour;
+    context.fillRect(x, y, width * clamp(value, 0, 1), 10);
+    context.strokeStyle = highContrast ? "#ffffff" : "rgba(244, 230, 197, 0.7)";
+    context.lineWidth = 1;
+    context.strokeRect(x, y, width, 10);
+    context.fillStyle = highContrast ? "#ffffff" : "#f4e6c5";
+    context.font = "800 10px system-ui, sans-serif";
+    context.textBaseline = "bottom";
+    context.fillText(label, x, y - 1);
   }
 
   private drawFishingEnvironment(

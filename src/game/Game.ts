@@ -184,6 +184,7 @@ export class Game {
   private lastQuestMarkup = "";
   private resetConfirming = false;
   private overlayEntering = false;
+  private lineWasCritical = false;
   private readonly visualTestSpot = import.meta.env.DEV
     ? new URLSearchParams(window.location.search).get("e2eSpot") as SpotId | null
     : null;
@@ -269,6 +270,7 @@ export class Game {
       }
       if (this.input.consumeAction()) this.handleInteract();
       this.handleSimulationEvents();
+      this.updateFishingStrainFeedback();
     } else {
       this.accumulator = 0;
       this.previousRenderMotion = captureRenderMotion(this.simulation);
@@ -375,12 +377,31 @@ export class Game {
     }
   }
 
+  private updateFishingStrainFeedback(): void {
+    const fight = this.simulation.fishing?.reeling;
+    const critical = fight !== undefined
+      && fight !== null
+      && fight.landingAt === null
+      && fight.tension >= BALANCE.fishingCriticalTension;
+    if (critical && !this.lineWasCritical) {
+      this.feedback.cue("line-strain");
+      this.pulseFeedback("collision");
+      this.showToast("LINE STRAIN — release Reel before the line breaks.");
+    }
+    this.lineWasCritical = critical;
+  }
+
   private handleEvent(event: SimulationEvent): void {
     switch (event.type) {
       case "caught":
         this.feedback.cue("catch");
         this.pulseFeedback("catch");
         this.showToast(`${FISH[event.species].name} secured. Freshness is falling.`);
+        break;
+      case "line-broke":
+        this.feedback.cue("deny");
+        this.pulseFeedback("collision");
+        this.showToast(`${FISH[event.species].name} broke free. Ease off when line tension is critical, then try again.`);
         break;
       case "sold":
         this.feedback.cue("delivery");
@@ -490,12 +511,19 @@ export class Game {
     const prompt = getInteractionPrompt(this.simulation);
     if (action) {
       const fishingCue = prompt?.kind === "fishing";
-      action.hidden = !prompt || this.overlay !== null || this.simulation.mode === "fishing";
-      action.disabled = prompt ? !prompt.enabled : true;
-      action.textContent = prompt?.label ?? "Interact";
-      action.setAttribute("aria-label", prompt?.label ?? "Interact");
-      action.title = prompt?.label ?? "";
+      const fight = this.simulation.fishing?.reeling;
+      const showReelControl = this.overlay === null && fight !== null && fight !== undefined && fight.landingAt === null;
+      const label = showReelControl ? "Hold to reel" : prompt?.label ?? "Interact";
+      action.hidden = !showReelControl && (!prompt || this.overlay !== null || this.simulation.mode === "fishing");
+      action.disabled = showReelControl ? false : prompt ? !prompt.enabled : true;
+      action.textContent = showReelControl ? "HOLD TO REEL" : label;
+      action.setAttribute(
+        "aria-label",
+        showReelControl ? `Hold ${formatKey(this.save.settings.controls.action)} to reel; release to lower tension` : label,
+      );
+      action.title = showReelControl ? `Hold ${formatKey(this.save.settings.controls.action)} to reel` : label;
       action.classList.toggle("is-fishing-cue", fishingCue);
+      action.classList.toggle("is-reel-control", showReelControl);
       this.syncContextActionAnchor(action);
     }
   }
@@ -707,7 +735,7 @@ export class Game {
         )
       : activeSection === "cargo"
         ? `<aside class="cargo-section" aria-labelledby="cargo-heading"><div class="cargo-inventory-heading"><h3 id="cargo-heading">Fish inventory</h3><span>${this.simulation.cargo.length} carried · ${availableCargoSlots} unlocked</span></div><div class="cargo-slot-grid" aria-label="Cargo inventory">${cargoMarkup}</div></aside>`
-        : `<section class="upgrades" aria-label="Upgrades"><div class="service-grid">${this.upgradeCard("cargo", "Cargo", "+1 cargo slot")}${this.upgradeCard("engine", "Engine", "+11% speed")}${this.upgradeCard("line", "Line depth", "Next depth tier")}${harborId === "gloam" ? this.permitCard() : ""}</div><div class="upgrade-feature-grid">${this.boostCard()}${this.beachCard()}</div></section>`;
+        : `<section class="upgrades" aria-label="Upgrades"><div class="service-grid">${this.upgradeCard("cargo", "Cargo", "+1 cargo slot")}${this.upgradeCard("engine", "Engine", "+11% speed")}${this.upgradeCard("line", "Fishing line", "Next depth · +12% strength")}${harborId === "gloam" ? this.permitCard() : ""}</div><div class="upgrade-feature-grid">${this.boostCard()}${this.beachCard()}</div></section>`;
     const tabs = `<nav class="harbor-tabs has-3-tabs" aria-label="Harbor sections" style="--harbor-tab-count: 3">${availableSections.map((section) => `<button class="harbor-tab ${activeSection === section ? "is-active" : ""}" type="button" data-action="harbor-section" data-harbor-section="${section}" aria-label="${capitalise(section)}" aria-pressed="${activeSection === section}"><span class="ui-icon icon-${HARBOR_SECTION_ICON[section]}" aria-hidden="true"></span><span>${capitalise(section)}</span></button>`).join("")}</nav>`;
     const mainFooterAction = activeSection === "market" && this.marketDetailOpen
       ? `<button class="leave-button market-footer-back" type="button" data-action="close-market-fish-detail" aria-label="Back to market"><span class="harbor-back-arrow" aria-hidden="true">←</span><strong>Back to market</strong></button>`
@@ -942,11 +970,11 @@ export class Game {
       },
       {
         title: "Catch and protect",
-        body: "Drop the line and steer the hook with the movement keys. Once caught, faster travel protects freshness and can change which harbor gives the better realised sale.",
+        body: `Drop the line and steer onto a fish. Hold <kbd>${formatKey(this.save.settings.controls.action)}</kbd> to reel, then release during struggle bursts or critical tension. Tired fish become easier to land.`,
       },
       {
         title: "Sell and invest",
-        body: "Open a fish listing to sell every fresh catch of that species. A bigger cargo hold increases each trip's potential, while line upgrades reach more valuable fish.",
+        body: "Open a fish listing to sell every fresh catch of that species. A bigger cargo hold increases each trip's potential, while line upgrades reach deeper fish and withstand more tension.",
       },
     ];
     const step = steps[this.helpStep] ?? steps[0];
@@ -1607,7 +1635,7 @@ export class Game {
         const target = this.simulation.fishing?.targets.find((candidate) => candidate.species === species);
         if (!this.simulation.fishing || !target) return;
         this.simulation.fishing.hook = { x: target.x, y: target.y };
-        updateSimulation(this.simulation, { travel: 0, hookX: 0, hookY: 0, boost: false }, 0);
+        updateSimulation(this.simulation, { travel: 0, hookX: 0, hookY: 0, boost: false, actionHeld: false }, 0);
         this.refreshHud();
       },
       damage: (amount) => {
@@ -1628,7 +1656,7 @@ export class Game {
 }
 
 function upgradeName(upgrade: UpgradeId): string {
-  return { cargo: "Boat and cargo", engine: "Engine", line: "Line depth" }[upgrade];
+  return { cargo: "Boat and cargo", engine: "Engine", line: "Fishing line" }[upgrade];
 }
 
 function capitalise(value: string): string {

@@ -18,6 +18,7 @@ import {
   buyUpgrade,
   cargoCapacity,
   closeMarketSpeciesDetail,
+  consumeEvents,
   createSimulation,
   damageBoat,
   getInteractionPrompt,
@@ -53,6 +54,7 @@ const idle: InputState = {
   boost: false,
   hookX: 0,
   hookY: 0,
+  actionHeld: false,
 };
 
 describe("FSHING side-on simulation", () => {
@@ -413,11 +415,35 @@ describe("FSHING side-on simulation", () => {
     updateSimulation(simulation, idle, 0);
     expect(simulation.mode).toBe("fishing");
     expect(simulation.fishing?.reeling).toMatchObject({ species: "bluegill" });
-    expect(tutorialPrompt(simulation)).toBe("Reeling the Bluegill to the boat.");
+    expect(tutorialPrompt(simulation)).toContain("Hold Reel");
     expect(simulation.cargo).toEqual([]);
-    for (let index = 0; index < 12; index += 1) updateSimulation(simulation, idle, 0.1);
+    for (let index = 0; index < 180 && simulation.mode === "fishing"; index += 1) {
+      const tension = simulation.fishing?.reeling?.tension ?? 0;
+      updateSimulation(simulation, { ...idle, actionHeld: tension < 0.72 }, 0.1);
+    }
     expect(simulation.mode).toBe("cruising");
     expect(simulation.cargo).toEqual([{ species: "bluegill", freshness: 100 }]);
+  });
+
+  test("breaks a critically strained line without ending the fishing session", () => {
+    const simulation = createSimulation(9);
+    expect(startFishing(simulation, "sunwardShoal")).toBe(true);
+    const target = simulation.fishing?.targets[0];
+    if (!simulation.fishing || !target) throw new Error("Expected a fishing target.");
+    simulation.fishing.hook = { x: target.x, y: target.y };
+    updateSimulation(simulation, idle, 0);
+    const fight = simulation.fishing.reeling;
+    if (!fight) throw new Error("Expected a hooked fish.");
+    fight.tension = 0.96;
+    fight.criticalSeconds = BALANCE.fishingBreakGraceSeconds - 0.05;
+
+    updateSimulation(simulation, { ...idle, actionHeld: true }, 0.1);
+
+    expect(simulation.mode).toBe("fishing");
+    expect(simulation.fishing?.reeling).toBeNull();
+    expect(simulation.fishing?.hook).toEqual({ x: 0.5, y: 0.08 });
+    expect(consumeEvents(simulation)).toContainEqual({ type: "line-broke", species: "bluegill" });
+    expect(simulation.cargo).toEqual([]);
   });
 
   test("keeps fishing active while a manual exit rises to the surface", () => {
