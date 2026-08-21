@@ -217,7 +217,7 @@ Development shortcuts: `B` grants a temporary boost. In `npm run dev`, `G` jumps
 - Fishing canvas `aria-label` includes the site, and the tracked target and rarity when a fish is tracked
 - Locked market cards and disabled actions have text, not colour alone
 
-The in-fishing “W / S MOVE HOOK” cue is hardcoded and does not follow rebinds.
+The in-fishing “W A S D MOVE HOOK” cue presents all four movement keys in one horizontal row. It is hardcoded and does not follow rebinds.
 
 ## Persistence
 
