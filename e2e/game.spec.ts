@@ -168,6 +168,22 @@ test("first assignment teaches the complete market sale loop", async ({ page }) 
   await expect(page.locator(".shell-balance strong")).toHaveText(/^[1-9]\d*$/);
 });
 
+test("first assignment follows the player back to the market list", async ({ page }) => {
+  await page.goto("/?e2e=1");
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+
+  const tutorial = page.locator("#market-tutorial");
+  const bluegillListing = page.locator('[data-action="select-market-fish"][data-species="bluegill"]');
+  await bluegillListing.click();
+  await expect(tutorial).toContainText("Track catch");
+
+  await page.getByRole("button", { name: "Back to market" }).click();
+
+  await expect(tutorial).toContainText("Choose Bluegill");
+  await expect(tutorial.locator(".market-tutorial-step")).toHaveText("1");
+  await expect(bluegillListing).toHaveClass(/is-tutorial-target/);
+});
+
 test("settings reset save asks for confirmation before restoring the first assignment", async ({ page }) => {
   await page.goto("/?e2e=1");
   await page.getByRole("button", { name: "Play", exact: true }).click();
@@ -208,13 +224,28 @@ test("upgrade tutorial walks through Dock Services after the player can afford o
   await expect(servicesTab).toHaveClass(/is-tutorial-target/);
 
   await servicesTab.click();
-  await expect(tutorial).toContainText("Buy upgrade");
+  await expect(tutorial).toContainText("Buy line depth");
   await expect(tutorial.locator(".market-tutorial-step")).toHaveText("2");
   const lineUpgrade = page.locator('[data-action="buy-upgrade"][data-upgrade="line"]');
   await expect(lineUpgrade).toHaveClass(/is-tutorial-target/);
   await lineUpgrade.click();
-  await expect(tutorial).toBeHidden();
+  await expect(tutorial).toContainText("Return to lake");
+  await expect(tutorial.locator(".market-tutorial-step")).toHaveText("3");
   await expect(page.locator(".shell-balance strong")).toHaveText("0");
+  const returnToLake = page.locator('[data-action="undock"]');
+  await expect(returnToLake).toHaveClass(/is-tutorial-target/);
+  await returnToLake.click();
+
+  await expect(tutorial).toContainText("Sail to Mosswater");
+  await expect(tutorial.locator(".market-tutorial-step")).toHaveText("4");
+  await page.evaluate(() => window.__FSHING_TEST__?.sailToSpot("mosswaterPool"));
+  await expect(tutorial).toContainText("Drop the line");
+  await expect(tutorial.locator(".market-tutorial-step")).toHaveText("5");
+  const dropLine = page.getByRole("button", { name: "Drop line · Mosswater Pool" });
+  await expect(dropLine).toHaveClass(/is-tutorial-target/);
+  await dropLine.click();
+
+  await expect(tutorial).toBeHidden();
 });
 
 test("hides direction guidance unless a fish is tracked or the first assignment is active", async ({ page }) => {

@@ -2,6 +2,7 @@ import { BALANCE } from "./balance";
 import {
   cheapestAffordableUpgrade,
   getInteractionPrompt,
+  isLineDepthTutorialExploration,
   isUpgradeTutorialActive,
   navigationGuidance,
   type MarketTutorialStep,
@@ -36,7 +37,12 @@ export interface QuestRect {
   height: number;
 }
 
-export type QuestGuideStep = MarketTutorialStep | "upgrade-open" | "upgrade-buy";
+export type QuestGuideStep = MarketTutorialStep
+  | "upgrade-open"
+  | "upgrade-buy"
+  | "upgrade-return"
+  | "upgrade-sail"
+  | "upgrade-fish";
 
 export interface QuestPresentation {
   active: boolean;
@@ -124,6 +130,32 @@ export function questPresentation(
     return idlePresentation("done", true);
   }
 
+  if (isLineDepthTutorialExploration(simulation)) {
+    const prompt = getInteractionPrompt(simulation);
+    const atMosswater = prompt?.kind === "fishing" && prompt.spot === "mosswaterPool";
+    const step: QuestGuideStep = simulation.dockedAt
+      ? "upgrade-return"
+      : atMosswater
+        ? "upgrade-fish"
+        : "upgrade-sail";
+    return {
+      active: true,
+      hidden: false,
+      step,
+      heading: "Tutorial",
+      title: step === "upgrade-return"
+        ? "Return to lake"
+        : step === "upgrade-fish"
+          ? "Drop the line"
+          : "Sail to Mosswater",
+      index: step === "upgrade-return" ? 3 : step === "upgrade-sail" ? 4 : 5,
+      totalSteps: 5,
+      uiTargetSelector: upgradeUiTargetSelector(simulation, view, step, null),
+      worldFollow: shouldFollowWorld(simulation, view),
+      hookFollow: false,
+    };
+  }
+
   const upgrade = cheapestAffordableUpgrade(simulation);
   const onServices = view.overlay === "harbor" && view.harborSection === "services";
   const step: QuestGuideStep = onServices || simulation.progress.upgradeTutorialStep === "buy"
@@ -135,9 +167,9 @@ export function questPresentation(
     hidden: false,
     step,
     heading: "Tutorial",
-    title: step === "upgrade-buy" ? "Buy upgrade" : onLake ? "Dock harbor" : "Open services",
+    title: step === "upgrade-buy" ? "Buy line depth" : onLake ? "Dock harbor" : "Open services",
     index: step === "upgrade-buy" ? 2 : 1,
-    totalSteps: 2,
+    totalSteps: 5,
     uiTargetSelector: upgradeUiTargetSelector(simulation, view, step, upgrade),
     worldFollow: shouldFollowWorld(simulation, view),
     hookFollow: false,
@@ -284,6 +316,9 @@ function upgradeUiTargetSelector(
   upgrade: ReturnType<typeof cheapestAffordableUpgrade>,
 ): string | null {
   if (view.overlay === "harbor") {
+    if (step === "upgrade-return") {
+      return '[data-action="undock"]';
+    }
     if (step === "upgrade-buy" && upgrade) {
       return `[data-action="buy-upgrade"][data-upgrade="${upgrade}"]`;
     }
@@ -293,6 +328,9 @@ function upgradeUiTargetSelector(
   }
   if (view.overlay === null && simulation.mode === "cruising") {
     const prompt = getInteractionPrompt(simulation);
+    if (step === "upgrade-fish" && prompt?.kind === "fishing" && prompt.spot === "mosswaterPool") {
+      return "#context-action";
+    }
     if (prompt?.kind === "harbor") return "#context-action";
   }
   return null;

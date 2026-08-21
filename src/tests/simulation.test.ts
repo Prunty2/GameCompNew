@@ -17,6 +17,7 @@ import {
   buyPermit,
   buyUpgrade,
   cargoCapacity,
+  closeMarketSpeciesDetail,
   createSimulation,
   damageBoat,
   getInteractionPrompt,
@@ -371,6 +372,18 @@ describe("FSHING side-on simulation", () => {
     expect(simulation.cargo).toEqual([]);
   });
 
+  test("moves the first assignment backward with reversed market actions", () => {
+    const simulation = createSimulation();
+    inspectMarketSpecies(simulation, "bluegill");
+    closeMarketSpeciesDetail(simulation, "bluegill");
+    expect(simulation.progress.marketTutorialStep).toBe("inspect");
+
+    inspectMarketSpecies(simulation, "bluegill");
+    expect(trackMarketSpecies(simulation, "bluegill")).toBe(true);
+    expect(trackMarketSpecies(simulation, "bluegill")).toBe(true);
+    expect(simulation.progress.marketTutorialStep).toBe("track");
+  });
+
   test("opens the upgrade tutorial once the player can afford a dock upgrade", () => {
     const simulation = createSimulation();
     skipMarketTutorial(simulation);
@@ -380,6 +393,11 @@ describe("FSHING side-on simulation", () => {
     expect(simulation.progress.upgradeTutorialStep).toBe("open-services");
     expect(navigationGuidance(simulation)).toMatchObject({ kicker: "UPGRADE AT", label: "Brindle Harbor" });
     expect(buyUpgrade(simulation, "line")).toBe(true);
+    expect(simulation.progress.upgradeTutorialStep).toBe("buy");
+    expect(navigationGuidance(simulation)).toMatchObject({ kicker: "FISH AT", label: "Mosswater Pool" });
+    undock(simulation);
+    moveBoatForTesting(simulation, spotById("mosswaterPool"));
+    expect(startFishing(simulation, "mosswaterPool")).toBe(true);
     expect(simulation.progress.upgradeTutorialStep).toBe("done");
     expect(navigationGuidance(simulation)?.kicker).not.toBe("UPGRADE AT");
   });

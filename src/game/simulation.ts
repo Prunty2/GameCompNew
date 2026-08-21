@@ -437,6 +437,9 @@ export function startFishing(simulation: Simulation, spotId: SpotId): boolean {
       )
     )),
   };
+  if (isLineDepthTutorialExploration(simulation) && spotId === "mosswaterPool") {
+    simulation.progress.upgradeTutorialStep = "done";
+  }
   return true;
 }
 
@@ -476,11 +479,20 @@ export function inspectMarketSpecies(simulation: Simulation, species: FishSpecie
   }
 }
 
+export function closeMarketSpeciesDetail(simulation: Simulation, species: FishSpecies): void {
+  if (simulation.progress.marketTutorialStep === "track" && species === "bluegill") {
+    simulation.progress.marketTutorialStep = "inspect";
+  }
+}
+
 export function trackMarketSpecies(simulation: Simulation, species: FishSpecies): boolean {
   const worldSpecies = Object.values(WORLD_SPOT_RESIDENTS[simulation.world]).flat();
   if (!simulation.progress.discovered.includes(species) || !worldSpecies.includes(species)) return false;
   if (simulation.progress.marketTarget === species) {
     simulation.progress.marketTarget = null;
+    if (simulation.progress.marketTutorialStep === "catch" && species === "bluegill") {
+      simulation.progress.marketTutorialStep = "track";
+    }
     return true;
   }
   simulation.progress.marketTarget = species;
@@ -619,8 +631,17 @@ export function isUpgradeTutorialActive(simulation: Simulation): boolean {
     || simulation.progress.upgradeTutorialStep === "buy";
 }
 
-function completeUpgradeTutorial(simulation: Simulation): void {
+export function isLineDepthTutorialExploration(simulation: Simulation): boolean {
+  return simulation.progress.upgradeTutorialStep === "buy"
+    && simulation.progress.upgrades.line > 0;
+}
+
+function completeUpgradeTutorial(simulation: Simulation, upgrade?: UpgradeId): void {
   if (isUpgradeTutorialActive(simulation)) {
+    if (upgrade === "line") {
+      simulation.progress.upgradeTutorialStep = "buy";
+      return;
+    }
     simulation.progress.upgradeTutorialStep = "done";
   }
 }
@@ -716,7 +737,7 @@ export function buyUpgrade(simulation: Simulation, upgrade: UpgradeId): boolean 
   if (tier >= upgradeTierCap(upgrade) || simulation.progress.money < cost || !simulation.dockedAt) return false;
   simulation.progress.money -= cost;
   simulation.progress.upgrades[upgrade] += 1;
-  completeUpgradeTutorial(simulation);
+  completeUpgradeTutorial(simulation, upgrade);
   simulation.events.push({ type: "upgrade", upgrade });
   return true;
 }
@@ -866,6 +887,21 @@ export function navigationGuidance(simulation: Simulation): NavigationGuidance |
   }
 
   if (isUpgradeTutorialActive(simulation)) {
+    if (isLineDepthTutorialExploration(simulation)) {
+      const spot = spotById("mosswaterPool");
+      const prompt = getInteractionPrompt(simulation);
+      const instruction = prompt?.kind === "fishing" && prompt.spot === spot.id
+        ? prompt.enabled
+          ? `Drop the line at ${spot.name}.`
+          : `Slow beneath ${spot.name}, then drop the line.`
+        : `Head ${horizontalDirection(simulation.boat.x, spot.x)} to ${spot.name}; line depth tier 1 can fish there.`;
+      return {
+        point: spot,
+        label: spot.name,
+        kicker: "FISH AT",
+        instruction,
+      };
+    }
     const harbor = closestHarbor(simulation);
     return {
       point: harbor,
