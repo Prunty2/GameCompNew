@@ -187,6 +187,7 @@ Vite `publicDir` is `false`. Only these files are imported.
 - Surf direction: shallow pale sea-glass water, warm cream caustics, rippled sand, sparse eelgrass and estuary vegetation, small shell patches, restrained driftwood, and faint suspended sand.
 - Bay direction: greener water with slightly lower visibility, pale sand and silt pockets, low seagrass meadows, rounded sandstone ledges, and sparse kelp holdfasts.
 - Reef direction: deeper cold desaturated blue water, dark sandstone shelves and boulders, sparse pale sponge and short kelp growth, a distant open channel, and faint mineral or suspended-silt glow; mysterious but readable rather than horrific.
+- Reef detail update: regenerated on 21 August 2026 as a precise object edit of the approved background, adding one small, dark, algae-stained antique brass diving helmet nestled into the lower-left rock shelf. The helmet remains a subdued environmental discovery; the open play corridor and all gameplay layers remain unchanged.
 
 ### Dock menu backgrounds
 
