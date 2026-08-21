@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This repository is a new CrazyGames-ready browser game, not a continuation or reskin of Boomerang Birds. Use `/Users/liam/Documents/Crazy Games` only as an architectural reference. Do not copy its gameplay, theme, art, names, economy, balance values, or large implementation modules into this project.
+This repository is an ACER Game Competition submission. It is not intended to be distributed or used outside of the competition.
 
 The theme and game design belong in `Docs/Game-Brief.md`. Read and update that brief before implementing theme-specific gameplay or assets.
 
@@ -16,8 +16,8 @@ Every repository change, including documentation and configuration updates, must
 
 ### Before starting
 
-1. Read this file, `README.md`, and the relevant sections of `Docs/Game-Brief.md`.
-2. Run `git status --short` and inspect current changes before editing. Treat every pre-existing change as another person's work.
+1. Read file, `README.md`, and the relevant sections of `Docs/Game-Brief.md`.
+2. Run `git status --short` and inspect current changes before editing.
 3. Agree on one owner, a narrow scope, affected files, and an acceptance check for the task. Record this in the issue, task, pull request, or team chat.
 4. Create a new short-lived branch from an up-to-date `main` for every change. Use a descriptive name such as `liam/fishing-input` or `codex/save-validation`; do not reuse a branch or work directly on `main`.
 5. Check whether someone else owns the same files or system. Coordinate before changing a shared hotspot.
