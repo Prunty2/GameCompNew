@@ -658,7 +658,6 @@
   color: var(--menu-paper);
   font-family: inherit;
   text-align: center;
-  box-shadow: inset 0 1px 0 rgb(247 241 227 / 3%);
 }
 
 .cargo-slot-number {
@@ -675,9 +674,12 @@
   width: 48px;
   height: 48px;
   flex: 0 0 auto;
-  border: 1px solid rgb(145 169 176 / 24%);
-  border-radius: 10px;
-  background-color: rgb(4 20 29 / 72%);
+}
+
+.cargo-fish {
+  width: 96px;
+  height: 56px;
+  flex: 0 0 auto;
 }
 
 .cargo-slot small {
@@ -687,7 +689,6 @@
 }
 
 .cargo-slot.is-empty {
-  border-style: dashed;
   background: rgb(247 241 227 / 1.5%);
 }
 
@@ -696,8 +697,9 @@
 }
 
 .cargo-slot.is-occupied {
-  border-color: rgb(240 166 72 / 54%);
-  background: linear-gradient(180deg, rgb(240 166 72 / 8%), rgb(247 241 227 / 3%));
+  padding-top: 28px;
+  border-color: var(--menu-signal);
+  background: rgb(232 164 77 / 8%);
 }
 
 @keyframes cargo-release-out {
@@ -726,7 +728,7 @@
 }
 
 .cargo-slot-copy small {
-  color: #f0a648;
+  color: var(--menu-signal);
 }
 
 .cargo-release {
@@ -797,9 +799,9 @@
 
 .cargo-release:hover,
 .cargo-release:focus-visible {
-  border-color: rgb(240 166 72 / 46%);
+  border-color: var(--menu-signal);
   outline: none;
-  background: rgb(240 166 72 / 12%);
+  background: rgb(232 164 77 / 12%);
 }
 
 .cargo-release:hover .cargo-bin-lid,
@@ -823,7 +825,6 @@
 }
 
 .cargo-slot.is-locked {
-  border-style: dashed;
   background: rgb(1 14 21 / 34%);
   cursor: pointer;
 }
@@ -1010,7 +1011,6 @@
   margin: auto 0 0;
   padding: 12px 0 0;
   border: 0;
-  border-top: 1px solid rgb(145 169 176 / 29%);
 }
 
 .harbor-screen.is-first-voyage .panel-actions > div,
@@ -1419,6 +1419,11 @@
     height: 35px;
   }
 
+  .cargo-fish {
+    width: 56px;
+    height: 36px;
+  }
+
   .cargo-slot.is-empty,
   .cargo-slot.is-locked {
     flex-direction: column;
@@ -1432,6 +1437,10 @@
   .cargo-slot-copy strong {
     max-width: 66px;
     font-size: 0.7rem;
+  }
+
+  .cargo-slot-copy small {
+    white-space: nowrap;
   }
 
   .cargo-padlock {
