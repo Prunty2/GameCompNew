@@ -18,7 +18,7 @@ test("main menu presents centered play, settings, and credits actions", async ({
   await page.goto("/");
 
   const version = page.locator(".title-build-version");
-  await expect(version).toHaveText("v0.4.3 (PR #85)");
+  await expect(version).toHaveText("v0.5.0 (PR #100)");
   const versionBounds = await version.boundingBox();
   expect(versionBounds).not.toBeNull();
   expect(versionBounds!.x).toBeLessThan(24);
@@ -177,6 +177,30 @@ test("first assignment teaches the complete market sale loop", async ({ page }) 
   await expect(page.locator(".shell-balance strong")).toHaveText(/^[1-9]\d*$/);
 });
 
+test("hooked fish require active reel and release tension control", async ({ page }) => {
+  await page.goto("/?e2e=1");
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.evaluate(() => window.__FSHING_TEST__?.previewFishing("sunwardShoal", "bluegill"));
+  await page.evaluate(() => window.__FSHING_TEST__?.hookSpecies("bluegill"));
+
+  const canvas = page.locator("#game-canvas");
+  const reelButton = page.getByRole("button", { name: /Hold E to reel/ });
+  await expect(canvas).toHaveAttribute("data-fishing-state", "fighting");
+  await expect(reelButton).toBeVisible();
+  const startingProgress = Number(await canvas.getAttribute("data-fishing-reel-progress"));
+
+  await reelButton.dispatchEvent("pointerdown", { pointerId: 1 });
+  await page.waitForTimeout(900);
+  await reelButton.dispatchEvent("pointerup", { pointerId: 1 });
+  const pulledProgress = Number(await canvas.getAttribute("data-fishing-reel-progress"));
+  const pulledTension = Number(await canvas.getAttribute("data-fishing-line-tension"));
+  expect(pulledProgress).toBeGreaterThan(startingProgress);
+
+  await page.waitForTimeout(500);
+  const restedTension = Number(await canvas.getAttribute("data-fishing-line-tension"));
+  expect(restedTension).toBeLessThan(pulledTension);
+});
+
 test("first assignment follows the player back to the market list", async ({ page }) => {
   await page.goto("/?e2e=1");
   await page.getByRole("button", { name: "Play", exact: true }).click();
@@ -220,6 +244,7 @@ test("settings reset save asks for confirmation before restoring the first assig
 });
 
 test("upgrade tutorial walks through Upgrades after the player can afford one", async ({ page }) => {
+  test.setTimeout(45_000);
   await page.goto("/?e2e=1");
   await page.getByRole("button", { name: "Play", exact: true }).click();
   await page.getByRole("button", { name: "Close tutorial" }).click();
@@ -830,6 +855,7 @@ test("all three fishing spots render their habitat-specific real species", async
 });
 
 test("reels a hooked fish to the boat before securing the catch", async ({ page }) => {
+  test.setTimeout(45_000);
   await page.goto("/?e2e=1&e2eSpot=sunwardShoal");
   await page.getByRole("button", { name: "Play", exact: true }).click();
   await page.locator('[data-action="undock"]').click();
@@ -837,10 +863,26 @@ test("reels a hooked fish to the boat before securing the catch", async ({ page 
 
   const canvas = page.locator("#game-canvas");
   await expect.poll(async () => Number(await canvas.getAttribute("data-fishing-dive-progress"))).toBeGreaterThan(0.99);
+  await page.evaluate(() => window.__FSHING_TEST__?.hookSpecies("bluegill"));
+  let holdingReel = false;
+  await expect.poll(async () => {
+    const state = await canvas.getAttribute("data-fishing-state");
+    if (state !== "fighting") return state;
+    const tension = Number(await canvas.getAttribute("data-fishing-line-tension"));
+    if (!holdingReel && tension < 0.68) {
+      await page.keyboard.down("e");
+      holdingReel = true;
+    } else if (holdingReel && tension > 0.78) {
+      await page.keyboard.up("e");
+      holdingReel = false;
+    }
+    return state;
+  }, { timeout: 20_000, intervals: [50] }).toBe("landing");
+  if (holdingReel) await page.keyboard.up("e");
+
   const [reelStart, reelMidpoint] = await page.evaluate(async () => {
     const element = document.querySelector<HTMLCanvasElement>("#game-canvas");
     if (!element) throw new Error("Expected the game canvas.");
-    window.__FSHING_TEST__?.hookSpecies("bluegill");
 
     type ReelSample = {
       diveProgress: number;
@@ -852,7 +894,7 @@ test("reels a hooked fish to the boat before securing the catch", async ({ page 
     const startedAt = performance.now();
     return new Promise<[ReelSample, ReelSample]>((resolve, reject) => {
       const sampleFrame = (): void => {
-        if (element.dataset.fishingState === "reeling") {
+        if (element.dataset.fishingState === "landing") {
           const sample = {
             diveProgress: Number(element.getAttribute("data-fishing-dive-progress")),
             schoolOpacity: Number(element.getAttribute("data-fishing-school-opacity")),

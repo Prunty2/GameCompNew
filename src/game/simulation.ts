@@ -2,6 +2,7 @@ import { clamp, createRandom, type RandomSource } from "./math";
 import { fishingSpeciesMotion } from "./fishingMovement";
 import { fishingHighlightSpecies } from "./fishingPresentation";
 import { FISHING_REEL_DURATION } from "./fishingReeling";
+import { stepFishingFight } from "./fishingFight";
 import {
   BALANCE,
   FISH,
@@ -41,6 +42,7 @@ export interface InputState {
   boost: boolean;
   hookX: number;
   hookY: number;
+  actionHeld: boolean;
 }
 
 export interface BoatState extends WorldPoint {
@@ -141,6 +143,12 @@ export interface FishingReelState {
   targetIndex: number;
   hookedAt: number;
   direction: -1 | 1;
+  progress: number;
+  tension: number;
+  stamina: number;
+  criticalSeconds: number;
+  struggle: number;
+  landingAt: number | null;
 }
 
 export interface DeliveryResult {
@@ -154,6 +162,7 @@ export interface DeliveryResult {
 
 export type SimulationEvent =
   | { type: "caught"; species: FishSpecies }
+  | { type: "line-broke"; species: FishSpecies }
   | { type: "delivered"; payment: number }
   | { type: "sold"; result: Pick<MarketSaleResult, "quantity" | "payment"> }
   | { type: "market-day"; day: number }
@@ -966,7 +975,10 @@ export function tutorialPrompt(simulation: Simulation): string | null {
   if (simulation.progress.marketTutorialStep === "done" || simulation.progress.marketTutorialStep === "complete") return null;
   if (simulation.mode === "fishing" && simulation.fishing) {
     if (simulation.fishing.reeling) {
-      return `Reeling the ${FISH[simulation.fishing.reeling.species].name} to the boat.`;
+      if (simulation.fishing.reeling.landingAt !== null) {
+        return `Landing the ${FISH[simulation.fishing.reeling.species].name}.`;
+      }
+      return `Hold Reel to pull in the ${FISH[simulation.fishing.reeling.species].name}; release before line tension stays critical.`;
     }
     if (simulation.fishing.exitingAt !== null) return "Reeling in the line and returning to the surface.";
     const target = fishingHighlightSpecies(
@@ -1026,9 +1038,7 @@ function updateFishing(simulation: Simulation, input: InputState, dt: number): v
     return;
   }
   if (fishing.reeling) {
-    if (simulation.elapsed - fishing.reeling.hookedAt >= FISHING_REEL_DURATION) {
-      resolveCatch(simulation, fishing.reeling.species);
-    }
+    updateFishingFight(simulation, input, dt);
     return;
   }
   const verticalSpeed = input.hookY < 0 ? BALANCE.fishingHookUpSpeed : BALANCE.fishingHookDownSpeed;
@@ -1049,10 +1059,54 @@ function updateFishing(simulation: Simulation, input: InputState, dt: number): v
         targetIndex,
         hookedAt: simulation.elapsed,
         direction: multiplyDirection(target.direction, motion.heading),
+        progress: 0,
+        tension: 0.12,
+        stamina: 1,
+        criticalSeconds: 0,
+        struggle: 0,
+        landingAt: null,
       };
       return;
     }
   }
+}
+
+function updateFishingFight(simulation: Simulation, input: InputState, dt: number): void {
+  const fishing = simulation.fishing;
+  const fight = fishing?.reeling;
+  if (!fishing || !fight) return;
+  if (fight.landingAt !== null) {
+    if (simulation.elapsed - fight.landingAt >= FISHING_REEL_DURATION) {
+      resolveCatch(simulation, fight.species);
+    }
+    return;
+  }
+
+  const next = stepFishingFight(
+    fight.species,
+    fight,
+    input.actionHeld,
+    simulation.elapsed - fight.hookedAt,
+    simulation.progress.upgrades.line,
+    dt,
+  );
+  fight.progress = next.progress;
+  fight.tension = next.tension;
+  fight.stamina = next.stamina;
+  fight.criticalSeconds = next.criticalSeconds;
+  fight.struggle = next.struggle;
+  if (next.broken) {
+    const escapedTarget = fishing.targets[fight.targetIndex];
+    if (escapedTarget) {
+      escapedTarget.x = escapedTarget.direction === 1 ? 0.88 : 0.12;
+      escapedTarget.phase += Math.PI / 2;
+    }
+    fishing.hook = { x: 0.5, y: 0.08 };
+    fishing.reeling = null;
+    simulation.events.push({ type: "line-broke", species: fight.species });
+    return;
+  }
+  if (next.landed) fight.landingAt = simulation.elapsed;
 }
 
 function multiplyDirection(first: -1 | 1, second: -1 | 1): -1 | 1 {

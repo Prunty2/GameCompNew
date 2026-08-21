@@ -10,6 +10,7 @@ export class InputController {
   private pauseQueued = false;
   private debugTimeJumpQueued: DebugTimeJump | null = null;
   private debugBoostUnlockQueued = false;
+  private pointerActionHeld = false;
   private bindings = new AbortController();
   private pendingRebind: { action: ControlAction; callback: (code: string | null) => void } | null = null;
 
@@ -27,11 +28,13 @@ export class InputController {
       boost: this.hasAction("boost"),
       hookX: travel,
       hookY: vertical,
+      actionHeld: this.hasAction("action") || this.pointerActionHeld,
     };
   }
 
   bindPointerAction(root: HTMLElement): void {
     this.bindings.abort();
+    this.pointerActionHeld = false;
     this.bindings = new AbortController();
     const { signal } = this.bindings;
     for (const control of root.querySelectorAll<HTMLElement>("[data-control=\"action\"]")) {
@@ -39,11 +42,13 @@ export class InputController {
         event.preventDefault();
         control.setPointerCapture(event.pointerId);
         control.classList.add("is-pressed");
+        this.pointerActionHeld = true;
         this.actionQueued = true;
       };
       const release = (event: PointerEvent): void => {
         if (control.hasPointerCapture(event.pointerId)) control.releasePointerCapture(event.pointerId);
         control.classList.remove("is-pressed");
+        this.pointerActionHeld = false;
       };
       control.addEventListener("pointerdown", press, { signal });
       control.addEventListener("pointerup", release, { signal });
@@ -139,6 +144,7 @@ export class InputController {
 
   private readonly onBlur = (): void => {
     this.pressed.clear();
+    this.pointerActionHeld = false;
   };
 }
 

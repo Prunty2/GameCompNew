@@ -56,6 +56,17 @@ export interface FishDefinition {
   rarity: FishRarity;
 }
 
+export interface FishingFightProfile {
+  reelProgressPerSecond: number;
+  tensionPerSecond: number;
+  tensionRecoveryPerSecond: number;
+  slipPerSecond: number;
+  staminaDrainPerSecond: number;
+  staminaRecoveryPerSecond: number;
+  struggleCycleSeconds: number;
+  struggleFraction: number;
+}
+
 export interface RegionDefinition {
   id: RegionId;
   name: string;
@@ -96,6 +107,9 @@ export const BALANCE = {
   fishingHookHorizontalSpeed: 0.25,
   fishingHookUpSpeed: 0.35,
   fishingHookDownSpeed: 0.25,
+  fishingLineStrengthPerTier: 0.12,
+  fishingCriticalTension: 0.9,
+  fishingBreakGraceSeconds: 0.7,
   upgradeCosts: { cargo: 60, engine: 70, line: 55 },
   permitCost: 85,
   beachAccessCost: 120,
@@ -113,6 +127,50 @@ export const BALANCE = {
   maxCargoSlots: 10,
   repairDamagePerShell: 2,
 } as const;
+
+/** Rates are fractions of their respective fight meter per second. */
+export const FISHING_FIGHT_PROFILES: Record<FishRarity, FishingFightProfile> = {
+  common: {
+    reelProgressPerSecond: 0.34,
+    tensionPerSecond: 0.68,
+    tensionRecoveryPerSecond: 0.78,
+    slipPerSecond: 0.035,
+    staminaDrainPerSecond: 0.23,
+    staminaRecoveryPerSecond: 0.035,
+    struggleCycleSeconds: 2.2,
+    struggleFraction: 0.42,
+  },
+  uncommon: {
+    reelProgressPerSecond: 0.29,
+    tensionPerSecond: 0.76,
+    tensionRecoveryPerSecond: 0.73,
+    slipPerSecond: 0.045,
+    staminaDrainPerSecond: 0.19,
+    staminaRecoveryPerSecond: 0.04,
+    struggleCycleSeconds: 2,
+    struggleFraction: 0.48,
+  },
+  rare: {
+    reelProgressPerSecond: 0.25,
+    tensionPerSecond: 0.84,
+    tensionRecoveryPerSecond: 0.68,
+    slipPerSecond: 0.055,
+    staminaDrainPerSecond: 0.16,
+    staminaRecoveryPerSecond: 0.045,
+    struggleCycleSeconds: 1.8,
+    struggleFraction: 0.54,
+  },
+  legendary: {
+    reelProgressPerSecond: 0.22,
+    tensionPerSecond: 0.94,
+    tensionRecoveryPerSecond: 0.64,
+    slipPerSecond: 0.065,
+    staminaDrainPerSecond: 0.13,
+    staminaRecoveryPerSecond: 0.05,
+    struggleCycleSeconds: 1.65,
+    struggleFraction: 0.6,
+  },
+};
 
 export const SURFACE_Y = 0.61;
 

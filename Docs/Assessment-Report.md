@@ -4,7 +4,7 @@
 
 **Project:** FSHING, original browser game  
 **Team:** Liam, Saxon, Harrison, David  
-**Version documented:** 0.4.3 (PR #85)  
+**Version documented:** 0.5.0 (PR #100)
 **Document date:** 21 August 2026  
 **Submission components:** This report, source repository, and production build
 
@@ -21,6 +21,7 @@ The completed vertical slice contains:
 - one lake and one unlockable Beach, each with two harbors and three fishing grounds
 - eighteen real species (nine freshwater, nine south-eastern Australian coastal)
 - cargo, engine, and line upgrades, plus a rechargeable boost, Outer Gloam permit, and Beach access
+- deterministic reel-and-release fish fights with line tension, fish stamina, rarity scaling, and break recovery
 - seeded daily quotes, seven-day history, and freshness-adjusted sales
 - a five-step First Assignment, four-card How to play, credits, and an eight-sale season report
 - keyboard sailing and hook steering, pointer/touch menus, remappable controls, mute, high contrast, reduced motion, and pause on focus loss
@@ -88,7 +89,7 @@ flowchart LR
 2. First Assignment highlights Bluegill. Open it, read today's quote, then **Track Bluegill**.
 3. Return to the lake. The badge reads **FISH AT Sunward Shoal**.
 4. Slow under the shoal until the hook cue appears, then drop the line.
-5. Steer onto a Bluegill. The catch is reeled to the boat at 100% freshness.
+5. Steer onto a Bluegill. Hold Reel to gain ground, then release during struggle bursts or critical line tension. The landed catch reaches the boat at 100% freshness.
 6. Guidance switches to **SELL AT** whichever harbor currently pays more.
 7. Dock, open Bluegill, sell. Shells land, the assignment completes, and prices will change when the next 210-second day begins.
 
@@ -152,7 +153,7 @@ payout ← max(1, round(quote × (0.25 + 0.75 × freshness / 100)))
 
 ### Fishing spawn
 
-A site spawns every resident. Count per resident follows that day's availability: 3 abundant, 2 normal, 1 scarce. Hook contact within radius 0.058 on a reachable depth starts a 1.15 s reel, then stores the catch at 100% freshness.
+A site spawns every resident. Count per resident follows that day's availability: 3 abundant, 2 normal, 1 scarce. Hook contact within radius 0.058 on a reachable depth starts a deterministic fight. Holding Reel gains ground, drains fish stamina, and raises tension; releasing lowers tension while allowing slight slip and stamina recovery. Rarity scales pull strength and frequency. Sustained critical tension breaks the line without ending the fishing session, while a completed fight uses a 1.15 s landing transition and stores the catch at 100% freshness.
 
 ### Determinism
 
@@ -252,7 +253,7 @@ Delivery contracts, water surveys, and the field guide were removed from the pla
 Unit/model tests cover:
 
 - map scale, movement, facing, braking, speed, bounds, and determinism
-- fishing targets, catch radius, cargo capacity, depth gates, and permits
+- fishing targets, catch radius, reel progress, tension breaks, fish stamina, line strength, cargo capacity, depth gates, and permits
 - market quotes, harbor demand, freshness payouts, and Beach premiums
 - First Assignment, cargo release/restore, Beach travel, boost heat, season completion
 - night fade, destination-badge layout, fishing presentation and reeling
@@ -264,7 +265,7 @@ Browser tests cover:
 - First Assignment inspect → track → catch → sell → reload
 - market grid, locked cards, cargo counts, Beach coastal art
 - dock day/night plates, waterline transitions, night indicator
-- fishing dive, reel, Escape-to-surface, habitat-specific species
+- fishing dive, reel-and-release fights, landing, Escape-to-surface, habitat-specific species
 - four-step How to play
 - absence of mobile movement pads and of the field guide
 
@@ -320,7 +321,7 @@ Solution: per-harbor demand, a 6% daily cap, and freshness so a longer crossing 
 
 - Season report copy still says "Research season complete" from an earlier STEM framing.
 - Help card 1 says the player can compare both harbors on one card; the detail view shows only the docked harbor. The other quote is seen by docking there, or inferred from the sell badge.
-- Fish share a hook-contact rule; gait, depth, and speed vary more than bite behaviour.
+- Fish within the same rarity share a fight profile, so species-specific fight personalities remain limited.
 - Time, cargo, and world are not saved, so a refresh is always morning at Brindle.
 - The human playtest table is pending.
 
