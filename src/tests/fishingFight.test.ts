@@ -40,6 +40,35 @@ describe("fishing fight", () => {
     expect(upgraded.progress).toBeCloseTo(basic.progress);
   });
 
+  test("rarer fish pull harder and reel more slowly", () => {
+    const sampleFight = (species: "bluegill" | "lakeSturgeon"): { tension: number; progress: number } => (
+      Array.from({ length: 100 }, (_, index) => (
+        stepFishingFight(species, freshFight, true, index * 0.1, 0, 0.1)
+      )).reduce(
+        (total, step) => ({
+          tension: total.tension + step.tension - freshFight.tension,
+          progress: total.progress + step.progress,
+        }),
+        { tension: 0, progress: 0 },
+      )
+    );
+    const common = sampleFight("bluegill");
+    const legendary = sampleFight("lakeSturgeon");
+    expect(legendary.tension).toBeGreaterThan(common.tension);
+    expect(legendary.progress).toBeLessThan(common.progress);
+  });
+
+  test("continuous unchecked reeling eventually breaks the line", () => {
+    let fight = freshFight;
+    let broken = false;
+    for (let index = 0; index < 100 && !broken; index += 1) {
+      const next = stepFishingFight("bluegill", fight, true, index * 0.1, 0, 0.1);
+      fight = next;
+      broken = next.broken;
+    }
+    expect(broken).toBe(true);
+  });
+
   test("requires one continuous critical-tension window to break", () => {
     const recovered = stepFishingFight(
       "bluegill",
