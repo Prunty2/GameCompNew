@@ -105,6 +105,39 @@ const SCENE_COVER_DURATION = 120;
 const SCENE_REVEAL_DURATION = 160;
 const DELIVERY_NOTIFICATION_DURATION = 4_000;
 const DELIVERY_NOTIFICATION_EXIT_DURATION = 280;
+const VISIBILITY_TOLERANCE = 0.5;
+
+function isFullyVisibleWithinClippingParents(element: HTMLElement, rect: DOMRect): boolean {
+  if (
+    rect.left < -VISIBILITY_TOLERANCE
+    || rect.top < -VISIBILITY_TOLERANCE
+    || rect.right > window.innerWidth + VISIBILITY_TOLERANCE
+    || rect.bottom > window.innerHeight + VISIBILITY_TOLERANCE
+  ) {
+    return false;
+  }
+
+  for (let parent = element.parentElement; parent; parent = parent.parentElement) {
+    const style = getComputedStyle(parent);
+    const clipsX = style.overflowX !== "visible";
+    const clipsY = style.overflowY !== "visible";
+    if (!clipsX && !clipsY) continue;
+
+    const parentRect = parent.getBoundingClientRect();
+    const left = parentRect.left + parent.clientLeft;
+    const top = parentRect.top + parent.clientTop;
+    const right = left + parent.clientWidth;
+    const bottom = top + parent.clientHeight;
+    if (
+      clipsX && (rect.left < left - VISIBILITY_TOLERANCE || rect.right > right + VISIBILITY_TOLERANCE)
+      || clipsY && (rect.top < top - VISIBILITY_TOLERANCE || rect.bottom > bottom + VISIBILITY_TOLERANCE)
+    ) {
+      return false;
+    }
+  }
+
+  return true;
+}
 
 const DOCK_BACKGROUND_URL: Record<HarborId, { day: string; night: string }> = {
   brindle: { day: brindleDockDayUrl, night: brindleDockNightUrl },
@@ -567,7 +600,7 @@ export class Game {
     const target = selector ? this.uiRoot.querySelector<HTMLElement>(selector) : null;
     const targetRect = target?.getClientRects()[0];
     if (!arrow || !glow) return;
-    if (!selector || !target || !targetRect) {
+    if (!selector || !target || !targetRect || !isFullyVisibleWithinClippingParents(target, targetRect)) {
       arrow.hidden = true;
       glow.hidden = true;
       return;

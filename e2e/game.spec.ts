@@ -119,6 +119,15 @@ test("first assignment teaches the complete market sale loop", async ({ page }) 
   await expect(questArrow).toBeVisible();
   await expect(page.locator(".quest-arrow-mark")).toHaveCSS("animation-name", "quest-arrow-bob");
 
+  const marketList = page.locator(".market-list");
+  await marketList.evaluate((element) => { element.scrollTop = element.scrollHeight; });
+  await expect(questGlow).toBeHidden();
+  await expect(questArrow).toBeHidden();
+  await expect(bluegillListing).toHaveClass(/is-tutorial-target/);
+  await marketList.evaluate((element) => { element.scrollTop = 0; });
+  await expect(questGlow).toBeVisible();
+  await expect(questArrow).toBeVisible();
+
   await bluegillListing.click();
   await expect(tutorial).toContainText("Track catch");
   await expect(tutorial.locator(".market-tutorial-step")).toHaveText("2");
