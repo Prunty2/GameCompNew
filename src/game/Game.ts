@@ -1565,6 +1565,10 @@ export class Game {
         const spot = spotById(id);
         this.simulation.progress.upgrades.line = spot.requiredDepthTier;
         this.simulation.progress.outerUnlocked = true;
+        if (!this.simulation.progress.discovered.includes(species)) {
+          this.simulation.progress.discovered.push(species);
+        }
+        this.simulation.progress.marketTarget = species;
         if (this.simulation.activeContract) {
           this.simulation.activeContract.spot = id;
           this.simulation.activeContract.species = species;

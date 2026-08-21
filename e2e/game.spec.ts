@@ -738,11 +738,8 @@ test("fishing descends through the sailing waterline into a site-specific scene"
 
   const canvas = page.locator("#game-canvas");
   await expect(canvas).toHaveAttribute("data-fishing-spot", "sunwardShoal");
-  await expect(canvas).toHaveAttribute("data-target-rarity", "common");
-  await expect(canvas).toHaveAttribute(
-    "aria-label",
-    "Fishing at Sunward Shoal. Target Bluegill, common rarity.",
-  );
+  await expect(canvas).not.toHaveAttribute("data-target-rarity");
+  await expect(canvas).toHaveAttribute("aria-label", "Fishing at Sunward Shoal.");
   const initialDiveProgress = Number(await canvas.getAttribute("data-fishing-dive-progress"));
   expect(initialDiveProgress).toBeLessThan(1);
   await expect.poll(async () => Number(await canvas.getAttribute("data-fishing-dive-progress"))).toBeGreaterThan(0.99);

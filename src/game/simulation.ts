@@ -1,5 +1,6 @@
 import { clamp, createRandom, type RandomSource } from "./math";
 import { fishingSpeciesMotion } from "./fishingMovement";
+import { fishingHighlightSpecies } from "./fishingPresentation";
 import { FISHING_REEL_DURATION } from "./fishingReeling";
 import {
   BALANCE,
@@ -10,7 +11,6 @@ import {
   WORLD_SPOT_RESIDENTS,
   engineSpeedMultiplier,
   harborById,
-  primarySpeciesForSpot,
   residentsForSpot,
   spotById,
   upgradeTierCap,
@@ -964,12 +964,14 @@ export function tutorialPrompt(simulation: Simulation): string | null {
       return `Reeling the ${FISH[simulation.fishing.reeling.species].name} to the boat.`;
     }
     if (simulation.fishing.exitingAt !== null) return "Reeling in the line and returning to the surface.";
-    const spot = spotById(simulation.fishing.spot);
-    const target = simulation.progress.marketTarget
-      && residentsForSpot(simulation.world, spot.id).includes(simulation.progress.marketTarget)
-      ? simulation.progress.marketTarget
-      : primarySpeciesForSpot(simulation.world, spot.id);
-    return `Guide the hook toward the ${FISH[target].name}.`;
+    const target = fishingHighlightSpecies(
+      simulation.progress.marketTarget,
+      simulation.world,
+      simulation.fishing.spot,
+    );
+    return target
+      ? `Guide the hook toward the ${FISH[target].name}.`
+      : "Steer the hook onto a reachable fish.";
   }
   if (simulation.progress.marketTutorialStep === "inspect") return "Select Bluegill on the market board.";
   if (simulation.progress.marketTutorialStep === "track") return "Read the Bluegill details, then track it.";

@@ -1,4 +1,11 @@
-import type { FishRarity, FishSpecies, SpotId, WorldPoint } from "./balance";
+import {
+  residentsForSpot,
+  type FishRarity,
+  type FishSpecies,
+  type SpotId,
+  type WorldId,
+  type WorldPoint,
+} from "./balance";
 import { FISHING_MOVEMENT_PROFILES, fishingSpeciesMotion } from "./fishingMovement";
 
 export interface FishingViewLayout {
@@ -109,6 +116,15 @@ export function fishingPointToScreen(
 
 export function targetRarity(species: FishSpecies, rarity: FishRarity): { species: FishSpecies; colour: string } {
   return { species, colour: FISHING_RARITY_COLOURS[rarity] };
+}
+
+export function fishingHighlightSpecies(
+  marketTarget: FishSpecies | null,
+  world: WorldId,
+  spotId: SpotId,
+): FishSpecies | null {
+  if (!marketTarget) return null;
+  return residentsForSpot(world, spotId).includes(marketTarget) ? marketTarget : null;
 }
 
 function clamp(value: number, minimum: number, maximum: number): number {

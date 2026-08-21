@@ -6,6 +6,7 @@ import {
   FISHING_RARITY_COLOURS,
   fishingDiveProgress,
   fishingFishPose,
+  fishingHighlightSpecies,
   fishingPointToScreen,
   fishingReelCameraProgress,
   fishingViewLayout,
@@ -61,6 +62,14 @@ describe("fishing presentation", () => {
     expect(mappedLimit.x).toBe(720);
     expect(mappedLimit.y).toBeCloseTo(layout.lineLimitY);
     expect(layout.lineLimitY).toBeGreaterThan(600);
+  });
+
+  test("highlights a fishing target only when the tracked fish lives at the site", () => {
+    expect(fishingHighlightSpecies(null, "lake", "sunwardShoal")).toBeNull();
+    expect(fishingHighlightSpecies("bluegill", "lake", "sunwardShoal")).toBe("bluegill");
+    expect(fishingHighlightSpecies("northernPike", "lake", "sunwardShoal")).toBeNull();
+    expect(fishingHighlightSpecies("seaMullet", "beach", "sunwardShoal")).toBe("seaMullet");
+    expect(fishingHighlightSpecies("bluegill", "beach", "sunwardShoal")).toBeNull();
   });
 
   test("assigns distinct rarity colors and site-specific environment assets", () => {

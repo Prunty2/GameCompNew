@@ -21,7 +21,7 @@ This file describes the playable presentation in `v0.4.3`. It replaces earlier Q
 - Dive lasts 0.85 s. Settled waterline sits near 31% of the viewport; sailing waterline sits near 78%.
 - Each site uses its own underwater painting. Beach maps surf / bay / reef art onto the same three spot ids.
 - Four line-limit floats and a short “upgrade line” label mark unreachable depth. There is no centre depth ruler.
-- The tracked fish (or the site's primary resident) gets a rarity-coloured outline and a specimen cue that is name-only.
+- The tracked fish gets a rarity-coloured outline and a name-only specimen cue. If nothing is tracked, or the tracked fish does not live at this site, neither cue is shown.
 - Escape reels out and returns to sailing. It does not open pause.
 - Reduced motion skips dive/reel camera motion and body flex; fish still translate.
 
