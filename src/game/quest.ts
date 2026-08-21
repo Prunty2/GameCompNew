@@ -151,6 +151,7 @@ export function questFollowArrows(simulation: Simulation): QuestFollowArrow[] {
   }
   if (simulation.mode !== "cruising") return [];
   const goal = navigationGuidance(simulation);
+  if (!goal) return [];
   const from = simulation.boat.x;
   const to = goal.point.x;
   const span = to - from;
@@ -299,16 +300,16 @@ function upgradeUiTargetSelector(
 
 function shouldFollowWorld(simulation: Simulation, view: QuestViewContext): boolean {
   if (view.overlay !== null || simulation.mode !== "cruising" || simulation.dockedAt) return false;
-  if (isUpgradeTutorialActive(simulation)) {
-    return Math.abs(navigationGuidance(simulation).point.x - simulation.boat.x) > worldArrivalRadius(simulation);
+  if (isUpgradeTutorialActive(simulation) || isWorldFollowStep(simulation.progress.marketTutorialStep)) {
+    const goal = navigationGuidance(simulation);
+    return goal !== null && Math.abs(goal.point.x - simulation.boat.x) > worldArrivalRadius(simulation);
   }
-  if (!isWorldFollowStep(simulation.progress.marketTutorialStep)) return false;
-  return Math.abs(navigationGuidance(simulation).point.x - simulation.boat.x) > worldArrivalRadius(simulation);
+  return false;
 }
 
 function worldArrivalRadius(simulation: Simulation): number {
   const goal = navigationGuidance(simulation);
-  const radius = goal.kicker === "FISH AT" ? BALANCE.fishingRadius : BALANCE.dockRadius;
+  const radius = goal?.kicker === "FISH AT" ? BALANCE.fishingRadius : BALANCE.dockRadius;
   return radius + WORLD_ARRIVAL_PADDING;
 }
 

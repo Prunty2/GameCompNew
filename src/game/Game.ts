@@ -44,7 +44,7 @@ import {
   type RenderMotionSnapshot,
 } from "./renderInterpolation";
 import { CanvasRenderer } from "./renderer";
-import { marketBoardMarkup } from "./marketView";
+import { fishIcon, marketBoardMarkup } from "./marketView";
 import {
   chooseQuestArrowSide,
   questPresentation,
@@ -75,6 +75,7 @@ import {
   releaseCargo,
   restoreCargo,
   resolveCatch,
+  sellAllFishAtMarket,
   sellSpeciesAtMarket,
   shouldShowNightIndicator,
   skipMarketTutorial,
@@ -449,7 +450,7 @@ export class Game {
 
     const guidance = navigationGuidance(simulation);
     const navigationStatus = this.uiRoot.querySelector<HTMLElement>(".navigation-status");
-    const navigationStatusText = this.overlay === null && simulation.mode === "cruising"
+    const navigationStatusText = this.overlay === null && simulation.mode === "cruising" && guidance
       ? `${guidance.kicker} ${guidance.label}. ${guidance.instruction}`
       : "";
     if (navigationStatus && navigationStatus.textContent !== navigationStatusText) {
@@ -682,7 +683,8 @@ export class Game {
       const item = this.simulation.cargo[index];
       const slotNumber = String(index + 1).padStart(2, "0");
       if (item) {
-        return `<article class="cargo-slot is-occupied" aria-label="Cargo slot ${index + 1}: ${FISH[item.species].name}, ${Math.ceil(item.freshness)}% fresh"><span class="cargo-slot-number">${slotNumber}</span><span class="ui-icon icon-freshness cargo-fish-icon" aria-hidden="true"></span><div class="cargo-slot-copy"><strong>${FISH[item.species].name}</strong><small>${Math.ceil(item.freshness)}% fresh</small></div><button class="cargo-release" type="button" data-action="release" data-index="${index}" aria-label="Release ${FISH[item.species].name} from cargo"><span class="cargo-release-tooltip" aria-hidden="true">Release</span><span class="cargo-release-art" aria-hidden="true"><img class="cargo-bin-body" src="${binIconUrl}" alt="" /><img class="cargo-bin-lid" src="${binIconUrl}" alt="" /></span></button></article>`;
+        const freshness = Math.ceil(item.freshness);
+        return `<article class="cargo-slot is-occupied" aria-label="Cargo slot ${index + 1}: ${FISH[item.species].name}, ${freshness}% fresh"><span class="cargo-slot-number">${slotNumber}</span>${fishIcon(item.species, fishAtlasUiUrl, beachFishAtlasUiUrl, "cargo-fish")}<div class="cargo-slot-copy"><strong>${FISH[item.species].name}</strong><small>${freshness}% fresh</small></div><button class="cargo-release" type="button" data-action="release" data-index="${index}" aria-label="Release ${FISH[item.species].name} from cargo"><span class="cargo-release-tooltip" aria-hidden="true">Release</span><span class="cargo-release-art" aria-hidden="true"><img class="cargo-bin-body" src="${binIconUrl}" alt="" /><img class="cargo-bin-lid" src="${binIconUrl}" alt="" /></span></button></article>`;
       }
       if (index < availableCargoSlots) {
         return `<div class="cargo-slot is-empty" aria-label="Cargo slot ${index + 1}: empty"><span class="cargo-slot-number">${slotNumber}</span><span class="ui-icon icon-cargo" aria-hidden="true"></span><small>Empty</small></div>`;
@@ -1394,12 +1396,15 @@ export class Game {
       }
       case "track-market-fish": {
         const species = target.dataset.species as FishSpecies | undefined;
+        const untracking = species !== undefined && this.simulation.progress.marketTarget === species;
         if (!species || !(species in FISH) || !trackMarketSpecies(this.simulation, species)) break;
         this.selectedMarketSpecies = species;
         this.syncSave();
         this.renderOverlay();
         this.refreshQuestGuide();
-        this.showToast(`${FISH[species].name} tracked. The navigation marker now points to its fishing ground.`);
+        this.showToast(untracking
+          ? `${FISH[species].name} untracked.`
+          : `${FISH[species].name} tracked. The navigation marker now points to its fishing ground.`);
         break;
       }
       case "sell-market-fish": {
@@ -1412,6 +1417,13 @@ export class Game {
         }
         break;
       }
+      case "sell-all-market-fish":
+        if (sellAllFishAtMarket(this.simulation)) {
+          this.handleSimulationEvents();
+          this.renderOverlay();
+          this.refreshQuestGuide();
+        }
+        break;
       case "finish-market-tutorial":
         finishMarketTutorial(this.simulation);
         this.syncSave();

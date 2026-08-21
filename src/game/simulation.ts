@@ -27,6 +27,7 @@ import {
   type SurveyResult,
 } from "./stem";
 import {
+  bulkSalePreview,
   marketCondition,
   marketQuote,
   residentCountForMarket,
@@ -107,6 +108,12 @@ export interface MarketSaleResult {
   payment: number;
 }
 
+export interface MarketBulkSaleResult {
+  harbor: HarborId;
+  quantity: number;
+  payment: number;
+}
+
 export interface FishingTarget extends WorldPoint {
   species: FishSpecies;
   direction: -1 | 1;
@@ -143,7 +150,7 @@ export interface DeliveryResult {
 export type SimulationEvent =
   | { type: "caught"; species: FishSpecies }
   | { type: "delivered"; payment: number }
-  | { type: "sold"; result: MarketSaleResult }
+  | { type: "sold"; result: Pick<MarketSaleResult, "quantity" | "payment"> }
   | { type: "market-day"; day: number }
   | { type: "docked"; harbor: HarborId }
   | { type: "full-cargo" }
@@ -472,6 +479,10 @@ export function inspectMarketSpecies(simulation: Simulation, species: FishSpecie
 export function trackMarketSpecies(simulation: Simulation, species: FishSpecies): boolean {
   const worldSpecies = Object.values(WORLD_SPOT_RESIDENTS[simulation.world]).flat();
   if (!simulation.progress.discovered.includes(species) || !worldSpecies.includes(species)) return false;
+  if (simulation.progress.marketTarget === species) {
+    simulation.progress.marketTarget = null;
+    return true;
+  }
   simulation.progress.marketTarget = species;
   if (simulation.progress.marketTutorialStep === "track" && species === "bluegill") {
     simulation.progress.marketTutorialStep = "catch";
@@ -508,6 +519,41 @@ export function sellSpeciesAtMarket(
     simulation.progress.marketTutorialStep === "sell"
     && simulation.progress.marketTarget === species
   ) {
+    simulation.progress.marketTutorialStep = "done";
+    syncUpgradeTutorial(simulation);
+  }
+  simulation.events.push({ type: "sold", result });
+  if (!simulation.progress.seasonCompleted && simulation.progress.marketSales >= SEASON_SALES) {
+    simulation.progress.seasonCompleted = true;
+    simulation.events.push({ type: "season-complete" });
+  }
+  return result;
+}
+
+export function sellAllFishAtMarket(simulation: Simulation): MarketBulkSaleResult | null {
+  const harbor = simulation.dockedAt;
+  if (!harbor) return null;
+  const preview = bulkSalePreview(
+    simulation.cargo,
+    harbor,
+    simulation.progress.marketDay,
+    simulation.seed,
+  );
+  if (preview.quantity === 0) return null;
+  const soldTarget = simulation.progress.marketTarget !== null
+    && simulation.cargo.some((item) => (
+      item.species === simulation.progress.marketTarget && item.freshness > 0
+    ));
+  simulation.cargo = simulation.cargo.filter((item) => item.freshness <= 0);
+  const result: MarketBulkSaleResult = {
+    harbor,
+    quantity: preview.quantity,
+    payment: preview.total,
+  };
+  simulation.progress.money += result.payment;
+  simulation.progress.marketSales += 1;
+  simulation.progress.marketEarnings += result.payment;
+  if (simulation.progress.marketTutorialStep === "sell" && soldTarget) {
     simulation.progress.marketTutorialStep = "done";
     syncUpgradeTutorial(simulation);
   }
@@ -803,8 +849,12 @@ export function fogIntensity(simulation: Simulation): number {
   return Math.min(0.9, Math.max(0, Math.sin((phase - 0.18) * Math.PI * 2)) * 0.72 * condition.fogMultiplier);
 }
 
-export function navigationGuidance(simulation: Simulation): NavigationGuidance {
+export function navigationGuidance(simulation: Simulation): NavigationGuidance | null {
   const target = simulation.progress.marketTarget;
+  const tutorialActive = simulation.progress.marketTutorialStep !== "done"
+    && simulation.progress.marketTutorialStep !== "complete";
+  if (!target && !tutorialActive && !isUpgradeTutorialActive(simulation)) return null;
+
   if (simulation.cargo.length >= cargoCapacity(simulation)) {
     const harbor = closestHarbor(simulation);
     return {
@@ -887,7 +937,7 @@ export function tutorialPrompt(simulation: Simulation): string | null {
   }
   if (simulation.progress.marketTutorialStep === "inspect") return "Select Bluegill on the market board.";
   if (simulation.progress.marketTutorialStep === "track") return "Read the Bluegill details, then track it.";
-  return navigationGuidance(simulation).instruction;
+  return navigationGuidance(simulation)?.instruction ?? null;
 }
 
 export function consumeEvents(simulation: Simulation): SimulationEvent[] {

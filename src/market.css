@@ -38,6 +38,8 @@
   display: flex;
   min-height: 54px;
   align-items: center;
+  justify-content: space-between;
+  gap: 16px;
   padding: 2px 3px 11px;
 }
 
@@ -45,6 +47,58 @@
   margin-top: 4px;
   font-size: clamp(1.35rem, 2.5vw, 1.75rem);
   line-height: 1;
+}
+
+.harbor-screen .market-sell-all-button {
+  display: flex;
+  min-height: 54px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 6px 18px;
+  border: 1px solid rgb(145 169 176 / 38%);
+  border-radius: 15px;
+  background: rgb(5 24 33 / 82%);
+  color: var(--menu-paper);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  box-shadow: none;
+  transform: none;
+  white-space: nowrap;
+}
+
+.market-sell-all-button.is-active {
+  border-color: #ffbd61;
+  background: linear-gradient(#f3aa48, #e89532);
+  color: #071824;
+  box-shadow: inset 0 -3px 0 #b96f20, 0 3px 8px rgb(2 12 18 / 18%);
+}
+
+.market-sell-all-button:hover:not(:disabled),
+.market-sell-all-button:focus-visible {
+  border-color: var(--menu-signal);
+  outline: 2px solid var(--menu-paper);
+  outline-offset: 2px;
+  transform: none;
+}
+
+.market-sell-all-button:disabled {
+  color: rgb(247 241 227 / 55%);
+  cursor: not-allowed;
+}
+
+.market-sell-all-total {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.market-sell-all-total .ui-icon {
+  width: 22px;
+  height: 22px;
 }
 
 .market-summary-pills {
@@ -511,6 +565,8 @@
   padding-top: calc(max(18px, env(safe-area-inset-top)) + 70px);
 }
 
+.game-ui:has(.market-tutorial:not([hidden])) .harbor-screen.is-first-voyage .harbor-panel,
+.game-ui:has(.market-tutorial:not([hidden])) .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-panel,
 .game-ui:has(.market-tutorial:not([hidden])) .harbor-screen.is-harbor-market .market-harbor-panel {
   height: min(760px, calc(100dvh - 118px));
   max-height: calc(100dvh - 118px);
@@ -518,6 +574,19 @@
 
 .game-ui:has(#delivery-notification:not([hidden])) .market-tutorial {
   top: calc(max(18px, env(safe-area-inset-top)) + 76px);
+}
+
+@media (max-height: 720px) and (min-width: 701px) {
+  .game-ui:has(.market-tutorial:not([hidden])) .harbor-screen.is-first-voyage {
+    padding-top: 16px;
+  }
+
+  .game-ui:has(.market-tutorial:not([hidden])) .harbor-screen.is-first-voyage .harbor-panel,
+  .game-ui:has(.market-tutorial:not([hidden])) .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-panel,
+  .game-ui:has(.market-tutorial:not([hidden])) .harbor-screen.is-harbor-market .market-harbor-panel {
+    height: min(760px, calc(100dvh - 32px));
+    max-height: calc(100dvh - 32px);
+  }
 }
 
 .market-tutorial-step {
@@ -763,6 +832,11 @@
     font-size: 1.22rem;
   }
 
+  .market-sell-all-button {
+    padding-inline: 13px;
+    font-size: 0.72rem;
+  }
+
   .market-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
@@ -816,9 +890,43 @@
     top: 10px;
     width: min(300px, calc(100vw - 20px));
   }
+
+  .game-ui:has(.harbor-screen):has(.market-tutorial:not([hidden])) .market-tutorial {
+    right: 10px;
+    left: 10px;
+    width: calc(100vw - 20px);
+    transform: none;
+  }
+
+  .game-ui:has(.market-tutorial:not([hidden])) .harbor-screen.is-first-voyage {
+    padding-top: 128px;
+  }
+
+  .game-ui:has(.market-tutorial:not([hidden])) .harbor-screen.is-first-voyage .harbor-panel,
+  .game-ui:has(.market-tutorial:not([hidden])) .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-panel,
+  .game-ui:has(.market-tutorial:not([hidden])) .harbor-screen.is-harbor-market .market-harbor-panel {
+    height: calc(100dvh - 148px);
+    max-height: calc(100dvh - 148px);
+  }
+
+  .game-ui:has(.market-tutorial:not([hidden])) .toast {
+    top: auto;
+    right: max(12px, env(safe-area-inset-right));
+    bottom: max(12px, env(safe-area-inset-bottom));
+  }
 }
 
 @media (max-width: 460px) {
+  .market-board-heading {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .market-sell-all-button {
+    width: 100%;
+  }
+
   .market-listing-copy > strong {
     font-size: 0.74rem;
   }

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This repository is a new CrazyGames-ready browser game, not a continuation or reskin of Boomerang Birds. Use `/Users/liam/Documents/Crazy Games` only as an architectural reference. Do not copy its gameplay, theme, art, names, economy, balance values, or large implementation modules into this project.
+This repository is an ACER Game Competition submission. It is not intended to be distributed or used outside of the competition.
 
 The theme and game design belong in `Docs/Game-Brief.md`. Read and update that brief before implementing theme-specific gameplay or assets.
 
@@ -16,8 +16,8 @@ Every repository change, including documentation and configuration updates, must
 
 ### Before starting
 
-1. Read this file, `README.md`, and the relevant sections of `Docs/Game-Brief.md`.
-2. Run `git status --short` and inspect current changes before editing. Treat every pre-existing change as another person's work.
+1. Read file, `README.md`, and the relevant sections of `Docs/Game-Brief.md`.
+2. Run `git status --short` and inspect current changes before editing.
 3. Agree on one owner, a narrow scope, affected files, and an acceptance check for the task. Record this in the issue, task, pull request, or team chat.
 4. Create a new short-lived branch from an up-to-date `main` for every change. Use a descriptive name such as `liam/fishing-input` or `codex/save-validation`; do not reuse a branch or work directly on `main`.
 5. Check whether someone else owns the same files or system. Coordinate before changing a shared hotspot.
@@ -33,6 +33,8 @@ Files that commonly affect many systems require explicit coordination before edi
 - `Docs/Game-Brief.md`
 - `src/game/Game.ts`
 - `src/game/simulation.ts`
+- `src/game/balance.ts`
+- `src/game/market.ts`
 - `src/game/input.ts`
 - `src/game/renderer.ts`
 - `src/styles.css`
@@ -116,14 +118,16 @@ Run `npm run check` before finishing code changes. Also run `npm run build` for 
 ## Architecture
 
 - `src/main.ts` owns startup and dependency wiring only.
-- `src/game/Game.ts` coordinates lifecycle and high-level state; keep rules out of this file.
+- `src/game/Game.ts` coordinates lifecycle, overlays, and HUD; keep rules out of this file.
 - `src/game/simulation.ts` owns deterministic world state and fixed-step updates.
-- `src/game/input.ts` translates browser input into game-level intent.
-- `src/game/renderer.ts` draws state but must not change it.
+- `src/game/balance.ts` owns species, spots, harbors, costs, and motion constants.
+- `src/game/market.ts` owns quotes, history, and freshness sale math; `src/game/marketView.ts` owns market HTML.
+- `src/game/input.ts` and `src/game/controls.ts` translate browser input into game-level intent.
+- `src/game/renderer.ts` draws state but must not change it. Surface framing lives in `camera.ts` and `panorama.ts`; fishing presentation lives in `fishingMovement.ts`, `fishingPresentation.ts`, and `fishingReeling.ts`.
 - `src/services/platformService.ts` is the only CrazyGames SDK boundary.
 - `src/services/saveGame.ts` owns versioned, validated persistence.
 - `src/tests/` contains model and simulation tests; `e2e/` contains user-flow tests.
-- `Docs/` is the source of truth for product, balance, and technical decisions.
+- `Docs/Game-Brief.md` is the source of truth for the playable product and balance. `Docs/` also holds the asset manifest and assessment portfolio.
 
 Split new systems by responsibility as the design becomes concrete. Avoid recreating the oversized all-in-one coordinator, renderer, simulation, or stylesheet modules found in the reference project.
 

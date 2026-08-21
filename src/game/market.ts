@@ -48,6 +48,11 @@ export interface MarketSalePreview {
   total: number;
 }
 
+export interface MarketBulkSalePreview {
+  quantity: number;
+  total: number;
+}
+
 const CONDITIONS: readonly MarketCondition[] = [
   {
     id: "clear",
@@ -198,6 +203,22 @@ export function salePreview(
     freshnessLoss: wholeFishValue - total,
     total,
   };
+}
+
+export function bulkSalePreview(
+  cargo: readonly CargoItem[],
+  harbor: HarborId,
+  day: number,
+  seed: number,
+): MarketBulkSalePreview {
+  return cargo.reduce<MarketBulkSalePreview>((preview, item) => {
+    if (item.freshness <= 0) return preview;
+    const quote = marketQuote(item.species, harbor, day, seed);
+    return {
+      quantity: preview.quantity + 1,
+      total: preview.total + catchSaleValue(quote.price, item.freshness),
+    };
+  }, { quantity: 0, total: 0 });
 }
 
 export function catchSaleValue(wholeFishQuote: number, freshness: number): number {
