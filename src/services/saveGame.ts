@@ -1,11 +1,11 @@
-import { BALANCE, FISH, upgradeTierCap, type FishSpecies, type UpgradeId } from "../game/balance";
+import { BALANCE, FISH, upgradeTierCap, type FishSpecies } from "../game/balance";
 import {
   CONTROL_ACTIONS,
   DEFAULT_CONTROL_BINDINGS,
   isBindableCode,
   type ControlBindings,
 } from "../game/controls";
-import type { MarketTutorialStep, ProgressState, UpgradeTutorialStep } from "../game/simulation";
+import type { MarketTutorialStep, ProgressState, UpgradeProgress, UpgradeTutorialStep } from "../game/simulation";
 import type { SaveStorage } from "./platformService";
 
 const SAVE_KEY = "gamecomp-new.save";
@@ -137,7 +137,7 @@ function readControlBindings(value: unknown): ControlBindings {
   return bindings;
 }
 
-function readUpgrades(candidate: Record<string, unknown>): Record<UpgradeId, number> {
+function readUpgrades(candidate: Record<string, unknown>): UpgradeProgress {
   return {
     cargo: finiteInteger(candidate.cargo, 0, upgradeTierCap("cargo")),
     engine: finiteInteger(candidate.engine, 0, BALANCE.maxUpgradeTier),

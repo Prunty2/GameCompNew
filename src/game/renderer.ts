@@ -1411,8 +1411,7 @@ export class CanvasRenderer {
     const nightIntensity = nightVisualIntensity(simulation);
     if (nightIntensity <= 0) return;
     const boatX = worldToScreenX(simulation.boat.x, camera, width);
-    const lampTier = simulation.progress.upgrades.lamp;
-    const radius = Math.min(width, height) * (0.25 + lampTier * 0.055);
+    const radius = Math.min(width, height) * 0.25;
     const darkness = settings.highContrast ? 0.58 : 0.76;
     const vignette = this.context.createRadialGradient(
       boatX,

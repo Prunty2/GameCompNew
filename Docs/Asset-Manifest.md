@@ -40,6 +40,8 @@ Vite `publicDir` is `false`. Only these files are imported.
 | `fshing-logo.png` | Favicon and apple-touch icon |
 | `fish-atlas-ui.png` | Lake market species icons |
 | `fish-beach-atlas-ui.png` | Beach market species icons |
+| `upgrade-beach.png` | Large Beach unlock/travel card icon |
+| `upgrade-engine-boost.png` | Large Engine boost unlock card icon |
 | `dock-brindle-day.jpg` / `dock-brindle-night.jpg` | Brindle harbor backdrops |
 | `dock-gloam-day.jpg` / `dock-gloam-night.jpg` | Gloam harbor backdrops |
 | `ui-panel.png` / `ui-button.png` / `ui-icons.png` | Panel, primary button, 13 pictograms |
@@ -267,7 +269,16 @@ Vite `publicDir` is `false`. Only these files are imported.
 - Runtime role: thirteen status, objective, upgrade, setting, and pause pictograms
 - Generated size: 1448 × 1448
 - Prompt: “Use GPT Image 2.0. Regenerate the complete menu icon set. Preserve these pictogram meanings: cargo crate; fish freshness shown by fish plus leaf; damaged boat hull; clock/time; shell currency; objective compass arrow; engine; boat lamp; line depth shown by a fishing line descending through depth marks to a hook; stamped permit paper; repair wrench; speaker/sound; pause bars. Use restrained bold screen-printed game UI pictograms, warm cream shapes with sparse safety-orange details, crisp high-contrast silhouettes, matching the existing FSHING interface. Use one icon per cell, consistent apparent scale, generous equal safe padding, and no artwork crossing a cell boundary. Place the icons on a perfectly flat solid chroma-key background for removal. No navy or colored tiles, circles, medallions, labels, letters, numbers, borders, grid lines, frames, shadows, reflections, watermark, or checkerboard.”
-- Processing: The flat keys were removed to alpha, then the generated pictogram bounds were mechanically packed into the first thirteen cells of a 4 × 4 atlas with three transparent unused cells. Every alpha-bound centre is within 0.5 px of its 362 × 362 cell centre; the artwork itself was not redrawn during packing.
+
+### Upgrade feature icons
+
+- Files: `upgrade-beach.png`, `upgrade-engine-boost.png`
+- Runtime role: unique large-card pictograms for the Beach destination and rechargeable Engine boost unlock
+- Runtime size: transparent 512 × 512 PNGs, reduced from 1254 × 1254 generation output
+- Generation mode: OpenAI built-in image generation on 21 August 2026, using `ui-icons.png` as the authoritative visual reference; each subject was generated independently
+- Beach prompt: “Replace the supplied Beach image with a simpler production UI pictogram. Match the supplied UI atlas closely: bold flat warm-cream silhouette, sparse safety-orange accents, extremely limited thin dark-navy interior lines, almost no texture, crisp screen-printed shapes, generous negative space, and readability at 48–64 px. Create exactly one compact lighthouse above two simple wave bands, with a small orange lantern window and short orange sun-disc accent. No teal, vegetation, rocks, sand landscape, foam droplets, detailed masonry, realistic lighting, text, tile, border, shadow, gradient, or 3D rendering. Center the icon with equal transparent padding on a genuine alpha background.”
+- Engine boost prompt: “Replace the supplied Engine boost image with a simpler production UI pictogram. Match the supplied UI atlas closely, especially its engine cell: bold flat warm-cream silhouette, one sparse safety-orange accent, extremely limited thin dark-navy interior lines, almost no texture, crisp screen-printed shapes, generous negative space, and readability at 48–64 px. Create exactly one compact marine engine: a simple cream outboard-engine housing, a small three-blade cream propeller, one bold orange lightning bolt, and exactly two short cream speed lines trailing left. No teal, complex turbine, gauge, realistic machinery, text, tile, border, shadow, gradient, or 3D rendering. Center the icon with equal transparent padding on a genuine alpha background.”
+- Processing: Both outputs were reduced to transparent 512 × 512 runtime PNGs with their authored padding preserved. The Beach output received a second image-edit pass to replace a baked checkerboard with genuine alpha; the artwork was otherwise preserved.
 
 ### `padlock-icon.png`
 

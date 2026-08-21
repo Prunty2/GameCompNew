@@ -20,7 +20,7 @@ export type QuestOverlay =
   | "seasonReport"
   | null;
 
-export type QuestHarborSection = "market" | "cargo" | "services";
+export type QuestHarborSection = "market" | "cargo" | "upgrades";
 export type QuestUiArrowSide = "left" | "right" | "above" | "below";
 
 export interface QuestViewContext {
@@ -157,8 +157,8 @@ export function questPresentation(
   }
 
   const upgrade = cheapestAffordableUpgrade(simulation);
-  const onServices = view.overlay === "harbor" && view.harborSection === "services";
-  const step: QuestGuideStep = onServices || simulation.progress.upgradeTutorialStep === "buy"
+  const onUpgrades = view.overlay === "harbor" && view.harborSection === "upgrades";
+  const step: QuestGuideStep = onUpgrades || simulation.progress.upgradeTutorialStep === "buy"
     ? "upgrade-buy"
     : "upgrade-open";
   const onLake = view.overlay === null;
@@ -167,7 +167,7 @@ export function questPresentation(
     hidden: false,
     step,
     heading: "Tutorial",
-    title: step === "upgrade-buy" ? "Buy line depth" : onLake ? "Dock harbor" : "Open services",
+    title: step === "upgrade-buy" ? "Buy line depth" : onLake ? "Dock harbor" : "Open upgrades",
     index: step === "upgrade-buy" ? 2 : 1,
     totalSteps: 5,
     uiTargetSelector: upgradeUiTargetSelector(simulation, view, step, upgrade),
@@ -323,8 +323,8 @@ function upgradeUiTargetSelector(
     if (step === "upgrade-buy" && upgrade) {
       return `[data-action="buy-upgrade"][data-upgrade="${upgrade}"]`;
     }
-    if (view.harborSection !== "services") {
-      return '[data-action="harbor-section"][data-harbor-section="services"]';
+    if (view.harborSection !== "upgrades") {
+      return '[data-action="harbor-section"][data-harbor-section="upgrades"]';
     }
   }
   if (view.overlay === null && simulation.mode === "cruising") {
