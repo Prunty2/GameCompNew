@@ -2,7 +2,7 @@ import { clamp, createRandom, type RandomSource } from "./math";
 import { fishingSpeciesMotion } from "./fishingMovement";
 import { fishingHighlightSpecies } from "./fishingPresentation";
 import { FISHING_REEL_DURATION } from "./fishingReeling";
-import { fishingFightBehaviour, fishingFightCue, stepFishingFight } from "./fishingFight";
+import { fishingFightBehaviour, fishingFightCue, RESTING_FIGHT_DART, stepFishingFight } from "./fishingFight";
 import {
   BALANCE,
   FISH,
@@ -149,6 +149,10 @@ export interface FishingReelState {
   criticalSeconds: number;
   behaviour: "calm" | "run" | "thrash";
   struggle: number;
+  dartX: number;
+  dartY: number;
+  dartVx: number;
+  dartVy: number;
   landingAt: number | null;
 }
 
@@ -1078,6 +1082,10 @@ function updateFishing(simulation: Simulation, input: InputState, dt: number): v
         criticalSeconds: 0,
         behaviour: opening.kind,
         struggle: opening.intensity,
+        dartX: RESTING_FIGHT_DART.x,
+        dartY: RESTING_FIGHT_DART.y,
+        dartVx: RESTING_FIGHT_DART.vx,
+        dartVy: RESTING_FIGHT_DART.vy,
         landingAt: null,
       };
       return;
@@ -1098,11 +1106,18 @@ function updateFishingFight(simulation: Simulation, input: InputState, dt: numbe
 
   const next = stepFishingFight(
     fight.species,
-    fight,
+    {
+      progress: fight.progress,
+      tension: fight.tension,
+      stamina: fight.stamina,
+      criticalSeconds: fight.criticalSeconds,
+      dart: { x: fight.dartX, y: fight.dartY, vx: fight.dartVx, vy: fight.dartVy },
+    },
     input.actionHeld,
     simulation.elapsed - fight.hookedAt,
     simulation.progress.upgrades.line,
     dt,
+    fight.direction,
   );
   fight.progress = next.progress;
   fight.tension = next.tension;
@@ -1110,6 +1125,10 @@ function updateFishingFight(simulation: Simulation, input: InputState, dt: numbe
   fight.criticalSeconds = next.criticalSeconds;
   fight.behaviour = next.behaviour;
   fight.struggle = next.struggle;
+  fight.dartX = next.dart.x;
+  fight.dartY = next.dart.y;
+  fight.dartVx = next.dart.vx;
+  fight.dartVy = next.dart.vy;
   if (next.broken) {
     const escapedTarget = fishing.targets[fight.targetIndex];
     if (escapedTarget) {

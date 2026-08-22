@@ -129,6 +129,10 @@ describe("first-assignment quest prototype", () => {
       criticalSeconds: 0,
       behaviour: "calm",
       struggle: 0.08,
+      dartX: 0,
+      dartY: 0,
+      dartVx: 0,
+      dartVy: 0,
       landingAt: null,
     };
     const hooked = questPresentation(simulation, playView);

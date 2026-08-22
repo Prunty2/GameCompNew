@@ -3,6 +3,8 @@ import {
   fishingFightBehaviour,
   fishingFightCue,
   fishingStruggleIntensity,
+  RESTING_FIGHT_DART,
+  stepFightDart,
   stepFishingFight,
 } from "../game/fishingFight";
 
@@ -117,6 +119,33 @@ describe("fishing fight", () => {
     expect(waiting.behaviour).toBe("calm");
     expect(waiting.progress).toBe(0);
     expect(waiting.stamina).toBeGreaterThan(0.5);
+  });
+
+  test("darts in hashed directions instead of snapping back each cycle", () => {
+    const runPose = { kind: "run" as const, intensity: 0.9 };
+    let dart = RESTING_FIGHT_DART;
+    const path: Array<{ x: number; y: number }> = [];
+    for (let index = 0; index < 40; index += 1) {
+      dart = stepFightDart("bluegill", dart, runPose, index * 0.08, 1, 0.08);
+      path.push({ x: dart.x, y: dart.y });
+    }
+    dart = RESTING_FIGHT_DART;
+    const repeated = [];
+    for (let index = 0; index < 40; index += 1) {
+      dart = stepFightDart("bluegill", dart, runPose, index * 0.08, 1, 0.08);
+      repeated.push({ x: dart.x, y: dart.y });
+    }
+    expect(path).toEqual(repeated);
+    expect(Math.max(...path.map((point) => Math.hypot(point.x, point.y)))).toBeGreaterThan(0.04);
+    const xs = path.map((point) => point.x);
+    const ys = path.map((point) => point.y);
+    expect(Math.max(...xs) - Math.min(...xs)).toBeGreaterThan(0.03);
+    expect(Math.max(...ys) - Math.min(...ys)).toBeGreaterThan(0.02);
+
+    const afterRun = dart;
+    const calmed = stepFightDart("bluegill", afterRun, { kind: "calm", intensity: 0.1 }, 4, 1, 0.08);
+    expect(Math.hypot(calmed.x, calmed.y)).toBeGreaterThan(0.02);
+    expect(Math.hypot(calmed.x, calmed.y)).not.toBeCloseTo(0, 2);
   });
 
   test("maps fight behaviour onto reel, run, and resume cues", () => {
