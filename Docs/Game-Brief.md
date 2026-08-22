@@ -37,7 +37,7 @@ On-water chrome is the night moon indicator, the boost gauge after unlock, the c
 
 Scene changes between title, harbor, and the water use a waterline cover/reveal.
 
-The title sky periodically carries a flock of two to five animated seagulls. Each flock may cross in either direction, while individual birds vary their size, launch delay, flap phase, speed, and curved vertical drift so the formation stays loose and natural. Decorative flights are omitted when reduced motion is enabled.
+The title sky periodically carries a flock of two to five animated seagulls. Each flock may cross in either direction, while individual birds vary their size, launch delay, flap phase, speed, and curved vertical drift so the formation stays loose and natural. Decorative flights are omitted when reduced motion is enabled, and are cleared and rescheduled when the page loses and regains focus so background tabs cannot accumulate flocks.
 
 ## Worlds
 
