@@ -14,6 +14,7 @@ import mosswaterFishAtlasUrl from "../assets/fish-mosswater-swim.png";
 import sunwardFishAtlasUrl from "../assets/fish-sunward-swim.png";
 import whiteSuckerFishAtlasUrl from "../assets/fish-white-sucker-swim.png";
 import longnoseGarFishAtlasUrl from "../assets/fish-longnose-gar-swim.png";
+import ciscoFishAtlasUrl from "../assets/fish-cisco-swim.png";
 import fishingLineLimitFloatUrl from "../assets/fishing-line-limit-float.png";
 import mosswaterFishingUrl from "../assets/fishing-mosswater-pool.jpg";
 import gloamFishingUrl from "../assets/fishing-outer-gloam.jpg";
@@ -123,7 +124,7 @@ interface LoadedArt {
   world: HTMLCanvasElement;
 }
 
-type FishSheetId = SpotId | "whiteSucker" | "longnoseGar" | "beachSurf" | "beachBay" | "beachReef";
+type FishSheetId = SpotId | "whiteSucker" | "longnoseGar" | "cisco" | "beachSurf" | "beachBay" | "beachReef";
 
 const SURFACE_FISH_CELLS = [
   [0, 0],
@@ -143,6 +144,7 @@ const FISH_SPRITE_CELLS: Record<FishSpecies, { sheet: FishSheetId; row: number }
   northernPike: { sheet: "mosswaterPool", row: 0 },
   largemouthBass: { sheet: "mosswaterPool", row: 1 },
   bowfin: { sheet: "mosswaterPool", row: 2 },
+  cisco: { sheet: "cisco", row: 0 },
   lakeTrout: { sheet: "outerGloam", row: 0 },
   burbot: { sheet: "outerGloam", row: 1 },
   lakeSturgeon: { sheet: "outerGloam", row: 2 },
@@ -163,6 +165,7 @@ const FISH_SHEET_ROWS: Record<FishSheetId, number> = {
   outerGloam: 3,
   whiteSucker: 1,
   longnoseGar: 1,
+  cisco: 1,
   beachSurf: 3,
   beachBay: 3,
   beachReef: 3,
@@ -174,6 +177,7 @@ const FISH_DRAW_SIZE: Record<FishSpecies, number> = {
   emeraldShiner: 1.46,
   whiteSucker: 1.48,
   longnoseGar: 1.62,
+  cisco: 1.44,
   northernPike: 1.56,
   largemouthBass: 1.12,
   bowfin: 1.44,
@@ -232,6 +236,7 @@ export class CanvasRenderer {
       loadImage(sunwardFishAtlasUrl),
       loadImage(whiteSuckerFishAtlasUrl),
       loadImage(longnoseGarFishAtlasUrl),
+      loadImage(ciscoFishAtlasUrl),
       loadImage(mosswaterFishAtlasUrl),
       loadImage(gloamFishAtlasUrl),
       loadImage(beachSurfFishAtlasUrl),
@@ -260,6 +265,7 @@ export class CanvasRenderer {
       sunwardFish,
       whiteSuckerFish,
       longnoseGarFish,
+      ciscoFish,
       mosswaterFish,
       gloamFish,
       beachSurfFish,
@@ -281,6 +287,7 @@ export class CanvasRenderer {
         sunwardShoal: keyMagenta(sunwardFish, false, true),
         whiteSucker: keyMagenta(whiteSuckerFish, false, true),
         longnoseGar: keyMagenta(longnoseGarFish, false, true),
+        cisco: keyMagenta(ciscoFish, false, true),
         mosswaterPool: keyMagenta(mosswaterFish, false, true),
         outerGloam: keyMagenta(gloamFish, false, true),
         beachSurf: keyMagenta(beachSurfFish, false, true),
@@ -291,6 +298,7 @@ export class CanvasRenderer {
         sunwardShoal: tintAlpha(keyedFish.sunwardShoal, colour),
         whiteSucker: tintAlpha(keyedFish.whiteSucker, colour),
         longnoseGar: tintAlpha(keyedFish.longnoseGar, colour),
+        cisco: tintAlpha(keyedFish.cisco, colour),
         mosswaterPool: tintAlpha(keyedFish.mosswaterPool, colour),
         outerGloam: tintAlpha(keyedFish.outerGloam, colour),
         beachSurf: tintAlpha(keyedFish.beachSurf, colour),

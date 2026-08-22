@@ -158,6 +158,13 @@ export const FISH_SCIENCE: Record<FishSpecies, FishScienceProfile> = {
     ecologicalRole: "Resilient predator of crayfish and smaller fishes.",
     evidence: "Its long dorsal ribbon fin undulates for slow, precise movement without body sway.",
   },
+  cisco: {
+    temperatureRangeC: [4, 18],
+    minimumOxygenMgL: 6,
+    habitat: "Cold open-water schools in Great Lakes bays and offshore pelagic habitat",
+    ecologicalRole: "Native planktivore that transfers open-water production to Lake Trout and other predators.",
+    evidence: "Its silver compressed body and forked tail support steady coordinated swimming in the open water column.",
+  },
   lakeTrout: {
     temperatureRangeC: [4, 12],
     minimumOxygenMgL: 6,
@@ -244,6 +251,7 @@ const SURVEY_CHOICES: Record<FishSpecies, readonly [FishSpecies, FishSpecies, Fi
   northernPike: ["northernPike", "bluegill", "burbot"],
   largemouthBass: ["largemouthBass", "emeraldShiner", "lakeSturgeon"],
   bowfin: ["bowfin", "yellowPerch", "lakeTrout"],
+  cisco: ["cisco", "lakeTrout", "emeraldShiner"],
   lakeTrout: ["lakeTrout", "yellowPerch", "bowfin"],
   burbot: ["burbot", "northernPike", "bluegill"],
   lakeSturgeon: ["lakeSturgeon", "bluegill", "northernPike"],

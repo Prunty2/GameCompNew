@@ -78,6 +78,13 @@ describe("species-specific fishing movement", () => {
     expect(Math.max(...motions.map((motion) => motion.horizontalMultiplier))).toBeGreaterThan(1.2);
   });
 
+  test("gives Cisco coordinated open-water schooling motion", () => {
+    const motions = Array.from({ length: 600 }, (_, index) => fishingSpeciesMotion("cisco", index * 0.05, 0.7));
+    expect(Math.max(...motions.map((motion) => motion.horizontalMultiplier))).toBeGreaterThan(1);
+    expect(Math.max(...motions.map((motion) => Math.abs(motion.depthOffset)))).toBeLessThan(0.025);
+    expect(new Set(motions.map((motion) => motion.heading))).toEqual(new Set([-1, 1]));
+  });
+
   test("eases desired speed into continuous target velocity", () => {
     const dt = 1 / 120;
     let target: FishingTargetMotionState = {

@@ -50,7 +50,10 @@ import {
   type InputState,
 } from "../game/simulation";
 import { strongerHarborFor } from "../game/market";
-import { responsiveResidentCount } from "../game/fishingPopulation";
+import {
+  MOSSWATER_POPULATION_DENSITY_MULTIPLIER,
+  responsiveResidentCount,
+} from "../game/fishingPopulation";
 
 const idle: InputState = {
   travel: 0,
@@ -106,6 +109,7 @@ describe("FSHING side-on simulation", () => {
       "northernPike",
       "largemouthBass",
       "bowfin",
+      "cisco",
       "lakeTrout",
       "burbot",
       "lakeSturgeon",
@@ -577,11 +581,8 @@ describe("FSHING side-on simulation", () => {
     );
     expect(maxFishingDepth(simulation)).toBeCloseTo(0.425);
 
-    const deepTarget = simulation.fishing?.targets.find((target) => target.y > maxFishingDepth(simulation));
-    expect(deepTarget).toBeDefined();
-    expect(deepTarget?.y).toBeGreaterThan(maxFishingDepth(simulation));
     simulation.progress.upgrades.line = 5;
-    expect(maxFishingDepth(simulation)).toBeGreaterThanOrEqual(deepTarget?.y ?? 1);
+    expect(maxFishingDepth(simulation)).toBeCloseTo(0.925);
   });
 
   test("increases the deterministic catchable population for larger fishing viewports", () => {
@@ -615,9 +616,14 @@ describe("FSHING side-on simulation", () => {
     expect(responsiveResidentCount(10, { width: 1280, height: 720 })).toBe(7);
   });
 
-  test("gives Mosswater a denser population than the global baseline", () => {
-    expect(responsiveResidentCount(2, { width: 1280, height: 720 })).toBe(1);
-    expect(responsiveResidentCount(2, { width: 1280, height: 720 }, 1)).toBe(2);
+  test("reduces Mosswater's population multiplier by thirty percent", () => {
+    expect(MOSSWATER_POPULATION_DENSITY_MULTIPLIER).toBe(0.7);
+    expect(responsiveResidentCount(10, { width: 1280, height: 720 }, 1)).toBe(10);
+    expect(responsiveResidentCount(
+      10,
+      { width: 1280, height: 720 },
+      MOSSWATER_POPULATION_DENSITY_MULTIPLIER,
+    )).toBe(7);
   });
 
   test("uses actual swimming depth for Mosswater reachability", () => {
@@ -647,6 +653,18 @@ describe("FSHING side-on simulation", () => {
     expect(Math.min(...gar.map((target) => target.homeY))).toBeGreaterThanOrEqual(0.09);
     expect(Math.max(...gar.map((target) => target.homeY))).toBeLessThanOrEqual(0.16);
     expect(gar.every((target) => isFishingTargetReachable(simulation, target))).toBe(true);
+  });
+
+  test("places Cisco in Outer Gloam's highlighted open-water band", () => {
+    const simulation = createSimulation(12);
+    simulation.progress.upgrades.line = 3;
+    expect(startFishing(simulation, "outerGloam", { width: 2048, height: 1152 })).toBe(true);
+    const cisco = simulation.fishing?.targets.filter((target) => target.species === "cisco") ?? [];
+
+    expect(cisco.length).toBeGreaterThan(0);
+    expect(Math.min(...cisco.map((target) => target.homeY))).toBeGreaterThanOrEqual(0.24);
+    expect(Math.max(...cisco.map((target) => target.homeY))).toBeLessThanOrEqual(0.4);
+    expect(cisco.every((target) => isFishingTargetReachable(simulation, target))).toBe(true);
   });
 
   test("spreads the Sunward population across shallow and upgrade-preview depths", () => {

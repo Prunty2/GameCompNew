@@ -103,6 +103,13 @@ export const FISHING_MOVEMENT_PROFILES: Record<FishSpecies, FishingMovementProfi
     depthAmplitude: 0.021, depthFrequency: 0.58, jukeStrength: 0.18, jukeChance: 0.18,
     bodyFrequency: 5.2, flexAmount: 0.014,
   },
+  cisco: {
+    gait: "subcarangiform", cruise: 1.02, speedVariance: 0.1, burstStrength: 0.5,
+    burstFrequency: 0.7, burstChance: 0.48, burstSharpness: 4,
+    turnFrequency: 0.25, reverseChance: 0.32, turnEase: 0.15,
+    depthAmplitude: 0.012, depthFrequency: 0.52, jukeStrength: 0.12, jukeChance: 0.18,
+    bodyFrequency: 4.8, flexAmount: 0.025,
+  },
   lakeTrout: {
     gait: "subcarangiform", cruise: 1.04, speedVariance: 0.08, burstStrength: 0.32,
     burstFrequency: 0.36, burstChance: 0.36, burstSharpness: 3,

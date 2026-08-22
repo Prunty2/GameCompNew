@@ -7,6 +7,7 @@ import {
 } from "./balance";
 import whiteSuckerUiUrl from "../assets/fish-white-sucker-ui.png";
 import longnoseGarUiUrl from "../assets/fish-longnose-gar-ui.png";
+import ciscoUiUrl from "../assets/fish-cisco-ui.png";
 import {
   bulkSalePreview,
   marketHistory,
@@ -130,6 +131,9 @@ export function fishIcon(
   }
   if (species === "longnoseGar") {
     return `<span class="market-fish-icon ${className}" role="img" aria-label="${FISH[species].name}" style="--fish-atlas-url: url(&quot;${longnoseGarUiUrl}&quot;); --fish-atlas-x: 0%; --fish-atlas-y: 0%; --fish-atlas-size: 100% 100%"></span>`;
+  }
+  if (species === "cisco") {
+    return `<span class="market-fish-icon ${className}" role="img" aria-label="${FISH[species].name}" style="--fish-atlas-url: url(&quot;${ciscoUiUrl}&quot;); --fish-atlas-x: 0%; --fish-atlas-y: 0%; --fish-atlas-size: 100% 100%"></span>`;
   }
   const [column, row] = FISH[species].atlasCell;
   const beachSpecies = Object.values(BEACH_SPOT_RESIDENTS).some((residents) => residents.includes(species));

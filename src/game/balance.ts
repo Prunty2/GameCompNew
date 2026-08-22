@@ -7,6 +7,7 @@ export type FishSpecies =
   | "northernPike"
   | "largemouthBass"
   | "bowfin"
+  | "cisco"
   | "lakeTrout"
   | "burbot"
   | "lakeSturgeon"
@@ -207,6 +208,7 @@ export const FISH: Record<FishSpecies, FishDefinition> = {
   northernPike: { id: "northernPike", name: "Northern Pike", shape: "Long body · duckbill snout", value: 40, depthTier: 1, atlasCell: [0, 1], hue: 0, scale: 1, rarity: "uncommon" },
   largemouthBass: { id: "largemouthBass", name: "Largemouth Bass", shape: "Heavy jaw · dark side band", value: 52, depthTier: 2, atlasCell: [1, 1], hue: 0, scale: 1.02, rarity: "uncommon" },
   bowfin: { id: "bowfin", name: "Bowfin", shape: "Long dorsal fin · rounded tail", value: 64, depthTier: 2, atlasCell: [2, 1], hue: 0, scale: 1.06, rarity: "rare" },
+  cisco: { id: "cisco", name: "Cisco", shape: "Silver flank · deeply forked tail", value: 74, depthTier: 3, atlasCell: [0, 0], hue: 0, scale: 0.9, rarity: "uncommon" },
   lakeTrout: { id: "lakeTrout", name: "Lake Trout", shape: "Pale spots · forked tail", value: 80, depthTier: 3, atlasCell: [0, 2], hue: 0, scale: 1.04, rarity: "rare" },
   burbot: { id: "burbot", name: "Burbot", shape: "Mottled body · chin barbel", value: 100, depthTier: 4, atlasCell: [1, 2], hue: 0, scale: 1.12, rarity: "rare" },
   lakeSturgeon: { id: "lakeSturgeon", name: "Lake Sturgeon", shape: "Bony scutes · four barbels", value: 130, depthTier: 5, atlasCell: [2, 2], hue: 0, scale: 1.24, rarity: "legendary" },
@@ -230,7 +232,7 @@ export const FISHING_SPOTS: readonly FishingSpotDefinition[] = [
 export const SPOT_RESIDENTS: Record<SpotId, readonly FishSpecies[]> = {
   sunwardShoal: ["bluegill", "yellowPerch", "emeraldShiner", "whiteSucker"],
   mosswaterPool: ["longnoseGar", "northernPike", "largemouthBass", "bowfin"],
-  outerGloam: ["lakeTrout", "burbot", "lakeSturgeon"],
+  outerGloam: ["cisco", "lakeTrout", "burbot", "lakeSturgeon"],
 };
 
 export const BEACH_SPOT_RESIDENTS: Record<SpotId, readonly FishSpecies[]> = {
