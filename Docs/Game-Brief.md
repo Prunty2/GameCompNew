@@ -178,7 +178,7 @@ Costs are `base + currentTier × 55` shells.
 | Engine boost | 300 | one-time | Hold Boost while moving. Overheats, then cools |
 | Beach | 120 | one-time | Unlock travel to the coastal map |
 
-Cargo, Engine, Line depth, and Reel power form a compact 2×2 equipment grid. Beach and Engine boost remain two larger feature cards side by side beneath them. The full upgrade menu fits without an internal scrollbar at supported desktop and mobile viewports. Reel power uses a CSS-drawn spool-and-handle pictogram that matches the existing harbor equipment icon treatment without adding another runtime asset.
+Cargo, Engine, Line depth, and Reel power form a compact vertical stack of full-width equipment rows. Beach and Engine boost remain two compressed feature cards side by side beneath them. The full upgrade menu fits without an internal scrollbar at supported desktop and mobile viewports. Reel power uses a CSS-drawn spool-and-handle pictogram that matches the existing harbor equipment icon treatment without adding another runtime asset.
 
 Boat class names (Skiff through Lakebreaker) exist in balance data and are not shown in the harbor UI. Repair is not sold. The hull starts at 18 damage; reaching 100 damage would rescue to the nearest harbor, charge up to 20 shells, and dump cargo, but nothing in the live loop applies collision damage.
 

@@ -325,18 +325,17 @@ test("upgrade tutorial walks through Upgrades after the player can afford one", 
     return { x: box.x, y: box.y, height: box.height };
   }));
   expect(regularLayout).toHaveLength(4);
-  expect(Math.abs(regularLayout[0]!.y - regularLayout[1]!.y)).toBeLessThan(2);
-  expect(regularLayout[1]!.x).toBeGreaterThan(regularLayout[0]!.x);
-  expect(Math.abs(regularLayout[2]!.y - regularLayout[3]!.y)).toBeLessThan(2);
-  expect(regularLayout[3]!.x).toBeGreaterThan(regularLayout[2]!.x);
-  expect(regularLayout[2]!.y).toBeGreaterThan(regularLayout[0]!.y);
+  for (let index = 1; index < regularLayout.length; index += 1) {
+    expect(Math.abs(regularLayout[index]!.x - regularLayout[0]!.x)).toBeLessThan(2);
+    expect(regularLayout[index]!.y).toBeGreaterThan(regularLayout[index - 1]!.y);
+  }
   const featureLayout = await featureCards.evaluateAll((cards) => cards.map((card) => {
     const box = card.getBoundingClientRect();
     return { x: box.x, y: box.y, height: box.height };
   }));
   expect(Math.abs(featureLayout[0]!.y - featureLayout[1]!.y)).toBeLessThan(2);
   expect(featureLayout[1]!.x).toBeGreaterThan(featureLayout[0]!.x);
-  expect(featureLayout[0]!.y - regularLayout[2]!.y - regularLayout[2]!.height).toBeGreaterThanOrEqual(8);
+  expect(featureLayout[0]!.y - regularLayout[3]!.y - regularLayout[3]!.height).toBeGreaterThanOrEqual(8);
   const regularCardHeight = await page.locator(".service-grid .service-card").first().evaluate(
     (card) => card.getBoundingClientRect().height,
   );
@@ -354,14 +353,15 @@ test("upgrade tutorial walks through Upgrades after the player can afford one", 
   }));
   expect(Math.abs(mobileFeatureLayout[0]!.y - mobileFeatureLayout[1]!.y)).toBeLessThan(2);
   expect(mobileFeatureLayout[1]!.x).toBeGreaterThan(mobileFeatureLayout[0]!.x);
-  expect(mobileFeatureLayout[0]!.height).toBeGreaterThanOrEqual(180);
+  expect(mobileFeatureLayout[0]!.height).toBeGreaterThanOrEqual(160);
   const mobileRegularLayout = await page.locator(".service-grid .service-card").evaluateAll((cards) => cards.map((card) => {
     const box = card.getBoundingClientRect();
     return { x: box.x, y: box.y };
   }));
-  expect(Math.abs(mobileRegularLayout[0]!.y - mobileRegularLayout[1]!.y)).toBeLessThan(2);
-  expect(mobileRegularLayout[1]!.x).toBeGreaterThan(mobileRegularLayout[0]!.x);
-  expect(Math.abs(mobileRegularLayout[2]!.y - mobileRegularLayout[3]!.y)).toBeLessThan(2);
+  for (let index = 1; index < mobileRegularLayout.length; index += 1) {
+    expect(Math.abs(mobileRegularLayout[index]!.x - mobileRegularLayout[0]!.x)).toBeLessThan(2);
+    expect(mobileRegularLayout[index]!.y).toBeGreaterThan(mobileRegularLayout[index - 1]!.y);
+  }
   const mobileOverflow = await page.locator(".upgrades").evaluate((element) => ({
     clientHeight: element.clientHeight,
     scrollHeight: element.scrollHeight,
