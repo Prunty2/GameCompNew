@@ -15,6 +15,8 @@ import sunwardFishAtlasUrl from "../assets/fish-sunward-swim.png";
 import whiteSuckerFishAtlasUrl from "../assets/fish-white-sucker-swim.png";
 import longnoseGarFishAtlasUrl from "../assets/fish-longnose-gar-swim.png";
 import ciscoFishAtlasUrl from "../assets/fish-cisco-swim.png";
+import estuaryPerchFishAtlasUrl from "../assets/fish-estuary-perch-swim.png";
+import largetoothFlounderFishAtlasUrl from "../assets/fish-largetooth-flounder-swim.png";
 import fishingLineLimitFloatUrl from "../assets/fishing-line-limit-float.png";
 import mosswaterFishingUrl from "../assets/fishing-mosswater-pool.jpg";
 import gloamFishingUrl from "../assets/fishing-outer-gloam.jpg";
@@ -124,7 +126,7 @@ interface LoadedArt {
   world: HTMLCanvasElement;
 }
 
-type FishSheetId = SpotId | "whiteSucker" | "longnoseGar" | "cisco" | "beachSurf" | "beachBay" | "beachReef";
+type FishSheetId = SpotId | "whiteSucker" | "longnoseGar" | "cisco" | "estuaryPerch" | "largetoothFlounder" | "beachSurf" | "beachBay" | "beachReef";
 
 const SURFACE_FISH_CELLS = [
   [0, 0],
@@ -151,9 +153,11 @@ const FISH_SPRITE_CELLS: Record<FishSpecies, { sheet: FishSheetId; row: number }
   seaMullet: { sheet: "beachSurf", row: 0 },
   yellowfinBream: { sheet: "beachSurf", row: 1 },
   sandWhiting: { sheet: "beachSurf", row: 2 },
+  largetoothFlounder: { sheet: "largetoothFlounder", row: 0 },
   duskyFlathead: { sheet: "beachBay", row: 0 },
   luderick: { sheet: "beachBay", row: 1 },
   easternAustralianSalmon: { sheet: "beachBay", row: 2 },
+  estuaryPerch: { sheet: "estuaryPerch", row: 0 },
   snapper: { sheet: "beachReef", row: 0 },
   yellowtailKingfish: { sheet: "beachReef", row: 1 },
   mulloway: { sheet: "beachReef", row: 2 },
@@ -166,6 +170,8 @@ const FISH_SHEET_ROWS: Record<FishSheetId, number> = {
   whiteSucker: 1,
   longnoseGar: 1,
   cisco: 1,
+  estuaryPerch: 1,
+  largetoothFlounder: 1,
   beachSurf: 3,
   beachBay: 3,
   beachReef: 3,
@@ -187,9 +193,11 @@ const FISH_DRAW_SIZE: Record<FishSpecies, number> = {
   seaMullet: 1.5,
   yellowfinBream: 1.08,
   sandWhiting: 1.58,
+  largetoothFlounder: 1.34,
   duskyFlathead: 1.62,
   luderick: 1.08,
   easternAustralianSalmon: 1.45,
+  estuaryPerch: 1.28,
   snapper: 1.18,
   yellowtailKingfish: 1.58,
   mulloway: 1.5,
@@ -237,6 +245,8 @@ export class CanvasRenderer {
       loadImage(whiteSuckerFishAtlasUrl),
       loadImage(longnoseGarFishAtlasUrl),
       loadImage(ciscoFishAtlasUrl),
+      loadImage(estuaryPerchFishAtlasUrl),
+      loadImage(largetoothFlounderFishAtlasUrl),
       loadImage(mosswaterFishAtlasUrl),
       loadImage(gloamFishAtlasUrl),
       loadImage(beachSurfFishAtlasUrl),
@@ -266,6 +276,8 @@ export class CanvasRenderer {
       whiteSuckerFish,
       longnoseGarFish,
       ciscoFish,
+      estuaryPerchFish,
+      largetoothFlounderFish,
       mosswaterFish,
       gloamFish,
       beachSurfFish,
@@ -288,6 +300,8 @@ export class CanvasRenderer {
         whiteSucker: keyMagenta(whiteSuckerFish, false, true),
         longnoseGar: keyMagenta(longnoseGarFish, false, true),
         cisco: keyMagenta(ciscoFish, false, true),
+        estuaryPerch: keyMagenta(estuaryPerchFish, false, true),
+        largetoothFlounder: keyMagenta(largetoothFlounderFish, false, true),
         mosswaterPool: keyMagenta(mosswaterFish, false, true),
         outerGloam: keyMagenta(gloamFish, false, true),
         beachSurf: keyMagenta(beachSurfFish, false, true),
@@ -299,6 +313,8 @@ export class CanvasRenderer {
         whiteSucker: tintAlpha(keyedFish.whiteSucker, colour),
         longnoseGar: tintAlpha(keyedFish.longnoseGar, colour),
         cisco: tintAlpha(keyedFish.cisco, colour),
+        estuaryPerch: tintAlpha(keyedFish.estuaryPerch, colour),
+        largetoothFlounder: tintAlpha(keyedFish.largetoothFlounder, colour),
         mosswaterPool: tintAlpha(keyedFish.mosswaterPool, colour),
         outerGloam: tintAlpha(keyedFish.outerGloam, colour),
         beachSurf: tintAlpha(keyedFish.beachSurf, colour),

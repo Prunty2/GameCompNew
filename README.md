@@ -5,7 +5,7 @@ FSHING is a single-player, side-on fishing market game for desktop and mobile br
 The playable game includes:
 
 - Deterministic fixed-step sailing, research-backed species movement and reel-and-release line fights, market quotes, and day/night
-- A lake with twelve real species and an unlockable Beach with nine, each across three fishing grounds
+- A lake with twelve real species and an unlockable Beach with eleven, each across three fishing grounds
 - Two harbors with seeded daily quotes, seven-day price history, and full-quote sales
 - Cargo, engine, line, and five-tier reel-power upgrades, plus a rechargeable engine boost
 - Line-tier-gated Outer Gloam water and a paid Beach location

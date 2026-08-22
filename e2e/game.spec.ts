@@ -666,9 +666,11 @@ test("Beach market lists, prices, and tracks coastal fish with coastal artwork",
           "seaMullet",
           "yellowfinBream",
           "sandWhiting",
+          "largetoothFlounder",
           "duskyFlathead",
           "luderick",
           "easternAustralianSalmon",
+          "estuaryPerch",
           "snapper",
           "yellowtailKingfish",
           "mulloway",
@@ -690,10 +692,18 @@ test("Beach market lists, prices, and tracks coastal fish with coastal artwork",
 
   const listings = page.locator(".market-listing");
   const snapper = page.locator('[data-action="select-market-fish"][data-species="snapper"]');
-  await expect(listings).toHaveCount(9);
+  await expect(listings).toHaveCount(11);
   await expect(page.locator('[data-species="bluegill"]')).toHaveCount(0);
   await expect(snapper).toBeVisible();
   await expect(snapper.locator(".market-fish-icon")).toHaveAttribute("style", /fish-beach-atlas-ui/);
+  await expect(page.locator('[data-species="estuaryPerch"] .market-fish-icon')).toHaveAttribute(
+    "style",
+    /fish-estuary-perch-ui/,
+  );
+  await expect(page.locator('[data-species="largetoothFlounder"] .market-fish-icon')).toHaveAttribute(
+    "style",
+    /fish-largetooth-flounder-ui/,
+  );
   await snapper.click();
   await page.getByRole("button", { name: "Track Snapper" }).click();
   await page.getByRole("button", { name: "Back to market" }).click();

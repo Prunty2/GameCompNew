@@ -152,6 +152,13 @@ export const FISHING_MOVEMENT_PROFILES: Record<FishSpecies, FishingMovementProfi
     depthAmplitude: 0.011, depthFrequency: 0.42, jukeStrength: 0.2, jukeChance: 0.17,
     bodyFrequency: 4.9, flexAmount: 0.028,
   },
+  largetoothFlounder: {
+    gait: "amiiform", cruise: 0.24, speedVariance: 0.05, burstStrength: 0.42,
+    burstFrequency: 0.28, burstChance: 0.28, burstSharpness: 5,
+    turnFrequency: 0.14, reverseChance: 0.32, turnEase: 0.23,
+    depthAmplitude: 0.004, depthFrequency: 0.22, jukeStrength: 0.03, jukeChance: 0.06,
+    bodyFrequency: 2.1, flexAmount: 0.012,
+  },
   duskyFlathead: {
     gait: "subcarangiform", cruise: 0.1, speedVariance: 0.07, burstStrength: 3.2,
     burstFrequency: 0.25, burstChance: 0.34, burstSharpness: 10,
@@ -172,6 +179,13 @@ export const FISHING_MOVEMENT_PROFILES: Record<FishSpecies, FishingMovementProfi
     turnFrequency: 0.36, reverseChance: 0.32, turnEase: 0.12,
     depthAmplitude: 0.022, depthFrequency: 0.75, jukeStrength: 0.38, jukeChance: 0.31,
     bodyFrequency: 6.2, flexAmount: 0.025,
+  },
+  estuaryPerch: {
+    gait: "subcarangiform", cruise: 0.42, speedVariance: 0.07, burstStrength: 0.82,
+    burstFrequency: 0.36, burstChance: 0.38, burstSharpness: 6,
+    turnFrequency: 0.18, reverseChance: 0.34, turnEase: 0.2,
+    depthAmplitude: 0.01, depthFrequency: 0.32, jukeStrength: 0.08, jukeChance: 0.1,
+    bodyFrequency: 3.1, flexAmount: 0.024,
   },
   snapper: {
     gait: "subcarangiform", cruise: 0.62, speedVariance: 0.08, burstStrength: 0.65,

@@ -85,6 +85,24 @@ describe("species-specific fishing movement", () => {
     expect(new Set(motions.map((motion) => motion.heading))).toEqual(new Set([-1, 1]));
   });
 
+  test("keeps Estuary Perch controlled near the bottom between short runs", () => {
+    const motions = Array.from({ length: 1200 }, (_, index) => (
+      fishingSpeciesMotion("estuaryPerch", index * 0.05, 0.7)
+    ));
+    expect(Math.max(...motions.map((motion) => Math.abs(motion.depthOffset)))).toBeLessThan(0.015);
+    expect(Math.max(...motions.map((motion) => motion.horizontalMultiplier))).toBeGreaterThan(0.9);
+    expect(motions.filter((motion) => motion.horizontalMultiplier < 0.6).length).toBeGreaterThan(600);
+  });
+
+  test("keeps Largetooth Flounder close to the seabed between short fin-powered runs", () => {
+    const motions = Array.from({ length: 1200 }, (_, index) => (
+      fishingSpeciesMotion("largetoothFlounder", index * 0.05, 0.7)
+    ));
+    expect(Math.max(...motions.map((motion) => Math.abs(motion.depthOffset)))).toBeLessThan(0.006);
+    expect(Math.max(...motions.map((motion) => motion.horizontalMultiplier))).toBeGreaterThan(0.55);
+    expect(motions.filter((motion) => motion.horizontalMultiplier < 0.4).length).toBeGreaterThan(650);
+  });
+
   test("eases desired speed into continuous target velocity", () => {
     const dt = 1 / 120;
     let target: FishingTargetMotionState = {

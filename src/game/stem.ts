@@ -192,6 +192,12 @@ export const FISH_SCIENCE: Record<FishSpecies, FishScienceProfile> = {
     ecologicalRole: "Benthic feeder on worms, small crustaceans, and molluscs.",
     evidence: "Its slender body makes compact tail beats while cruising close above open sand.",
   },
+  largetoothFlounder: {
+    temperatureRangeC: [16, 27], minimumOxygenMgL: 5,
+    habitat: "Sandy or muddy bottoms in estuaries, bays, and near-shore coastal water",
+    ecologicalRole: "Camouflaged benthic predator of small fish and bottom invertebrates.",
+    evidence: "Its flattened body stays close to the seabed while fine dorsal- and anal-fin waves power slow cruising.",
+  },
   duskyFlathead: {
     temperatureRangeC: [14, 26], minimumOxygenMgL: 5,
     habitat: "Shallow sand and mud beside sheltered rocky reef",
@@ -209,6 +215,12 @@ export const FISH_SCIENCE: Record<FishSpecies, FishScienceProfile> = {
     habitat: "Coastal schools over sand, with juveniles entering bays and estuaries",
     ecologicalRole: "Mobile predator of schooling fish and coastal invertebrates.",
     evidence: "Its powerful forked tail drives fast, coordinated open-water schooling.",
+  },
+  estuaryPerch: {
+    temperatureRangeC: [12, 24], minimumOxygenMgL: 5,
+    habitat: "Deeper bottom water in coastal lakes, estuaries, and lower tidal rivers",
+    ecologicalRole: "Structure-oriented estuary predator of fish and larger aquatic invertebrates.",
+    evidence: "Its perch-shaped body supports controlled deep-water cruising followed by short tail-powered runs.",
   },
   snapper: {
     temperatureRangeC: [12, 22], minimumOxygenMgL: 5.5,
@@ -246,9 +258,11 @@ const SURVEY_CHOICES: Record<FishSpecies, readonly [FishSpecies, FishSpecies, Fi
   seaMullet: ["seaMullet", "yellowfinBream", "sandWhiting"],
   yellowfinBream: ["yellowfinBream", "seaMullet", "luderick"],
   sandWhiting: ["sandWhiting", "yellowfinBream", "duskyFlathead"],
+  largetoothFlounder: ["largetoothFlounder", "sandWhiting", "duskyFlathead"],
   duskyFlathead: ["duskyFlathead", "sandWhiting", "luderick"],
   luderick: ["luderick", "yellowfinBream", "easternAustralianSalmon"],
   easternAustralianSalmon: ["easternAustralianSalmon", "seaMullet", "yellowtailKingfish"],
+  estuaryPerch: ["estuaryPerch", "luderick", "duskyFlathead"],
   snapper: ["snapper", "mulloway", "yellowfinBream"],
   yellowtailKingfish: ["yellowtailKingfish", "easternAustralianSalmon", "mulloway"],
   mulloway: ["mulloway", "snapper", "duskyFlathead"],

@@ -11,6 +11,7 @@ import {
   reelSpeedMultiplier,
   regionSurfaceTintAt,
   spotById,
+  type FishSpecies,
 } from "../game/balance";
 import {
   buyBeachAccess,
@@ -692,6 +693,46 @@ describe("FSHING side-on simulation", () => {
     expect(Math.max(...kingfish.map((target) => target.homeY))).toBeLessThanOrEqual(0.58);
     expect([...snapper, ...kingfish].every((target) => isFishingTargetReachable(simulation, target))).toBe(true);
     expect(Math.max(...mulloway.map((target) => target.homeY))).toBeGreaterThan(maxFishingDepth(simulation));
+  });
+
+  test("orders Beach Sunward residents vertically by value and keeps Flounder ultra-low", () => {
+    const simulation = createSimulation(12);
+    simulation.world = "beach";
+    expect(startFishing(simulation, "sunwardShoal", { width: 2048, height: 1152 })).toBe(true);
+    const targetsFor = (species: FishSpecies) => (
+      simulation.fishing?.targets.filter((target) => target.species === species) ?? []
+    );
+    const mullet = targetsFor("seaMullet");
+    const bream = targetsFor("yellowfinBream");
+    const whiting = targetsFor("sandWhiting");
+    const flounder = targetsFor("largetoothFlounder");
+
+    expect([mullet, bream, whiting, flounder].every((targets) => targets.length > 0)).toBe(true);
+    expect(Math.min(...mullet.map((target) => target.homeY))).toBeGreaterThanOrEqual(0.1);
+    expect(Math.max(...mullet.map((target) => target.homeY))).toBeLessThanOrEqual(0.17);
+    expect(Math.min(...bream.map((target) => target.homeY))).toBeGreaterThanOrEqual(0.22);
+    expect(Math.max(...bream.map((target) => target.homeY))).toBeLessThanOrEqual(0.29);
+    expect(Math.min(...whiting.map((target) => target.homeY))).toBeGreaterThanOrEqual(0.35);
+    expect(Math.max(...whiting.map((target) => target.homeY))).toBeLessThanOrEqual(0.42);
+    expect(Math.min(...flounder.map((target) => target.homeY))).toBeGreaterThanOrEqual(0.72);
+    expect(Math.max(...flounder.map((target) => target.homeY))).toBeLessThanOrEqual(0.79);
+
+    const orderedSpecies = ["seaMullet", "yellowfinBream", "sandWhiting", "largetoothFlounder"] as const;
+    for (let index = 1; index < orderedSpecies.length; index += 1) {
+      const shallower = targetsFor(orderedSpecies[index - 1]!);
+      const deeper = targetsFor(orderedSpecies[index]!);
+      expect(FISH[orderedSpecies[index]!].value).toBeGreaterThan(FISH[orderedSpecies[index - 1]!].value);
+      expect(Math.min(...deeper.map((target) => target.homeY))).toBeGreaterThan(
+        Math.max(...shallower.map((target) => target.homeY)),
+      );
+    }
+
+    expect([...mullet, ...bream].every((target) => isFishingTargetReachable(simulation, target))).toBe(true);
+    expect([...whiting, ...flounder].every((target) => !isFishingTargetReachable(simulation, target))).toBe(true);
+    simulation.progress.upgrades.line = 4;
+    expect([...mullet, ...bream, ...whiting, ...flounder].every((target) => (
+      isFishingTargetReachable(simulation, target)
+    ))).toBe(true);
   });
 
   test("steps Beach Mosswater residents down through the annotated bay bands", () => {

@@ -79,7 +79,9 @@ describe("fish market", () => {
     expect(spotForSpecies("lakeSturgeon").id).toBe("outerGloam");
     expect(spotForSpecies("cisco").id).toBe("outerGloam");
     expect(spotForSpecies("seaMullet").id).toBe("sunwardShoal");
+    expect(spotForSpecies("largetoothFlounder").id).toBe("sunwardShoal");
     expect(spotForSpecies("longnoseGar").id).toBe("mosswaterPool");
+    expect(spotForSpecies("estuaryPerch").id).toBe("mosswaterPool");
     expect(spotForSpecies("mulloway").id).toBe("outerGloam");
     expect(worldForSpecies("bluegill")).toBe("lake");
     expect(worldForSpecies("snapper")).toBe("beach");
