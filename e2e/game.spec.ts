@@ -261,6 +261,8 @@ test("a snapped line lets the fish escape before retracting without a hook", asy
     "aria-label",
     "Fishing at Sunward Shoal. The line snapped. The fish is swimming free while the bare line retracts.",
   );
+  await expect.poll(async () => Number(await canvas.getAttribute("data-fishing-loss-retract-progress"))).toBe(1);
+  await expect(canvas).toHaveAttribute("data-fishing-state", "line-retracting");
 
   await expect(canvas).toHaveAttribute("data-fishing-state", "steering");
   await expect(canvas).toHaveAttribute("data-fishing-hook-visible", "true");

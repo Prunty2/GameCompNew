@@ -2,7 +2,11 @@ import { clamp, createRandom, type RandomSource } from "./math";
 import { fishingSpeciesMotion, stepFishingTargetMotion } from "./fishingMovement";
 import { fishingHighlightSpecies } from "./fishingPresentation";
 import { responsiveResidentCount, type FishingViewport } from "./fishingPopulation";
-import { FISHING_LOSS_DURATION, FISHING_REEL_DURATION } from "./fishingReeling";
+import {
+  FISHING_LOSS_DEPTH_TOLERANCE,
+  FISHING_LOSS_DURATION,
+  FISHING_REEL_DURATION,
+} from "./fishingReeling";
 import { fishingFightBehaviour, fishingFightCue, RESTING_FIGHT_MOTION, stepFishingFight } from "./fishingFight";
 import {
   BALANCE,
@@ -1131,7 +1135,24 @@ function updateFishingFight(simulation: Simulation, input: InputState, dt: numbe
   const fight = fishing?.reeling;
   if (!fishing || !fight) return;
   if (fight.lostAt !== null) {
-    if (simulation.elapsed - fight.lostAt >= FISHING_LOSS_DURATION) {
+    const escapedTarget = fishing.targets[fight.targetIndex];
+    if (escapedTarget) {
+      const movement = stepFishingTargetMotion(
+        escapedTarget.species,
+        escapedTarget,
+        simulation.elapsed,
+        escapedTarget.phase,
+        dt,
+      );
+      escapedTarget.x = movement.x;
+      escapedTarget.y = movement.y;
+      escapedTarget.direction = movement.direction;
+      escapedTarget.velocityX = movement.velocityX;
+      escapedTarget.velocityY = movement.velocityY;
+    }
+    const reachedHabitatDepth = !escapedTarget
+      || Math.abs(escapedTarget.y - escapedTarget.homeY) <= FISHING_LOSS_DEPTH_TOLERANCE;
+    if (simulation.elapsed - fight.lostAt >= FISHING_LOSS_DURATION && reachedHabitatDepth) {
       fishing.hook = { x: 0.5, y: 0.08 };
       fishing.reeling = null;
     }
@@ -1171,8 +1192,17 @@ function updateFishingFight(simulation: Simulation, input: InputState, dt: numbe
   if (next.broken) {
     const escapedTarget = fishing.targets[fight.targetIndex];
     if (escapedTarget) {
-      escapedTarget.x = clamp(fishing.hook.x + fight.direction * 0.18, 0.04, 0.96);
-      escapedTarget.y = escapedTarget.homeY;
+      const fightPull = fight.progress * 0.72;
+      escapedTarget.x = clamp(
+        fishing.hook.x + (0.5 - fishing.hook.x) * fightPull + fight.motionX,
+        0.04,
+        0.96,
+      );
+      escapedTarget.y = clamp(
+        fishing.hook.y + (0.08 - fishing.hook.y) * fightPull + fight.motionY,
+        0.08,
+        0.94,
+      );
       escapedTarget.direction = fight.direction;
       escapedTarget.phase += Math.PI / 2;
       escapedTarget.velocityX = 0;

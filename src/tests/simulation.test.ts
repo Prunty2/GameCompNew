@@ -12,7 +12,10 @@ import {
   regionSurfaceTintAt,
   spotById,
 } from "../game/balance";
-import { FISHING_LOSS_DURATION, FISHING_LOSS_SWIM_DURATION } from "../game/fishingReeling";
+import {
+  FISHING_LOSS_DEPTH_TOLERANCE,
+  FISHING_LOSS_SWIM_DURATION,
+} from "../game/fishingReeling";
 import {
   buyBeachAccess,
   beginFishingExit,
@@ -465,6 +468,7 @@ describe("FSHING side-on simulation", () => {
     updateSimulation(simulation, idle, 0);
     const fight = simulation.fishing.reeling;
     if (!fight) throw new Error("Expected a hooked fish.");
+    fight.progress = 0.9;
     fight.tension = BALANCE.fishingCriticalTension;
 
     updateSimulation(simulation, { ...idle, actionHeld: true }, 0);
@@ -473,25 +477,27 @@ describe("FSHING side-on simulation", () => {
     expect(simulation.fishing?.reeling?.lostAt).toBe(simulation.elapsed);
     expect(consumeEvents(simulation)).toContainEqual({ type: "line-broke", species: "bluegill" });
     expect(simulation.cargo).toEqual([]);
-    const escapeDestination = { x: target.x, y: target.y };
-    expect(escapeDestination.y).toBe(target.homeY);
+    const lossStartedAt = simulation.elapsed;
+    const returnDistance = Math.abs(target.y - target.homeY);
+    expect(returnDistance).toBeGreaterThan(FISHING_LOSS_DEPTH_TOLERANCE);
 
     for (let elapsed = 0; elapsed < FISHING_LOSS_SWIM_DURATION; elapsed += 0.1) {
       updateSimulation(simulation, idle, Math.min(0.1, FISHING_LOSS_SWIM_DURATION - elapsed));
     }
     expect(simulation.fishing?.reeling).not.toBeNull();
 
-    for (let elapsed = FISHING_LOSS_SWIM_DURATION; elapsed < FISHING_LOSS_DURATION; elapsed += 0.1) {
-      updateSimulation(simulation, idle, Math.min(0.1, FISHING_LOSS_DURATION - elapsed));
+    for (let index = 0; index < 200 && simulation.fishing?.reeling; index += 1) {
+      updateSimulation(simulation, idle, 0.1);
     }
-    updateSimulation(simulation, idle, 0.001);
     expect(simulation.fishing?.reeling).toBeNull();
     expect(simulation.fishing?.hook).toEqual({ x: 0.5, y: 0.08 });
-    expect(target.x).toBeCloseTo(escapeDestination.x, 5);
-    expect(target.y).toBeCloseTo(escapeDestination.y, 5);
+    expect(Math.abs(target.y - target.homeY)).toBeLessThanOrEqual(FISHING_LOSS_DEPTH_TOLERANCE);
+    const minimumNormalSpeedReturn = Math.max(0, returnDistance - FISHING_LOSS_DEPTH_TOLERANCE) / 0.1;
+    expect(simulation.elapsed - lossStartedAt).toBeGreaterThanOrEqual(minimumNormalSpeedReturn);
 
+    const resumedAt = { x: target.x, y: target.y };
     updateSimulation(simulation, idle, 0.1);
-    expect(Math.hypot(target.x - escapeDestination.x, target.y - escapeDestination.y)).toBeLessThan(0.02);
+    expect(Math.hypot(target.x - resumedAt.x, target.y - resumedAt.y)).toBeLessThan(0.02);
   });
 
   test("keeps fishing active while a manual exit rises to the surface", () => {

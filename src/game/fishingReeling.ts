@@ -2,6 +2,7 @@ export const FISHING_REEL_DURATION = 1.15;
 export const FISHING_LOSS_SWIM_DURATION = 0.36;
 export const FISHING_LOSS_RETRACT_DURATION = 0.42;
 export const FISHING_LOSS_DURATION = FISHING_LOSS_SWIM_DURATION + FISHING_LOSS_RETRACT_DURATION;
+export const FISHING_LOSS_DEPTH_TOLERANCE = 0.03;
 
 export interface FishingLossProgress {
   swim: number;

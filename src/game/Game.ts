@@ -1762,6 +1762,7 @@ export class Game {
       snapLine: () => {
         const fight = this.simulation.fishing?.reeling;
         if (!fight || fight.landingAt !== null || fight.lostAt !== null) return;
+        fight.progress = 0.9;
         fight.tension = BALANCE.fishingCriticalTension;
         updateSimulation(this.simulation, { travel: 0, hookX: 0, hookY: 0, boost: false, actionHeld: true }, FIXED_STEP);
         this.handleSimulationEvents();
