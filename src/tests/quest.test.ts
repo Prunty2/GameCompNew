@@ -127,20 +127,19 @@ describe("first-assignment quest prototype", () => {
       tension: 0.12,
       stamina: 1,
       criticalSeconds: 0,
-      struggle: 0,
+      behaviour: "calm",
+      struggle: 0.08,
       landingAt: null,
     };
     const hooked = questPresentation(simulation, playView);
     expect(hooked.title).toBe("Hold left click");
-    expect(hooked.instruction).toBe(
-      "Hold left click to reel. Watch the line: cream is safe, red means release before it snaps.",
-    );
+    expect(hooked.instruction).toContain("while the fish is calm");
 
-    simulation.fishing.reeling.tension = 0.8;
-    simulation.fishing.reeling.struggle = 0.7;
-    const pulling = questPresentation(simulation, playView);
-    expect(pulling.title).toBe("Release to rest");
-    expect(pulling.instruction).toContain("Release left click");
+    simulation.fishing.reeling.behaviour = "run";
+    simulation.fishing.reeling.struggle = 0.8;
+    const running = questPresentation(simulation, playView);
+    expect(running.title).toBe("Let it run");
+    expect(running.instruction).toContain("racing away");
 
     simulation.fishing.reeling.tension = 0.94;
     const critical = questPresentation(simulation, playView);

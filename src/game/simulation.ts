@@ -2,7 +2,7 @@ import { clamp, createRandom, type RandomSource } from "./math";
 import { fishingSpeciesMotion } from "./fishingMovement";
 import { fishingHighlightSpecies } from "./fishingPresentation";
 import { FISHING_REEL_DURATION } from "./fishingReeling";
-import { fishingFightCue, stepFishingFight } from "./fishingFight";
+import { fishingFightBehaviour, fishingFightCue, stepFishingFight } from "./fishingFight";
 import {
   BALANCE,
   FISH,
@@ -147,6 +147,7 @@ export interface FishingReelState {
   tension: number;
   stamina: number;
   criticalSeconds: number;
+  behaviour: "calm" | "run" | "thrash";
   struggle: number;
   landingAt: number | null;
 }
@@ -982,11 +983,13 @@ export function tutorialPrompt(simulation: Simulation): string | null {
         case "critical":
           return `Release left click or Reel; the ${name}'s line is red and about to snap.`;
         case "release":
-          return `Release left click or Reel; the ${name} is pulling and the line is tightening.`;
+          return simulation.fishing.reeling.behaviour === "run"
+            ? `Release left click or Reel; the ${name} is racing away and the line will slacken.`
+            : `Release left click or Reel; the ${name} is shaking the line.`;
         case "resume":
-          return `Hold left click or Reel again to pull in the ${name}; tension has fallen.`;
+          return `Hold left click or Reel again to pull in the ${name} while it is calm.`;
         case "reel":
-          return `Hold left click or Reel to pull in the ${name}; the line turns red as tension rises.`;
+          return `Hold left click or Reel to pull in the ${name} while it is calm; release when it runs.`;
       }
     }
     if (simulation.fishing.exitingAt !== null) return "Reeling in the line and returning to the surface.";
@@ -1063,6 +1066,7 @@ function updateFishing(simulation: Simulation, input: InputState, dt: number): v
     }
     const reachable = FISH[target.species].depthTier <= simulation.progress.upgrades.line;
     if (reachable && distance(fishing.hook, target) <= FISHING_CATCH_RADIUS) {
+      const opening = fishingFightBehaviour(target.species, 0, 1);
       fishing.reeling = {
         species: target.species,
         targetIndex,
@@ -1072,7 +1076,8 @@ function updateFishing(simulation: Simulation, input: InputState, dt: number): v
         tension: 0.12,
         stamina: 1,
         criticalSeconds: 0,
-        struggle: 0,
+        behaviour: opening.kind,
+        struggle: opening.intensity,
         landingAt: null,
       };
       return;
@@ -1103,6 +1108,7 @@ function updateFishingFight(simulation: Simulation, input: InputState, dt: numbe
   fight.tension = next.tension;
   fight.stamina = next.stamina;
   fight.criticalSeconds = next.criticalSeconds;
+  fight.behaviour = next.behaviour;
   fight.struggle = next.struggle;
   if (next.broken) {
     const escapedTarget = fishing.targets[fight.targetIndex];

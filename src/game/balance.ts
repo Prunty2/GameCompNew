@@ -58,13 +58,20 @@ export interface FishDefinition {
 
 export interface FishingFightProfile {
   reelProgressPerSecond: number;
-  tensionPerSecond: number;
-  tensionRecoveryPerSecond: number;
-  slipPerSecond: number;
+  calmTensionPerSecond: number;
+  thrashTensionPerSecond: number;
+  runTensionPerSecond: number;
+  calmSlackPerSecond: number;
+  thrashSlackPerSecond: number;
+  runSlackPerSecond: number;
+  calmSlipPerSecond: number;
+  thrashSlipPerSecond: number;
+  runSlipPerSecond: number;
   staminaDrainPerSecond: number;
   staminaRecoveryPerSecond: number;
-  struggleCycleSeconds: number;
-  struggleFraction: number;
+  cycleSeconds: number;
+  runFraction: number;
+  thrashFraction: number;
 }
 
 export interface RegionDefinition {
@@ -131,44 +138,72 @@ export const BALANCE = {
 /** Rates are fractions of their respective fight meter per second. */
 export const FISHING_FIGHT_PROFILES: Record<FishRarity, FishingFightProfile> = {
   common: {
-    reelProgressPerSecond: 0.34,
-    tensionPerSecond: 0.68,
-    tensionRecoveryPerSecond: 0.78,
-    slipPerSecond: 0.035,
-    staminaDrainPerSecond: 0.23,
-    staminaRecoveryPerSecond: 0.035,
-    struggleCycleSeconds: 2.2,
-    struggleFraction: 0.42,
+    reelProgressPerSecond: 0.36,
+    calmTensionPerSecond: 0.26,
+    thrashTensionPerSecond: 0.78,
+    runTensionPerSecond: 1.18,
+    calmSlackPerSecond: 0.2,
+    thrashSlackPerSecond: 0.72,
+    runSlackPerSecond: 1.42,
+    calmSlipPerSecond: 0.012,
+    thrashSlipPerSecond: 0.048,
+    runSlipPerSecond: 0.17,
+    staminaDrainPerSecond: 0.22,
+    staminaRecoveryPerSecond: 0.032,
+    cycleSeconds: 2.6,
+    runFraction: 0.26,
+    thrashFraction: 0.16,
   },
   uncommon: {
-    reelProgressPerSecond: 0.29,
-    tensionPerSecond: 0.76,
-    tensionRecoveryPerSecond: 0.73,
-    slipPerSecond: 0.045,
-    staminaDrainPerSecond: 0.19,
-    staminaRecoveryPerSecond: 0.04,
-    struggleCycleSeconds: 2,
-    struggleFraction: 0.48,
+    reelProgressPerSecond: 0.3,
+    calmTensionPerSecond: 0.3,
+    thrashTensionPerSecond: 0.88,
+    runTensionPerSecond: 1.28,
+    calmSlackPerSecond: 0.18,
+    thrashSlackPerSecond: 0.64,
+    runSlackPerSecond: 1.28,
+    calmSlipPerSecond: 0.016,
+    thrashSlipPerSecond: 0.058,
+    runSlipPerSecond: 0.2,
+    staminaDrainPerSecond: 0.18,
+    staminaRecoveryPerSecond: 0.036,
+    cycleSeconds: 2.35,
+    runFraction: 0.3,
+    thrashFraction: 0.18,
   },
   rare: {
-    reelProgressPerSecond: 0.25,
-    tensionPerSecond: 0.84,
-    tensionRecoveryPerSecond: 0.68,
-    slipPerSecond: 0.055,
-    staminaDrainPerSecond: 0.16,
-    staminaRecoveryPerSecond: 0.045,
-    struggleCycleSeconds: 1.8,
-    struggleFraction: 0.54,
+    reelProgressPerSecond: 0.26,
+    calmTensionPerSecond: 0.34,
+    thrashTensionPerSecond: 0.96,
+    runTensionPerSecond: 1.38,
+    calmSlackPerSecond: 0.16,
+    thrashSlackPerSecond: 0.56,
+    runSlackPerSecond: 1.16,
+    calmSlipPerSecond: 0.02,
+    thrashSlipPerSecond: 0.068,
+    runSlipPerSecond: 0.23,
+    staminaDrainPerSecond: 0.15,
+    staminaRecoveryPerSecond: 0.04,
+    cycleSeconds: 2.1,
+    runFraction: 0.34,
+    thrashFraction: 0.2,
   },
   legendary: {
     reelProgressPerSecond: 0.22,
-    tensionPerSecond: 0.94,
-    tensionRecoveryPerSecond: 0.64,
-    slipPerSecond: 0.065,
-    staminaDrainPerSecond: 0.13,
-    staminaRecoveryPerSecond: 0.05,
-    struggleCycleSeconds: 1.65,
-    struggleFraction: 0.6,
+    calmTensionPerSecond: 0.38,
+    thrashTensionPerSecond: 1.04,
+    runTensionPerSecond: 1.5,
+    calmSlackPerSecond: 0.14,
+    thrashSlackPerSecond: 0.5,
+    runSlackPerSecond: 1.05,
+    calmSlipPerSecond: 0.024,
+    thrashSlipPerSecond: 0.078,
+    runSlipPerSecond: 0.26,
+    staminaDrainPerSecond: 0.12,
+    staminaRecoveryPerSecond: 0.045,
+    cycleSeconds: 1.9,
+    runFraction: 0.38,
+    thrashFraction: 0.22,
   },
 };
 

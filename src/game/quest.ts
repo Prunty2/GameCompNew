@@ -429,22 +429,27 @@ function catchQuestCopy(simulation: Simulation): { title: string; instruction: s
       case "critical":
         return {
           title: "Release left click",
-          instruction: "The line is red and about to snap. Release until the colour cools, then hold again.",
+          instruction: "The line is red and about to snap. Let the fish run until the colour cools, then reel.",
         };
       case "release":
-        return {
-          title: "Release to rest",
-          instruction: "The fish is pulling and the line is tightening. Release left click until the colour cools.",
-        };
+        return fight.behaviour === "run"
+          ? {
+            title: "Let it run",
+            instruction: "The fish is racing away. Release left click so it can take line and the tension can fall.",
+          }
+          : {
+            title: "Release to rest",
+            instruction: "The fish is shaking the line. Release left click until it calms, then reel.",
+          };
       case "resume":
         return {
           title: "Hold left click",
-          instruction: "Tension has fallen. Hold left click again to reel. Cream is safe; red means release.",
+          instruction: "The run is over. Hold left click again to reel while the fish is calm.",
         };
       case "reel":
         return {
           title: "Hold left click",
-          instruction: "Hold left click to reel. Watch the line: cream is safe, red means release before it snaps.",
+          instruction: "Hold left click while the fish is calm. Release when it races away so the line can slacken.",
         };
     }
   }

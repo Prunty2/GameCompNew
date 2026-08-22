@@ -432,7 +432,7 @@ export class Game {
     if (critical && !this.lineWasCritical) {
       this.feedback.cue("line-strain");
       this.pulseFeedback("collision");
-      this.showToast("The line is red — release left click or Reel before it snaps.");
+      this.showToast("The line is red — let the fish run. Release until the colour cools.");
     }
     this.lineWasCritical = critical;
   }
@@ -475,27 +475,30 @@ export class Game {
     const restTime = this.fightRestSince === 0 ? 0 : elapsed - this.fightRestSince;
     const highTensionHold = this.fightHighTensionSince === 0 ? 0 : elapsed - this.fightHighTensionSince;
 
-    if (!this.fightHadReel && fightAge >= FIGHT_IDLE_REEL_SECONDS) {
-      this.coachFight("idle-reel", "Hold left click on the water to reel. The line colour shows tension.");
+    if (holding && fight.behaviour === "run") {
+      this.coachFight("run-hold", "The fish is racing away. Release left click so the line can slacken.");
+    } else if (!this.fightHadReel && fightAge >= FIGHT_IDLE_REEL_SECONDS && fight.behaviour === "calm") {
+      this.coachFight("idle-reel", "Hold left click while the fish is calm to reel it in.");
     } else if (
       holding
       && highTensionHold >= FIGHT_HIGH_TENSION_HOLD_SECONDS
       && fight.tension < BALANCE.fishingCriticalTension
     ) {
-      this.coachFight("high-tension", "The line is turning red. Release left click before it snaps.");
+      this.coachFight("high-tension", "The line is turning red. Let the fish run — release left click.");
     } else if (
       this.fightHadReel
       && !holding
+      && fight.behaviour === "calm"
       && restTime >= FIGHT_REST_TOO_LONG_SECONDS
       && fight.tension <= FISHING_FIGHT_RESUME_TENSION
     ) {
-      this.coachFight("resume", "Hold left click again. Resting too long lets the fish slip away.");
+      this.coachFight("resume", "The fish has calmed. Hold left click to reel.");
     }
 
     if (holding && (this.fightCoachKind === "idle-reel" || this.fightCoachKind === "resume")) {
       this.fightCoachKind = "reeling";
     }
-    if (!holding && this.fightCoachKind === "high-tension") {
+    if (!holding && (this.fightCoachKind === "high-tension" || this.fightCoachKind === "run-hold")) {
       this.fightCoachKind = "resting";
     }
   }
@@ -516,7 +519,7 @@ export class Game {
       case "line-broke":
         this.feedback.cue("deny");
         this.pulseFeedback("collision");
-        this.showToast(`${FISH[event.species].name} broke free. Release when the line turns red, then hold again.`);
+        this.showToast(`${FISH[event.species].name} broke free. Let it race away when it runs, then reel the lulls.`);
         break;
       case "sold":
         this.feedback.cue("delivery");
@@ -1082,7 +1085,7 @@ export class Game {
       },
       {
         title: "Catch and protect",
-        body: `Hook a fish, then hold the left mouse button anywhere on the water to reel. Watch the fishing line: cream is safe, red means release before it snaps. After the colour cools, hold again. Repeat until the fish reaches the boat. Keyboard players can hold <kbd>${formatKey(this.save.settings.controls.action)}</kbd>; touch players hold the water.`,
+        body: `Hook a fish, then hold the left mouse button while it is calm to reel. When it races away, release so it can take line — that is what drops tension. Reeling against a run turns the line red. Repeat: reel the lulls, let the runs go, until the fish reaches the boat. Keyboard players can hold <kbd>${formatKey(this.save.settings.controls.action)}</kbd>; touch players hold the water.`,
       },
       {
         title: "Sell and invest",

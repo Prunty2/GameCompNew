@@ -317,6 +317,7 @@ export class CanvasRenderer {
       delete this.canvas.dataset.fishingLineTension;
       delete this.canvas.dataset.fishingLineColour;
       delete this.canvas.dataset.fishingFightCue;
+      delete this.canvas.dataset.fishingFightBehaviour;
       delete this.canvas.dataset.fishingFishStamina;
       delete this.canvas.dataset.targetRarity;
       this.canvas.setAttribute("aria-label", "Game area");
@@ -625,11 +626,13 @@ export class CanvasRenderer {
       this.canvas.dataset.fishingReelProgress = fishing.reeling.progress.toFixed(3);
       this.canvas.dataset.fishingLineTension = fishing.reeling.tension.toFixed(3);
       this.canvas.dataset.fishingFightCue = fishingFightCue(fishing.reeling);
+      this.canvas.dataset.fishingFightBehaviour = fishing.reeling.behaviour;
       this.canvas.dataset.fishingFishStamina = fishing.reeling.stamina.toFixed(3);
     } else {
       delete this.canvas.dataset.fishingReelProgress;
       delete this.canvas.dataset.fishingLineTension;
       delete this.canvas.dataset.fishingFightCue;
+      delete this.canvas.dataset.fishingFightBehaviour;
       delete this.canvas.dataset.fishingFishStamina;
     }
     this.canvas.setAttribute(
@@ -703,9 +706,12 @@ export class CanvasRenderer {
     }
 
     const restingHook = fishingPointToScreen(fishing.hook, width, layout, maximumDepth);
+    const runAway = fishing.reeling?.behaviour === "run" && fishing.reeling.landingAt === null
+      ? fishing.reeling.struggle * 0.2
+      : 0;
     const fightPull = fishing.reeling
       ? fishing.reeling.landingAt === null
-        ? fishing.reeling.progress * 0.72
+        ? Math.max(0, fishing.reeling.progress * 0.72 - runAway * (1 - fishing.reeling.progress))
         : 0.72 + reelProgress * 0.28
       : exitProgress;
     const hook = fishing.reeling || fishing.exitingAt !== null
@@ -714,6 +720,12 @@ export class CanvasRenderer {
           y: restingHook.y + (layout.surfaceY + 10 - restingHook.y) * fightPull,
         }
       : restingHook;
+    const runSign = hook.x >= width * 0.5 ? 1 : -1;
+    const runDrift = fishing.reeling?.behaviour === "run" && fishing.reeling.landingAt === null
+      ? fishing.reeling.struggle * Math.min(width, height) * 0.055
+      : 0;
+    hook.x += runSign * runDrift;
+    hook.y += runDrift * 0.28;
     const hookSize = clamp(Math.min(width, height) * 0.076, 46, 68);
     const hooked = fishing.reeling !== null;
     const hookDrawY = hooked ? hook.y - hookSize * 0.12 : hook.y;
@@ -732,18 +744,20 @@ export class CanvasRenderer {
         fishing.reeling.hookedAt,
         fishing.reeling.struggle,
         settings.reducedMotion,
+        fishing.reeling.behaviour,
       );
-      const fishOffset = fishing.reeling.direction * hookSize * 0.22;
+      const facing = fishing.reeling.behaviour === "run" ? runSign : fishing.reeling.direction;
+      const fishOffset = facing * hookSize * 0.22;
       context.save();
       context.globalAlpha = 1;
       context.translate(hook.x - fishOffset, hook.y + hookSize * 0.04);
-      context.rotate(wriggle * 0.18);
-      context.scale(1, 1 + Math.abs(wriggle) * 0.06);
+      context.rotate(wriggle * (fishing.reeling.behaviour === "thrash" ? 0.32 : 0.16));
+      context.scale(1 + (fishing.reeling.behaviour === "run" ? fishing.reeling.struggle * 0.08 : 0), 1 + Math.abs(wriggle) * 0.06);
       this.drawFish(
         fishing.reeling.species,
         fishingFishPose(fishing.reeling.species, simulation.elapsed, 0, settings.reducedMotion).animationFrame,
         { x: 0, y: 0 },
-        fishing.reeling.direction,
+        facing,
         width,
         height,
         settings.highContrast,
@@ -1859,14 +1873,16 @@ function fishingFightAriaLabel(
   const tensionPercent = Math.round(fight.tension * 100);
   const tensionState = cue === "critical"
     ? "critical, release now"
-    : cue === "release"
-      ? "high, release to rest"
-      : "safe";
+    : fight.behaviour === "run"
+      ? "the fish is racing away"
+      : cue === "release"
+        ? "high, release while it fights"
+        : "safe";
   const action = cue === "landed"
     ? "Landing the catch."
-    : cue === "critical" || cue === "release"
-      ? "Release left click, touch, or the Reel key until the line cools."
-      : "Hold left click, touch, or the Reel key to pull.";
+    : fight.behaviour === "run" || cue === "critical" || cue === "release"
+      ? "Release left click, touch, or the Reel key so the fish can run and the line can slacken."
+      : "Hold left click, touch, or the Reel key while the fish is calm.";
   return `Fishing at ${spotName}. Fighting ${FISH[fight.species].name}. ${action} Reel progress ${Math.round(fight.progress * 100)} percent. Line tension ${tensionPercent} percent, ${tensionState}.`;
 }
 

@@ -185,6 +185,7 @@ test("hooked fish require active reel and release tension control", async ({ pag
 
   const canvas = page.locator("#game-canvas");
   await expect(canvas).toHaveAttribute("data-fishing-state", "fighting");
+  await expect(canvas).toHaveAttribute("data-fishing-fight-behaviour", /^(calm|run|thrash)$/);
   await expect(page.locator("#context-action")).toBeHidden();
   await expect(canvas).toHaveAttribute("data-fishing-background-fish-opacity", "0.680");
   const frozenPoseTime = await canvas.getAttribute("data-fishing-background-pose-elapsed");
@@ -217,7 +218,7 @@ test("first assignment catch step teaches left-click reel and line colour", asyn
 
   const tutorial = page.locator("#market-tutorial");
   await expect(tutorial).toContainText("Hold left click");
-  await expect(tutorial).toContainText("cream is safe");
+  await expect(tutorial).toContainText("while the fish is calm");
 
   const canvas = page.locator("#game-canvas");
   await expect(canvas).toHaveAttribute("data-fishing-fight-cue", "reel");
@@ -226,7 +227,7 @@ test("first assignment catch step teaches left-click reel and line colour", asyn
     timeout: 8_000,
     intervals: [50],
   }).toMatch(/release|critical/);
-  await expect(tutorial).toContainText(/Release to rest|Release left click/);
+  await expect(tutorial).toContainText(/Let it run|Release to rest|Release left click/);
   await canvas.dispatchEvent("pointerup", { pointerId: 1, button: 0, isPrimary: true });
 });
 
@@ -898,10 +899,11 @@ test("reels a hooked fish to the boat before securing the catch", async ({ page 
     const state = await canvas.getAttribute("data-fishing-state");
     if (state !== "fighting") return state;
     const tension = Number(await canvas.getAttribute("data-fishing-line-tension"));
-    if (!holdingReel && tension < 0.68) {
+    const behaviour = await canvas.getAttribute("data-fishing-fight-behaviour");
+    if (!holdingReel && behaviour !== "run" && tension < 0.68) {
       await page.keyboard.down("e");
       holdingReel = true;
-    } else if (holdingReel && tension > 0.78) {
+    } else if (holdingReel && (behaviour === "run" || tension > 0.78)) {
       await page.keyboard.up("e");
       holdingReel = false;
     }
@@ -1045,8 +1047,8 @@ test("how to play instructions advance one card at a time", async ({ page }) => 
   await page.getByRole("button", { name: "Next" }).click();
   await page.getByRole("button", { name: "Next" }).click();
   await expect(page.getByRole("heading", { name: "Catch and protect" })).toBeVisible();
-  await expect(page.locator(".help-card")).toContainText("hold the left mouse button anywhere on the water");
-  await expect(page.locator(".help-card")).toContainText("cream is safe, red means release");
+  await expect(page.locator(".help-card")).toContainText("hold the left mouse button while it is calm");
+  await expect(page.locator(".help-card")).toContainText("When it races away, release");
 
   for (let step = 3; step < 4; step += 1) {
     await page.getByRole("button", { name: "Next" }).click();
