@@ -322,9 +322,11 @@ test("upgrade tutorial walks through Upgrades after the player can afford one", 
   await expect(featureCards.locator(".upgrade-feature-icon")).toHaveCount(2);
   const regularLayout = await page.locator(".service-grid .service-card").evaluateAll((cards) => cards.map((card) => {
     const box = card.getBoundingClientRect();
-    return { x: box.x, y: box.y, height: box.height };
+    const meter = card.querySelector<HTMLElement>(".upgrade-meter")?.getBoundingClientRect();
+    return { x: box.x, y: box.y, height: box.height, meterHeight: meter?.height ?? 0 };
   }));
   expect(regularLayout).toHaveLength(4);
+  expect(regularLayout.every((card) => card.height >= 64 && card.meterHeight >= 17)).toBe(true);
   for (let index = 1; index < regularLayout.length; index += 1) {
     expect(Math.abs(regularLayout[index]!.x - regularLayout[0]!.x)).toBeLessThan(2);
     expect(regularLayout[index]!.y).toBeGreaterThan(regularLayout[index - 1]!.y);
@@ -356,8 +358,10 @@ test("upgrade tutorial walks through Upgrades after the player can afford one", 
   expect(mobileFeatureLayout[0]!.height).toBeGreaterThanOrEqual(160);
   const mobileRegularLayout = await page.locator(".service-grid .service-card").evaluateAll((cards) => cards.map((card) => {
     const box = card.getBoundingClientRect();
-    return { x: box.x, y: box.y };
+    const meter = card.querySelector<HTMLElement>(".upgrade-meter")?.getBoundingClientRect();
+    return { x: box.x, y: box.y, height: box.height, meterHeight: meter?.height ?? 0 };
   }));
+  expect(mobileRegularLayout.every((card) => card.height >= 64 && card.meterHeight >= 16)).toBe(true);
   for (let index = 1; index < mobileRegularLayout.length; index += 1) {
     expect(Math.abs(mobileRegularLayout[index]!.x - mobileRegularLayout[0]!.x)).toBeLessThan(2);
     expect(mobileRegularLayout[index]!.y).toBeGreaterThan(mobileRegularLayout[index - 1]!.y);
