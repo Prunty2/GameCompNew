@@ -2,6 +2,7 @@ import { clamp, createRandom, type RandomSource } from "./math";
 import { fishingSpeciesMotion, stepFishingTargetMotion } from "./fishingMovement";
 import { fishingHighlightSpecies } from "./fishingPresentation";
 import {
+  BEACH_SUNWARD_POPULATION_DENSITY_MULTIPLIER,
   DEFAULT_POPULATION_DENSITY_MULTIPLIER,
   MOSSWATER_POPULATION_DENSITY_MULTIPLIER,
   responsiveResidentCount,
@@ -412,9 +413,11 @@ export function startFishing(
   }
 
   const residents = residentsForSpot(simulation.world, spotId);
-  const populationDensity = simulation.world === "lake" && spotId === "mosswaterPool"
-    ? MOSSWATER_POPULATION_DENSITY_MULTIPLIER
-    : DEFAULT_POPULATION_DENSITY_MULTIPLIER;
+  const populationDensity = simulation.world === "beach" && spotId === "sunwardShoal"
+    ? BEACH_SUNWARD_POPULATION_DENSITY_MULTIPLIER
+    : simulation.world === "lake" && spotId === "mosswaterPool"
+      ? MOSSWATER_POPULATION_DENSITY_MULTIPLIER
+      : DEFAULT_POPULATION_DENSITY_MULTIPLIER;
   simulation.boat.speed = 0;
   simulation.mode = "fishing";
   let targetIndex = 0;

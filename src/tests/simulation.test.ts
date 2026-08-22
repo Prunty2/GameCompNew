@@ -55,8 +55,10 @@ import {
   updateSimulation,
   type InputState,
 } from "../game/simulation";
-import { marketQuote, strongerHarborFor } from "../game/market";
+import { marketAvailability, marketQuote, strongerHarborFor } from "../game/market";
 import {
+  BEACH_SUNWARD_POPULATION_DENSITY_MULTIPLIER,
+  DEFAULT_POPULATION_DENSITY_MULTIPLIER,
   MOSSWATER_POPULATION_DENSITY_MULTIPLIER,
   responsiveResidentCount,
 } from "../game/fishingPopulation";
@@ -664,6 +666,39 @@ describe("FSHING side-on simulation", () => {
       { width: 1280, height: 720 },
       MOSSWATER_POPULATION_DENSITY_MULTIPLIER,
     )).toBe(7);
+  });
+
+  test("increases only Beach Sunward to the full population-density baseline", () => {
+    expect(BEACH_SUNWARD_POPULATION_DENSITY_MULTIPLIER).toBe(1);
+    expect(DEFAULT_POPULATION_DENSITY_MULTIPLIER).toBe(0.7);
+    expect(responsiveResidentCount(
+      10,
+      { width: 1280, height: 720 },
+      BEACH_SUNWARD_POPULATION_DENSITY_MULTIPLIER,
+    )).toBe(10);
+
+    const simulation = createSimulation(12);
+    simulation.world = "beach";
+    const viewport = { width: 1280, height: 720 };
+    expect(startFishing(simulation, "sunwardShoal", viewport)).toBe(true);
+    const availabilityCounts = { abundant: 3, normal: 2, scarce: 1 } as const;
+    const expectedTargetCount = BEACH_SPOT_RESIDENTS.sunwardShoal.reduce((total, species) => (
+      total + responsiveResidentCount(
+        availabilityCounts[marketAvailability(species, simulation.progress.marketDay, simulation.seed)],
+        viewport,
+        BEACH_SUNWARD_POPULATION_DENSITY_MULTIPLIER,
+      )
+    ), 0);
+    const defaultTargetCount = BEACH_SPOT_RESIDENTS.sunwardShoal.reduce((total, species) => (
+      total + responsiveResidentCount(
+        availabilityCounts[marketAvailability(species, simulation.progress.marketDay, simulation.seed)],
+        viewport,
+        DEFAULT_POPULATION_DENSITY_MULTIPLIER,
+      )
+    ), 0);
+
+    expect(simulation.fishing?.targets).toHaveLength(expectedTargetCount);
+    expect(expectedTargetCount).toBeGreaterThan(defaultTargetCount);
   });
 
   test("uses actual swimming depth for Mosswater reachability", () => {
