@@ -812,12 +812,12 @@ describe("FSHING side-on simulation", () => {
     expect(simulation.cargo.map((item) => item.species)).toEqual(["bluegill", "yellowPerch"]);
   });
 
-  test("finishes the research season after eight market sales", () => {
+  test("marks the eight-sale milestone without interrupting trading", () => {
     const simulation = createSimulation(4, { marketSales: 7 });
     expect(resolveCatch(simulation, "bluegill")).toBe(true);
     expect(sellSpeciesAtMarket(simulation, "bluegill")).not.toBeNull();
     expect(simulation.progress.seasonCompleted).toBe(true);
-    expect(simulation.events.some((event) => event.type === "season-complete")).toBe(true);
+    expect(simulation.events.map((event) => event.type)).toEqual(["caught", "sold"]);
   });
 
   test("sells every fish in one market transaction", () => {

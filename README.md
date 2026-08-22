@@ -9,7 +9,7 @@ The playable game includes:
 - Two harbors with seeded daily quotes, seven-day price history, and full-quote sales
 - Cargo, engine, line, and five-tier reel-power upgrades, plus a rechargeable engine boost
 - Line-tier-gated Outer Gloam water and a paid Beach location
-- A five-step First Assignment, four-card How to play, credits, and an eight-sale season report
+- A five-step First Assignment, four-card How to play, and credits
 - Keyboard sailing and hook steering, keyboard/pointer/touch reeling, and pause on focus loss
 - Mute, volume, high contrast, reduced motion, and remappable controls
 - Version 12 validated persistence and a local-safe CrazyGames SDK v3 adapter
