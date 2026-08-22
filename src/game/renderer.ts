@@ -85,6 +85,11 @@ import {
   objectiveIndicatorOpacity,
   type ObjectiveIndicatorDirection,
 } from "./objectiveIndicator";
+import {
+  containedSpriteSize,
+  fishAtlasCellAspect,
+  fishSpriteDestination,
+} from "./fishSpriteLayout";
 import { captureSurfaceLayer, drawWaterContact } from "./surfaceEffects";
 
 export interface RenderSettings {
@@ -143,6 +148,27 @@ const FISH_SPRITE_CELLS: Record<FishSpecies, { sheet: FishSheetId; row: number }
   snapper: { sheet: "beachReef", row: 0 },
   yellowtailKingfish: { sheet: "beachReef", row: 1 },
   mulloway: { sheet: "beachReef", row: 2 },
+};
+
+const FISH_DRAW_SIZE: Record<FishSpecies, number> = {
+  bluegill: 1.05,
+  yellowPerch: 1.14,
+  emeraldShiner: 1.46,
+  northernPike: 1.56,
+  largemouthBass: 1.12,
+  bowfin: 1.44,
+  lakeTrout: 1.34,
+  burbot: 1.46,
+  lakeSturgeon: 1.56,
+  seaMullet: 1.5,
+  yellowfinBream: 1.08,
+  sandWhiting: 1.58,
+  duskyFlathead: 1.62,
+  luderick: 1.08,
+  easternAustralianSalmon: 1.45,
+  snapper: 1.18,
+  yellowtailKingfish: 1.58,
+  mulloway: 1.5,
 };
 
 // Center of the visible hook-and-arc paint inside each 192 × 256 authored atlas cell.
@@ -1627,6 +1653,7 @@ export class CanvasRenderer {
     const guideY = Math.max(18, Math.min(surfaceY * 0.14, 42));
     const portraitWidth = clamp(guideWidth * 0.56, 110, 160);
     const portraitHeight = portraitWidth * 0.58;
+    const portrait = containedSpriteSize(portraitWidth, portraitHeight, this.fishCellAspect(species));
 
     context.save();
     context.shadowColor = "rgba(2, 10, 18, 0.86)";
@@ -1636,8 +1663,8 @@ export class CanvasRenderer {
       0,
       guideX + guideWidth / 2,
       guideY + portraitHeight / 2,
-      portraitWidth,
-      portraitHeight,
+      portrait.width,
+      portrait.height,
     );
 
     const textY = guideY + portraitHeight + 8;
@@ -1651,32 +1678,15 @@ export class CanvasRenderer {
 
   private fishDimensions(species: FishSpecies, width: number, height: number): { fishWidth: number; fishHeight: number } {
     const fish = FISH[species];
-    const scale = clamp(Math.min(width, height) * 0.105, 54, 92) * fish.scale;
-    const proportions: Record<FishSpecies, readonly [number, number]> = {
-      bluegill: [1.05, 1],
-      yellowPerch: [1.14, 0.95],
-      emeraldShiner: [1.46, 0.72],
-      northernPike: [1.56, 0.7],
-      largemouthBass: [1.12, 0.96],
-      bowfin: [1.44, 0.76],
-      lakeTrout: [1.34, 0.82],
-      burbot: [1.46, 0.76],
-      lakeSturgeon: [1.56, 0.7],
-      seaMullet: [1.5, 0.68],
-      yellowfinBream: [1.08, 0.98],
-      sandWhiting: [1.58, 0.62],
-      duskyFlathead: [1.62, 0.6],
-      luderick: [1.08, 0.98],
-      easternAustralianSalmon: [1.45, 0.72],
-      snapper: [1.18, 0.9],
-      yellowtailKingfish: [1.58, 0.66],
-      mulloway: [1.5, 0.72],
-    };
-    const [widthRatio, heightRatio] = proportions[species];
-    return {
-      fishWidth: scale * widthRatio,
-      fishHeight: scale * heightRatio,
-    };
+    const scale = clamp(Math.min(width, height) * 0.105, 54, 92) * fish.scale * FISH_DRAW_SIZE[species];
+    return fishSpriteDestination(scale, this.fishCellAspect(species));
+  }
+
+  private fishCellAspect(species: FishSpecies): number {
+    const art = this.art;
+    if (!art) return 1;
+    const atlas = art.fish[FISH_SPRITE_CELLS[species].sheet];
+    return fishAtlasCellAspect(atlas.width, atlas.height);
   }
 
   private drawFishCell(species: FishSpecies, animationFrame: number, x: number, y: number, width: number, height: number): void {
