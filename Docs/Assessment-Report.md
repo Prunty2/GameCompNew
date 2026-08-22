@@ -20,7 +20,7 @@ The completed vertical slice contains:
 
 - one lake and one unlockable Beach, each with two harbors and three fishing grounds
 - eighteen real species (nine freshwater, nine south-eastern Australian coastal)
-- cargo, engine, and line upgrades, plus a rechargeable boost and Beach access; line tier 3 unlocks Outer Gloam
+- cargo, engine, and line upgrades, plus a rechargeable boost and Beach access; Beach middle/right grounds require line tiers 3/4
 - deterministic reel-and-release fish fights with line tension, fish stamina, rarity scaling, and break recovery
 - seeded daily quotes, seven-day history, and freshness-adjusted sales
 - a five-step First Assignment, four-card How to play, credits, and an eight-sale season report
@@ -95,11 +95,11 @@ flowchart LR
 
 ### World
 
-| Site | Region | Line | Lake residents | Beach residents |
-| --- | --- | --- | --- | --- |
-| Sunward Shoal | Brindle Coast | T0 | Bluegill, Yellow Perch, Emerald Shiner | Sea Mullet, Yellowfin Bream, Sand Whiting |
-| Mosswater Pool | Mosswater Reach | T1 | Northern Pike, Largemouth Bass, Bowfin | Dusky Flathead, Luderick, Eastern Australian Salmon |
-| Outer Gloam | Violet Gloam | T3 | Lake Trout, Burbot, Lake Sturgeon | Snapper, Yellowtail Kingfish, Mulloway |
+| Site | Region | Lake line | Beach line | Lake residents | Beach residents |
+| --- | --- | --- | --- | --- | --- |
+| Sunward Shoal | Brindle Coast | T0 | T0 | Bluegill, Yellow Perch, Emerald Shiner | Sea Mullet, Yellowfin Bream, Sand Whiting |
+| Mosswater Pool | Mosswater Reach | T1 | T3 | Northern Pike, Largemouth Bass, Bowfin | Dusky Flathead, Luderick, Eastern Australian Salmon |
+| Outer Gloam | Violet Gloam | T3 | T4 | Lake Trout, Burbot, Lake Sturgeon | Snapper, Yellowtail Kingfish, Mulloway |
 
 Beach reuses the same spot names and world X positions. Reloading always restores the lake at Brindle; world, cargo, and time of day are not saved.
 
@@ -109,7 +109,7 @@ Beach reuses the same spot names and world X positions. Reloading always restore
 | --- | --- |
 | Cargo (7 tiers, 3→10 slots) | Carry more before docking |
 | Engine (6 tiers) | Faster crossings, less freshness loss |
-| Line (6 tiers) | Reach deeper bands; tier 3 unlocks Outer Gloam |
+| Line (6 tiers) | Reach deeper bands; Beach middle/right require tiers 3/4 |
 | Engine boost (300 shells) | Hold Boost for a short overclock that overheats |
 | Beach (120 shells) | Travel to the coastal map |
 

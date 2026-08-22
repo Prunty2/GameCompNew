@@ -382,7 +382,7 @@ export class CanvasRenderer {
     for (const [spotIndex, spot] of FISHING_SPOTS.entries()) {
       const x = worldToScreenX(spot.x, camera, width);
       if (!isNearScreen(x, width, 260)) continue;
-      const depthLocked = spot.requiredDepthTier > simulation.progress.upgrades.line;
+      const depthLocked = spot.requiredDepthTier[simulation.world] > simulation.progress.upgrades.line;
       const cue = surfaceFishingCue(simulation.boat.x, spot.x, BALANCE.fishingRadius);
       this.drawSurfaceFishingGround({
         spotIndex,
@@ -951,7 +951,7 @@ export class CanvasRenderer {
       for (const [spotIndex, spot] of FISHING_SPOTS.entries()) {
         const x = worldToScreenX(spot.x, camera, width);
         if (!isNearScreen(x, width, 260)) continue;
-        const depthLocked = spot.requiredDepthTier > simulation.progress.upgrades.line;
+        const depthLocked = spot.requiredDepthTier[simulation.world] > simulation.progress.upgrades.line;
         const cue = surfaceFishingCue(simulation.boat.x, spot.x, BALANCE.fishingRadius);
         this.drawSurfaceFishingGround({
           spotIndex,

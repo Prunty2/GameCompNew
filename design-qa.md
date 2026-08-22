@@ -9,7 +9,7 @@ This file describes the playable presentation in `v0.4.3`. It replaces earlier Q
 - **Market catalogue.** Nine cards. Undiscovered cards are darkened with a `?`. Discovered cards show species art, name, price, optional cargo count, and a tracking badge.
 - **Market detail.** Species art, current-harbor price, Track, Sell, 7-day graph. No “Found at”, no supply pill, no second-harbor column.
 - **Cargo.** Up to ten slots. Occupied slots can be released. Locked slots open Services.
-- **Services.** Cargo, Engine, Line, Engine boost, and Beach. Fishing-line tier 3 unlocks Outer Gloam.
+- **Services.** Cargo, Engine, Line, Engine boost, and Beach. The Beach middle and far-right grounds require fishing-line tiers 3 and 4.
 - **Pause.** Compact centred menu: Resume, Settings, How to play, Title screen. Lake behind the menu is blurred.
 - **Settings / Controls.** Mute, volume, high contrast, reduced motion, seven remappable actions.
 - **Credits.** Liam, Saxon, Harrison, David, each with a decorative flag on hover.

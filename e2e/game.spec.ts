@@ -319,7 +319,7 @@ test("upgrade tutorial walks through Upgrades after the player can afford one", 
   await expect(tutorial).toBeHidden();
 });
 
-test("Gloam upgrades put Outer Gloam access on fishing-line tier 3", async ({ page }) => {
+test("Lake upgrades show its middle and far-right fishing-line tiers", async ({ page }) => {
   await page.goto("/?e2e=1");
   await page.getByRole("button", { name: "Play", exact: true }).click();
   await page.getByRole("button", { name: "Close tutorial" }).click();
@@ -330,8 +330,53 @@ test("Gloam upgrades put Outer Gloam access on fishing-line tier 3", async ({ pa
 
   await expect(page.getByRole("heading", { name: "Outer permit" })).toHaveCount(0);
   const lineCard = page.locator(".service-card").filter({ hasText: "Fishing line" });
-  await expect(lineCard).toContainText("Outer at tier 3");
+  await expect(lineCard).toContainText("Middle tier 1 · far right tier 3");
   await expect(page.locator(".service-grid .service-card")).toHaveCount(3);
+});
+
+test("Beach fishing requires line tier 3 in the middle and tier 4 at the far right", async ({ page }) => {
+  await page.goto("/?e2e=1");
+  await page.evaluate(() => {
+    window.localStorage.setItem("gamecomp-new.save", JSON.stringify({
+      version: 11,
+      progress: {
+        money: 1_000,
+        upgrades: { line: 2 },
+        beachUnlocked: true,
+        marketTutorialStep: "done",
+        upgradeTutorialStep: "done",
+      },
+      settings: {},
+    }));
+  });
+  await page.reload();
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.getByRole("button", { name: "Upgrades", exact: true }).click();
+  await page.getByRole("button", { name: "Travel to Beach" }).click();
+
+  await page.evaluate(() => window.__FSHING_TEST__?.sailToSpot("mosswaterPool"));
+  await expect(page.getByRole("button", { name: "Line tier 3 required · Mosswater Pool" })).toBeDisabled();
+
+  await page.evaluate(() => window.__FSHING_TEST__?.sailToHarbor("brindle"));
+  await page.getByRole("button", { name: "Dock · Brindle Harbor" }).click();
+  await page.getByRole("button", { name: "Upgrades", exact: true }).click();
+  const lineCard = page.locator(".service-card").filter({ hasText: "Fishing line" });
+  await expect(lineCard).toContainText("Middle tier 3 · far right tier 4");
+  await lineCard.locator('[data-action="buy-upgrade"]').click();
+  await page.locator('[data-action="undock"]').click();
+
+  await page.evaluate(() => window.__FSHING_TEST__?.sailToSpot("mosswaterPool"));
+  await expect(page.getByRole("button", { name: "Drop line · Mosswater Pool" })).toBeEnabled();
+  await page.evaluate(() => window.__FSHING_TEST__?.sailToSpot("outerGloam"));
+  await expect(page.getByRole("button", { name: "Line tier 4 required · Outer Gloam" })).toBeDisabled();
+
+  await page.evaluate(() => window.__FSHING_TEST__?.sailToHarbor("gloam"));
+  await page.getByRole("button", { name: "Dock · Gloam Ferry" }).click();
+  await page.getByRole("button", { name: "Upgrades", exact: true }).click();
+  await page.locator(".service-card").filter({ hasText: "Fishing line" }).locator('[data-action="buy-upgrade"]').click();
+  await page.locator('[data-action="undock"]').click();
+  await page.evaluate(() => window.__FSHING_TEST__?.sailToSpot("outerGloam"));
+  await expect(page.getByRole("button", { name: "Drop line · Outer Gloam" })).toBeEnabled();
 });
 
 test("hides direction guidance unless a fish is tracked or the first assignment is active", async ({ page }) => {

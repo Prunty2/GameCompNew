@@ -39,7 +39,7 @@ export interface FishingSpotDefinition extends WorldPoint {
   id: SpotId;
   name: string;
   species: FishSpecies;
-  requiredDepthTier: number;
+  requiredDepthTier: Readonly<Record<WorldId, number>>;
   region: RegionId;
 }
 
@@ -201,9 +201,9 @@ export const FISH: Record<FishSpecies, FishDefinition> = {
 };
 
 export const FISHING_SPOTS: readonly FishingSpotDefinition[] = [
-  { id: "sunwardShoal", name: "Sunward Shoal", species: "bluegill", requiredDepthTier: 0, region: "brindleCoast", x: 0.18, y: SURFACE_Y },
-  { id: "mosswaterPool", name: "Mosswater Pool", species: "largemouthBass", requiredDepthTier: 1, region: "mosswaterReach", x: 0.5, y: SURFACE_Y },
-  { id: "outerGloam", name: "Outer Gloam", species: "lakeTrout", requiredDepthTier: 3, region: "violetGloam", x: 0.82, y: SURFACE_Y },
+  { id: "sunwardShoal", name: "Sunward Shoal", species: "bluegill", requiredDepthTier: { lake: 0, beach: 0 }, region: "brindleCoast", x: 0.18, y: SURFACE_Y },
+  { id: "mosswaterPool", name: "Mosswater Pool", species: "largemouthBass", requiredDepthTier: { lake: 1, beach: 3 }, region: "mosswaterReach", x: 0.5, y: SURFACE_Y },
+  { id: "outerGloam", name: "Outer Gloam", species: "lakeTrout", requiredDepthTier: { lake: 3, beach: 4 }, region: "violetGloam", x: 0.82, y: SURFACE_Y },
 ];
 
 export const SPOT_RESIDENTS: Record<SpotId, readonly FishSpecies[]> = {
