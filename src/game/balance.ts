@@ -39,7 +39,6 @@ export interface FishingSpotDefinition extends WorldPoint {
   id: SpotId;
   name: string;
   species: FishSpecies;
-  requiresPermit: boolean;
   requiredDepthTier: number;
   region: RegionId;
 }
@@ -111,7 +110,6 @@ export const BALANCE = {
   fishingCriticalTension: 0.9,
   fishingBreakGraceSeconds: 0.7,
   upgradeCosts: { cargo: 60, engine: 70, line: 55 },
-  permitCost: 85,
   beachAccessCost: 120,
   boostUnlockCost: 300,
   boostSpeedMultiplier: 1.35,
@@ -203,9 +201,9 @@ export const FISH: Record<FishSpecies, FishDefinition> = {
 };
 
 export const FISHING_SPOTS: readonly FishingSpotDefinition[] = [
-  { id: "sunwardShoal", name: "Sunward Shoal", species: "bluegill", requiresPermit: false, requiredDepthTier: 0, region: "brindleCoast", x: 0.18, y: SURFACE_Y },
-  { id: "mosswaterPool", name: "Mosswater Pool", species: "largemouthBass", requiresPermit: false, requiredDepthTier: 1, region: "mosswaterReach", x: 0.5, y: SURFACE_Y },
-  { id: "outerGloam", name: "Outer Gloam", species: "lakeTrout", requiresPermit: true, requiredDepthTier: 3, region: "violetGloam", x: 0.82, y: SURFACE_Y },
+  { id: "sunwardShoal", name: "Sunward Shoal", species: "bluegill", requiredDepthTier: 0, region: "brindleCoast", x: 0.18, y: SURFACE_Y },
+  { id: "mosswaterPool", name: "Mosswater Pool", species: "largemouthBass", requiredDepthTier: 1, region: "mosswaterReach", x: 0.5, y: SURFACE_Y },
+  { id: "outerGloam", name: "Outer Gloam", species: "lakeTrout", requiredDepthTier: 3, region: "violetGloam", x: 0.82, y: SURFACE_Y },
 ];
 
 export const SPOT_RESIDENTS: Record<SpotId, readonly FishSpecies[]> = {

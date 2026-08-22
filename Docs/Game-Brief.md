@@ -11,7 +11,7 @@ FSHING is a single-player side-on fishing market game for desktop and mobile bro
 3. Sail to that species' fishing ground. Slow down until the hook cue appears, then drop the line.
 4. Steer the hook onto a reachable fish. Hold left click on the water (or touch / the Reel key) to pull it closer, then release during struggle bursts or critical line tension. Landed catches reach the boat at 100% freshness.
 5. Freshness falls while the simulation is running. Dock at the harbor that currently pays more and sell every fresh catch of that species.
-6. Spend shells on cargo, engine, line, boost, the Outer Gloam permit, or Beach access.
+6. Spend shells on cargo, engine, line, boost, or Beach access. Fishing-line tier 3 unlocks Outer Gloam.
 
 A new save starts docked at Brindle Harbor on the lake with Bluegill already discovered. The first run is a four-step **First Assignment** that walks through inspect → track → catch → sell. Each tutorial pill includes a short instruction that changes with the player's current screen and, during the catch, explains left-click reeling, releasing on fish pulls or critical tension, and resuming after tension falls. The sale ends that assignment. When the player can afford a dock upgrade, a second tutorial walks through Upgrades.
 
@@ -53,13 +53,11 @@ Side-on freshwater chart with Brindle Harbor at the left and Gloam Ferry at the 
 
 Paid unlock (120 shells) from Upgrades. Travel is immediate and undocks the boat. The Beach reuses lake spot names and layout, and swaps panorama, pier, underwater paintings, fish, and market art.
 
-| Spot id | Display name | x | Line tier | Permit | Lake residents | Beach residents |
-| --- | --- | --- | --- | --- | --- | --- |
-| `sunwardShoal` | Sunward Shoal | 0.18 | 0 | no | Bluegill, Yellow Perch, Emerald Shiner | Sea Mullet, Yellowfin Bream, Sand Whiting |
-| `mosswaterPool` | Mosswater Pool | 0.50 | 1 | no | Northern Pike, Largemouth Bass, Bowfin | Dusky Flathead, Luderick, Eastern Australian Salmon |
-| `outerGloam` | Outer Gloam | 0.82 | 3 | yes | Lake Trout, Burbot, Lake Sturgeon | Snapper, Yellowtail Kingfish, Mulloway |
-
-Outer Gloam also requires the Outer permit (85 shells, sold only at Gloam Ferry).
+| Spot id | Display name | x | Line tier | Lake residents | Beach residents |
+| --- | --- | --- | --- | --- | --- |
+| `sunwardShoal` | Sunward Shoal | 0.18 | 0 | Bluegill, Yellow Perch, Emerald Shiner | Sea Mullet, Yellowfin Bream, Sand Whiting |
+| `mosswaterPool` | Mosswater Pool | 0.50 | 1 | Northern Pike, Largemouth Bass, Bowfin | Dusky Flathead, Luderick, Eastern Australian Salmon |
+| `outerGloam` | Outer Gloam | 0.82 | 3 | Lake Trout, Burbot, Lake Sturgeon | Snapper, Yellowtail Kingfish, Mulloway |
 
 Harbors:
 
@@ -172,7 +170,6 @@ Costs are `base + currentTier × 55` shells.
 | Fishing line | 55 | 6 | Deeper hook limit and +12% fight strength per tier; Mosswater needs tier 1, Outer Gloam needs tier 3 |
 | Engine boost | 300 | one-time | Hold Boost while moving. Overheats, then cools |
 | Beach | 120 | one-time | Unlock travel to the coastal map |
-| Outer permit | 85 | one-time | Outer Gloam access. Gloam Ferry only |
 
 Cargo, Engine, and Line depth are stacked vertically as compact tier cards. Beach and Engine boost are presented as two larger feature cards side by side beneath them. Each uses a unique generated pictogram matching the rest of the harbor icon set so the destination and ability read distinctly at a glance.
 
@@ -231,9 +228,9 @@ The in-fishing “W A S D MOVE HOOK” cue presents all four movement keys in on
 
 ## Persistence
 
-Save key `gamecomp-new.save`. Schema version **10**. Storage is CrazyGames `sdk.data` when the SDK initializes, otherwise `localStorage`. Malformed JSON becomes a new save.
+Save key `gamecomp-new.save`. Schema version **11**. Storage is CrazyGames `sdk.data` when the SDK initializes, otherwise `localStorage`. Malformed JSON becomes a new save.
 
-Saved: money, upgrade tiers, outer/beach/boost unlocks, discovered species, market day/sales/earnings/target, first-assignment and upgrade tutorial steps, season-complete flag, leftover learning counters, and settings (mute, volume, contrast, reduced motion, bindings).
+Saved: money, upgrade tiers, beach/boost unlocks, discovered species, market day/sales/earnings/target, first-assignment and upgrade tutorial steps, season-complete flag, leftover learning counters, and settings (mute, volume, contrast, reduced motion, bindings). Version 11 ignores the retired `outerUnlocked` field from older saves; existing line tiers are preserved, and tier 3 remains the Outer Gloam unlock.
 
 Not saved: world, cargo, elapsed time, boat pose, damage, boost heat, docked harbor.
 
@@ -271,7 +268,7 @@ CrazyGames HTML5 SDK v3 is loaded from the page. Local play works if the script 
 | `src/game/objectiveIndicator.ts` | Destination badge layout |
 | `src/game/quest.ts` | First-assignment and upgrade tutorial presentation |
 | `src/game/stem.ts` | Habitat readings and leftover survey/route helpers |
-| `src/services/saveGame.ts` | Version 10 validation and migration |
+| `src/services/saveGame.ts` | Version 11 validation and migration |
 | `src/services/platformService.ts` | CrazyGames boundary |
 | `src/services/feedbackService.ts` | Synthesized audio and optional vibration |
 
@@ -299,7 +296,7 @@ A build matches this brief when:
 - A new save can complete First Assignment: inspect Bluegill, track, catch at Sunward Shoal, sell
 - Market lists nine species for the current world, with undiscovered cards locked
 - Quotes differ by harbor and day, and selling pays freshness-adjusted shells
-- Line tier and Outer permit gate Mosswater Pool and Outer Gloam
+- Line tier gates Mosswater Pool at tier 1 and Outer Gloam at tier 3
 - Beach unlock swaps coastal fish and art, then travel returns to the lake
 - Keyboard sailing, hook steering, pause, mute, high contrast, and reduced motion work
 - Reloading keeps money, unlocks, discoveries, tutorial completion, and settings

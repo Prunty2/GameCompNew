@@ -319,6 +319,21 @@ test("upgrade tutorial walks through Upgrades after the player can afford one", 
   await expect(tutorial).toBeHidden();
 });
 
+test("Gloam upgrades put Outer Gloam access on fishing-line tier 3", async ({ page }) => {
+  await page.goto("/?e2e=1");
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.getByRole("button", { name: "Close tutorial" }).click();
+  await page.locator('[data-action="undock"]').click();
+  await page.evaluate(() => window.__FSHING_TEST__?.sailToHarbor("gloam"));
+  await page.getByRole("button", { name: "Dock · Gloam Ferry" }).click();
+  await page.getByRole("button", { name: "Upgrades", exact: true }).click();
+
+  await expect(page.getByRole("heading", { name: "Outer permit" })).toHaveCount(0);
+  const lineCard = page.locator(".service-card").filter({ hasText: "Fishing line" });
+  await expect(lineCard).toContainText("Outer at tier 3");
+  await expect(page.locator(".service-grid .service-card")).toHaveCount(3);
+});
+
 test("hides direction guidance unless a fish is tracked or the first assignment is active", async ({ page }) => {
   await page.goto("/?e2e=1");
   await page.getByRole("button", { name: "Play", exact: true }).click();
@@ -443,7 +458,7 @@ test("Beach market lists, prices, and tracks coastal fish with coastal artwork",
   await page.goto("/?e2e=1");
   await page.evaluate(() => {
     window.localStorage.setItem("gamecomp-new.save", JSON.stringify({
-      version: 10,
+      version: 11,
       progress: {
         money: 0,
         upgrades: {},
