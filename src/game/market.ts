@@ -42,9 +42,6 @@ export interface MarketHistoryPoint {
 export interface MarketSalePreview {
   species: FishSpecies;
   quantity: number;
-  averageFreshness: number;
-  wholeFishValue: number;
-  freshnessLoss: number;
   total: number;
 }
 
@@ -191,19 +188,11 @@ export function salePreview(
   species: FishSpecies,
   wholeFishQuote: number,
 ): MarketSalePreview {
-  const catches = cargo.filter((item) => item.species === species && item.freshness > 0);
-  const wholeFishValue = wholeFishQuote * catches.length;
-  const total = catches.reduce((sum, item) => sum + catchSaleValue(wholeFishQuote, item.freshness), 0);
-  const averageFreshness = catches.length === 0
-    ? 0
-    : catches.reduce((sum, item) => sum + item.freshness, 0) / catches.length;
+  const catches = cargo.filter((item) => item.species === species);
   return {
     species,
     quantity: catches.length,
-    averageFreshness: Math.round(averageFreshness),
-    wholeFishValue,
-    freshnessLoss: wholeFishValue - total,
-    total,
+    total: wholeFishQuote * catches.length,
   };
 }
 
@@ -214,20 +203,12 @@ export function bulkSalePreview(
   seed: number,
 ): MarketBulkSalePreview {
   return cargo.reduce<MarketBulkSalePreview>((preview, item) => {
-    if (item.freshness <= 0) return preview;
     const quote = marketQuote(item.species, harbor, day, seed);
     return {
       quantity: preview.quantity + 1,
-      total: preview.total + catchSaleValue(quote.price, item.freshness),
+      total: preview.total + quote.price,
     };
   }, { quantity: 0, total: 0 });
-}
-
-export function catchSaleValue(wholeFishQuote: number, freshness: number): number {
-  if (freshness <= 0) return 0;
-  const safeFreshness = Math.max(0, Math.min(100, freshness));
-  const freshnessFactor = 0.25 + 0.75 * (safeFreshness / 100);
-  return Math.max(1, Math.round(wholeFishQuote * freshnessFactor));
 }
 
 export function spotForSpecies(species: FishSpecies): (typeof FISHING_SPOTS)[number] {

@@ -548,7 +548,7 @@ test("market uses a scrollable fish-card grid and a focused detail view", async 
   await sellAllButton.click();
   await expect(page.locator("#delivery-notification")).toContainText("Sold, 3 fish");
   await expect(page.locator(".market-cargo-count")).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "No fresh fish to sell" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "No fish to sell" })).toBeDisabled();
   const scrollState = await list.evaluate((element) => ({
     clientHeight: element.clientHeight,
     scrollHeight: element.scrollHeight,

@@ -521,12 +521,6 @@
   transform: translateX(-6px);
 }
 
-.harbor-screen.is-first-voyage.is-harbor-delivery .job-route-icon.job-route-freshness-icon {
-  width: 88px;
-  height: 88px;
-  margin: 0;
-}
-
 .harbor-screen.is-first-voyage.is-harbor-delivery .job-route-deliver-icon {
   width: 96px;
   height: 96px;
@@ -1332,12 +1326,6 @@
 
   .harbor-screen.is-first-voyage.is-harbor-delivery .job-route-fish {
     transform: translateX(-2px);
-  }
-
-  .harbor-screen.is-first-voyage.is-harbor-delivery .job-route-icon.job-route-freshness-icon {
-    width: 48px;
-    height: 48px;
-    margin-block: 1px -1px;
   }
 
   .harbor-screen.is-first-voyage.is-harbor-delivery .harbor-content .job-route li {

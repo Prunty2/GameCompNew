@@ -178,7 +178,6 @@ input:focus-visible {
 }
 
 .icon-cargo { background-position: 0 0; }
-.icon-freshness { background-position: 33.333% 0; }
 .icon-hull { background-position: 66.667% 0; }
 .icon-time { background-position: 100% 0; }
 .icon-shells { background-position: 0 33.333%; }

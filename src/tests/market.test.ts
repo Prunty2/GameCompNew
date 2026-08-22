@@ -4,7 +4,6 @@ import {
   MARKET_HISTORY_DAYS,
   MARKET_MAX_DAILY_CHANGE,
   bulkSalePreview,
-  catchSaleValue,
   marketHistory,
   marketQuote,
   salePreview,
@@ -43,38 +42,34 @@ describe("fish market", () => {
     expect(differences.length).toBeGreaterThanOrEqual(5);
   });
 
-  test("applies freshness per catch and excludes spoiled fish", () => {
+  test("prices every matching catch at the displayed quote", () => {
     const preview = salePreview([
-      { species: "bluegill", freshness: 100 },
-      { species: "bluegill", freshness: 50 },
-      { species: "bluegill", freshness: 0 },
-      { species: "yellowPerch", freshness: 100 },
+      { species: "bluegill" },
+      { species: "bluegill" },
+      { species: "bluegill" },
+      { species: "yellowPerch" },
     ], "bluegill", 20);
 
-    expect(catchSaleValue(20, 100)).toBe(20);
-    expect(catchSaleValue(20, 50)).toBe(13);
-    expect(catchSaleValue(20, 0)).toBe(0);
-    expect(preview).toMatchObject({
-      quantity: 2,
-      averageFreshness: 75,
-      wholeFishValue: 40,
-      freshnessLoss: 7,
-      total: 33,
+    expect(preview).toEqual({
+      species: "bluegill",
+      quantity: 3,
+      total: 60,
     });
   });
 
-  test("previews every fresh cargo item at its species quote", () => {
+  test("previews every cargo item at its species quote", () => {
     const cargo = [
-      { species: "bluegill" as const, freshness: 100 },
-      { species: "yellowPerch" as const, freshness: 50 },
-      { species: "lakeTrout" as const, freshness: 0 },
+      { species: "bluegill" as const },
+      { species: "yellowPerch" as const },
+      { species: "lakeTrout" as const },
     ];
     const preview = bulkSalePreview(cargo, "brindle", 3, 11);
 
     expect(preview).toEqual({
-      quantity: 2,
-      total: catchSaleValue(marketQuote("bluegill", "brindle", 3, 11).price, 100)
-        + catchSaleValue(marketQuote("yellowPerch", "brindle", 3, 11).price, 50),
+      quantity: 3,
+      total: marketQuote("bluegill", "brindle", 3, 11).price
+        + marketQuote("yellowPerch", "brindle", 3, 11).price
+        + marketQuote("lakeTrout", "brindle", 3, 11).price,
     });
   });
 
