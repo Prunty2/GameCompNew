@@ -82,6 +82,23 @@ export class MenuSeagulls {
   private animations: Animation[] = [];
   private readonly motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
   private settingReducedMotion = false;
+  private pageSuspended = false;
+
+  private readonly onWindowBlur = (): void => {
+    this.suspend();
+  };
+
+  private readonly onWindowFocus = (): void => {
+    this.resume();
+  };
+
+  private readonly onVisibilityChange = (): void => {
+    if (document.hidden) {
+      this.suspend();
+    } else {
+      this.resume();
+    }
+  };
 
   private readonly onMotionPreferenceChange = (): void => {
     if (this.motionQuery.matches) {
@@ -96,15 +113,23 @@ export class MenuSeagulls {
     this.stop();
     this.container = container;
     this.settingReducedMotion = settingReducedMotion;
+    this.pageSuspended = document.hidden;
     this.motionQuery.addEventListener("change", this.onMotionPreferenceChange);
+    window.addEventListener("blur", this.onWindowBlur);
+    window.addEventListener("focus", this.onWindowFocus);
+    document.addEventListener("visibilitychange", this.onVisibilityChange);
     if (!this.motionDisabled()) this.scheduleFlock(FIRST_FLOCK_DELAY_MS);
   }
 
   stop(): void {
     this.clearFlockTimer();
     this.motionQuery.removeEventListener("change", this.onMotionPreferenceChange);
+    window.removeEventListener("blur", this.onWindowBlur);
+    window.removeEventListener("focus", this.onWindowFocus);
+    document.removeEventListener("visibilitychange", this.onVisibilityChange);
     this.clearFlights();
     this.container = null;
+    this.pageSuspended = false;
   }
 
   private motionDisabled(): boolean {
@@ -118,12 +143,29 @@ export class MenuSeagulls {
   }
 
   private scheduleFlock(delayMs: number): void {
-    if (!this.container || this.motionDisabled() || this.flockTimer !== undefined) return;
+    if (
+      !this.container
+      || this.motionDisabled()
+      || this.pageSuspended
+      || this.flockTimer !== undefined
+    ) return;
     this.flockTimer = window.setTimeout(() => {
       this.flockTimer = undefined;
       this.releaseFlock();
       this.scheduleFlock(MIN_FLOCK_GAP_MS + Math.random() * FLOCK_GAP_VARIANCE_MS);
     }, delayMs);
+  }
+
+  private suspend(): void {
+    this.pageSuspended = true;
+    this.clearFlockTimer();
+    this.clearFlights();
+  }
+
+  private resume(): void {
+    if (!this.container || document.hidden) return;
+    this.pageSuspended = false;
+    this.scheduleFlock(FIRST_FLOCK_DELAY_MS);
   }
 
   private releaseFlock(): void {

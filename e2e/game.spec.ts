@@ -91,6 +91,21 @@ test("main menu seagulls stay still when reduced motion is requested", async ({ 
   await expect(page.locator(".menu-seagull-sky")).toHaveCSS("display", "none");
 });
 
+test("main menu seagulls do not build up while the page is unfocused", async ({ page }) => {
+  await page.goto("/");
+
+  const flocks = page.locator(".menu-seagull-flock");
+  await expect(flocks).toHaveCount(1, { timeout: 3_000 });
+
+  await page.evaluate(() => window.dispatchEvent(new Event("blur")));
+  await expect(flocks).toHaveCount(0);
+  await page.waitForTimeout(1_200);
+  await expect(flocks).toHaveCount(0);
+
+  await page.evaluate(() => window.dispatchEvent(new Event("focus")));
+  await expect(flocks).toHaveCount(1, { timeout: 3_000 });
+});
+
 test("credits lists the team and returns to the main menu", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Credits" }).click();
