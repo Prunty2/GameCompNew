@@ -12,6 +12,7 @@ import {
   reelSpeedMultiplier,
   regionSurfaceTintAt,
   spotById,
+  type FishSpecies,
 } from "../game/balance";
 import {
   FISHING_LOSS_DEPTH_TOLERANCE,
@@ -30,6 +31,7 @@ import {
   getInteractionPrompt,
   inspectMarketSpecies,
   interact,
+  isFishingTargetReachable,
   learningAccuracy,
   maxFishingDepth,
   moveBoatForTesting,
@@ -53,8 +55,13 @@ import {
   updateSimulation,
   type InputState,
 } from "../game/simulation";
-import { marketQuote, strongerHarborFor } from "../game/market";
-import { responsiveResidentCount } from "../game/fishingPopulation";
+import { marketAvailability, marketQuote, strongerHarborFor } from "../game/market";
+import {
+  BEACH_SUNWARD_POPULATION_BONUS,
+  DEFAULT_POPULATION_DENSITY_MULTIPLIER,
+  MOSSWATER_POPULATION_DENSITY_MULTIPLIER,
+  responsiveResidentCount,
+} from "../game/fishingPopulation";
 
 const idle: InputState = {
   travel: 0,
@@ -106,9 +113,11 @@ describe("FSHING side-on simulation", () => {
       "yellowPerch",
       "emeraldShiner",
       "whiteSucker",
+      "longnoseGar",
       "northernPike",
       "largemouthBass",
       "bowfin",
+      "cisco",
       "lakeTrout",
       "burbot",
       "lakeSturgeon",
@@ -614,10 +623,8 @@ describe("FSHING side-on simulation", () => {
     );
     expect(maxFishingDepth(simulation)).toBeCloseTo(0.425);
 
-    const deepTarget = simulation.fishing?.targets.find((target) => target.species === "largemouthBass");
-    expect(deepTarget?.y).toBeGreaterThan(maxFishingDepth(simulation));
     simulation.progress.upgrades.line = 5;
-    expect(maxFishingDepth(simulation)).toBeGreaterThanOrEqual(deepTarget?.y ?? 1);
+    expect(maxFishingDepth(simulation)).toBeCloseTo(0.925);
   });
 
   test("increases the deterministic catchable population for larger fishing viewports", () => {
@@ -649,6 +656,199 @@ describe("FSHING side-on simulation", () => {
 
   test("applies the thirty-percent fish-density reduction", () => {
     expect(responsiveResidentCount(10, { width: 1280, height: 720 })).toBe(7);
+  });
+
+  test("reduces Mosswater's population multiplier by thirty percent", () => {
+    expect(MOSSWATER_POPULATION_DENSITY_MULTIPLIER).toBe(0.7);
+    expect(responsiveResidentCount(10, { width: 1280, height: 720 }, 1)).toBe(10);
+    expect(responsiveResidentCount(
+      10,
+      { width: 1280, height: 720 },
+      MOSSWATER_POPULATION_DENSITY_MULTIPLIER,
+    )).toBe(7);
+  });
+
+  test("adds a stable two-fish bonus across Beach Sunward's smallest schools", () => {
+    expect(BEACH_SUNWARD_POPULATION_BONUS).toBe(2);
+    expect(DEFAULT_POPULATION_DENSITY_MULTIPLIER).toBe(0.7);
+    const availabilityCounts = { abundant: 3, normal: 2, scarce: 1 } as const;
+    const scenarios = [
+      { seed: 12, marketDay: 0, viewport: { width: 960, height: 540 } },
+      { seed: 18, marketDay: 3, viewport: { width: 1280, height: 720 } },
+      { seed: 27, marketDay: 8, viewport: { width: 2560, height: 1440 } },
+    ];
+
+    for (const { seed, marketDay, viewport } of scenarios) {
+      const simulation = createSimulation(seed);
+      simulation.world = "beach";
+      simulation.progress.marketDay = marketDay;
+      expect(startFishing(simulation, "sunwardShoal", viewport)).toBe(true);
+
+      const defaultCounts = BEACH_SPOT_RESIDENTS.sunwardShoal.map((species) => responsiveResidentCount(
+        availabilityCounts[marketAvailability(species, marketDay, seed)],
+        viewport,
+        DEFAULT_POPULATION_DENSITY_MULTIPLIER,
+      ));
+      const actualCounts = BEACH_SPOT_RESIDENTS.sunwardShoal.map((species) => (
+        simulation.fishing?.targets.filter((target) => target.species === species).length ?? 0
+      ));
+      const increments = actualCounts.map((count, index) => count - defaultCounts[index]);
+
+      expect(actualCounts.reduce((total, count) => total + count, 0)).toBe(
+        defaultCounts.reduce((total, count) => total + count, 0) + BEACH_SUNWARD_POPULATION_BONUS,
+      );
+      expect(increments.sort()).toEqual([0, 0, 1, 1]);
+    }
+  });
+
+  test("uses actual swimming depth for Mosswater reachability", () => {
+    const simulation = createSimulation(12);
+    simulation.progress.upgrades.line = 1;
+    expect(startFishing(simulation, "mosswaterPool")).toBe(true);
+    const bass = simulation.fishing?.targets.find((target) => target.species === "largemouthBass");
+    expect(bass).toBeDefined();
+    expect(FISH.largemouthBass.depthTier).toBe(2);
+    bass!.x = 0.5;
+    bass!.y = maxFishingDepth(simulation) - 0.01;
+    bass!.homeY = bass!.y;
+    simulation.fishing!.hook = { x: bass!.x, y: bass!.y };
+
+    expect(isFishingTargetReachable(simulation, bass!)).toBe(true);
+    updateSimulation(simulation, idle, 0);
+    expect(simulation.fishing?.reeling?.species).toBe("largemouthBass");
+  });
+
+  test("keeps Longnose Gar in Mosswater's surface band", () => {
+    const simulation = createSimulation(12);
+    simulation.progress.upgrades.line = 1;
+    expect(startFishing(simulation, "mosswaterPool", { width: 2048, height: 1152 })).toBe(true);
+    const gar = simulation.fishing?.targets.filter((target) => target.species === "longnoseGar") ?? [];
+
+    expect(gar.length).toBeGreaterThan(0);
+    expect(Math.min(...gar.map((target) => target.homeY))).toBeGreaterThanOrEqual(0.09);
+    expect(Math.max(...gar.map((target) => target.homeY))).toBeLessThanOrEqual(0.16);
+    expect(gar.every((target) => isFishingTargetReachable(simulation, target))).toBe(true);
+  });
+
+  test("steps Outer Gloam residents through the diagrammed depth bands", () => {
+    const simulation = createSimulation(12);
+    simulation.progress.upgrades.line = 3;
+    expect(startFishing(simulation, "outerGloam", { width: 2048, height: 1152 })).toBe(true);
+    const cisco = simulation.fishing?.targets.filter((target) => target.species === "cisco") ?? [];
+    const lakeTrout = simulation.fishing?.targets.filter((target) => target.species === "lakeTrout") ?? [];
+    const burbot = simulation.fishing?.targets.filter((target) => target.species === "burbot") ?? [];
+    const lakeSturgeon = simulation.fishing?.targets.filter((target) => target.species === "lakeSturgeon") ?? [];
+
+    expect(cisco.length).toBeGreaterThan(0);
+    expect(lakeTrout.length).toBeGreaterThan(0);
+    expect(burbot.length).toBeGreaterThan(0);
+    expect(lakeSturgeon.length).toBeGreaterThan(0);
+    expect(Math.min(...cisco.map((target) => target.homeY))).toBeGreaterThanOrEqual(0.1);
+    expect(Math.max(...cisco.map((target) => target.homeY))).toBeLessThanOrEqual(0.18);
+    expect(Math.min(...lakeTrout.map((target) => target.homeY))).toBeGreaterThanOrEqual(0.25);
+    expect(Math.max(...lakeTrout.map((target) => target.homeY))).toBeLessThanOrEqual(0.39);
+    expect(Math.min(...burbot.map((target) => target.homeY))).toBeGreaterThanOrEqual(0.5);
+    expect(Math.max(...burbot.map((target) => target.homeY))).toBeLessThanOrEqual(0.6);
+    expect(Math.min(...lakeSturgeon.map((target) => target.homeY))).toBeGreaterThan(0.675);
+    expect([...cisco, ...lakeTrout, ...burbot].every((target) => (
+      isFishingTargetReachable(simulation, target)
+    ))).toBe(true);
+    expect(lakeSturgeon.every((target) => !isFishingTargetReachable(simulation, target))).toBe(true);
+  });
+
+  test("steps Beach Outer Gloam residents through the diagrammed depth bands", () => {
+    const simulation = createSimulation(12);
+    simulation.world = "beach";
+    simulation.progress.upgrades.line = 4;
+    expect(startFishing(simulation, "outerGloam", { width: 2048, height: 1152 })).toBe(true);
+    const snapper = simulation.fishing?.targets.filter((target) => target.species === "snapper") ?? [];
+    const kingfish = simulation.fishing?.targets.filter((target) => (
+      target.species === "yellowtailKingfish"
+    )) ?? [];
+    const mulloway = simulation.fishing?.targets.filter((target) => target.species === "mulloway") ?? [];
+
+    expect(snapper.length).toBeGreaterThan(0);
+    expect(kingfish.length).toBeGreaterThan(0);
+    expect(mulloway.length).toBeGreaterThan(0);
+    expect(Math.min(...snapper.map((target) => target.homeY))).toBeGreaterThanOrEqual(0.16);
+    expect(Math.max(...snapper.map((target) => target.homeY))).toBeLessThanOrEqual(0.28);
+    expect(Math.min(...kingfish.map((target) => target.homeY))).toBeGreaterThanOrEqual(0.46);
+    expect(Math.max(...kingfish.map((target) => target.homeY))).toBeLessThanOrEqual(0.58);
+    expect([...snapper, ...kingfish].every((target) => isFishingTargetReachable(simulation, target))).toBe(true);
+    expect(Math.max(...mulloway.map((target) => target.homeY))).toBeGreaterThan(maxFishingDepth(simulation));
+  });
+
+  test("orders Beach Sunward residents vertically by value and keeps Flounder ultra-low", () => {
+    const simulation = createSimulation(12);
+    simulation.world = "beach";
+    expect(startFishing(simulation, "sunwardShoal", { width: 2048, height: 1152 })).toBe(true);
+    const targetsFor = (species: FishSpecies) => (
+      simulation.fishing?.targets.filter((target) => target.species === species) ?? []
+    );
+    const mullet = targetsFor("seaMullet");
+    const bream = targetsFor("yellowfinBream");
+    const whiting = targetsFor("sandWhiting");
+    const flounder = targetsFor("largetoothFlounder");
+
+    expect([mullet, bream, whiting, flounder].every((targets) => targets.length > 0)).toBe(true);
+    expect(Math.min(...mullet.map((target) => target.homeY))).toBeGreaterThanOrEqual(0.1);
+    expect(Math.max(...mullet.map((target) => target.homeY))).toBeLessThanOrEqual(0.17);
+    expect(Math.min(...bream.map((target) => target.homeY))).toBeGreaterThanOrEqual(0.22);
+    expect(Math.max(...bream.map((target) => target.homeY))).toBeLessThanOrEqual(0.29);
+    expect(Math.min(...whiting.map((target) => target.homeY))).toBeGreaterThanOrEqual(0.35);
+    expect(Math.max(...whiting.map((target) => target.homeY))).toBeLessThanOrEqual(0.42);
+    expect(Math.min(...flounder.map((target) => target.homeY))).toBeGreaterThanOrEqual(0.72);
+    expect(Math.max(...flounder.map((target) => target.homeY))).toBeLessThanOrEqual(0.79);
+
+    const orderedSpecies = ["seaMullet", "yellowfinBream", "sandWhiting", "largetoothFlounder"] as const;
+    for (let index = 1; index < orderedSpecies.length; index += 1) {
+      const shallower = targetsFor(orderedSpecies[index - 1]!);
+      const deeper = targetsFor(orderedSpecies[index]!);
+      expect(FISH[orderedSpecies[index]!].value).toBeGreaterThan(FISH[orderedSpecies[index - 1]!].value);
+      expect(Math.min(...deeper.map((target) => target.homeY))).toBeGreaterThan(
+        Math.max(...shallower.map((target) => target.homeY)),
+      );
+    }
+
+    expect([...mullet, ...bream].every((target) => isFishingTargetReachable(simulation, target))).toBe(true);
+    expect([...whiting, ...flounder].every((target) => !isFishingTargetReachable(simulation, target))).toBe(true);
+    simulation.progress.upgrades.line = 4;
+    expect([...mullet, ...bream, ...whiting, ...flounder].every((target) => (
+      isFishingTargetReachable(simulation, target)
+    ))).toBe(true);
+  });
+
+  test("steps Beach Mosswater residents down through the annotated bay bands", () => {
+    const simulation = createSimulation(12);
+    simulation.world = "beach";
+    simulation.progress.upgrades.line = 3;
+    expect(startFishing(simulation, "mosswaterPool", { width: 2048, height: 1152 })).toBe(true);
+    const luderick = simulation.fishing?.targets.filter((target) => target.species === "luderick") ?? [];
+    const salmon = simulation.fishing?.targets.filter((target) => (
+      target.species === "easternAustralianSalmon"
+    )) ?? [];
+    const flathead = simulation.fishing?.targets.filter((target) => target.species === "duskyFlathead") ?? [];
+    const perch = simulation.fishing?.targets.filter((target) => target.species === "estuaryPerch") ?? [];
+
+    expect(luderick.length).toBeGreaterThan(0);
+    expect(salmon.length).toBeGreaterThan(0);
+    expect(flathead.length).toBeGreaterThan(0);
+    expect(perch.length).toBeGreaterThan(0);
+    expect(Math.min(...luderick.map((target) => target.homeY))).toBeGreaterThanOrEqual(0.14);
+    expect(Math.max(...luderick.map((target) => target.homeY))).toBeLessThanOrEqual(0.26);
+    expect(Math.min(...salmon.map((target) => target.homeY))).toBeGreaterThanOrEqual(0.34);
+    expect(Math.max(...salmon.map((target) => target.homeY))).toBeLessThanOrEqual(0.46);
+    expect(Math.min(...flathead.map((target) => target.homeY))).toBeGreaterThanOrEqual(0.53);
+    expect(Math.max(...flathead.map((target) => target.homeY))).toBeLessThanOrEqual(0.62);
+    expect(Math.min(...perch.map((target) => target.homeY))).toBeGreaterThanOrEqual(0.71);
+    expect(Math.max(...perch.map((target) => target.homeY))).toBeLessThanOrEqual(0.77);
+    expect([...luderick, ...salmon, ...flathead].every((target) => (
+      isFishingTargetReachable(simulation, target)
+    ))).toBe(true);
+    expect(perch.every((target) => !isFishingTargetReachable(simulation, target))).toBe(true);
+
+    simulation.progress.upgrades.line = 4;
+    expect(perch.every((target) => isFishingTargetReachable(simulation, target))).toBe(true);
   });
 
   test("spreads the Sunward population across shallow and upgrade-preview depths", () => {
@@ -764,8 +964,8 @@ describe("FSHING side-on simulation", () => {
     expect(learningAccuracy(simulation)).toBe(67);
 
     simulation.world = "beach";
-    const beachSurvey = recordSurvey(simulation, "mosswaterPool", "duskyFlathead");
-    expect(beachSurvey).toMatchObject({ correct: true, expected: "duskyFlathead" });
+    const beachSurvey = recordSurvey(simulation, "mosswaterPool", "luderick");
+    expect(beachSurvey).toMatchObject({ correct: true, expected: "luderick" });
     expect(beachSurvey.explanation).toContain("sand, seagrass, and shallow reef");
   });
 

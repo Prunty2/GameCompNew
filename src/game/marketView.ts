@@ -6,6 +6,10 @@ import {
   type HarborId,
 } from "./balance";
 import whiteSuckerUiUrl from "../assets/fish-white-sucker-ui.png";
+import longnoseGarUiUrl from "../assets/fish-longnose-gar-ui.png";
+import ciscoUiUrl from "../assets/fish-cisco-ui.png";
+import estuaryPerchUiUrl from "../assets/fish-estuary-perch-ui.png";
+import largetoothFlounderUiUrl from "../assets/fish-largetooth-flounder-ui.png";
 import {
   bulkSalePreview,
   marketHistory,
@@ -126,6 +130,18 @@ export function fishIcon(
 ): string {
   if (species === "whiteSucker") {
     return `<span class="market-fish-icon ${className}" role="img" aria-label="${FISH[species].name}" style="--fish-atlas-url: url(&quot;${whiteSuckerUiUrl}&quot;); --fish-atlas-x: 0%; --fish-atlas-y: 0%; --fish-atlas-size: 100% 100%"></span>`;
+  }
+  if (species === "longnoseGar") {
+    return `<span class="market-fish-icon ${className}" role="img" aria-label="${FISH[species].name}" style="--fish-atlas-url: url(&quot;${longnoseGarUiUrl}&quot;); --fish-atlas-x: 0%; --fish-atlas-y: 0%; --fish-atlas-size: 100% 100%"></span>`;
+  }
+  if (species === "cisco") {
+    return `<span class="market-fish-icon ${className}" role="img" aria-label="${FISH[species].name}" style="--fish-atlas-url: url(&quot;${ciscoUiUrl}&quot;); --fish-atlas-x: 0%; --fish-atlas-y: 0%; --fish-atlas-size: 100% 100%"></span>`;
+  }
+  if (species === "estuaryPerch") {
+    return `<span class="market-fish-icon ${className}" role="img" aria-label="${FISH[species].name}" style="--fish-atlas-url: url(&quot;${estuaryPerchUiUrl}&quot;); --fish-atlas-x: 0%; --fish-atlas-y: 0%; --fish-atlas-size: 100% 100%"></span>`;
+  }
+  if (species === "largetoothFlounder") {
+    return `<span class="market-fish-icon ${className}" role="img" aria-label="${FISH[species].name}" style="--fish-atlas-url: url(&quot;${largetoothFlounderUiUrl}&quot;); --fish-atlas-x: 0%; --fish-atlas-y: 0%; --fish-atlas-size: 100% 100%"></span>`;
   }
   const [column, row] = FISH[species].atlasCell;
   const beachSpecies = Object.values(BEACH_SPOT_RESIDENTS).some((residents) => residents.includes(species));

@@ -13,6 +13,10 @@ import gloamFishAtlasUrl from "../assets/fish-gloam-swim.png";
 import mosswaterFishAtlasUrl from "../assets/fish-mosswater-swim.png";
 import sunwardFishAtlasUrl from "../assets/fish-sunward-swim.png";
 import whiteSuckerFishAtlasUrl from "../assets/fish-white-sucker-swim.png";
+import longnoseGarFishAtlasUrl from "../assets/fish-longnose-gar-swim.png";
+import ciscoFishAtlasUrl from "../assets/fish-cisco-swim.png";
+import estuaryPerchFishAtlasUrl from "../assets/fish-estuary-perch-swim.png";
+import largetoothFlounderFishAtlasUrl from "../assets/fish-largetooth-flounder-swim.png";
 import fishingLineLimitFloatUrl from "../assets/fishing-line-limit-float.png";
 import mosswaterFishingUrl from "../assets/fishing-mosswater-pool.jpg";
 import gloamFishingUrl from "../assets/fishing-outer-gloam.jpg";
@@ -81,6 +85,7 @@ import {
 } from "./quest";
 import {
   maxFishingDepth,
+  isFishingTargetReachable,
   navigationGuidance,
   nightVisualIntensity,
   type Simulation,
@@ -123,7 +128,7 @@ interface LoadedArt {
   world: HTMLCanvasElement;
 }
 
-type FishSheetId = SpotId | "whiteSucker" | "beachSurf" | "beachBay" | "beachReef";
+type FishSheetId = SpotId | "whiteSucker" | "longnoseGar" | "cisco" | "estuaryPerch" | "largetoothFlounder" | "beachSurf" | "beachBay" | "beachReef";
 
 const SURFACE_FISH_CELLS = [
   [0, 0],
@@ -139,18 +144,22 @@ const FISH_SPRITE_CELLS: Record<FishSpecies, { sheet: FishSheetId; row: number }
   yellowPerch: { sheet: "sunwardShoal", row: 1 },
   emeraldShiner: { sheet: "sunwardShoal", row: 2 },
   whiteSucker: { sheet: "whiteSucker", row: 0 },
+  longnoseGar: { sheet: "longnoseGar", row: 0 },
   northernPike: { sheet: "mosswaterPool", row: 0 },
   largemouthBass: { sheet: "mosswaterPool", row: 1 },
   bowfin: { sheet: "mosswaterPool", row: 2 },
+  cisco: { sheet: "cisco", row: 0 },
   lakeTrout: { sheet: "outerGloam", row: 0 },
   burbot: { sheet: "outerGloam", row: 1 },
   lakeSturgeon: { sheet: "outerGloam", row: 2 },
   seaMullet: { sheet: "beachSurf", row: 0 },
   yellowfinBream: { sheet: "beachSurf", row: 1 },
   sandWhiting: { sheet: "beachSurf", row: 2 },
+  largetoothFlounder: { sheet: "largetoothFlounder", row: 0 },
   duskyFlathead: { sheet: "beachBay", row: 0 },
   luderick: { sheet: "beachBay", row: 1 },
   easternAustralianSalmon: { sheet: "beachBay", row: 2 },
+  estuaryPerch: { sheet: "estuaryPerch", row: 0 },
   snapper: { sheet: "beachReef", row: 0 },
   yellowtailKingfish: { sheet: "beachReef", row: 1 },
   mulloway: { sheet: "beachReef", row: 2 },
@@ -161,6 +170,10 @@ const FISH_SHEET_ROWS: Record<FishSheetId, number> = {
   mosswaterPool: 3,
   outerGloam: 3,
   whiteSucker: 1,
+  longnoseGar: 1,
+  cisco: 1,
+  estuaryPerch: 1,
+  largetoothFlounder: 1,
   beachSurf: 3,
   beachBay: 3,
   beachReef: 3,
@@ -171,6 +184,8 @@ const FISH_DRAW_SIZE: Record<FishSpecies, number> = {
   yellowPerch: 1.14,
   emeraldShiner: 1.46,
   whiteSucker: 1.48,
+  longnoseGar: 1.62,
+  cisco: 1.44,
   northernPike: 1.56,
   largemouthBass: 1.12,
   bowfin: 1.44,
@@ -180,9 +195,11 @@ const FISH_DRAW_SIZE: Record<FishSpecies, number> = {
   seaMullet: 1.5,
   yellowfinBream: 1.08,
   sandWhiting: 1.58,
+  largetoothFlounder: 1.34,
   duskyFlathead: 1.62,
   luderick: 1.08,
   easternAustralianSalmon: 1.45,
+  estuaryPerch: 1.28,
   snapper: 1.18,
   yellowtailKingfish: 1.58,
   mulloway: 1.5,
@@ -228,6 +245,10 @@ export class CanvasRenderer {
       loadImage(playerBoatUrl),
       loadImage(sunwardFishAtlasUrl),
       loadImage(whiteSuckerFishAtlasUrl),
+      loadImage(longnoseGarFishAtlasUrl),
+      loadImage(ciscoFishAtlasUrl),
+      loadImage(estuaryPerchFishAtlasUrl),
+      loadImage(largetoothFlounderFishAtlasUrl),
       loadImage(mosswaterFishAtlasUrl),
       loadImage(gloamFishAtlasUrl),
       loadImage(beachSurfFishAtlasUrl),
@@ -255,6 +276,10 @@ export class CanvasRenderer {
       boat,
       sunwardFish,
       whiteSuckerFish,
+      longnoseGarFish,
+      ciscoFish,
+      estuaryPerchFish,
+      largetoothFlounderFish,
       mosswaterFish,
       gloamFish,
       beachSurfFish,
@@ -275,6 +300,10 @@ export class CanvasRenderer {
       const keyedFish: Record<FishSheetId, HTMLCanvasElement> = {
         sunwardShoal: keyMagenta(sunwardFish, false, true),
         whiteSucker: keyMagenta(whiteSuckerFish, false, true),
+        longnoseGar: keyMagenta(longnoseGarFish, false, true),
+        cisco: keyMagenta(ciscoFish, false, true),
+        estuaryPerch: keyMagenta(estuaryPerchFish, false, true),
+        largetoothFlounder: keyMagenta(largetoothFlounderFish, false, true),
         mosswaterPool: keyMagenta(mosswaterFish, false, true),
         outerGloam: keyMagenta(gloamFish, false, true),
         beachSurf: keyMagenta(beachSurfFish, false, true),
@@ -284,6 +313,10 @@ export class CanvasRenderer {
       const tintedFish = (colour: string): Record<FishSheetId, HTMLCanvasElement> => ({
         sunwardShoal: tintAlpha(keyedFish.sunwardShoal, colour),
         whiteSucker: tintAlpha(keyedFish.whiteSucker, colour),
+        longnoseGar: tintAlpha(keyedFish.longnoseGar, colour),
+        cisco: tintAlpha(keyedFish.cisco, colour),
+        estuaryPerch: tintAlpha(keyedFish.estuaryPerch, colour),
+        largetoothFlounder: tintAlpha(keyedFish.largetoothFlounder, colour),
         mosswaterPool: tintAlpha(keyedFish.mosswaterPool, colour),
         outerGloam: tintAlpha(keyedFish.outerGloam, colour),
         beachSurf: tintAlpha(keyedFish.beachSurf, colour),
@@ -762,7 +795,7 @@ export class CanvasRenderer {
         x: point.x,
         y: point.y + pose.verticalOffsetRatio * layout.underwaterHeight,
       };
-      const reachable = FISH[target.species].depthTier <= simulation.progress.upgrades.line;
+      const reachable = isFishingTargetReachable(simulation, target);
       context.save();
       context.globalAlpha = (reachable ? 1 : 0.3) * focus.backgroundFishOpacity;
       if (!focus.showTargetGuides) context.filter = "grayscale(1) brightness(0.35) contrast(1.15)";

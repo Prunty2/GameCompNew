@@ -71,6 +71,38 @@ describe("species-specific fishing movement", () => {
     expect(Math.max(...motions.map((motion) => motion.horizontalMultiplier))).toBeGreaterThan(2.4);
   });
 
+  test("keeps longnose gar nearly still between surface stalking bursts", () => {
+    const motions = Array.from({ length: 1200 }, (_, index) => fishingSpeciesMotion("longnoseGar", index * 0.05, 0.7));
+    expect(motions.filter((motion) => motion.horizontalMultiplier < 0.35).length).toBeGreaterThan(650);
+    expect(Math.max(...motions.map((motion) => Math.abs(motion.depthOffset)))).toBeLessThan(0.01);
+    expect(Math.max(...motions.map((motion) => motion.horizontalMultiplier))).toBeGreaterThan(1.2);
+  });
+
+  test("gives Cisco coordinated open-water schooling motion", () => {
+    const motions = Array.from({ length: 600 }, (_, index) => fishingSpeciesMotion("cisco", index * 0.05, 0.7));
+    expect(Math.max(...motions.map((motion) => motion.horizontalMultiplier))).toBeGreaterThan(1);
+    expect(Math.max(...motions.map((motion) => Math.abs(motion.depthOffset)))).toBeLessThan(0.025);
+    expect(new Set(motions.map((motion) => motion.heading))).toEqual(new Set([-1, 1]));
+  });
+
+  test("keeps Estuary Perch controlled near the bottom between short runs", () => {
+    const motions = Array.from({ length: 1200 }, (_, index) => (
+      fishingSpeciesMotion("estuaryPerch", index * 0.05, 0.7)
+    ));
+    expect(Math.max(...motions.map((motion) => Math.abs(motion.depthOffset)))).toBeLessThan(0.015);
+    expect(Math.max(...motions.map((motion) => motion.horizontalMultiplier))).toBeGreaterThan(0.9);
+    expect(motions.filter((motion) => motion.horizontalMultiplier < 0.6).length).toBeGreaterThan(600);
+  });
+
+  test("keeps Largetooth Flounder close to the seabed between short fin-powered runs", () => {
+    const motions = Array.from({ length: 1200 }, (_, index) => (
+      fishingSpeciesMotion("largetoothFlounder", index * 0.05, 0.7)
+    ));
+    expect(Math.max(...motions.map((motion) => Math.abs(motion.depthOffset)))).toBeLessThan(0.006);
+    expect(Math.max(...motions.map((motion) => motion.horizontalMultiplier))).toBeGreaterThan(0.55);
+    expect(motions.filter((motion) => motion.horizontalMultiplier < 0.4).length).toBeGreaterThan(650);
+  });
+
   test("eases desired speed into continuous target velocity", () => {
     const dt = 1 / 120;
     let target: FishingTargetMotionState = {

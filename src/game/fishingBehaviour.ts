@@ -10,6 +10,7 @@ export type FishingFightStyle =
   | "deep-sustained"
   | "bottom-writhe"
   | "bottom-power"
+  | "surface-stalk"
   | "schooling-run"
   | "cautious-pulse"
   | "sand-dive"
@@ -78,6 +79,14 @@ export const FISHING_SPECIES_FIGHT_PROFILES: Record<FishSpecies, FishingSpeciesF
     pathFrequency: 0.46, steeringResponse: 3.2, motionDamping: 5, maximumSpeed: 0.21,
     wriggleFrequency: 8.2, wriggleAmplitude: 0.14,
   },
+  longnoseGar: {
+    style: "surface-stalk", cycleSeconds: 4.6, runFraction: 0.2, thrashFraction: 0.12,
+    runIntensity: 0.82, thrashIntensity: 0.62, runPower: 0.92, thrashPower: 0.86,
+    reelResistance: 1, endurance: 0.96, recovery: 0.86, runSlip: 1.02, runSlack: 1,
+    horizontalRange: 0.13, verticalRange: 0.03, runDepthBias: -0.045,
+    pathFrequency: 0.44, steeringResponse: 4.8, motionDamping: 4.8, maximumSpeed: 0.32,
+    wriggleFrequency: 7.5, wriggleAmplitude: 0.12,
+  },
   northernPike: {
     style: "ambush-surge", cycleSeconds: 4.8, runFraction: 0.2, thrashFraction: 0.1,
     runIntensity: 1, thrashIntensity: 0.64, runPower: 1.2, thrashPower: 0.92,
@@ -101,6 +110,14 @@ export const FISHING_SPECIES_FIGHT_PROFILES: Record<FishSpecies, FishingSpeciesF
     horizontalRange: 0.08, verticalRange: 0.055, runDepthBias: 0.022,
     pathFrequency: 0.64, steeringResponse: 3.7, motionDamping: 4.4, maximumSpeed: 0.25,
     wriggleFrequency: 13, wriggleAmplitude: 0.28,
+  },
+  cisco: {
+    style: "schooling-run", cycleSeconds: 3.65, runFraction: 0.26, thrashFraction: 0.12,
+    runIntensity: 0.72, thrashIntensity: 0.54, runPower: 0.78, thrashPower: 0.7,
+    reelResistance: 0.98, endurance: 0.92, recovery: 0.92, runSlip: 0.9, runSlack: 1.04,
+    horizontalRange: 0.1, verticalRange: 0.025, runDepthBias: 0,
+    pathFrequency: 0.78, steeringResponse: 4.3, motionDamping: 5.2, maximumSpeed: 0.27,
+    wriggleFrequency: 10.5, wriggleAmplitude: 0.11,
   },
   lakeTrout: {
     style: "deep-sustained", cycleSeconds: 5.1, runFraction: 0.34, thrashFraction: 0.1,
@@ -150,6 +167,14 @@ export const FISHING_SPECIES_FIGHT_PROFILES: Record<FishSpecies, FishingSpeciesF
     pathFrequency: 0.86, steeringResponse: 4.3, motionDamping: 5.4, maximumSpeed: 0.25,
     wriggleFrequency: 14, wriggleAmplitude: 0.11,
   },
+  largetoothFlounder: {
+    style: "bottom-power", cycleSeconds: 5.2, runFraction: 0.27, thrashFraction: 0.14,
+    runIntensity: 0.84, thrashIntensity: 0.7, runPower: 1.14, thrashPower: 0.98,
+    reelResistance: 1.24, endurance: 1.08, recovery: 0.78, runSlip: 0.8, runSlack: 0.82,
+    horizontalRange: 0.105, verticalRange: 0.026, runDepthBias: 0.07,
+    pathFrequency: 0.42, steeringResponse: 3.5, motionDamping: 5, maximumSpeed: 0.27,
+    wriggleFrequency: 8.4, wriggleAmplitude: 0.18,
+  },
   duskyFlathead: {
     style: "ambush-surge", cycleSeconds: 5, runFraction: 0.18, thrashFraction: 0.11,
     runIntensity: 1, thrashIntensity: 0.66, runPower: 1.18, thrashPower: 0.92,
@@ -173,6 +198,14 @@ export const FISHING_SPECIES_FIGHT_PROFILES: Record<FishSpecies, FishingSpeciesF
     horizontalRange: 0.145, verticalRange: 0.065, runDepthBias: -0.035,
     pathFrequency: 1.16, steeringResponse: 5.1, motionDamping: 5.2, maximumSpeed: 0.4,
     wriggleFrequency: 18, wriggleAmplitude: 0.2,
+  },
+  estuaryPerch: {
+    style: "bottom-power", cycleSeconds: 4.9, runFraction: 0.3, thrashFraction: 0.14,
+    runIntensity: 0.82, thrashIntensity: 0.66, runPower: 1.12, thrashPower: 0.92,
+    reelResistance: 1.2, endurance: 1.08, recovery: 0.8, runSlip: 0.82, runSlack: 0.84,
+    horizontalRange: 0.11, verticalRange: 0.032, runDepthBias: 0.06,
+    pathFrequency: 0.48, steeringResponse: 3.6, motionDamping: 4.8, maximumSpeed: 0.29,
+    wriggleFrequency: 9.2, wriggleAmplitude: 0.16,
   },
   snapper: {
     style: "reef-dive", cycleSeconds: 4.7, runFraction: 0.34, thrashFraction: 0.14,

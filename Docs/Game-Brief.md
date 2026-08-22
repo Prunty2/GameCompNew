@@ -53,9 +53,17 @@ Paid unlock (300 shells) from Upgrades. Travel is immediate and undocks the boat
 
 | Spot id | Display name | x | Lake line | Beach line | Lake residents | Beach residents |
 | --- | --- | --- | --- | --- | --- | --- |
-| `sunwardShoal` | Sunward Shoal | 0.18 | 0 | 0 | Bluegill, Yellow Perch, Emerald Shiner, White Sucker | Sea Mullet, Yellowfin Bream, Sand Whiting |
-| `mosswaterPool` | Mosswater Pool | 0.50 | 1 | 3 | Northern Pike, Largemouth Bass, Bowfin | Dusky Flathead, Luderick, Eastern Australian Salmon |
-| `outerGloam` | Outer Gloam | 0.82 | 3 | 4 | Lake Trout, Burbot, Lake Sturgeon | Snapper, Yellowtail Kingfish, Mulloway |
+| `sunwardShoal` | Sunward Shoal | 0.18 | 0 | 0 | Bluegill, Yellow Perch, Emerald Shiner, White Sucker | Sea Mullet, Yellowfin Bream, Sand Whiting, Largetooth Flounder |
+| `mosswaterPool` | Mosswater Pool | 0.50 | 1 | 3 | Longnose Gar, Northern Pike, Largemouth Bass, Bowfin | Luderick, Eastern Australian Salmon, Dusky Flathead, Estuary Perch |
+| `outerGloam` | Outer Gloam | 0.82 | 3 | 4 | Cisco, Lake Trout, Burbot, Lake Sturgeon | Snapper, Yellowtail Kingfish, Mulloway |
+
+At Lake Outer Gloam, the visible depth order is deliberately stepped: Cisco school near the top (`0.10-0.18`), Lake Trout cruise through the upper-middle (`0.25-0.39`), Burbot occupy the lower reachable water (`0.50-0.60`), and Lake Sturgeon remain below the tier-3 line until the line is upgraded further.
+
+At Beach Outer Gloam, Snapper occupy the upper water (`0.16-0.28`), Yellowtail Kingfish cruise through the middle (`0.46-0.58`), and Mulloway retain their deep-water band below the tier-4 line.
+
+At Beach Mosswater Pool, the diagrammed depth order is deliberately stepped: Luderick graze in the upper band (`0.14-0.26`), Eastern Australian Salmon school through open middle water (`0.34-0.46`), Dusky Flathead hold over the lower sand (`0.53-0.62`), and Estuary Perch patrol the deep bottom band (`0.71-0.77`). The ground remains gated at line tier 3; Estuary Perch become reachable at tier 4.
+
+At Beach Sunward Shoal, residents are vertically ordered by whole-fish value: Sea Mullet school nearest the surface (`0.10-0.17`), Yellowfin Bream occupy the next band (`0.22-0.29`), Sand Whiting forage lower over sand (`0.35-0.42`), and Largetooth Flounder remain in the ultra-low bottom band (`0.72-0.79`). The flounder becomes reachable at line tier 4.
 
 Harbors:
 
@@ -76,18 +84,22 @@ Depth tier is the primary price driver. Rarity separates fish that share a depth
 | Yellow Perch | Lake | Sunward Shoal | 0 | common | 22 |
 | Emerald Shiner | Lake | Sunward Shoal | 1 | uncommon | 40 |
 | White Sucker | Lake | Sunward Shoal | 2 | uncommon | 58 |
+| Longnose Gar | Lake | Mosswater Pool | 1 | uncommon | 46 |
 | Northern Pike | Lake | Mosswater Pool | 1 | uncommon | 40 |
 | Largemouth Bass | Lake | Mosswater Pool | 2 | uncommon | 52 |
 | Bowfin | Lake | Mosswater Pool | 2 | rare | 64 |
+| Cisco | Lake | Outer Gloam | 3 | uncommon | 74 |
 | Lake Trout | Lake | Outer Gloam | 3 | rare | 80 |
 | Burbot | Lake | Outer Gloam | 4 | rare | 100 |
 | Lake Sturgeon | Lake | Outer Gloam | 5 | legendary | 130 |
 | Sea Mullet | Beach | Sunward Shoal | 0 | common | 22 |
 | Yellowfin Bream | Beach | Sunward Shoal | 0 | common | 26 |
 | Sand Whiting | Beach | Sunward Shoal | 0 | uncommon | 34 |
+| Largetooth Flounder | Beach | Sunward Shoal | 4 | rare | 112 |
 | Dusky Flathead | Beach | Mosswater Pool | 1 | uncommon | 48 |
 | Luderick | Beach | Mosswater Pool | 2 | uncommon | 62 |
 | Eastern Australian Salmon | Beach | Mosswater Pool | 2 | rare | 76 |
+| Estuary Perch | Beach | Mosswater Pool | 4 | rare | 108 |
 | Snapper | Beach | Outer Gloam | 3 | rare | 96 |
 | Yellowtail Kingfish | Beach | Outer Gloam | 4 | rare | 120 |
 | Mulloway | Beach | Outer Gloam | 5 | legendary | 156 |
@@ -117,7 +129,7 @@ Hidden market conditions still change quotes, availability, and fog math:
 | Cold current | Deep fish abundant, shallow fish scarce |
 | Fog banks | Slight price lift and tighter supply |
 
-Availability sets the baseline number of each resident while fishing: abundant 3, normal 2, scarce 1. The final catchable population is tuned to 70% of the viewport-capacity result, accounting for both screen area and rendered fish size. Larger windows still show more fish after sprites approach their size cap, while compact screens reduce crowding without removing any resident species. Fish use low-discrepancy vertical spacing across their habitat-appropriate depth band rather than collecting on one horizontal shelf. At Sunward Shoal, Emerald Shiners occupy 0.335–0.405 fishing depth, entirely below the starter line and reachable at line tier 1. White Suckers occupy the deeper 0.465–0.535 bottom band and become reachable at line tier 2. Both remain visible as dimmed upgrade previews while locked. Condition names are not shown in the harbor UI.
+Availability sets the baseline number of each resident while fishing: abundant 3, normal 2, scarce 1. The final catchable population is normally tuned to 70% of the viewport-capacity result, accounting for both screen area and rendered fish size. Beach Sunward Shoal uses that same 70% calculation, then adds exactly two fish across its two smallest resident schools so the water remains populated without multiplying every species independently. Larger windows still show more fish after sprites approach their size cap, while compact screens reduce crowding without removing any resident species. Fish use low-discrepancy vertical spacing across their habitat-appropriate depth band rather than collecting on one horizontal shelf. Longnose Gar occupy Mosswater's 0.09–0.16 surface band and remain reachable as soon as the spot unlocks at line tier 1. Cisco occupy Lake Outer Gloam's 0.10–0.18 top band, above Lake Trout at 0.25–0.39 and Burbot at 0.50–0.60, while the ground remains gated at line tier 3. At Beach Sunward, Sea Mullet occupy 0.10–0.17, Yellowfin Bream 0.22–0.29, Sand Whiting 0.35–0.42, and Largetooth Flounder 0.72–0.79. At Beach Mosswater, Luderick occupy 0.14–0.26, Eastern Australian Salmon 0.34–0.46, Dusky Flathead 0.53–0.62, and Estuary Perch occupy 0.71–0.77. At Beach Outer Gloam, Snapper occupy 0.16–0.28 and Yellowtail Kingfish occupy 0.46–0.58 while Mulloway remain deep. At Lake Sunward Shoal, Emerald Shiners occupy 0.335–0.405 fishing depth, entirely below the starter line and reachable at line tier 1. White Suckers occupy the deeper 0.465–0.535 bottom band and become reachable at line tier 2. Fish are dimmed and blocked according to their actual swimming position relative to the line limit, so a higher-tier species that swims above the boundary remains fully visible and catchable. Condition names are not shown in the harbor UI.
 
 ## Sailing and fishing
 
@@ -148,7 +160,7 @@ Simulation step is `1/120` s. Gameplay RNG is seeded. The boat travels only on t
 | Night start | 140 | seconds into the day |
 | Night fade | 25 | seconds |
 
-Hook depth is `min(0.94, 0.3 + lineTier × 0.125)`. Fish below the line limit are visible and dimmed but cannot be hooked. Escape while fishing reels the empty line and returns to sailing; it does not pause.
+Hook depth is `min(0.94, 0.3 + lineTier × 0.125)`. Fish whose current position is below the line limit are visible and dimmed but cannot be hooked. Escape while fishing reels the empty line and returns to sailing; it does not pause.
 
 Hooking a fish begins a deterministic line fight built from fish behaviour, not a generic hold-to-fill meter. Holding the primary mouse button directly on the fishing canvas reels; touch hold and the remappable Reel key remain equivalent accessibility inputs. Every hook-up opens with a smoothly ramped 0.65-second escape run, followed by the first calm reeling window, then cycles through calm lulls, runs, and short thrashes. Reeling during a lull gains ground at modest tension and tires the fish. Reeling against a run loads the line fast. Releasing during a run lets the fish take line, slip farther from the boat, and drop tension. Waiting through a lull barely slacks the line and does not tire the fish. Tired fish stop running and become easier to land. There is no on-water fight HUD. Line tension is shown by the hook line itself: cream when safe, amber as it tightens, red at the 90% critical threshold, and slightly thicker as strain rises. The hooked fish follows a continuous velocity-limited path; it accelerates, turns, rolls, rises, or dives instead of receiving discrete random displacement impulses. Reduced motion holds the fight offset still. Non-colour feedback remains: the tutorial title, toasts, sound, vibration, live-region copy, and the canvas `aria-label`. The hooked fish is drawn over the lower hook so only the eye and line stay visible. There is no separate on-screen Reel button.
 
@@ -158,7 +170,7 @@ During a fight, every non-hooked fish keeps swimming and animating as a clearly 
 
 The Lake's three Sunward Shoal fish are intentionally forgiving starters. Their weak runs create proportionally low tension, and Bluegill, Yellow Perch, and Emerald Shiner can all be landed with a steady continuous reel even if a new player misses the release cue. Later fish still require deliberate reel-and-release control.
 
-Rarity sets the base meter rates, but each species supplies its own researched timing, movement, and resistance profile. Bluegill kick and glide; Pike and Flathead wait then surge; Bass rises into an acrobatic thrash; Bowfin and Luderick roll; Trout, Snapper, Kingfish, Sturgeon, and Mulloway make increasingly sustained deep or long runs; and Burbot writhes close to the bottom. Line tiers reduce tension gain by 12% per tier as well as extending maximum depth. Giving line has the same slack physics at every tier. A cue-following reference strategy lands beginner fish in roughly 4–5 seconds, most mid-tier fish in 7–16 seconds, Kingfish and Sturgeon in about 21 seconds, and Mulloway in about 27 seconds. After reel progress fills, the existing 1.15-second landing transition completes the catch.
+Rarity sets the base meter rates, but each species supplies its own researched timing, movement, and resistance profile. Bluegill kick and glide; Pike and Flathead wait then surge; Bass rises into an acrobatic thrash; Bowfin and Luderick roll; Estuary Perch hold deep then make short powerful runs; Trout, Snapper, Kingfish, Sturgeon, and Mulloway make increasingly sustained deep or long runs; and Burbot writhes close to the bottom. Line tiers reduce tension gain by 12% per tier as well as extending maximum depth. Giving line has the same slack physics at every tier. A cue-following reference strategy lands beginner fish in roughly 4–5 seconds, most mid-tier fish in 7–16 seconds, Kingfish and Sturgeon in about 21 seconds, and Mulloway in about 27 seconds. After reel progress fills, the existing 1.15-second landing transition completes the catch.
 
 Each species has a deterministic swim gait. Free-swimming targets ease toward their desired horizontal speed and depth with bounded acceleration, so even burst swimmers glide between states instead of changing position or velocity abruptly. The tracked species gets a rarity outline, a hook-guidance cue, and a named specimen portrait while steering, but only when that fish lives at the current site. Those targeting cues hide during a fight. Nothing is highlighted while no fish is tracked. The evidence and species-by-species gameplay translation are recorded in [`Docs/Fish-Behaviour-Research.md`](Fish-Behaviour-Research.md).
 
@@ -298,7 +310,7 @@ A build matches this brief when:
 
 - Title shows Play, Settings, Credits, and `vX.Y.Z (PR #N)`
 - A new save can complete First Assignment: inspect Bluegill, track, catch at Sunward Shoal, sell
-- Market lists ten Lake species or nine Beach species, with undiscovered cards locked
+- Market lists twelve Lake species or eleven Beach species, with undiscovered cards locked
 - Quotes differ by harbor and day, and every catch sells for the displayed quote
 - Line tier gates the Lake middle/right spots at tiers 1/3 and the Beach middle/right spots at tiers 3/4
 - Beach unlock swaps coastal fish and art, then travel returns to the lake

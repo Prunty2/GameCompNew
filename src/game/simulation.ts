@@ -1,7 +1,13 @@
 import { clamp, createRandom, type RandomSource } from "./math";
 import { fishingSpeciesMotion, stepFishingTargetMotion } from "./fishingMovement";
 import { fishingHighlightSpecies } from "./fishingPresentation";
-import { responsiveResidentCount, type FishingViewport } from "./fishingPopulation";
+import {
+  BEACH_SUNWARD_POPULATION_BONUS,
+  DEFAULT_POPULATION_DENSITY_MULTIPLIER,
+  MOSSWATER_POPULATION_DENSITY_MULTIPLIER,
+  responsiveResidentCount,
+  type FishingViewport,
+} from "./fishingPopulation";
 import {
   FISHING_LOSS_DEPTH_TOLERANCE,
   FISHING_LOSS_DURATION,
@@ -203,6 +209,20 @@ const FISHING_ENTRY_CLEARANCE = 0.12;
 const FISHING_SPECIES_DEPTH_BANDS: Partial<Record<FishSpecies, { top: number; bottom: number }>> = {
   emeraldShiner: { top: 0.335, bottom: 0.405 },
   whiteSucker: { top: 0.465, bottom: 0.535 },
+  longnoseGar: { top: 0.09, bottom: 0.16 },
+  cisco: { top: 0.1, bottom: 0.18 },
+  lakeTrout: { top: 0.25, bottom: 0.39 },
+  burbot: { top: 0.5, bottom: 0.6 },
+  seaMullet: { top: 0.1, bottom: 0.17 },
+  yellowfinBream: { top: 0.22, bottom: 0.29 },
+  sandWhiting: { top: 0.35, bottom: 0.42 },
+  largetoothFlounder: { top: 0.72, bottom: 0.79 },
+  luderick: { top: 0.14, bottom: 0.26 },
+  easternAustralianSalmon: { top: 0.34, bottom: 0.46 },
+  duskyFlathead: { top: 0.53, bottom: 0.62 },
+  estuaryPerch: { top: 0.71, bottom: 0.77 },
+  snapper: { top: 0.16, bottom: 0.28 },
+  yellowtailKingfish: { top: 0.46, bottom: 0.58 },
 };
 const SEASON_SALES = 8;
 
@@ -393,6 +413,23 @@ export function startFishing(
   }
 
   const residents = residentsForSpot(simulation.world, spotId);
+  const populationDensity = simulation.world === "lake" && spotId === "mosswaterPool"
+    ? MOSSWATER_POPULATION_DENSITY_MULTIPLIER
+    : DEFAULT_POPULATION_DENSITY_MULTIPLIER;
+  const residentCounts = residents.map((fishSpecies) => responsiveResidentCount(
+    residentCountForMarket(fishSpecies, simulation.progress.marketDay, simulation.seed),
+    viewport,
+    populationDensity,
+  ));
+  if (simulation.world === "beach" && spotId === "sunwardShoal") {
+    residentCounts
+      .map((count, index) => ({ count, index }))
+      .sort((left, right) => left.count - right.count || left.index - right.index)
+      .slice(0, BEACH_SUNWARD_POPULATION_BONUS)
+      .forEach(({ index }) => {
+        residentCounts[index] += 1;
+      });
+  }
   simulation.boat.speed = 0;
   simulation.mode = "fishing";
   let targetIndex = 0;
@@ -405,10 +442,7 @@ export function startFishing(
     targets: residents.flatMap((fishSpecies, residentIndex) => (
       Array.from(
         {
-          length: responsiveResidentCount(
-            residentCountForMarket(fishSpecies, simulation.progress.marketDay, simulation.seed),
-            viewport,
-          ),
+          length: residentCounts[residentIndex],
         },
         (_, schoolIndex) => {
           const fish = FISH[fishSpecies];
@@ -767,6 +801,10 @@ export function maxFishingDepth(simulation: Simulation): number {
   return Math.min(0.94, 0.3 + simulation.progress.upgrades.line * 0.125);
 }
 
+export function isFishingTargetReachable(simulation: Simulation, target: Pick<FishingTarget, "y">): boolean {
+  return target.y <= maxFishingDepth(simulation) + Number.EPSILON * 16;
+}
+
 export function upgradeCost(upgrade: UpgradeId, tier: number): number {
   return BALANCE.upgradeCosts[upgrade] + Math.max(0, tier) * 55;
 }
@@ -984,7 +1022,7 @@ function updateFishing(simulation: Simulation, input: InputState, dt: number): v
   fishing.hook.x = clamp(fishing.hook.x + input.hookX * BALANCE.fishingHookHorizontalSpeed * dt, 0.07, 0.93);
   fishing.hook.y = clamp(fishing.hook.y + input.hookY * verticalSpeed * dt, 0.07, maxFishingDepth(simulation));
   for (const [targetIndex, target] of fishing.targets.entries()) {
-    const reachable = FISH[target.species].depthTier <= simulation.progress.upgrades.line;
+    const reachable = isFishingTargetReachable(simulation, target);
     if (reachable && distance(fishing.hook, target) <= FISHING_CATCH_RADIUS) {
       const opening = fishingFightBehaviour(target.species, 0, 1);
       fishing.reeling = {

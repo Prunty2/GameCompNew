@@ -3,18 +3,22 @@ export type FishSpecies =
   | "yellowPerch"
   | "emeraldShiner"
   | "whiteSucker"
+  | "longnoseGar"
   | "northernPike"
   | "largemouthBass"
   | "bowfin"
+  | "cisco"
   | "lakeTrout"
   | "burbot"
   | "lakeSturgeon"
   | "seaMullet"
   | "yellowfinBream"
   | "sandWhiting"
+  | "largetoothFlounder"
   | "duskyFlathead"
   | "luderick"
   | "easternAustralianSalmon"
+  | "estuaryPerch"
   | "snapper"
   | "yellowtailKingfish"
   | "mulloway";
@@ -192,18 +196,22 @@ export const FISH: Record<FishSpecies, FishDefinition> = {
   yellowPerch: { id: "yellowPerch", name: "Yellow Perch", shape: "Golden flank · dark bars", value: 22, depthTier: 0, atlasCell: [1, 0], hue: 0, scale: 0.82, rarity: "common" },
   emeraldShiner: { id: "emeraldShiner", name: "Emerald Shiner", shape: "Silver body · forked tail", value: 40, depthTier: 1, atlasCell: [2, 0], hue: 0, scale: 0.76, rarity: "uncommon" },
   whiteSucker: { id: "whiteSucker", name: "White Sucker", shape: "Olive body · downturned mouth", value: 58, depthTier: 2, atlasCell: [0, 0], hue: 0, scale: 0.98, rarity: "uncommon" },
+  longnoseGar: { id: "longnoseGar", name: "Longnose Gar", shape: "Armoured body · needle-like snout", value: 46, depthTier: 1, atlasCell: [0, 0], hue: 0, scale: 1.06, rarity: "uncommon" },
   northernPike: { id: "northernPike", name: "Northern Pike", shape: "Long body · duckbill snout", value: 40, depthTier: 1, atlasCell: [0, 1], hue: 0, scale: 1, rarity: "uncommon" },
   largemouthBass: { id: "largemouthBass", name: "Largemouth Bass", shape: "Heavy jaw · dark side band", value: 52, depthTier: 2, atlasCell: [1, 1], hue: 0, scale: 1.02, rarity: "uncommon" },
   bowfin: { id: "bowfin", name: "Bowfin", shape: "Long dorsal fin · rounded tail", value: 64, depthTier: 2, atlasCell: [2, 1], hue: 0, scale: 1.06, rarity: "rare" },
+  cisco: { id: "cisco", name: "Cisco", shape: "Silver flank · deeply forked tail", value: 74, depthTier: 3, atlasCell: [0, 0], hue: 0, scale: 0.9, rarity: "uncommon" },
   lakeTrout: { id: "lakeTrout", name: "Lake Trout", shape: "Pale spots · forked tail", value: 80, depthTier: 3, atlasCell: [0, 2], hue: 0, scale: 1.04, rarity: "rare" },
   burbot: { id: "burbot", name: "Burbot", shape: "Mottled body · chin barbel", value: 100, depthTier: 4, atlasCell: [1, 2], hue: 0, scale: 1.12, rarity: "rare" },
   lakeSturgeon: { id: "lakeSturgeon", name: "Lake Sturgeon", shape: "Bony scutes · four barbels", value: 130, depthTier: 5, atlasCell: [2, 2], hue: 0, scale: 1.24, rarity: "legendary" },
   seaMullet: { id: "seaMullet", name: "Sea Mullet", shape: "Striped silver body · two dorsal fins", value: 22, depthTier: 0, atlasCell: [0, 0], hue: 0, scale: 0.86, rarity: "common" },
   yellowfinBream: { id: "yellowfinBream", name: "Yellowfin Bream", shape: "Deep silver body · yellow fins", value: 26, depthTier: 0, atlasCell: [1, 0], hue: 0, scale: 0.9, rarity: "common" },
   sandWhiting: { id: "sandWhiting", name: "Sand Whiting", shape: "Slender silver body · yellow lower fins", value: 34, depthTier: 0, atlasCell: [2, 0], hue: 0, scale: 0.78, rarity: "uncommon" },
+  largetoothFlounder: { id: "largetoothFlounder", name: "Largetooth Flounder", shape: "Mottled flat body · both eyes on one side", value: 112, depthTier: 4, atlasCell: [0, 0], hue: 0, scale: 1.08, rarity: "rare" },
   duskyFlathead: { id: "duskyFlathead", name: "Dusky Flathead", shape: "Flat wedge head · mottled tail", value: 48, depthTier: 1, atlasCell: [0, 1], hue: 0, scale: 1.04, rarity: "uncommon" },
   luderick: { id: "luderick", name: "Luderick", shape: "Deep barred body · small mouth", value: 62, depthTier: 2, atlasCell: [1, 1], hue: 0, scale: 0.96, rarity: "uncommon" },
   easternAustralianSalmon: { id: "easternAustralianSalmon", name: "Eastern Australian Salmon", shape: "Silver body · powerful forked tail", value: 76, depthTier: 2, atlasCell: [2, 1], hue: 0, scale: 1.06, rarity: "rare" },
+  estuaryPerch: { id: "estuaryPerch", name: "Estuary Perch", shape: "Silver-grey flank · concave snout", value: 108, depthTier: 4, atlasCell: [0, 0], hue: 0, scale: 1.08, rarity: "rare" },
   snapper: { id: "snapper", name: "Snapper", shape: "Pink flank · blue spots", value: 96, depthTier: 3, atlasCell: [0, 2], hue: 0, scale: 1.04, rarity: "rare" },
   yellowtailKingfish: { id: "yellowtailKingfish", name: "Yellowtail Kingfish", shape: "Yellow stripe · forked yellow tail", value: 120, depthTier: 4, atlasCell: [1, 2], hue: 0, scale: 1.16, rarity: "rare" },
   mulloway: { id: "mulloway", name: "Mulloway", shape: "Bronze-silver flank · pearly spots", value: 156, depthTier: 5, atlasCell: [2, 2], hue: 0, scale: 1.24, rarity: "legendary" },
@@ -217,13 +225,13 @@ export const FISHING_SPOTS: readonly FishingSpotDefinition[] = [
 
 export const SPOT_RESIDENTS: Record<SpotId, readonly FishSpecies[]> = {
   sunwardShoal: ["bluegill", "yellowPerch", "emeraldShiner", "whiteSucker"],
-  mosswaterPool: ["northernPike", "largemouthBass", "bowfin"],
-  outerGloam: ["lakeTrout", "burbot", "lakeSturgeon"],
+  mosswaterPool: ["longnoseGar", "northernPike", "largemouthBass", "bowfin"],
+  outerGloam: ["cisco", "lakeTrout", "burbot", "lakeSturgeon"],
 };
 
 export const BEACH_SPOT_RESIDENTS: Record<SpotId, readonly FishSpecies[]> = {
-  sunwardShoal: ["seaMullet", "yellowfinBream", "sandWhiting"],
-  mosswaterPool: ["duskyFlathead", "luderick", "easternAustralianSalmon"],
+  sunwardShoal: ["seaMullet", "yellowfinBream", "sandWhiting", "largetoothFlounder"],
+  mosswaterPool: ["luderick", "easternAustralianSalmon", "duskyFlathead", "estuaryPerch"],
   outerGloam: ["snapper", "yellowtailKingfish", "mulloway"],
 };
 

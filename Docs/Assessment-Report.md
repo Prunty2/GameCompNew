@@ -97,9 +97,9 @@ flowchart LR
 
 | Site | Region | Lake line | Beach line | Lake residents | Beach residents |
 | --- | --- | --- | --- | --- | --- |
-| Sunward Shoal | Brindle Coast | T0 | T0 | Bluegill, Yellow Perch, Emerald Shiner, White Sucker | Sea Mullet, Yellowfin Bream, Sand Whiting |
-| Mosswater Pool | Mosswater Reach | T1 | T3 | Northern Pike, Largemouth Bass, Bowfin | Dusky Flathead, Luderick, Eastern Australian Salmon |
-| Outer Gloam | Violet Gloam | T3 | T4 | Lake Trout, Burbot, Lake Sturgeon | Snapper, Yellowtail Kingfish, Mulloway |
+| Sunward Shoal | Brindle Coast | T0 | T0 | Bluegill, Yellow Perch, Emerald Shiner, White Sucker | Sea Mullet, Yellowfin Bream, Sand Whiting, Largetooth Flounder |
+| Mosswater Pool | Mosswater Reach | T1 | T3 | Longnose Gar, Northern Pike, Largemouth Bass, Bowfin | Luderick, Eastern Australian Salmon, Dusky Flathead, Estuary Perch |
+| Outer Gloam | Violet Gloam | T3 | T4 | Cisco, Lake Trout, Burbot, Lake Sturgeon | Snapper, Yellowtail Kingfish, Mulloway |
 
 Beach reuses the same spot names and world X positions. Reloading always restores the lake at Brindle; world, cargo, and time of day are not saved.
 
@@ -152,7 +152,7 @@ payout ← quote
 
 ### Fishing spawn
 
-A site spawns every resident. Count per resident follows that day's availability: 3 abundant, 2 normal, 1 scarce. Hook contact within radius 0.058 on a reachable depth starts a deterministic fight with an immediate, smoothly ramped 0.65 s escape run before the first lull. Holding left click, touch, or the Reel key during a lull gains ground and cools the line slightly; only an active run or thrash can increase tension. Releasing during a run lets the fish take line, which drops tension. Tension is read from the hook line colour and thickness rather than a corner meter. Non-hooked fish keep swimming, fade into subdued silhouettes, and lose their targeting cues during the fight. Free-swimming and hooked fish use bounded velocity and continuous steering rather than position impulses. Rarity supplies base difficulty while a researched profile gives each species its own run cadence, direction, depth bias, endurance, and body action; the source record is `Docs/Fish-Behaviour-Research.md`. Sustained critical tension breaks the line without ending the fishing session, while a completed fight uses a 1.15 s landing transition and stores the catch in cargo.
+A site spawns every resident. Count per resident follows that day's availability: 3 abundant, 2 normal, 1 scarce, scaled to 70% of responsive viewport capacity. Hook contact within radius 0.058 on a fish whose current swimming position is above the line limit starts a deterministic fight with an immediate, smoothly ramped 0.65 s escape run before the first lull. Holding left click, touch, or the Reel key during a lull gains ground and cools the line slightly; only an active run or thrash can increase tension. Releasing during a run lets the fish take line, which drops tension. Tension is read from the hook line colour and thickness rather than a corner meter. Non-hooked fish keep swimming, fade into subdued silhouettes, and lose their targeting cues during the fight. Free-swimming and hooked fish use bounded velocity and continuous steering rather than position impulses. Rarity supplies base difficulty while a researched profile gives each species its own run cadence, direction, depth bias, endurance, and body action; the source record is `Docs/Fish-Behaviour-Research.md`. Sustained critical tension breaks the line without ending the fishing session, while a completed fight uses a 1.15-second landing transition and stores the catch in cargo.
 
 Sunward Shoal is the forgiving introduction: Bluegill, Yellow Perch, and Emerald Shiner have weak enough line loads to survive a continuous reel, while later habitats require the intended reel-and-release response.
 
@@ -195,7 +195,7 @@ Deep teal structure, sea-glass water, warm ivory copy, muted amber for actions. 
 
 Art direction is restrained gouache/screen-print scenery, deep teal interfaces, and high-readability side silhouettes. Runtime files are explicitly imported so authoring files in `output/imagegen/` do not enter `dist/`.
 
-Lake and Beach each have a 3×3 UI atlas and three 4-frame swim sheets. The original 2×2 `fish-atlas.png` remains only for the fishing-hook cell. Prompts, sizes, and roles are in `Docs/Asset-Manifest.md`.
+Lake and Beach each have a 3×3 base UI atlas and three base 4-frame swim sheets. Five additional species use their own 4-frame swim sheet and transparent UI derivative. The original 2×2 `fish-atlas.png` remains only for the fishing-hook cell. Prompts, sizes, and roles are in `Docs/Asset-Manifest.md`.
 
 ### Procedural audio
 
@@ -242,7 +242,7 @@ Surface fishing grounds use a faint school, then a polarized lens, then a hook c
 | Larger map | Camera view width 0.30, so the harbor span is about three views |
 | Normal menu | Centred title panel, dominant Play, Settings and Credits |
 | Fishing spots should feel alive | Resident schools, polarized lens on approach, hook only inside the interaction radius |
-| Lots of fish | Eighteen named real species with distinct swim gaits |
+| Lots of fish | Twenty-three named real species with distinct swim gaits |
 | Water deeper only with upgrades | Six line tiers and a labelled underwater boundary |
 | Larger boats / more upgrades | Seven cargo tiers, six engine/line tiers, five reel-power tiers, boost, Beach |
 | Different worlds | Lake and Beach palettes, piers, underwater plates, and fish sets |
