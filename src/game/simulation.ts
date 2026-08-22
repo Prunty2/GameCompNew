@@ -1171,8 +1171,8 @@ function updateFishingFight(simulation: Simulation, input: InputState, dt: numbe
   if (next.broken) {
     const escapedTarget = fishing.targets[fight.targetIndex];
     if (escapedTarget) {
-      escapedTarget.x = clamp(fishing.hook.x + fight.direction * 0.28, 0.04, 0.96);
-      escapedTarget.y = clamp(fishing.hook.y + fight.motionY - 0.035, 0.08, 0.94);
+      escapedTarget.x = clamp(fishing.hook.x + fight.direction * 0.18, 0.04, 0.96);
+      escapedTarget.y = escapedTarget.homeY;
       escapedTarget.direction = fight.direction;
       escapedTarget.phase += Math.PI / 2;
       escapedTarget.velocityX = 0;

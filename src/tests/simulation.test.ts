@@ -474,6 +474,7 @@ describe("FSHING side-on simulation", () => {
     expect(consumeEvents(simulation)).toContainEqual({ type: "line-broke", species: "bluegill" });
     expect(simulation.cargo).toEqual([]);
     const escapeDestination = { x: target.x, y: target.y };
+    expect(escapeDestination.y).toBe(target.homeY);
 
     for (let elapsed = 0; elapsed < FISHING_LOSS_SWIM_DURATION; elapsed += 0.1) {
       updateSimulation(simulation, idle, Math.min(0.1, FISHING_LOSS_SWIM_DURATION - elapsed));
