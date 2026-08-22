@@ -82,7 +82,7 @@ export function fishingFocusPresentation(
   const fightActive = hookedAt !== null;
   return {
     backgroundFishOpacity: clamp(schoolOpacity, 0, 1) * (fightActive ? 0.68 : 1),
-    backgroundPoseElapsed: fightActive ? hookedAt : elapsed,
+    backgroundPoseElapsed: elapsed,
     showTargetGuides: !fightActive,
   };
 }

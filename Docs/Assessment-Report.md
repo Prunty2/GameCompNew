@@ -89,7 +89,7 @@ flowchart LR
 2. First Assignment highlights Bluegill. Open it, read today's quote, then **Track Bluegill**.
 3. Return to the lake. The badge reads **FISH AT Sunward Shoal**.
 4. Slow under the shoal until the hook cue appears, then drop the line.
-5. Steer onto a Bluegill. Hold left click while it is calm to gain ground, then release when it races away so the line can slacken. Background fish freeze and fade so the hooked fish remains the focus. The landed catch reaches the boat at 100% freshness.
+5. Steer onto a Bluegill. Hold left click while it is calm to gain ground, then release when it races away so the line can slacken. Background fish keep swimming in a subdued silhouette so the hooked fish remains the focus. The landed catch reaches the boat at 100% freshness.
 6. Guidance switches to **SELL AT** whichever harbor currently pays more.
 7. Dock, open Bluegill, sell. Shells land, the assignment completes, and prices will change when the next 210-second day begins.
 
@@ -152,7 +152,9 @@ payout ← max(1, round(quote × (0.25 + 0.75 × freshness / 100)))
 
 ### Fishing spawn
 
-A site spawns every resident. Count per resident follows that day's availability: 3 abundant, 2 normal, 1 scarce. Hook contact within radius 0.058 on a reachable depth starts a deterministic fight with an immediate, smoothly ramped 0.65 s escape run before the first lull. Holding left click, touch, or the Reel key during a lull gains ground; horsing a run loads the line. Releasing during a run lets the fish take line, which drops tension. Tension is read from the hook line colour and thickness rather than a corner meter. Non-hooked fish freeze, fade, and lose their targeting cues during the fight. Free-swimming and hooked fish use bounded velocity and continuous steering rather than position impulses. Rarity supplies base difficulty while a researched profile gives each species its own run cadence, direction, depth bias, endurance, and body action; the source record is `Docs/Fish-Behaviour-Research.md`. Sustained critical tension breaks the line without ending the fishing session, while a completed fight uses a 1.15 s landing transition and stores the catch at 100% freshness.
+A site spawns every resident. Count per resident follows that day's availability: 3 abundant, 2 normal, 1 scarce. Hook contact within radius 0.058 on a reachable depth starts a deterministic fight with an immediate, smoothly ramped 0.65 s escape run before the first lull. Holding left click, touch, or the Reel key during a lull gains ground and cools the line slightly; only an active run or thrash can increase tension. Releasing during a run lets the fish take line, which drops tension. Tension is read from the hook line colour and thickness rather than a corner meter. Non-hooked fish keep swimming, fade into subdued silhouettes, and lose their targeting cues during the fight. Free-swimming and hooked fish use bounded velocity and continuous steering rather than position impulses. Rarity supplies base difficulty while a researched profile gives each species its own run cadence, direction, depth bias, endurance, and body action; the source record is `Docs/Fish-Behaviour-Research.md`. Sustained critical tension breaks the line without ending the fishing session, while a completed fight uses a 1.15 s landing transition and stores the catch at 100% freshness.
+
+Sunward Shoal is the forgiving introduction: Bluegill, Yellow Perch, and Emerald Shiner have weak enough line loads to survive a continuous reel, while later habitats require the intended reel-and-release response.
 
 ### Determinism
 

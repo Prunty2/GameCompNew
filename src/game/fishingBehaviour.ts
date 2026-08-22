@@ -64,8 +64,8 @@ export const FISHING_SPECIES_FIGHT_PROFILES: Record<FishSpecies, FishingSpeciesF
   },
   emeraldShiner: {
     style: "schooling-sprint", cycleSeconds: 2.75, runFraction: 0.28, thrashFraction: 0.14,
-    runIntensity: 0.84, thrashIntensity: 0.58, runPower: 0.88, thrashPower: 0.76,
-    reelResistance: 0.82, endurance: 0.7, recovery: 1.02, runSlip: 0.92, runSlack: 1.18,
+    runIntensity: 0.68, thrashIntensity: 0.48, runPower: 0.5, thrashPower: 0.52,
+    reelResistance: 0.76, endurance: 0.7, recovery: 1.02, runSlip: 0.82, runSlack: 1.18,
     horizontalRange: 0.085, verticalRange: 0.026, runDepthBias: -0.008,
     pathFrequency: 1.3, steeringResponse: 5.2, motionDamping: 6.2, maximumSpeed: 0.31,
     wriggleFrequency: 17, wriggleAmplitude: 0.11,
@@ -89,7 +89,7 @@ export const FISHING_SPECIES_FIGHT_PROFILES: Record<FishSpecies, FishingSpeciesF
   bowfin: {
     style: "rolling-power", cycleSeconds: 4.1, runFraction: 0.22, thrashFraction: 0.25,
     runIntensity: 0.78, thrashIntensity: 0.94, runPower: 1.04, thrashPower: 1.2,
-    reelResistance: 1.06, endurance: 0.98, recovery: 0.82, runSlip: 0.8, runSlack: 0.88,
+    reelResistance: 1.15, endurance: 0.98, recovery: 0.82, runSlip: 0.8, runSlack: 0.88,
     horizontalRange: 0.08, verticalRange: 0.055, runDepthBias: 0.022,
     pathFrequency: 0.64, steeringResponse: 3.7, motionDamping: 4.4, maximumSpeed: 0.25,
     wriggleFrequency: 13, wriggleAmplitude: 0.28,
@@ -113,7 +113,7 @@ export const FISHING_SPECIES_FIGHT_PROFILES: Record<FishSpecies, FishingSpeciesF
   lakeSturgeon: {
     style: "bottom-power", cycleSeconds: 6.2, runFraction: 0.38, thrashFraction: 0.08,
     runIntensity: 0.94, thrashIntensity: 0.48, runPower: 1.28, thrashPower: 0.96,
-    reelResistance: 1.12, endurance: 1, recovery: 0.72, runSlip: 0.56, runSlack: 0.76,
+    reelResistance: 1.7, endurance: 1, recovery: 0.72, runSlip: 0.56, runSlack: 0.76,
     horizontalRange: 0.145, verticalRange: 0.024, runDepthBias: 0.075,
     pathFrequency: 0.34, steeringResponse: 2.65, motionDamping: 4.2, maximumSpeed: 0.24,
     wriggleFrequency: 6.8, wriggleAmplitude: 0.16,
@@ -169,7 +169,7 @@ export const FISHING_SPECIES_FIGHT_PROFILES: Record<FishSpecies, FishingSpeciesF
   snapper: {
     style: "reef-dive", cycleSeconds: 4.7, runFraction: 0.34, thrashFraction: 0.14,
     runIntensity: 0.9, thrashIntensity: 0.7, runPower: 1.16, thrashPower: 0.96,
-    reelResistance: 1.1, endurance: 1.05, recovery: 0.82, runSlip: 0.88, runSlack: 0.84,
+    reelResistance: 1.25, endurance: 1.05, recovery: 0.82, runSlip: 0.88, runSlack: 0.84,
     horizontalRange: 0.105, verticalRange: 0.07, runDepthBias: 0.08,
     pathFrequency: 0.58, steeringResponse: 4.1, motionDamping: 4.7, maximumSpeed: 0.3,
     wriggleFrequency: 10, wriggleAmplitude: 0.17,
@@ -177,7 +177,7 @@ export const FISHING_SPECIES_FIGHT_PROFILES: Record<FishSpecies, FishingSpeciesF
   yellowtailKingfish: {
     style: "power-dive", cycleSeconds: 5.2, runFraction: 0.42, thrashFraction: 0.11,
     runIntensity: 1, thrashIntensity: 0.7, runPower: 1.34, thrashPower: 1.02,
-    reelResistance: 1.2, endurance: 1.18, recovery: 0.78, runSlip: 0.86, runSlack: 0.76,
+    reelResistance: 1.32, endurance: 1.18, recovery: 0.78, runSlip: 0.86, runSlack: 0.76,
     horizontalRange: 0.15, verticalRange: 0.085, runDepthBias: 0.1,
     pathFrequency: 0.72, steeringResponse: 4.6, motionDamping: 4.4, maximumSpeed: 0.42,
     wriggleFrequency: 13, wriggleAmplitude: 0.2,
@@ -185,7 +185,7 @@ export const FISHING_SPECIES_FIGHT_PROFILES: Record<FishSpecies, FishingSpeciesF
   mulloway: {
     style: "long-run", cycleSeconds: 6.5, runFraction: 0.44, thrashFraction: 0.09,
     runIntensity: 0.96, thrashIntensity: 0.58, runPower: 1.32, thrashPower: 0.94,
-    reelResistance: 1.14, endurance: 1.05, recovery: 0.72, runSlip: 0.54, runSlack: 0.72,
+    reelResistance: 1.45, endurance: 1.05, recovery: 0.72, runSlip: 0.54, runSlack: 0.72,
     horizontalRange: 0.16, verticalRange: 0.05, runDepthBias: 0.06,
     pathFrequency: 0.38, steeringResponse: 3.1, motionDamping: 4, maximumSpeed: 0.31,
     wriggleFrequency: 7.2, wriggleAmplitude: 0.18,

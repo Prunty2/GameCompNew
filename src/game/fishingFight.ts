@@ -173,12 +173,15 @@ export function stepFishingFight(
         ? rarityProfile.reelProgressPerSecond / speciesProfile.reelResistance * (0.34 + (1 - thrash) * 0.18)
         : rarityProfile.reelProgressPerSecond / speciesProfile.reelResistance * (0.82 + (1 - stamina) * 0.24);
     const tensionRate = pose.kind === "run"
-      ? rarityProfile.runTensionPerSecond * speciesProfile.runPower * (0.5 + run * 0.72)
+      ? rarityProfile.runTensionPerSecond * speciesProfile.runPower * run
       : pose.kind === "thrash"
-        ? rarityProfile.thrashTensionPerSecond * speciesProfile.thrashPower * (0.42 + thrash * 0.7)
-        : rarityProfile.calmTensionPerSecond * (0.88 + speciesProfile.reelResistance * 0.12);
+        ? rarityProfile.thrashTensionPerSecond * speciesProfile.thrashPower * thrash
+        : 0;
     progress += reelRate * safeDt;
     tension += tensionRate / lineStrength * safeDt;
+    if (pose.kind === "calm") {
+      tension -= rarityProfile.calmSlackPerSecond * 0.18 * safeDt;
+    }
     nextStamina -= rarityProfile.staminaDrainPerSecond / speciesProfile.endurance
       * (pose.kind === "run" ? 0.9 + run * 0.35 : 0.58 + thrash * 0.22)
       * safeDt;

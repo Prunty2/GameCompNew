@@ -1,5 +1,5 @@
 import { clamp, createRandom, type RandomSource } from "./math";
-import { stepFishingTargetMotion } from "./fishingMovement";
+import { fishingSpeciesMotion, stepFishingTargetMotion } from "./fishingMovement";
 import { fishingHighlightSpecies } from "./fishingPresentation";
 import { FISHING_REEL_DURATION } from "./fishingReeling";
 import { fishingFightBehaviour, fishingFightCue, RESTING_FIGHT_MOTION, stepFishingFight } from "./fishingFight";
@@ -1039,6 +1039,16 @@ function updateFishing(simulation: Simulation, input: InputState, dt: number): v
     if (simulation.elapsed - fishing.exitingAt >= FISHING_REEL_DURATION) leaveFishing(simulation);
     return;
   }
+  const hookedTargetIndex = fishing.reeling?.targetIndex ?? null;
+  for (const [targetIndex, target] of fishing.targets.entries()) {
+    if (targetIndex === hookedTargetIndex) continue;
+    const movement = stepFishingTargetMotion(target.species, target, simulation.elapsed, target.phase, dt);
+    target.x = movement.x;
+    target.y = movement.y;
+    target.direction = movement.direction;
+    target.velocityX = movement.velocityX;
+    target.velocityY = movement.velocityY;
+  }
   if (fishing.reeling) {
     updateFishingFight(simulation, input, dt);
     return;
@@ -1047,12 +1057,6 @@ function updateFishing(simulation: Simulation, input: InputState, dt: number): v
   fishing.hook.x = clamp(fishing.hook.x + input.hookX * BALANCE.fishingHookHorizontalSpeed * dt, 0.07, 0.93);
   fishing.hook.y = clamp(fishing.hook.y + input.hookY * verticalSpeed * dt, 0.07, maxFishingDepth(simulation));
   for (const [targetIndex, target] of fishing.targets.entries()) {
-    const movement = stepFishingTargetMotion(target.species, target, simulation.elapsed, target.phase, dt);
-    target.x = movement.x;
-    target.y = movement.y;
-    target.direction = movement.direction;
-    target.velocityX = movement.velocityX;
-    target.velocityY = movement.velocityY;
     const reachable = FISH[target.species].depthTier <= simulation.progress.upgrades.line;
     if (reachable && distance(fishing.hook, target) <= FISHING_CATCH_RADIUS) {
       const opening = fishingFightBehaviour(target.species, 0, 1);
@@ -1062,7 +1066,7 @@ function updateFishing(simulation: Simulation, input: InputState, dt: number): v
         hookedAt: simulation.elapsed,
         direction: Math.abs(target.velocityX) > 0.001
           ? target.velocityX >= 0 ? 1 : -1
-          : multiplyDirection(target.direction, movement.speciesMotion.heading),
+          : multiplyDirection(target.direction, fishingSpeciesMotion(target.species, simulation.elapsed, target.phase).heading),
         progress: 0,
         tension: 0.12,
         stamina: 1,

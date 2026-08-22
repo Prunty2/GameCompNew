@@ -190,7 +190,7 @@ test("hooked fish require active reel and release tension control", async ({ pag
   await expect(canvas).toHaveAttribute("data-fishing-fight-style", "kick-glide");
   await expect(page.locator("#context-action")).toBeHidden();
   await expect(canvas).toHaveAttribute("data-fishing-background-fish-opacity", "0.680");
-  const frozenPoseTime = await canvas.getAttribute("data-fishing-background-pose-elapsed");
+  const startingBackgroundPoseTime = Number(await canvas.getAttribute("data-fishing-background-pose-elapsed"));
   const startingProgress = Number(await canvas.getAttribute("data-fishing-reel-progress"));
   const restColour = await canvas.getAttribute("data-fishing-line-colour");
 
@@ -202,7 +202,8 @@ test("hooked fish require active reel and release tension control", async ({ pag
   const pulledColour = await canvas.getAttribute("data-fishing-line-colour");
   expect(pulledProgress).toBeGreaterThan(startingProgress);
   expect(pulledColour).not.toBe(restColour);
-  await expect(canvas).toHaveAttribute("data-fishing-background-pose-elapsed", frozenPoseTime ?? "");
+  const movedBackgroundPoseTime = Number(await canvas.getAttribute("data-fishing-background-pose-elapsed"));
+  expect(movedBackgroundPoseTime).toBeGreaterThan(startingBackgroundPoseTime);
 
   await page.waitForTimeout(500);
   const restedTension = Number(await canvas.getAttribute("data-fishing-line-tension"));

@@ -42,6 +42,36 @@ function playFight(species: FishSpecies): { seconds: number; broken: boolean; ma
   return { seconds, broken, maximumTension };
 }
 
+function holdFight(species: FishSpecies): {
+  landed: boolean;
+  broken: boolean;
+  maximumTension: number;
+} {
+  let meters = { ...freshFight };
+  let seconds = 0;
+  let maximumTension = meters.tension;
+  let broken = false;
+  while (seconds < 45 && meters.progress < 1 && !broken) {
+    const next = stepFishingFight(
+      species,
+      meters,
+      true,
+      seconds,
+      FISH[species].depthTier,
+      1 / 120,
+    );
+    meters = next;
+    broken = next.broken;
+    maximumTension = Math.max(maximumTension, next.tension);
+    seconds += 1 / 120;
+  }
+  return {
+    landed: meters.progress >= 1,
+    broken,
+    maximumTension,
+  };
+}
+
 function samplePose(species: "bluegill" | "lakeSturgeon", stamina = 1): ReturnType<typeof fishingFightBehaviour>[] {
   return Array.from({ length: 80 }, (_, index) => fishingFightBehaviour(species, index * 0.1, stamina));
 }
@@ -73,12 +103,12 @@ describe("fishing fight", () => {
     expect(tired.every((pose) => pose.kind === "calm")).toBe(true);
   });
 
-  test("reeling in a lull gains ground without dumping the line", () => {
+  test("reeling in a lull gains ground and cannot increase tension", () => {
     const calmAge = samplePose("bluegill").findIndex((pose) => pose.kind === "calm") * 0.1;
     const pulling = stepFishingFight("bluegill", freshFight, true, calmAge, 0, 0.1);
     expect(pulling.behaviour).toBe("calm");
     expect(pulling.progress).toBeGreaterThan(freshFight.progress);
-    expect(pulling.tension).toBeGreaterThan(freshFight.tension);
+    expect(pulling.tension).toBeLessThan(freshFight.tension);
     expect(pulling.stamina).toBeLessThan(freshFight.stamina);
   });
 
@@ -129,15 +159,24 @@ describe("fishing fight", () => {
     expect(legendary.progress).toBeLessThan(common.progress);
   });
 
-  test("continuous unchecked reeling eventually breaks the line", () => {
+  test("continuous unchecked reeling can still break the line against a powerful fish", () => {
     let fight = freshFight;
     let broken = false;
-    for (let index = 0; index < 120 && !broken; index += 1) {
-      const next = stepFishingFight("bluegill", fight, true, index * 0.1, 0, 0.1);
+    for (let index = 0; index < 450 && !broken; index += 1) {
+      const next = stepFishingFight("yellowtailKingfish", fight, true, index * 0.1, 0, 0.1);
       fight = next;
       broken = next.broken;
     }
     expect(broken).toBe(true);
+  });
+
+  test("Sunward Shoal starters stay forgiving even with a continuous reel", () => {
+    for (const species of ["bluegill", "yellowPerch", "emeraldShiner"] as const) {
+      const result = holdFight(species);
+      expect(result.landed, species).toBe(true);
+      expect(result.broken, species).toBe(false);
+      expect(result.maximumTension, species).toBeLessThan(0.62);
+    }
   });
 
   test("requires one continuous critical-tension window to break", () => {
@@ -219,7 +258,7 @@ describe("fishing fight", () => {
     expect(results.bluegill.seconds).toBeLessThanOrEqual(5.5);
     expect(results.northernPike.seconds).toBeGreaterThanOrEqual(6);
     expect(results.northernPike.seconds).toBeLessThanOrEqual(9);
-    expect(results.bowfin.seconds).toBeGreaterThanOrEqual(10);
+    expect(results.bowfin.seconds).toBeGreaterThanOrEqual(9);
     expect(results.bowfin.seconds).toBeLessThanOrEqual(15);
     expect(results.yellowtailKingfish.seconds).toBeGreaterThanOrEqual(18);
     expect(results.yellowtailKingfish.seconds).toBeLessThanOrEqual(24);

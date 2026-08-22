@@ -33,7 +33,7 @@ describe("fishing presentation", () => {
     expect(fishingReelCameraProgress(1, 0, true)).toBe(0);
   });
 
-  test("freezes and shadows the background school during a fight", () => {
+  test("keeps the subdued background school moving during a fight", () => {
     expect(fishingFocusPresentation(12, 1, null)).toEqual({
       backgroundFishOpacity: 1,
       backgroundPoseElapsed: 12,
@@ -41,7 +41,7 @@ describe("fishing presentation", () => {
     });
     expect(fishingFocusPresentation(15, 1, 12)).toEqual({
       backgroundFishOpacity: 0.68,
-      backgroundPoseElapsed: 12,
+      backgroundPoseElapsed: 15,
       showTargetGuides: false,
     });
     expect(fishingFocusPresentation(16, 0.5, 12).backgroundFishOpacity).toBeCloseTo(0.34);

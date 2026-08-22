@@ -57,7 +57,6 @@ export interface FishDefinition {
 
 export interface FishingFightProfile {
   reelProgressPerSecond: number;
-  calmTensionPerSecond: number;
   thrashTensionPerSecond: number;
   runTensionPerSecond: number;
   calmSlackPerSecond: number;
@@ -134,7 +133,6 @@ export const BALANCE = {
 export const FISHING_FIGHT_PROFILES: Record<FishRarity, FishingFightProfile> = {
   common: {
     reelProgressPerSecond: 0.36,
-    calmTensionPerSecond: 0.26,
     thrashTensionPerSecond: 0.78,
     runTensionPerSecond: 1.18,
     calmSlackPerSecond: 0.2,
@@ -148,7 +146,6 @@ export const FISHING_FIGHT_PROFILES: Record<FishRarity, FishingFightProfile> = {
   },
   uncommon: {
     reelProgressPerSecond: 0.3,
-    calmTensionPerSecond: 0.3,
     thrashTensionPerSecond: 0.88,
     runTensionPerSecond: 1.28,
     calmSlackPerSecond: 0.18,
@@ -162,7 +159,6 @@ export const FISHING_FIGHT_PROFILES: Record<FishRarity, FishingFightProfile> = {
   },
   rare: {
     reelProgressPerSecond: 0.26,
-    calmTensionPerSecond: 0.34,
     thrashTensionPerSecond: 0.96,
     runTensionPerSecond: 1.38,
     calmSlackPerSecond: 0.16,
@@ -176,7 +172,6 @@ export const FISHING_FIGHT_PROFILES: Record<FishRarity, FishingFightProfile> = {
   },
   legendary: {
     reelProgressPerSecond: 0.22,
-    calmTensionPerSecond: 0.38,
     thrashTensionPerSecond: 1.04,
     runTensionPerSecond: 1.5,
     calmSlackPerSecond: 0.14,
