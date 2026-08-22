@@ -18,7 +18,7 @@ test("main menu presents centered play, settings, and credits actions", async ({
   await page.goto("/");
 
   const version = page.locator(".title-build-version");
-  await expect(version).toHaveText("v0.7.0 (PR #109)");
+  await expect(version).toHaveText("v0.8.0 (PR #115)");
   const versionBounds = await version.boundingBox();
   expect(versionBounds).not.toBeNull();
   expect(versionBounds!.x).toBeLessThan(24);
@@ -1204,7 +1204,7 @@ test("how to play instructions advance one card at a time", async ({ page }) => 
 
   await page.getByRole("button", { name: "Next" }).click();
   await page.getByRole("button", { name: "Next" }).click();
-  await expect(page.getByRole("heading", { name: "Catch and protect" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Catch and store" })).toBeVisible();
   await expect(page.locator(".help-card")).toContainText("hold the left mouse button while it is calm");
   await expect(page.locator(".help-card")).toContainText("When it races away, release");
 

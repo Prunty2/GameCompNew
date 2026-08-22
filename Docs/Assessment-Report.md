@@ -4,7 +4,7 @@
 
 **Project:** FSHING, original browser game  
 **Team:** Liam, Saxon, Harrison, David  
-**Version documented:** 0.7.0 (PR #111)
+**Version documented:** 0.8.0 (PR #115)
 **Document date:** 22 August 2026
 **Submission components:** This report, source repository, and production build
 
@@ -272,12 +272,13 @@ Browser tests cover:
 
 ### Automated verification record
 
-Local verification on 21 August 2026:
+Local verification on 22 August 2026:
 
 | Check | Result | Evidence |
 | --- | --- | --- |
-| Unit/model suite | Pass | 89 of 89 Vitest tests passed |
-| SDK-unavailable fallback | Pass | Browser suite aborts CrazyGames and still completes local play |
+| Typecheck and unit/model suite | Pass | Strict TypeScript passed; 142 of 142 Vitest tests passed |
+| Production build | Pass | Vite transformed 76 modules and produced `dist/` |
+| Browser suite and SDK fallback | Pass | 34 of 34 Playwright tests passed; the suite aborts CrazyGames and still completes local play |
 
 Typecheck, production build, and the Playwright suite should be run before merge (`npm run check`, `npm run build`, `npm run test:e2e`).
 
@@ -345,7 +346,7 @@ Solution: per-harbor demand and a 6% daily cap keep the two quotes distinct whil
 | Algorithms | Section 5; market quote, spawn counts, determinism, save validation |
 | Computational thinking | Decomposed modules, seeded tests |
 | User-centred design | User-needs table, hierarchy, accessibility |
-| Testing and iteration | Section 8; 89 unit tests, 24 browser tests, honest playtest protocol |
+| Testing and iteration | Section 8; 142 unit tests, 34 browser tests, honest playtest protocol |
 | Functional game | Onboarding-to-sale loop, Beach, upgrades, persistence |
 | Reflection | Section 9 |
 
@@ -353,7 +354,7 @@ Solution: per-harbor demand and a 6% daily cap keep the two quotes distinct whil
 
 - [ ] Replace the human-playtest blank cells with real observations.
 - [x] Keep `Docs/Game-Brief.md` aligned with the playable loop.
-- [x] 89 unit/model tests pass.
+- [x] 142 unit/model tests pass.
 - [ ] Run `npm run check`, `npm run build`, and `npm run test:e2e` on the submission machine.
 - [x] Confirm CrazyGames SDK failure still falls back locally (browser suite aborts the SDK).
 - [x] Confirm a refresh retains money, unlocks, discoveries, and tutorial completion.
