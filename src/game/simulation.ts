@@ -207,6 +207,12 @@ const FISHING_SPECIES_DEPTH_BANDS: Partial<Record<FishSpecies, { top: number; bo
   cisco: { top: 0.1, bottom: 0.18 },
   lakeTrout: { top: 0.25, bottom: 0.39 },
   burbot: { top: 0.5, bottom: 0.6 },
+  luderick: { top: 0.14, bottom: 0.26 },
+  easternAustralianSalmon: { top: 0.34, bottom: 0.46 },
+  duskyFlathead: { top: 0.53, bottom: 0.62 },
+  estuaryPerch: { top: 0.71, bottom: 0.77 },
+  snapper: { top: 0.16, bottom: 0.28 },
+  yellowtailKingfish: { top: 0.46, bottom: 0.58 },
 };
 const SEASON_SALES = 8;
 

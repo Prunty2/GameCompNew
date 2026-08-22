@@ -672,6 +672,61 @@ describe("FSHING side-on simulation", () => {
     expect(lakeSturgeon.every((target) => !isFishingTargetReachable(simulation, target))).toBe(true);
   });
 
+  test("steps Beach Outer Gloam residents through the diagrammed depth bands", () => {
+    const simulation = createSimulation(12);
+    simulation.world = "beach";
+    simulation.progress.upgrades.line = 4;
+    expect(startFishing(simulation, "outerGloam", { width: 2048, height: 1152 })).toBe(true);
+    const snapper = simulation.fishing?.targets.filter((target) => target.species === "snapper") ?? [];
+    const kingfish = simulation.fishing?.targets.filter((target) => (
+      target.species === "yellowtailKingfish"
+    )) ?? [];
+    const mulloway = simulation.fishing?.targets.filter((target) => target.species === "mulloway") ?? [];
+
+    expect(snapper.length).toBeGreaterThan(0);
+    expect(kingfish.length).toBeGreaterThan(0);
+    expect(mulloway.length).toBeGreaterThan(0);
+    expect(Math.min(...snapper.map((target) => target.homeY))).toBeGreaterThanOrEqual(0.16);
+    expect(Math.max(...snapper.map((target) => target.homeY))).toBeLessThanOrEqual(0.28);
+    expect(Math.min(...kingfish.map((target) => target.homeY))).toBeGreaterThanOrEqual(0.46);
+    expect(Math.max(...kingfish.map((target) => target.homeY))).toBeLessThanOrEqual(0.58);
+    expect([...snapper, ...kingfish].every((target) => isFishingTargetReachable(simulation, target))).toBe(true);
+    expect(Math.max(...mulloway.map((target) => target.homeY))).toBeGreaterThan(maxFishingDepth(simulation));
+  });
+
+  test("steps Beach Mosswater residents down through the annotated bay bands", () => {
+    const simulation = createSimulation(12);
+    simulation.world = "beach";
+    simulation.progress.upgrades.line = 3;
+    expect(startFishing(simulation, "mosswaterPool", { width: 2048, height: 1152 })).toBe(true);
+    const luderick = simulation.fishing?.targets.filter((target) => target.species === "luderick") ?? [];
+    const salmon = simulation.fishing?.targets.filter((target) => (
+      target.species === "easternAustralianSalmon"
+    )) ?? [];
+    const flathead = simulation.fishing?.targets.filter((target) => target.species === "duskyFlathead") ?? [];
+    const perch = simulation.fishing?.targets.filter((target) => target.species === "estuaryPerch") ?? [];
+
+    expect(luderick.length).toBeGreaterThan(0);
+    expect(salmon.length).toBeGreaterThan(0);
+    expect(flathead.length).toBeGreaterThan(0);
+    expect(perch.length).toBeGreaterThan(0);
+    expect(Math.min(...luderick.map((target) => target.homeY))).toBeGreaterThanOrEqual(0.14);
+    expect(Math.max(...luderick.map((target) => target.homeY))).toBeLessThanOrEqual(0.26);
+    expect(Math.min(...salmon.map((target) => target.homeY))).toBeGreaterThanOrEqual(0.34);
+    expect(Math.max(...salmon.map((target) => target.homeY))).toBeLessThanOrEqual(0.46);
+    expect(Math.min(...flathead.map((target) => target.homeY))).toBeGreaterThanOrEqual(0.53);
+    expect(Math.max(...flathead.map((target) => target.homeY))).toBeLessThanOrEqual(0.62);
+    expect(Math.min(...perch.map((target) => target.homeY))).toBeGreaterThanOrEqual(0.71);
+    expect(Math.max(...perch.map((target) => target.homeY))).toBeLessThanOrEqual(0.77);
+    expect([...luderick, ...salmon, ...flathead].every((target) => (
+      isFishingTargetReachable(simulation, target)
+    ))).toBe(true);
+    expect(perch.every((target) => !isFishingTargetReachable(simulation, target))).toBe(true);
+
+    simulation.progress.upgrades.line = 4;
+    expect(perch.every((target) => isFishingTargetReachable(simulation, target))).toBe(true);
+  });
+
   test("spreads the Sunward population across shallow and upgrade-preview depths", () => {
     const simulation = createSimulation(12);
     expect(startFishing(simulation, "sunwardShoal", { width: 2048, height: 1152 })).toBe(true);
@@ -785,8 +840,8 @@ describe("FSHING side-on simulation", () => {
     expect(learningAccuracy(simulation)).toBe(67);
 
     simulation.world = "beach";
-    const beachSurvey = recordSurvey(simulation, "mosswaterPool", "duskyFlathead");
-    expect(beachSurvey).toMatchObject({ correct: true, expected: "duskyFlathead" });
+    const beachSurvey = recordSurvey(simulation, "mosswaterPool", "luderick");
+    expect(beachSurvey).toMatchObject({ correct: true, expected: "luderick" });
     expect(beachSurvey.explanation).toContain("sand, seagrass, and shallow reef");
   });
 
