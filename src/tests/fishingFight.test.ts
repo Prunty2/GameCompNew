@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import {
+  FISHING_FIGHT_OPENING_RUN_SECONDS,
   fishingFightBehaviour,
   fishingFightCue,
   fishingStruggleIntensity,
@@ -57,6 +58,16 @@ describe("fishing fight", () => {
     expect(fishingStruggleIntensity("bluegill", 0, 1)).toBe(fishingFightBehaviour("bluegill", 0, 1).intensity);
   });
 
+  test("every hooked species immediately begins an escape run", () => {
+    for (const species of Object.keys(FISH) as FishSpecies[]) {
+      const opening = fishingFightBehaviour(species, 0, 1);
+      const stillOpening = fishingFightBehaviour(species, FISHING_FIGHT_OPENING_RUN_SECONDS - 0.01, 1);
+      expect(opening.kind, species).toBe("run");
+      expect(opening.intensity, species).toBeGreaterThan(0.3);
+      expect(stillOpening.kind, species).toBe("run");
+    }
+  });
+
   test("tired fish stop racing away and stay in a lull", () => {
     const tired = samplePose("bluegill", 0.12);
     expect(tired.every((pose) => pose.kind === "calm")).toBe(true);
@@ -73,9 +84,10 @@ describe("fishing fight", () => {
 
   test("giving line during a run slacks tension because the fish races away", () => {
     const runAge = samplePose("bluegill").findIndex((pose) => pose.kind === "run") * 0.1;
+    const calmAge = samplePose("bluegill").findIndex((pose) => pose.kind === "calm") * 0.1;
     const loaded = { ...freshFight, tension: 0.82, progress: 0.4 };
     const givingLine = stepFishingFight("bluegill", loaded, false, runAge, 0, 0.1);
-    const restingCalm = stepFishingFight("bluegill", loaded, false, 0, 0, 0.1);
+    const restingCalm = stepFishingFight("bluegill", loaded, false, calmAge, 0, 0.1);
     expect(givingLine.behaviour).toBe("run");
     expect(givingLine.tension).toBeLessThan(loaded.tension);
     expect(givingLine.tension).toBeLessThan(restingCalm.tension);
@@ -84,8 +96,9 @@ describe("fishing fight", () => {
 
   test("horsing a running fish loads the line faster than reeling a lull", () => {
     const runAge = samplePose("bluegill").findIndex((pose) => pose.kind === "run") * 0.1;
+    const calmAge = samplePose("bluegill").findIndex((pose) => pose.kind === "calm") * 0.1;
     const horsing = stepFishingFight("bluegill", freshFight, true, runAge, 0, 0.1);
-    const lull = stepFishingFight("bluegill", freshFight, true, 0, 0, 0.1);
+    const lull = stepFishingFight("bluegill", freshFight, true, calmAge, 0, 0.1);
     expect(horsing.behaviour).toBe("run");
     expect(horsing.tension).toBeGreaterThan(lull.tension);
     expect(horsing.progress).toBeLessThan(lull.progress);
@@ -141,7 +154,8 @@ describe("fishing fight", () => {
   });
 
   test("passive waiting cannot tire a fish through a lull", () => {
-    const waiting = stepFishingFight("bluegill", { ...freshFight, stamina: 0.5 }, false, 0, 0, 0.1);
+    const calmAge = samplePose("bluegill", 0.5).findIndex((pose) => pose.kind === "calm") * 0.1;
+    const waiting = stepFishingFight("bluegill", { ...freshFight, stamina: 0.5 }, false, calmAge, 0, 0.1);
     expect(waiting.behaviour).toBe("calm");
     expect(waiting.progress).toBe(0);
     expect(waiting.stamina).toBeGreaterThan(0.5);

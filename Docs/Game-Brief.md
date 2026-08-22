@@ -13,7 +13,7 @@ FSHING is a single-player side-on fishing market game for desktop and mobile bro
 5. Freshness falls while the simulation is running. Dock at the harbor that currently pays more and sell every fresh catch of that species.
 6. Spend shells on cargo, engine, line, boost, or Beach access. Line upgrades unlock the middle and far-right grounds at world-specific tiers.
 
-A new save starts docked at Brindle Harbor on the lake with Bluegill already discovered. The first run is a four-step **First Assignment** that walks through inspect → track → catch → sell. Each tutorial pill includes a short instruction that changes with the player's current screen. During the catch the title switches to **Hold left click** or **Let it run**, explains that a racing fish slacks the line, and toasts if the player horses a run, never reels a lull, or rests too long. The sale ends that assignment. When the player can afford a dock upgrade, a second tutorial walks through Upgrades.
+A new save starts docked at Brindle Harbor on the lake with Bluegill already discovered. The first run is a four-step **First Assignment** that walks through inspect → track → catch → sell. Each tutorial pill includes a short instruction that changes with the player's current screen. During the catch the title first shows **Let it run**, then switches to **Hold left click** in the first lull, explains that a racing fish slacks the line, and toasts if the player horses a run, never reels a lull, or rests too long. The sale ends that assignment. When the player can afford a dock upgrade, a second tutorial walks through Upgrades.
 
 After eight market sales the game shows a season report, then returns to the same market. Trading does not stop.
 
@@ -144,7 +144,7 @@ Simulation step is `1/120` s. Gameplay RNG is seeded. The boat travels only on t
 | Critical line tension | 90% | tension threshold |
 | Break grace | 0.7 | seconds continuously at critical tension |
 | Line strength per tier | +12% | tension resistance |
-| Hook-up reaction lull | 0.65 | seconds before the first run |
+| Hook-up opening run | 0.65 | seconds of immediate escape before the first lull |
 | Dive duration | 0.85 | seconds |
 | Day length | 210 | seconds |
 | Night start | 140 | seconds into the day |
@@ -152,7 +152,7 @@ Simulation step is `1/120` s. Gameplay RNG is seeded. The boat travels only on t
 
 Hook depth is `min(0.94, 0.3 + lineTier × 0.125)`. Fish below the line limit are visible and dimmed but cannot be hooked. Escape while fishing reels the empty line and returns to sailing; it does not pause.
 
-Hooking a fish begins a deterministic line fight built from fish behaviour, not a generic hold-to-fill meter. Holding the primary mouse button directly on the fishing canvas reels; touch hold and the remappable Reel key remain equivalent accessibility inputs. Every hook-up opens with a 0.65-second reaction lull, then the fight cycles through calm lulls, runs, and short thrashes. Reeling during a lull gains ground at modest tension and tires the fish. Reeling against a run loads the line fast. Releasing during a run lets the fish take line, slip farther from the boat, and drop tension. Waiting through a lull barely slacks the line and does not tire the fish. Tired fish stop running and become easier to land. There is no on-water fight HUD. Line tension is shown by the hook line itself: cream when safe, amber as it tightens, red at the 90% critical threshold, and slightly thicker as strain rises. The hooked fish follows a continuous velocity-limited path; it accelerates, turns, rolls, rises, or dives instead of receiving discrete random displacement impulses. Reduced motion holds the fight offset still. Non-colour feedback remains: the tutorial title, toasts, sound, vibration, live-region copy, and the canvas `aria-label`. The hooked fish is drawn over the lower hook so only the eye and line stay visible. There is no separate on-screen Reel button.
+Hooking a fish begins a deterministic line fight built from fish behaviour, not a generic hold-to-fill meter. Holding the primary mouse button directly on the fishing canvas reels; touch hold and the remappable Reel key remain equivalent accessibility inputs. Every hook-up opens with a smoothly ramped 0.65-second escape run, followed by the first calm reeling window, then cycles through calm lulls, runs, and short thrashes. Reeling during a lull gains ground at modest tension and tires the fish. Reeling against a run loads the line fast. Releasing during a run lets the fish take line, slip farther from the boat, and drop tension. Waiting through a lull barely slacks the line and does not tire the fish. Tired fish stop running and become easier to land. There is no on-water fight HUD. Line tension is shown by the hook line itself: cream when safe, amber as it tightens, red at the 90% critical threshold, and slightly thicker as strain rises. The hooked fish follows a continuous velocity-limited path; it accelerates, turns, rolls, rises, or dives instead of receiving discrete random displacement impulses. Reduced motion holds the fight offset still. Non-colour feedback remains: the tutorial title, toasts, sound, vibration, live-region copy, and the canvas `aria-label`. The hooked fish is drawn over the lower hook so only the eye and line stay visible. There is no separate on-screen Reel button.
 
 During a fight, every non-hooked fish freezes on its current animation frame and becomes a clearly visible dark silhouette at 68% opacity. Tracked-fish outlines, chevrons, tutorial hook arrows, and the large species portrait are hidden until the fight ends so the hooked fish remains the sole visual focus. Keeping tension at or above 90% for 0.7 seconds breaks the line, returns the hook to the top, and leaves the player at the same fishing ground for an immediate retry. It does not remove cargo or money.
 
@@ -186,7 +186,7 @@ Saved as `marketTutorialStep`. Skip is always available. The prompt is a top-cen
 | --- | --- |
 | 1 of 4 | Choose Bluegill |
 | 2 of 4 | Track the catch |
-| 3 of 4 | Catch a Bluegill at Sunward Shoal; after the hook-up the title becomes **Hold left click**, then **Let it run** when the fish races away |
+| 3 of 4 | Catch a Bluegill at Sunward Shoal; after hook-up the title becomes **Let it run**, then **Hold left click** when the fish first calms |
 | 4 of 4 | Sell while fresh |
 
 The sale ends the assignment. Older saves with `completedContracts > 0` or leftover `complete` load as `done`.

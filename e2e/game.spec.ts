@@ -185,7 +185,8 @@ test("hooked fish require active reel and release tension control", async ({ pag
 
   const canvas = page.locator("#game-canvas");
   await expect(canvas).toHaveAttribute("data-fishing-state", "fighting");
-  await expect(canvas).toHaveAttribute("data-fishing-fight-behaviour", /^(calm|run|thrash)$/);
+  await expect(canvas).toHaveAttribute("data-fishing-fight-behaviour", "run");
+  await expect(canvas).toHaveAttribute("data-fishing-fight-cue", "release");
   await expect(canvas).toHaveAttribute("data-fishing-fight-style", "kick-glide");
   await expect(page.locator("#context-action")).toBeHidden();
   await expect(canvas).toHaveAttribute("data-fishing-background-fish-opacity", "0.680");
@@ -236,11 +237,16 @@ test("first assignment catch step teaches left-click reel and line colour", asyn
   await page.evaluate(() => window.__FSHING_TEST__?.hookSpecies("bluegill"));
 
   const tutorial = page.locator("#market-tutorial");
-  await expect(tutorial).toContainText("Hold left click");
-  await expect(tutorial).toContainText("while the fish is calm");
+  await expect(tutorial).toContainText("Let it run");
+  await expect(tutorial).toContainText("racing away");
 
   const canvas = page.locator("#game-canvas");
-  await expect(canvas).toHaveAttribute("data-fishing-fight-cue", "reel");
+  await expect(canvas).toHaveAttribute("data-fishing-fight-cue", "release");
+  await expect.poll(async () => canvas.getAttribute("data-fishing-fight-cue"), {
+    timeout: 3_000,
+    intervals: [50],
+  }).toMatch(/reel|resume/);
+  await expect(tutorial).toContainText("Hold left click");
   await canvas.dispatchEvent("pointerdown", { pointerId: 1, button: 0, isPrimary: true });
   await expect.poll(async () => canvas.getAttribute("data-fishing-fight-cue"), {
     timeout: 8_000,

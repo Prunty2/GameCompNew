@@ -35,6 +35,6 @@ This note records the evidence used for FSHING's underwater movement and hooked-
 - All movement is deterministic at the fixed simulation step. Pseudo-random-looking variation comes from continuous seeded functions, never per-frame randomness.
 - Free-swimming fish ease toward desired velocity and depth. Burst profiles change the desired speed, but acceleration is limited so positions cannot jump.
 - Hooked fish follow continuous velocity-limited trajectories. Species style changes run direction, vertical bias, path frequency, endurance, and body wriggle without changing the player's three readable states: calm, run, and thrash.
-- Every hook-up begins with a 0.65-second reaction lull. This avoids an unavoidable tension spike and gives pointer, touch, keyboard, tutorial, and screen-reader players time to read the first cue.
+- Every hook-up begins with a 0.65-second escape run. Its intensity ramps smoothly, so the fish starts pulling immediately without an abrupt position or tension spike. The first calm reeling window follows that opening run.
 - Releasing a run reduces tension and yields line; reeling a lull gains progress and drains stamina. A stronger line reduces tension gain but does not unrealistically make released tension disappear faster.
 - An automated cue-following reference strategy lands beginner fish in about 4–5 seconds, mid-tier fish in about 7–16 seconds, Yellowtail Kingfish in about 21 seconds, Lake Sturgeon in about 21 seconds, and Mulloway in about 27 seconds. The timing test runs at 120 Hz and guards these bands.

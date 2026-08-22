@@ -48,7 +48,7 @@ export const FISHING_FIGHT_RELEASE_TENSION = 0.72;
 export const FISHING_FIGHT_RESUME_TENSION = 0.45;
 export const FISHING_FIGHT_PULLING_STRUGGLE = 0.55;
 export const FISHING_FIGHT_TIRED_STAMINA = 0.22;
-export const FISHING_FIGHT_REACTION_SECONDS = 0.65;
+export const FISHING_FIGHT_OPENING_RUN_SECONDS = 0.65;
 
 export function fishingFightBehaviour(
   species: FishSpecies,
@@ -57,10 +57,24 @@ export function fishingFightBehaviour(
 ): FishingFightPose {
   const profile = FISHING_SPECIES_FIGHT_PROFILES[species];
   const energy = clamp(stamina, 0, 1);
-  if (fightAge < FISHING_FIGHT_REACTION_SECONDS || energy <= FISHING_FIGHT_TIRED_STAMINA) {
+  if (energy <= FISHING_FIGHT_TIRED_STAMINA) {
     return { kind: "calm", intensity: 0.07 + (1 - energy) * 0.04 };
   }
-  const activeAge = Math.max(0, fightAge - FISHING_FIGHT_REACTION_SECONDS);
+  if (fightAge < FISHING_FIGHT_OPENING_RUN_SECONDS) {
+    const openingProgress = smoothstep(fightAge / FISHING_FIGHT_OPENING_RUN_SECONDS);
+    const openingPulse = Math.sin(Math.PI * openingProgress);
+    return {
+      kind: "run",
+      intensity: clamp(
+        profile.runIntensity
+          * (0.14 + (1 - openingProgress) * 0.41 + openingPulse * 0.45)
+          * (0.5 + energy * 0.5),
+        0,
+        1,
+      ),
+    };
+  }
+  const activeAge = Math.max(0, fightAge - FISHING_FIGHT_OPENING_RUN_SECONDS);
   const cyclePosition = positiveModulo(activeAge / profile.cycleSeconds, 1);
   const runFraction = profile.runFraction;
   const thrashFraction = profile.thrashFraction;
