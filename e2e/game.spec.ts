@@ -39,6 +39,14 @@ test("main menu presents centered play, settings, and credits actions", async ({
   await expect(page.getByRole("button", { name: "Field guide" })).toHaveCount(0);
   await expect(page.locator(".title-tagline, .title-controls")).toHaveCount(0);
 
+  const seagullFlocks = page.locator(".title-seagulls .seagull-flock");
+  await expect(page.locator(".title-seagulls")).toHaveAttribute("aria-hidden", "true");
+  await expect(seagullFlocks).toHaveCount(4);
+  expect(await seagullFlocks.evaluateAll((flocks) => flocks.map((flock) => flock.getAttribute("data-flock-size"))))
+    .toEqual(["3", "5", "2", "4"]);
+  await expect(seagullFlocks.first()).toHaveCSS("animation-name", "seagull-flock-cross");
+  expect(await seagullFlocks.locator(".seagull").evaluateAll((flocks) => flocks.length)).toBe(14);
+
   const bounds = await actions.evaluateAll((buttons) => buttons.map((button) => {
     const rect = button.getBoundingClientRect();
     return {
@@ -51,6 +59,13 @@ test("main menu presents centered play, settings, and credits actions", async ({
   expect(bounds[1].width).toBe(bounds[2].width);
   expect(Math.abs(bounds[0].center - viewportCenter)).toBeLessThanOrEqual(1);
   expect(Math.abs((bounds[1].center + bounds[2].center) / 2 - viewportCenter)).toBeLessThanOrEqual(1);
+});
+
+test("main menu seagulls respect reduced motion", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+
+  await expect(page.locator(".title-seagulls")).toBeHidden();
 });
 
 test("credits lists the team and returns to the main menu", async ({ page }) => {

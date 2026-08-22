@@ -789,8 +789,14 @@ export class Game {
     const returnClass = this.overlaySource === "settings" || this.overlaySource === "credits"
       ? " is-settings-return"
       : "";
+    const seagullFlocks = [3, 5, 2, 4].map((size, flockIndex) => {
+      const seagulls = Array.from({ length: size }, (_, seagullIndex) => `
+        <span class="seagull seagull-${seagullIndex + 1}"><span class="seagull-body"></span></span>`).join("");
+      return `<span class="seagull-flock seagull-flock-${flockIndex + 1}" data-flock-size="${size}">${seagulls}</span>`;
+    }).join("");
     return `
       <section class="screen-overlay title-screen${returnClass}" role="dialog" aria-label="FSHING main menu">
+        <div class="title-seagulls" aria-hidden="true">${seagullFlocks}</div>
         <div class="title-panel">
           <img class="wordmark" src="${wordmarkUrl}" alt="FSHING" />
           <div class="title-actions">

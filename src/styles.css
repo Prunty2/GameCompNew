@@ -4364,7 +4364,157 @@ kbd {
   backdrop-filter: none;
 }
 
+/* Small coastal formations periodically cross the title sky behind the menu. */
+@keyframes seagull-flock-cross {
+  0% {
+    opacity: 0;
+    transform: translate3d(-24vw, 8px, 0);
+  }
+  3% {
+    opacity: 0.82;
+  }
+  21% {
+    opacity: 0.82;
+  }
+  25% {
+    opacity: 0;
+    transform: translate3d(132vw, -18px, 0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(132vw, -18px, 0);
+  }
+}
+
+@keyframes seagull-left-wing {
+  from { transform: rotate(5deg) translateY(1px); }
+  to { transform: rotate(24deg) translateY(-2px); }
+}
+
+@keyframes seagull-right-wing {
+  from { transform: rotate(-5deg) translateY(1px); }
+  to { transform: rotate(-24deg) translateY(-2px); }
+}
+
+.title-seagulls {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.seagull-flock {
+  position: absolute;
+  top: 12%;
+  left: 0;
+  width: clamp(150px, 21vw, 260px);
+  height: 84px;
+  opacity: 0;
+  animation: seagull-flock-cross 36s linear infinite;
+  will-change: transform, opacity;
+}
+
+.seagull-flock-1 {
+  top: 11%;
+  animation-delay: -2s;
+}
+
+.seagull-flock-2 {
+  top: 20%;
+  animation-delay: 7s;
+}
+
+.seagull-flock-3 {
+  top: 8%;
+  animation-delay: 16s;
+}
+
+.seagull-flock-4 {
+  top: 25%;
+  animation-delay: 25s;
+}
+
+.seagull {
+  --seagull-scale: 1;
+
+  position: absolute;
+  width: 38px;
+  height: 17px;
+  transform: scale(var(--seagull-scale));
+  filter: drop-shadow(0 2px 1px rgb(2 15 21 / 32%));
+}
+
+.seagull::before,
+.seagull::after {
+  position: absolute;
+  top: 5px;
+  width: 20px;
+  height: 8px;
+  border-top: 3px solid rgb(247 241 227 / 94%);
+  border-radius: 50% 50% 0 0;
+  content: "";
+}
+
+.seagull::before {
+  left: 1px;
+  transform-origin: 100% 35%;
+  animation: seagull-left-wing 720ms ease-in-out infinite alternate;
+}
+
+.seagull::after {
+  right: 1px;
+  transform-origin: 0 35%;
+  animation: seagull-right-wing 720ms ease-in-out infinite alternate;
+}
+
+.seagull-body {
+  position: absolute;
+  z-index: 1;
+  top: 6px;
+  left: 16px;
+  width: 8px;
+  height: 4px;
+  border-radius: 60% 60% 45% 45%;
+  background: rgb(247 241 227 / 96%);
+}
+
+.seagull-1 {
+  top: 32px;
+  left: 0;
+}
+
+.seagull-2 {
+  --seagull-scale: 0.88;
+
+  top: 7px;
+  left: 25%;
+}
+
+.seagull-3 {
+  --seagull-scale: 0.82;
+
+  top: 61px;
+  left: 28%;
+}
+
+.seagull-4 {
+  --seagull-scale: 0.72;
+
+  top: 18px;
+  left: 57%;
+}
+
+.seagull-5 {
+  --seagull-scale: 0.66;
+
+  top: 66px;
+  left: 64%;
+}
+
 .title-panel {
+  position: relative;
+  z-index: 1;
   width: min(680px, 94vw);
   min-width: 0;
   height: auto;
@@ -4467,6 +4617,7 @@ kbd {
 
 .title-build-version {
   position: absolute;
+  z-index: 1;
   bottom: max(12px, env(safe-area-inset-bottom));
   left: max(14px, env(safe-area-inset-left));
   color: rgb(247 241 227 / 68%);
@@ -4477,6 +4628,20 @@ kbd {
   line-height: 1;
   text-shadow: 0 1px 3px rgb(2 15 21 / 80%);
   user-select: none;
+}
+
+.high-contrast .seagull {
+  filter: drop-shadow(0 0 2px #071f28) drop-shadow(0 2px 1px #071f28);
+}
+
+.reduced-motion .title-seagulls {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .title-seagulls {
+    display: none;
+  }
 }
 
 @media (max-height: 650px) {

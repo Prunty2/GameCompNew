@@ -25,7 +25,7 @@ Market → Track → Sail → Fish → Reel → Sell while fresh → Upgrade →
 
 | Screen | How it opens | What it contains |
 | --- | --- | --- |
-| Title | Launch, or Title screen from pause | Wordmark, Play, Settings, Credits, `v0.7.0 (PR #111)` |
+| Title | Launch, or Title screen from pause | Wordmark, periodically flying groups of 2–5 seagulls, Play, Settings, Credits, `v0.7.0 (PR #111)` |
 | Harbor | Play from a docked start, or docking | Market / Cargo / Upgrades tabs, shell balance, Help, Return to Lake or Beach |
 | Market detail | Selecting a discovered listing | Species art, current-harbor price, Track, Sell, 7-day graph |
 | Pause | Escape or Pause on the water | Resume, Settings, How to play, Title screen |
