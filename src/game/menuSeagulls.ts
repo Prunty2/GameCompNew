@@ -5,8 +5,8 @@ export const seagullFlightUrl = seagullFlightAssetUrl;
 const MIN_FLOCK_SIZE = 2;
 const MAX_FLOCK_SIZE = 5;
 const FIRST_FLOCK_DELAY_MS = 900;
-const MIN_FLOCK_GAP_MS = 7_000;
-const FLOCK_GAP_VARIANCE_MS = 7_000;
+const MIN_FLOCK_GAP_MS = 21_000;
+const FLOCK_GAP_VARIANCE_MS = 21_000;
 
 export interface SeagullFlightPlan {
   delayMs: number;
