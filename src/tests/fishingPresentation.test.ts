@@ -4,6 +4,7 @@ import {
   FISHING_DIVE_DURATION,
   FISHING_ENVIRONMENT_KEYS,
   FISHING_RARITY_COLOURS,
+  fishingDepthRequirementLabel,
   fishingDiveProgress,
   fishingFishPose,
   fishingFocusPresentation,
@@ -15,6 +16,11 @@ import {
 } from "../game/fishingPresentation";
 
 describe("fishing presentation", () => {
+  test("names the exact depth level required to go deeper", () => {
+    expect(fishingDepthRequirementLabel(1)).toBe("DEPTH LEVEL 1 REQUIRED TO GO DEEPER");
+    expect(fishingDepthRequirementLabel(4)).toBe("DEPTH LEVEL 4 REQUIRED TO GO DEEPER");
+  });
+
   test("moves the waterline upward as the camera descends below the surface", () => {
     const start = fishingViewLayout(900, 0, fishingDiveProgress(20, 20, false));
     const middle = fishingViewLayout(900, 0, fishingDiveProgress(20 + FISHING_DIVE_DURATION / 2, 20, false));

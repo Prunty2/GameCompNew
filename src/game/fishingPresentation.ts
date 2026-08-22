@@ -59,6 +59,10 @@ export const FISHING_ENVIRONMENT_KEYS: Record<SpotId, string> = {
   outerGloam: "fishing-outer-gloam",
 };
 
+export function fishingDepthRequirementLabel(requiredDepthLevel: number): string {
+  return `DEPTH LEVEL ${requiredDepthLevel} REQUIRED TO GO DEEPER`;
+}
+
 export function fishingDiveProgress(elapsed: number, startedAt: number, reducedMotion: boolean): number {
   if (reducedMotion) return 1;
   const linear = clamp((elapsed - startedAt) / FISHING_DIVE_DURATION, 0, 1);
