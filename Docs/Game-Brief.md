@@ -1,6 +1,6 @@
 # FSHING — game brief
 
-This brief is the product source of truth. It describes the playable game in `v0.6.0` (build label `v0.6.0 (PR #108)`), not leftover simulation APIs.
+This brief is the product source of truth. It describes the playable game in `v0.7.0` (build label `v0.7.0 (PR #111)`), not leftover simulation APIs.
 
 FSHING is a single-player side-on fishing market game for desktop and mobile browsers. The player pilots a working boat across a lake, and later an unlockable Beach, then sells catches at two harbors whose prices move each in-game day.
 
@@ -25,7 +25,7 @@ Market → Track → Sail → Fish → Reel → Sell while fresh → Upgrade →
 
 | Screen | How it opens | What it contains |
 | --- | --- | --- |
-| Title | Launch, or Title screen from pause | Wordmark, Play, Settings, Credits, `v0.6.0 (PR #108)` |
+| Title | Launch, or Title screen from pause | Wordmark, Play, Settings, Credits, `v0.7.0 (PR #111)` |
 | Harbor | Play from a docked start, or docking | Market / Cargo / Upgrades tabs, shell balance, Help, Return to Lake or Beach |
 | Market detail | Selecting a discovered listing | Species art, current-harbor price, Track, Sell, 7-day graph |
 | Pause | Escape or Pause on the water | Resume, Settings, How to play, Title screen |
@@ -144,6 +144,7 @@ Simulation step is `1/120` s. Gameplay RNG is seeded. The boat travels only on t
 | Critical line tension | 90% | tension threshold |
 | Break grace | 0.7 | seconds continuously at critical tension |
 | Line strength per tier | +12% | tension resistance |
+| Reel speed per tier | +12% | progress while actively reeling; five-tier cap |
 | Hook-up opening run | 0.65 | seconds of immediate escape before the first lull |
 | Dive duration | 0.85 | seconds |
 | Day length | 210 | seconds |
@@ -153,6 +154,8 @@ Simulation step is `1/120` s. Gameplay RNG is seeded. The boat travels only on t
 Hook depth is `min(0.94, 0.3 + lineTier × 0.125)`. Fish below the line limit are visible and dimmed but cannot be hooked. Escape while fishing reels the empty line and returns to sailing; it does not pause.
 
 Hooking a fish begins a deterministic line fight built from fish behaviour, not a generic hold-to-fill meter. Holding the primary mouse button directly on the fishing canvas reels; touch hold and the remappable Reel key remain equivalent accessibility inputs. Every hook-up opens with a smoothly ramped 0.65-second escape run, followed by the first calm reeling window, then cycles through calm lulls, runs, and short thrashes. Reeling during a lull gains ground at modest tension and tires the fish. Reeling against a run loads the line fast. Releasing during a run lets the fish take line, slip farther from the boat, and drop tension. Waiting through a lull barely slacks the line and does not tire the fish. Tired fish stop running and become easier to land. There is no on-water fight HUD. Line tension is shown by the hook line itself: cream when safe, amber as it tightens, red at the 90% critical threshold, and slightly thicker as strain rises. The hooked fish follows a continuous velocity-limited path; it accelerates, turns, rolls, rises, or dives instead of receiving discrete random displacement impulses. Reduced motion holds the fight offset still. Non-colour feedback remains: the tutorial title, toasts, sound, vibration, live-region copy, and the canvas `aria-label`. The hooked fish is drawn over the lower hook so only the eye and line stay visible. There is no separate on-screen Reel button.
+
+Reel power has five purchasable tiers. Each tier multiplies reel progress by another 12%, reaching 1.60× at tier 5 without changing fish stamina, line tension, run timing, or release physics.
 
 During a fight, every non-hooked fish keeps swimming and animating as a clearly visible dark silhouette at 68% opacity. Tracked-fish outlines, chevrons, tutorial hook arrows, and the large species portrait are hidden until the fight ends so the hooked fish remains the sole visual focus. Tension can only rise while the hooked fish is actively running or thrashing; calm reeling cools the line slightly. Keeping tension at or above 90% for 0.7 seconds breaks the line, returns the hook to the top, and leaves the player at the same fishing ground for an immediate retry. It does not remove cargo or money.
 
@@ -171,10 +174,11 @@ Costs are `base + currentTier × 55` shells.
 | Cargo | 60 | 7 | +1 slot per tier. Start 3, max 10 |
 | Engine | 70 | 6 | Faster travel, so less freshness loss |
 | Fishing line | 55 | 6 | Deeper hook limit and +12% fight strength per tier. Lake: middle tier 1, far right tier 3. Beach: middle tier 3, far right tier 4 |
+| Reel power | 65 | 5 | +12% reel speed per tier; 1.60× at tier 5 |
 | Engine boost | 300 | one-time | Hold Boost while moving. Overheats, then cools |
 | Beach | 120 | one-time | Unlock travel to the coastal map |
 
-Cargo, Engine, and Line depth are stacked vertically as compact tier cards. Beach and Engine boost are presented as two larger feature cards side by side beneath them. Each uses a unique generated pictogram matching the rest of the harbor icon set so the destination and ability read distinctly at a glance.
+Cargo, Engine, Line depth, and Reel power form a compact vertical stack of full-width equipment rows. Beach and Engine boost remain two compressed feature cards side by side beneath them. The full upgrade menu fits without an internal scrollbar at supported desktop and mobile viewports. Reel power uses a CSS-drawn spool-and-handle pictogram that matches the existing harbor equipment icon treatment without adding another runtime asset.
 
 Boat class names (Skiff through Lakebreaker) exist in balance data and are not shown in the harbor UI. Repair is not sold. The hull starts at 18 damage; reaching 100 damage would rescue to the nearest harbor, charge up to 20 shells, and dump cargo, but nothing in the live loop applies collision damage.
 
@@ -231,9 +235,9 @@ The in-fishing “W A S D MOVE HOOK” cue presents all four movement keys in on
 
 ## Persistence
 
-Save key `gamecomp-new.save`. Schema version **11**. Storage is CrazyGames `sdk.data` when the SDK initializes, otherwise `localStorage`. Malformed JSON becomes a new save.
+Save key `gamecomp-new.save`. Schema version **12**. Storage is CrazyGames `sdk.data` when the SDK initializes, otherwise `localStorage`. Malformed JSON becomes a new save.
 
-Saved: money, upgrade tiers, beach/boost unlocks, discovered species, market day/sales/earnings/target, first-assignment and upgrade tutorial steps, season-complete flag, leftover learning counters, and settings (mute, volume, contrast, reduced motion, bindings). Version 11 ignores the retired `outerUnlocked` field from older saves; existing line tiers are preserved and checked against the current world's spot requirements.
+Saved: money, upgrade tiers, beach/boost unlocks, discovered species, market day/sales/earnings/target, first-assignment and upgrade tutorial steps, season-complete flag, leftover learning counters, and settings (mute, volume, contrast, reduced motion, bindings). Version 12 adds a validated Reel power tier defaulting to zero, ignores the retired `outerUnlocked` field from older saves, and preserves existing line tiers against the current world's spot requirements.
 
 Not saved: world, cargo, elapsed time, boat pose, damage, boost heat, docked harbor.
 
@@ -271,7 +275,7 @@ CrazyGames HTML5 SDK v3 is loaded from the page. Local play works if the script 
 | `src/game/objectiveIndicator.ts` | Destination badge layout |
 | `src/game/quest.ts` | First-assignment and upgrade tutorial presentation |
 | `src/game/stem.ts` | Habitat readings and leftover survey/route helpers |
-| `src/services/saveGame.ts` | Version 11 validation and migration |
+| `src/services/saveGame.ts` | Version 12 validation and migration |
 | `src/services/platformService.ts` | CrazyGames boundary |
 | `src/services/feedbackService.ts` | Synthesized audio and optional vibration |
 

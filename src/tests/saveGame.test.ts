@@ -34,10 +34,10 @@ describe("versioned save data", () => {
       },
     }));
     expect(loadSave(storage)).toEqual({
-      version: 11,
+      version: 12,
       progress: {
         money: 999_999,
-        upgrades: { cargo: 7, engine: 0, lamp: 1, line: 0 },
+        upgrades: { cargo: 7, engine: 0, lamp: 1, line: 0, reel: 0 },
         beachUnlocked: false,
         boostUnlocked: false,
         completedContracts: 0,
@@ -70,7 +70,7 @@ describe("versioned save data", () => {
     const migrated = loadSave(storage);
     expect(migrated.progress.money).toBe(0);
     expect(migrated.settings.muted).toBe(true);
-    expect(migrated.version).toBe(11);
+    expect(migrated.version).toBe(12);
   });
 
   test("adds a safe line-depth default to older saves", () => {
@@ -85,8 +85,8 @@ describe("versioned save data", () => {
       settings: defaultSave().settings,
     }));
     const migrated = loadSave(storage);
-    expect(migrated.version).toBe(11);
-    expect(migrated.progress.upgrades).toEqual({ cargo: 2, engine: 1, lamp: 2, line: 0 });
+    expect(migrated.version).toBe(12);
+    expect(migrated.progress.upgrades).toEqual({ cargo: 2, engine: 1, lamp: 2, line: 0, reel: 0 });
     expect("outerUnlocked" in migrated.progress).toBe(false);
     expect(migrated.progress.money).toBe(140);
     expect(migrated.progress.marketTutorialStep).toBe("done");
@@ -95,7 +95,7 @@ describe("versioned save data", () => {
   test("closes leftover sale-complete tutorial steps on load", () => {
     const baseline = defaultSave();
     const storage = memoryStorage(JSON.stringify({
-      version: 11,
+      version: 12,
       progress: { ...baseline.progress, marketTutorialStep: "complete", marketSales: 1 },
       settings: baseline.settings,
     }));
@@ -121,7 +121,7 @@ describe("versioned save data", () => {
     }));
 
     const migrated = loadSave(storage);
-    expect(migrated.version).toBe(11);
+    expect(migrated.version).toBe(12);
     expect(migrated.settings.controls).toEqual(DEFAULT_CONTROL_BINDINGS);
   });
 
@@ -173,6 +173,7 @@ describe("versioned save data", () => {
     const save = defaultSave();
     save.progress.money = 92;
     save.progress.upgrades.engine = 1;
+    save.progress.upgrades.reel = 5;
     save.settings.reducedMotion = true;
     saveGame(storage, save);
     expect(loadSave(storage)).toEqual(save);

@@ -19,7 +19,7 @@ export type FishSpecies =
   | "mulloway";
 export type HarborId = "brindle" | "gloam";
 export type SpotId = "sunwardShoal" | "mosswaterPool" | "outerGloam";
-export type UpgradeId = "cargo" | "engine" | "line";
+export type UpgradeId = "cargo" | "engine" | "line" | "reel";
 export type WorldId = "lake" | "beach";
 export type RegionId = "brindleCoast" | "mosswaterReach" | "violetGloam";
 export type FishRarity = "common" | "uncommon" | "rare" | "legendary";
@@ -112,7 +112,7 @@ export const BALANCE = {
   fishingLineStrengthPerTier: 0.12,
   fishingCriticalTension: 0.9,
   fishingBreakGraceSeconds: 0.7,
-  upgradeCosts: { cargo: 60, engine: 70, line: 55 },
+  upgradeCosts: { cargo: 60, engine: 70, line: 55, reel: 65 },
   beachAccessCost: 120,
   boostUnlockCost: 300,
   boostSpeedMultiplier: 1.35,
@@ -121,6 +121,8 @@ export const BALANCE = {
   boostCoolingSeconds: 10,
   boostRecoveryThreshold: 0.25,
   maxUpgradeTier: 6,
+  maxReelTier: 5,
+  reelSpeedPerTier: 0.12,
   engineSpeedPerTier: 0.11,
   maxEngineSpeedMultiplier: 1.95,
   maxCargoTier: 7,
@@ -307,11 +309,18 @@ export function boatClassAt(tier: number): string {
 }
 
 export function upgradeTierCap(upgrade: UpgradeId): number {
-  return upgrade === "cargo" ? BALANCE.maxCargoTier : BALANCE.maxUpgradeTier;
+  if (upgrade === "cargo") return BALANCE.maxCargoTier;
+  if (upgrade === "reel") return BALANCE.maxReelTier;
+  return BALANCE.maxUpgradeTier;
 }
 
 export function engineSpeedMultiplier(tier: number): number {
   const clampedTier = Math.max(0, Math.min(BALANCE.maxUpgradeTier, Math.floor(tier)));
   if (clampedTier === BALANCE.maxUpgradeTier) return BALANCE.maxEngineSpeedMultiplier;
   return 1 + clampedTier * BALANCE.engineSpeedPerTier;
+}
+
+export function reelSpeedMultiplier(tier: number): number {
+  const clampedTier = Math.max(0, Math.min(BALANCE.maxReelTier, Math.floor(tier)));
+  return 1 + clampedTier * BALANCE.reelSpeedPerTier;
 }

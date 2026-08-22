@@ -18,7 +18,7 @@ const freshFight = {
   criticalSeconds: 0,
 };
 
-function playFight(species: FishSpecies): { seconds: number; broken: boolean; maximumTension: number } {
+function playFight(species: FishSpecies, reelTier = 0): { seconds: number; broken: boolean; maximumTension: number } {
   let meters = { ...freshFight };
   let seconds = 0;
   let maximumTension = meters.tension;
@@ -33,6 +33,8 @@ function playFight(species: FishSpecies): { seconds: number; broken: boolean; ma
       seconds,
       FISH[species].depthTier,
       1 / 120,
+      1,
+      reelTier,
     );
     meters = next;
     maximumTension = Math.max(maximumTension, next.tension);
@@ -177,6 +179,19 @@ describe("fishing fight", () => {
       expect(result.broken, species).toBe(false);
       expect(result.maximumTension, species).toBeLessThan(0.62);
     }
+  });
+
+  test("five reel-power tiers increase landing speed without adding tension", () => {
+    const calmAge = samplePose("lakeSturgeon").findIndex((pose) => pose.kind === "calm") * 0.1;
+    const baseStep = stepFishingFight("lakeSturgeon", freshFight, true, calmAge, 3, 0.1, 1, 0);
+    const maximumStep = stepFishingFight("lakeSturgeon", freshFight, true, calmAge, 3, 0.1, 1, 5);
+    const base = playFight("lakeSturgeon", 0);
+    const maximumReel = playFight("lakeSturgeon", 5);
+    expect(maximumStep.progress / baseStep.progress).toBeCloseTo(1.6);
+    expect(maximumStep.tension).toBeCloseTo(baseStep.tension);
+    expect(maximumReel.seconds).toBeLessThan(base.seconds * 0.8);
+    expect(maximumReel.maximumTension).toBeCloseTo(base.maximumTension);
+    expect(maximumReel.broken).toBe(false);
   });
 
   test("requires one continuous critical-tension window to break", () => {
