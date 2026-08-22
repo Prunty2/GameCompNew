@@ -1,6 +1,10 @@
 import { describe, expect, test } from "vitest";
 import { FISH, type FishSpecies } from "../game/balance";
-import { fishingSpeciesMotion } from "../game/fishingMovement";
+import {
+  fishingSpeciesMotion,
+  stepFishingTargetMotion,
+  type FishingTargetMotionState,
+} from "../game/fishingMovement";
 
 describe("species-specific fishing movement", () => {
   test("gives every species a distinct deterministic motion signature", () => {
@@ -65,5 +69,35 @@ describe("species-specific fishing movement", () => {
     const motions = Array.from({ length: 1200 }, (_, index) => fishingSpeciesMotion("northernPike", index * 0.05, 0.7));
     expect(motions.filter((motion) => motion.horizontalMultiplier < 0.25).length).toBeGreaterThan(700);
     expect(Math.max(...motions.map((motion) => motion.horizontalMultiplier))).toBeGreaterThan(2.4);
+  });
+
+  test("eases desired speed into continuous target velocity", () => {
+    const dt = 1 / 120;
+    let target: FishingTargetMotionState = {
+      x: 0.4,
+      y: 0.42,
+      direction: 1,
+      speed: 0.08,
+      homeY: 0.42,
+      velocityX: 0,
+      velocityY: 0,
+    };
+    const path: Array<{ x: number; y: number; velocityX: number; velocityY: number }> = [];
+    for (let index = 0; index < 1200; index += 1) {
+      const next = stepFishingTargetMotion("northernPike", target, index * dt, 0.7, dt);
+      target = next;
+      path.push(next);
+    }
+    const displacements = path.slice(1).map((point, index) => Math.hypot(
+      point.x - path[index]!.x,
+      point.y - path[index]!.y,
+    ));
+    const velocityChanges = path.slice(1).map((point, index) => Math.hypot(
+      point.velocityX - path[index]!.velocityX,
+      point.velocityY - path[index]!.velocityY,
+    ));
+    expect(Math.max(...displacements)).toBeLessThan(0.003);
+    expect(Math.max(...velocityChanges)).toBeLessThan(0.025);
+    expect(Math.max(...path.map((point) => Math.abs(point.velocityX)))).toBeGreaterThan(0.08);
   });
 });

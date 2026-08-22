@@ -68,9 +68,6 @@ export interface FishingFightProfile {
   runSlipPerSecond: number;
   staminaDrainPerSecond: number;
   staminaRecoveryPerSecond: number;
-  cycleSeconds: number;
-  runFraction: number;
-  thrashFraction: number;
 }
 
 export interface RegionDefinition {
@@ -148,9 +145,6 @@ export const FISHING_FIGHT_PROFILES: Record<FishRarity, FishingFightProfile> = {
     runSlipPerSecond: 0.17,
     staminaDrainPerSecond: 0.22,
     staminaRecoveryPerSecond: 0.032,
-    cycleSeconds: 2.6,
-    runFraction: 0.26,
-    thrashFraction: 0.16,
   },
   uncommon: {
     reelProgressPerSecond: 0.3,
@@ -165,9 +159,6 @@ export const FISHING_FIGHT_PROFILES: Record<FishRarity, FishingFightProfile> = {
     runSlipPerSecond: 0.2,
     staminaDrainPerSecond: 0.18,
     staminaRecoveryPerSecond: 0.036,
-    cycleSeconds: 2.35,
-    runFraction: 0.3,
-    thrashFraction: 0.18,
   },
   rare: {
     reelProgressPerSecond: 0.26,
@@ -182,9 +173,6 @@ export const FISHING_FIGHT_PROFILES: Record<FishRarity, FishingFightProfile> = {
     runSlipPerSecond: 0.23,
     staminaDrainPerSecond: 0.15,
     staminaRecoveryPerSecond: 0.04,
-    cycleSeconds: 2.1,
-    runFraction: 0.34,
-    thrashFraction: 0.2,
   },
   legendary: {
     reelProgressPerSecond: 0.22,
@@ -199,9 +187,6 @@ export const FISHING_FIGHT_PROFILES: Record<FishRarity, FishingFightProfile> = {
     runSlipPerSecond: 0.26,
     staminaDrainPerSecond: 0.12,
     staminaRecoveryPerSecond: 0.045,
-    cycleSeconds: 1.9,
-    runFraction: 0.38,
-    thrashFraction: 0.22,
   },
 };
 

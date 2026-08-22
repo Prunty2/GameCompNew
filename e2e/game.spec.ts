@@ -186,6 +186,7 @@ test("hooked fish require active reel and release tension control", async ({ pag
   const canvas = page.locator("#game-canvas");
   await expect(canvas).toHaveAttribute("data-fishing-state", "fighting");
   await expect(canvas).toHaveAttribute("data-fishing-fight-behaviour", /^(calm|run|thrash)$/);
+  await expect(canvas).toHaveAttribute("data-fishing-fight-style", "kick-glide");
   await expect(page.locator("#context-action")).toBeHidden();
   await expect(canvas).toHaveAttribute("data-fishing-background-fish-opacity", "0.680");
   const frozenPoseTime = await canvas.getAttribute("data-fishing-background-pose-elapsed");
@@ -205,6 +206,24 @@ test("hooked fish require active reel and release tension control", async ({ pag
   await page.waitForTimeout(500);
   const restedTension = Number(await canvas.getAttribute("data-fishing-line-tension"));
   expect(restedTension).toBeLessThan(pulledTension);
+
+  const motionSamples = await canvas.evaluate(async (element) => {
+    const samples: Array<{ x: number; y: number }> = [];
+    for (let index = 0; index < 48; index += 1) {
+      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+      const canvas = element as HTMLCanvasElement;
+      samples.push({
+        x: Number(canvas.dataset.fishingFightMotionX),
+        y: Number(canvas.dataset.fishingFightMotionY),
+      });
+    }
+    return samples;
+  });
+  const maximumFrameStep = Math.max(...motionSamples.slice(1).map((sample, index) => Math.hypot(
+    sample.x - motionSamples[index]!.x,
+    sample.y - motionSamples[index]!.y,
+  )));
+  expect(maximumFrameStep).toBeLessThan(0.015);
 });
 
 test("first assignment catch step teaches left-click reel and line colour", async ({ page }) => {

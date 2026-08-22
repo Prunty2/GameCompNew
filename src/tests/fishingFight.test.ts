@@ -3,10 +3,12 @@ import {
   fishingFightBehaviour,
   fishingFightCue,
   fishingStruggleIntensity,
-  RESTING_FIGHT_DART,
-  stepFightDart,
+  RESTING_FIGHT_MOTION,
+  stepFightMotion,
   stepFishingFight,
 } from "../game/fishingFight";
+import { FISH, type FishSpecies } from "../game/balance";
+import { FISHING_SPECIES_FIGHT_PROFILES } from "../game/fishingBehaviour";
 
 const freshFight = {
   progress: 0,
@@ -14,6 +16,30 @@ const freshFight = {
   stamina: 1,
   criticalSeconds: 0,
 };
+
+function playFight(species: FishSpecies): { seconds: number; broken: boolean; maximumTension: number } {
+  let meters = { ...freshFight };
+  let seconds = 0;
+  let maximumTension = meters.tension;
+  let broken = false;
+  while (seconds < 45 && meters.progress < 1 && !broken) {
+    const pose = fishingFightBehaviour(species, seconds, meters.stamina);
+    const cue = fishingFightCue({ ...meters, landingAt: null, behaviour: pose.kind, struggle: pose.intensity });
+    const next = stepFishingFight(
+      species,
+      meters,
+      cue === "reel" || cue === "resume",
+      seconds,
+      FISH[species].depthTier,
+      1 / 120,
+    );
+    meters = next;
+    maximumTension = Math.max(maximumTension, next.tension);
+    broken = next.broken;
+    seconds += 1 / 120;
+  }
+  return { seconds, broken, maximumTension };
+}
 
 function samplePose(species: "bluegill" | "lakeSturgeon", stamina = 1): ReturnType<typeof fishingFightBehaviour>[] {
   return Array.from({ length: 80 }, (_, index) => fishingFightBehaviour(species, index * 0.1, stamina));
@@ -27,7 +53,7 @@ describe("fishing fight", () => {
     expect(samples.some((pose) => pose.kind === "calm")).toBe(true);
     expect(samples.some((pose) => pose.kind === "run")).toBe(true);
     expect(samples.some((pose) => pose.kind === "thrash")).toBe(true);
-    expect(Math.max(...samples.map((pose) => pose.intensity))).toBeGreaterThan(0.7);
+    expect(Math.max(...samples.map((pose) => pose.intensity))).toBeGreaterThan(0.55);
     expect(fishingStruggleIntensity("bluegill", 0, 1)).toBe(fishingFightBehaviour("bluegill", 0, 1).intensity);
   });
 
@@ -72,7 +98,7 @@ describe("fishing fight", () => {
     expect(upgraded.tension).toBeLessThan(basic.tension);
   });
 
-  test("rarer fish pull harder and reel more slowly", () => {
+  test("powerful deep fish pull harder and reel more slowly", () => {
     const sampleFight = (species: "bluegill" | "lakeSturgeon"): { tension: number; progress: number } => (
       Array.from({ length: 100 }, (_, index) => (
         stepFishingFight(species, freshFight, true, index * 0.1, 0, 0.1)
@@ -121,31 +147,72 @@ describe("fishing fight", () => {
     expect(waiting.stamina).toBeGreaterThan(0.5);
   });
 
-  test("darts in hashed directions instead of snapping back each cycle", () => {
+  test("glides through continuous species-specific fight paths without position jumps", () => {
     const runPose = { kind: "run" as const, intensity: 0.9 };
-    let dart = RESTING_FIGHT_DART;
+    const dt = 1 / 120;
+    let motion = RESTING_FIGHT_MOTION;
     const path: Array<{ x: number; y: number }> = [];
-    for (let index = 0; index < 40; index += 1) {
-      dart = stepFightDart("bluegill", dart, runPose, index * 0.08, 1, 0.08);
-      path.push({ x: dart.x, y: dart.y });
+    for (let index = 0; index < 600; index += 1) {
+      motion = stepFightMotion("yellowtailKingfish", motion, runPose, index * dt, 1, dt);
+      path.push({ x: motion.x, y: motion.y });
     }
-    dart = RESTING_FIGHT_DART;
+    motion = RESTING_FIGHT_MOTION;
     const repeated = [];
-    for (let index = 0; index < 40; index += 1) {
-      dart = stepFightDart("bluegill", dart, runPose, index * 0.08, 1, 0.08);
-      repeated.push({ x: dart.x, y: dart.y });
+    for (let index = 0; index < 600; index += 1) {
+      motion = stepFightMotion("yellowtailKingfish", motion, runPose, index * dt, 1, dt);
+      repeated.push({ x: motion.x, y: motion.y });
     }
     expect(path).toEqual(repeated);
-    expect(Math.max(...path.map((point) => Math.hypot(point.x, point.y)))).toBeGreaterThan(0.04);
-    const xs = path.map((point) => point.x);
-    const ys = path.map((point) => point.y);
-    expect(Math.max(...xs) - Math.min(...xs)).toBeGreaterThan(0.03);
-    expect(Math.max(...ys) - Math.min(...ys)).toBeGreaterThan(0.02);
+    expect(Math.max(...path.map((point) => Math.hypot(point.x, point.y)))).toBeGreaterThan(0.08);
+    const displacements = path.slice(1).map((point, index) => Math.hypot(
+      point.x - path[index]!.x,
+      point.y - path[index]!.y,
+    ));
+    expect(Math.max(...displacements)).toBeLessThanOrEqual(
+      FISHING_SPECIES_FIGHT_PROFILES.yellowtailKingfish.maximumSpeed * dt + 0.00001,
+    );
 
-    const afterRun = dart;
-    const calmed = stepFightDart("bluegill", afterRun, { kind: "calm", intensity: 0.1 }, 4, 1, 0.08);
-    expect(Math.hypot(calmed.x, calmed.y)).toBeGreaterThan(0.02);
-    expect(Math.hypot(calmed.x, calmed.y)).not.toBeCloseTo(0, 2);
+    const afterRun = motion;
+    const calmed = stepFightMotion(
+      "yellowtailKingfish",
+      afterRun,
+      { kind: "calm", intensity: 0.1 },
+      5,
+      1,
+      dt,
+    );
+    expect(Math.hypot(calmed.x - afterRun.x, calmed.y - afterRun.y)).toBeLessThan(0.004);
+  });
+
+  test("gives every species a researched fight signature", () => {
+    const species = Object.keys(FISH) as FishSpecies[];
+    const signatures = species.map((fish) => JSON.stringify(FISHING_SPECIES_FIGHT_PROFILES[fish]));
+    expect(new Set(signatures).size).toBe(species.length);
+    expect(FISHING_SPECIES_FIGHT_PROFILES.northernPike.style).toBe("ambush-surge");
+    expect(FISHING_SPECIES_FIGHT_PROFILES.largemouthBass.style).toBe("leaping-thrash");
+    expect(FISHING_SPECIES_FIGHT_PROFILES.burbot.style).toBe("bottom-writhe");
+    expect(FISHING_SPECIES_FIGHT_PROFILES.yellowtailKingfish.style).toBe("power-dive");
+    expect(FISHING_SPECIES_FIGHT_PROFILES.mulloway.style).toBe("long-run");
+  });
+
+  test("lands each species in a deliberate browser-game timing band with correct tension play", () => {
+    const results = Object.fromEntries(
+      (Object.keys(FISH) as FishSpecies[]).map((species) => [species, playFight(species)]),
+    ) as Record<FishSpecies, ReturnType<typeof playFight>>;
+    expect(Object.values(results).every((result) => !result.broken)).toBe(true);
+    expect(Object.values(results).every((result) => result.maximumTension < 0.74)).toBe(true);
+    expect(results.bluegill.seconds).toBeGreaterThanOrEqual(3.5);
+    expect(results.bluegill.seconds).toBeLessThanOrEqual(5.5);
+    expect(results.northernPike.seconds).toBeGreaterThanOrEqual(6);
+    expect(results.northernPike.seconds).toBeLessThanOrEqual(9);
+    expect(results.bowfin.seconds).toBeGreaterThanOrEqual(10);
+    expect(results.bowfin.seconds).toBeLessThanOrEqual(15);
+    expect(results.yellowtailKingfish.seconds).toBeGreaterThanOrEqual(18);
+    expect(results.yellowtailKingfish.seconds).toBeLessThanOrEqual(24);
+    expect(results.lakeSturgeon.seconds).toBeGreaterThanOrEqual(19);
+    expect(results.lakeSturgeon.seconds).toBeLessThanOrEqual(24);
+    expect(results.mulloway.seconds).toBeGreaterThanOrEqual(24);
+    expect(results.mulloway.seconds).toBeLessThanOrEqual(30);
   });
 
   test("maps fight behaviour onto reel, run, and resume cues", () => {

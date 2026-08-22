@@ -30,6 +30,20 @@ export interface FishingSpeciesMotion {
   propulsion: number;
 }
 
+export interface FishingTargetMotionState {
+  x: number;
+  y: number;
+  direction: -1 | 1;
+  speed: number;
+  homeY: number;
+  velocityX: number;
+  velocityY: number;
+}
+
+export interface FishingTargetMotionStep extends FishingTargetMotionState {
+  speciesMotion: FishingSpeciesMotion;
+}
+
 // Profiles translate observed locomotor strategies into readable deterministic gameplay.
 // Speeds are relative to each spawned fish's base speed; depths are normalized fishing-view units.
 export const FISHING_MOVEMENT_PROFILES: Record<FishSpecies, FishingMovementProfile> = {
@@ -194,6 +208,48 @@ export function fishingSpeciesMotion(species: FishSpecies, elapsed: number, phas
     pitch: clamp(depthSlope * 1.05, -0.11, 0.11),
     flex,
     propulsion,
+  };
+}
+
+export function stepFishingTargetMotion(
+  species: FishSpecies,
+  state: FishingTargetMotionState,
+  elapsed: number,
+  phase: number,
+  dt: number,
+): FishingTargetMotionStep {
+  const safeDt = clamp(dt, 0, 0.1);
+  const profile = FISHING_MOVEMENT_PROFILES[species];
+  const speciesMotion = fishingSpeciesMotion(species, elapsed, phase);
+  const desiredVelocityX = state.speed * speciesMotion.horizontalMultiplier
+    * state.direction * speciesMotion.heading;
+  const speedResponse = clamp(2.5 + profile.burstFrequency + profile.burstSharpness * 0.45, 3, 8.5);
+  const depthResponse = clamp(2.2 + profile.depthFrequency * 1.8, 2.4, 4.2);
+  const horizontalBlend = 1 - Math.exp(-speedResponse * safeDt);
+  const verticalBlend = 1 - Math.exp(-depthResponse * safeDt);
+  let velocityX = state.velocityX + (desiredVelocityX - state.velocityX) * horizontalBlend;
+  const targetY = clamp(state.homeY + speciesMotion.depthOffset, 0.1, 0.92);
+  const desiredVelocityY = clamp((targetY - state.y) * depthResponse, -0.1, 0.1);
+  let velocityY = state.velocityY + (desiredVelocityY - state.velocityY) * verticalBlend;
+  let x = state.x + velocityX * safeDt;
+  let y = clamp(state.y + velocityY * safeDt, 0.1, 0.92);
+  let direction = state.direction;
+  if (x < 0.1 || x > 0.9) {
+    const leftEdge = x < 0.1;
+    x = clamp(x, 0.1, 0.9);
+    velocityX = (leftEdge ? 1 : -1) * Math.min(Math.abs(velocityX) * 0.25, state.speed * 0.35);
+    direction = leftEdge === (speciesMotion.heading === 1) ? 1 : -1;
+  }
+  if (y === 0.1 || y === 0.92) velocityY *= 0.25;
+  return {
+    x,
+    y,
+    direction,
+    speed: state.speed,
+    homeY: state.homeY,
+    velocityX,
+    velocityY,
+    speciesMotion,
   };
 }
 

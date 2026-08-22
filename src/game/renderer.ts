@@ -55,6 +55,7 @@ import {
   type FishingViewLayout,
 } from "./fishingPresentation";
 import { fishingFightCue, fishingFightWriggle } from "./fishingFight";
+import { FISHING_SPECIES_FIGHT_PROFILES } from "./fishingBehaviour";
 import {
   fishingReelProgress,
   fishingReelSchoolOpacity,
@@ -318,6 +319,9 @@ export class CanvasRenderer {
       delete this.canvas.dataset.fishingLineColour;
       delete this.canvas.dataset.fishingFightCue;
       delete this.canvas.dataset.fishingFightBehaviour;
+      delete this.canvas.dataset.fishingFightStyle;
+      delete this.canvas.dataset.fishingFightMotionX;
+      delete this.canvas.dataset.fishingFightMotionY;
       delete this.canvas.dataset.fishingFishStamina;
       delete this.canvas.dataset.targetRarity;
       this.canvas.setAttribute("aria-label", "Game area");
@@ -626,12 +630,18 @@ export class CanvasRenderer {
       this.canvas.dataset.fishingLineTension = fishing.reeling.tension.toFixed(3);
       this.canvas.dataset.fishingFightCue = fishingFightCue(fishing.reeling);
       this.canvas.dataset.fishingFightBehaviour = fishing.reeling.behaviour;
+      this.canvas.dataset.fishingFightStyle = FISHING_SPECIES_FIGHT_PROFILES[fishing.reeling.species].style;
+      this.canvas.dataset.fishingFightMotionX = fishing.reeling.motionX.toFixed(4);
+      this.canvas.dataset.fishingFightMotionY = fishing.reeling.motionY.toFixed(4);
       this.canvas.dataset.fishingFishStamina = fishing.reeling.stamina.toFixed(3);
     } else {
       delete this.canvas.dataset.fishingReelProgress;
       delete this.canvas.dataset.fishingLineTension;
       delete this.canvas.dataset.fishingFightCue;
       delete this.canvas.dataset.fishingFightBehaviour;
+      delete this.canvas.dataset.fishingFightStyle;
+      delete this.canvas.dataset.fishingFightMotionX;
+      delete this.canvas.dataset.fishingFightMotionY;
       delete this.canvas.dataset.fishingFishStamina;
     }
     this.canvas.setAttribute(
@@ -671,7 +681,9 @@ export class CanvasRenderer {
       if (fishing.reeling?.targetIndex === targetIndex) continue;
       const point = fishingPointToScreen(target, width, layout, maximumDepth);
       const pose = fishingFishPose(target.species, focus.backgroundPoseElapsed, target.phase, settings.reducedMotion);
-      const heading = target.direction === pose.heading ? 1 : -1;
+      const heading = Math.abs(target.velocityX) > 0.002
+        ? target.velocityX >= 0 ? 1 : -1
+        : target.direction === pose.heading ? 1 : -1;
       const animatedPoint = {
         x: point.x,
         y: point.y + pose.verticalOffsetRatio * layout.underwaterHeight,
@@ -716,10 +728,10 @@ export class CanvasRenderer {
           y: restingHook.y + (layout.surfaceY + 10 - restingHook.y) * fightPull,
         }
       : restingHook;
-    const dartScale = settings.reducedMotion ? 0 : Math.min(width, height);
+    const fightMotionScale = settings.reducedMotion ? 0 : Math.min(width, height);
     if (fishing.reeling && fishing.reeling.landingAt === null) {
-      hook.x += fishing.reeling.dartX * dartScale;
-      hook.y += fishing.reeling.dartY * dartScale;
+      hook.x += fishing.reeling.motionX * fightMotionScale;
+      hook.y += fishing.reeling.motionY * fightMotionScale;
     }
     const hookSize = clamp(Math.min(width, height) * 0.076, 46, 68);
     const hooked = fishing.reeling !== null;
@@ -735,20 +747,21 @@ export class CanvasRenderer {
     this.drawTackleCell(1, 1, hook.x, hookDrawY, hookSize, hookSize);
     if (fishing.reeling) {
       const wriggle = fishingFightWriggle(
+        fishing.reeling.species,
         simulation.elapsed,
         fishing.reeling.hookedAt,
         fishing.reeling.struggle,
         settings.reducedMotion,
         fishing.reeling.behaviour,
       );
-      const facing = !settings.reducedMotion && Math.abs(fishing.reeling.dartVx) > 0.12
-        ? fishing.reeling.dartVx >= 0 ? 1 : -1
+      const facing = !settings.reducedMotion && Math.abs(fishing.reeling.motionVx) > 0.008
+        ? fishing.reeling.motionVx >= 0 ? 1 : -1
         : fishing.reeling.direction;
       const fishOffset = facing * hookSize * 0.22;
       context.save();
       context.globalAlpha = 1;
       context.translate(hook.x - fishOffset, hook.y + hookSize * 0.04);
-      context.rotate(wriggle * (fishing.reeling.behaviour === "thrash" ? 0.3 : 0.14));
+      context.rotate(wriggle * (fishing.reeling.behaviour === "thrash" ? 0.45 : 0.22));
       context.scale(1, 1 + Math.abs(wriggle) * 0.05);
       this.drawFish(
         fishing.reeling.species,
