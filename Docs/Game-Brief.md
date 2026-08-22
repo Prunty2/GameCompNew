@@ -41,6 +41,8 @@ On-water chrome is the night moon indicator, the boost gauge after unlock, the c
 
 Scene changes between title, harbor, and the water use a waterline cover/reveal.
 
+The title sky periodically carries a flock of two to five animated seagulls. Each flock may cross in either direction, while individual birds vary their size, launch delay, flap phase, speed, and curved vertical drift so the formation stays loose and natural. Decorative flights are omitted when reduced motion is enabled.
+
 ## Worlds
 
 The same two harbors and three fishing-spot IDs exist in both worlds. Reloading always restores the lake, docked at Brindle. World, cargo, boat pose, damage, boost heat, and time of day are not saved.

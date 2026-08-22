@@ -48,6 +48,7 @@ import {
 } from "./renderInterpolation";
 import { CanvasRenderer } from "./renderer";
 import { fishIcon, marketBoardMarkup } from "./marketView";
+import { MenuSeagulls, seagullFlightUrl } from "./menuSeagulls";
 import {
   chooseQuestArrowSide,
   questPresentation,
@@ -193,6 +194,7 @@ export class Game {
   private readonly renderer: CanvasRenderer;
   private readonly input: InputController;
   private readonly feedback: FeedbackService;
+  private readonly menuSeagulls = new MenuSeagulls();
   private simulation: Simulation;
   private previousRenderMotion: RenderMotionSnapshot;
   private lastTime = 0;
@@ -240,6 +242,7 @@ export class Game {
     preloadImage(gloamDockNightUrl),
     preloadImage(binIconUrl),
     preloadImage(padlockIconUrl),
+    preloadImage(seagullFlightUrl),
     preloadImage(wordmarkUrl),
     preloadImage(uiButtonUrl),
     preloadImage(uiIconsUrl),
@@ -751,6 +754,7 @@ export class Game {
   private renderOverlay(): void {
     const host = this.uiRoot.querySelector<HTMLElement>("#overlay-host");
     if (!host) return;
+    this.menuSeagulls.stop();
     if (this.overlay === null) {
       host.innerHTML = "";
       this.refreshQuestGuide();
@@ -759,6 +763,7 @@ export class Game {
     switch (this.overlay) {
       case "title":
         host.innerHTML = this.titleScreen();
+        this.startMenuSeagulls();
         break;
       case "harbor":
         host.innerHTML = this.harborScreen();
@@ -791,6 +796,7 @@ export class Game {
       : "";
     return `
       <section class="screen-overlay title-screen${returnClass}" role="dialog" aria-label="FSHING main menu">
+        <div class="menu-seagull-sky" aria-hidden="true"></div>
         <div class="title-panel">
           <img class="wordmark" src="${wordmarkUrl}" alt="FSHING" />
           <div class="title-actions">
@@ -806,6 +812,11 @@ export class Game {
         </div>
         <small class="title-build-version">v${__APP_VERSION__} (PR #${__PR_NUMBER__})</small>
       </section>`;
+  }
+
+  private startMenuSeagulls(): void {
+    const sky = this.uiRoot.querySelector<HTMLElement>(".menu-seagull-sky");
+    if (sky) this.menuSeagulls.start(sky, this.save.settings.reducedMotion);
   }
 
   private harborScreen(): string {
