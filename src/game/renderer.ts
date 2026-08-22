@@ -1665,7 +1665,7 @@ export class CanvasRenderer {
       seaMullet: [1.5, 0.68],
       yellowfinBream: [1.08, 0.98],
       sandWhiting: [1.58, 0.62],
-      duskyFlathead: [1.62, 0.6],
+      duskyFlathead: [1.62, 1.62],
       luderick: [1.08, 0.98],
       easternAustralianSalmon: [1.45, 0.72],
       snapper: [1.18, 0.9],
