@@ -47,6 +47,7 @@ import {
   type InputState,
 } from "../game/simulation";
 import { strongerHarborFor } from "../game/market";
+import { responsiveResidentCount } from "../game/fishingPopulation";
 
 const idle: InputState = {
   travel: 0,
@@ -559,7 +560,7 @@ describe("FSHING side-on simulation", () => {
 
     expect(startFishing(compact, "mosswaterPool", { width: 390, height: 844 })).toBe(true);
     expect(startFishing(reference, "mosswaterPool", { width: 1280, height: 720 })).toBe(true);
-    expect(startFishing(large, "mosswaterPool", { width: 2048, height: 1152 })).toBe(true);
+    expect(startFishing(large, "mosswaterPool", { width: 2560, height: 1440 })).toBe(true);
 
     const compactTargets = compact.fishing?.targets ?? [];
     const referenceTargets = reference.fishing?.targets ?? [];
@@ -572,8 +573,12 @@ describe("FSHING side-on simulation", () => {
 
     const repeated = createSimulation(12);
     repeated.progress.upgrades.line = 1;
-    startFishing(repeated, "mosswaterPool", { width: 2048, height: 1152 });
+    startFishing(repeated, "mosswaterPool", { width: 2560, height: 1440 });
     expect(repeated.fishing?.targets).toEqual(largeTargets);
+  });
+
+  test("applies the thirty-percent fish-density reduction", () => {
+    expect(responsiveResidentCount(10, { width: 1280, height: 720 })).toBe(7);
   });
 
   test("spreads larger shallow-water populations across their reachable depth band", () => {
@@ -585,6 +590,17 @@ describe("FSHING side-on simulation", () => {
     expect(Math.min(...depths)).toBeGreaterThanOrEqual(0.1);
     expect(Math.max(...depths)).toBeLessThanOrEqual(maxFishingDepth(simulation));
     expect(Math.max(...depths) - Math.min(...depths)).toBeGreaterThan(0.12);
+  });
+
+  test("keeps Emerald Shiners low in the reachable shallow-water band", () => {
+    const simulation = createSimulation(12);
+    expect(startFishing(simulation, "sunwardShoal", { width: 2048, height: 1152 })).toBe(true);
+
+    const shiners = simulation.fishing?.targets.filter((target) => target.species === "emeraldShiner") ?? [];
+    expect(shiners.length).toBeGreaterThan(0);
+    expect(Math.min(...shiners.map((target) => target.homeY))).toBeGreaterThanOrEqual(0.225);
+    expect(Math.max(...shiners.map((target) => target.homeY))).toBeLessThanOrEqual(0.292);
+    expect(Math.max(...shiners.map((target) => target.homeY))).toBeLessThan(maxFishingDepth(simulation));
   });
 
   test("supports ten cargo slots across seven cargo upgrades", () => {

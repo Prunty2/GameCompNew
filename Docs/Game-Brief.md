@@ -119,7 +119,7 @@ Hidden market conditions still change quotes, availability, and fog math:
 | Cold current | Deep fish abundant, shallow fish scarce |
 | Fog banks | Slight price lift and tighter supply |
 
-Availability sets the baseline number of each resident while fishing: abundant 3, normal 2, scarce 1. The final catchable population scales with viewport capacity, accounting for both screen area and rendered fish size. A 1280 x 720 window uses the baseline; larger windows show more fish after sprites approach their size cap, while compact screens reduce crowding without removing any resident species. Fish use low-discrepancy vertical spacing across their habitat-appropriate depth band rather than collecting on one horizontal shelf. Condition names are not shown in the harbor UI.
+Availability sets the baseline number of each resident while fishing: abundant 3, normal 2, scarce 1. The final catchable population is tuned to 70% of the viewport-capacity result, accounting for both screen area and rendered fish size. Larger windows still show more fish after sprites approach their size cap, while compact screens reduce crowding without removing any resident species. Fish use low-discrepancy vertical spacing across their habitat-appropriate depth band rather than collecting on one horizontal shelf. Emerald Shiners occupy the lower part of the starter-line range, from 0.225 to 0.292 fishing depth. Condition names are not shown in the harbor UI.
 
 ## Sailing and fishing
 
