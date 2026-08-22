@@ -219,6 +219,13 @@ export interface NavigationGuidance {
 }
 
 const FISHING_CATCH_RADIUS = 0.058;
+const FISHING_DEPTH_BAND_TOP = 0.11;
+const FISHING_DEPTH_TIER_STEP = 0.13;
+const FISHING_DEPTH_BAND_HEIGHT = 0.17;
+const FISHING_HORIZONTAL_DISTRIBUTION_STEP = 0.61803398875;
+const FISHING_DEPTH_DISTRIBUTION_STEP = 0.75487766625;
+const FISHING_ENTRY_HOOK = { x: 0.5, y: 0.08 } as const;
+const FISHING_ENTRY_CLEARANCE = 0.12;
 const SEASON_SALES = 8;
 
 export function createSimulation(seed = 1, progress?: Partial<ProgressState>): Simulation {
@@ -425,7 +432,7 @@ export function startFishing(
   simulation.fishing = {
     spot: spotId,
     startedAt: simulation.elapsed,
-    hook: { x: 0.5, y: 0.08 },
+    hook: { ...FISHING_ENTRY_HOOK },
     reeling: null,
     exitingAt: null,
     targets: residents.flatMap((fishSpecies, residentIndex) => (
@@ -440,10 +447,24 @@ export function startFishing(
           const fish = FISH[fishSpecies];
           const index = targetIndex;
           targetIndex += 1;
-          const homeY = Math.min(0.92, 0.19 + fish.depthTier * 0.135 + simulation.random.next() * 0.05);
+          const x = 0.08 + (((index + 1) * FISHING_HORIZONTAL_DISTRIBUTION_STEP) % 1) * 0.84;
+          const depthBandTop = FISHING_DEPTH_BAND_TOP + fish.depthTier * FISHING_DEPTH_TIER_STEP;
+          const depthBandBottom = Math.min(0.92, depthBandTop + FISHING_DEPTH_BAND_HEIGHT);
+          const depthRatio = ((index + 1) * FISHING_DEPTH_DISTRIBUTION_STEP) % 1;
+          let homeY = depthBandTop + (depthBandBottom - depthBandTop) * depthRatio;
+          const entryHorizontalDistance = Math.abs(x - FISHING_ENTRY_HOOK.x);
+          if (entryHorizontalDistance < FISHING_ENTRY_CLEARANCE) {
+            const entryVerticalClearance = Math.sqrt(
+              FISHING_ENTRY_CLEARANCE ** 2 - entryHorizontalDistance ** 2,
+            );
+            homeY = Math.min(
+              depthBandBottom,
+              Math.max(homeY, FISHING_ENTRY_HOOK.y + entryVerticalClearance),
+            );
+          }
           return {
             species: fishSpecies,
-            x: 0.08 + (((index + 1) * 0.61803398875) % 1) * 0.84,
+            x,
             y: homeY,
             direction: index % 2 === 0 ? 1 : -1,
             speed: 0.048 + fish.depthTier * 0.0075 + simulation.random.next() * 0.032,

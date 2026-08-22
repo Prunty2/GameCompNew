@@ -576,6 +576,17 @@ describe("FSHING side-on simulation", () => {
     expect(repeated.fishing?.targets).toEqual(largeTargets);
   });
 
+  test("spreads larger shallow-water populations across their reachable depth band", () => {
+    const simulation = createSimulation(12);
+    expect(startFishing(simulation, "sunwardShoal", { width: 2048, height: 1152 })).toBe(true);
+
+    const targets = simulation.fishing?.targets ?? [];
+    const depths = targets.map((target) => target.homeY);
+    expect(Math.min(...depths)).toBeGreaterThanOrEqual(0.1);
+    expect(Math.max(...depths)).toBeLessThanOrEqual(maxFishingDepth(simulation));
+    expect(Math.max(...depths) - Math.min(...depths)).toBeGreaterThan(0.12);
+  });
+
   test("supports ten cargo slots across seven cargo upgrades", () => {
     const simulation = createSimulation(1, { money: 10_000 });
     expect(cargoCapacity(simulation)).toBe(3);

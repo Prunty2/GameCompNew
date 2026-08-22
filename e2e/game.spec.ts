@@ -879,6 +879,7 @@ test("fishing descends through the sailing waterline into a site-specific scene"
 test("larger windows render a larger catchable fish population", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 720 });
   await page.goto("/?e2e=1");
+  await page.getByRole("button", { name: "Play", exact: true }).click();
   const canvas = page.locator("#game-canvas");
   await page.evaluate(() => window.__FSHING_TEST__?.previewFishing("sunwardShoal", "bluegill"));
   await expect.poll(async () => Number(await canvas.getAttribute("data-fishing-fish-count"))).toBeGreaterThanOrEqual(3);
@@ -887,6 +888,8 @@ test("larger windows render a larger catchable fish population", async ({ page }
   await page.setViewportSize({ width: 2048, height: 1152 });
   await page.evaluate(() => window.__FSHING_TEST__?.previewFishing("sunwardShoal", "bluegill"));
   await expect.poll(async () => Number(await canvas.getAttribute("data-fishing-fish-count"))).toBeGreaterThan(referenceCount);
+  await expect.poll(async () => Number(await canvas.getAttribute("data-fishing-dive-progress"))).toBeGreaterThan(0.99);
+  await expect.poll(async () => Number(await canvas.getAttribute("data-fishing-fish-vertical-span"))).toBeGreaterThan(160);
 
   expect(referenceCount).toBeGreaterThanOrEqual(3);
 });
