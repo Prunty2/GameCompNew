@@ -51,7 +51,7 @@ Side-on freshwater chart with Brindle Harbor at the left and Gloam Ferry at the 
 
 ### Beach
 
-Paid unlock (120 shells) from Upgrades. Travel is immediate and undocks the boat. The Beach reuses lake spot names and layout, and swaps panorama, pier, underwater paintings, fish, and market art.
+Paid unlock (300 shells) from Upgrades. Travel is immediate and undocks the boat. The Beach reuses lake spot names and layout, and swaps panorama, pier, underwater paintings, fish, and market art.
 
 | Spot id | Display name | x | Lake line | Beach line | Lake residents | Beach residents |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -177,8 +177,8 @@ Costs are `base + currentTier × 55` shells.
 | Engine | 70 | 6 | Faster travel, so less freshness loss |
 | Fishing line | 55 | 6 | Deeper hook limit and +12% fight strength per tier. Lake: middle tier 1, far right tier 3. Beach: middle tier 3, far right tier 4 |
 | Reel power | 65 | 5 | +12% reel speed per tier; 1.60× at tier 5 |
-| Engine boost | 300 | one-time | Hold Boost while moving. Overheats, then cools |
-| Beach | 120 | one-time | Unlock travel to the coastal map |
+| Engine boost | 250 | one-time | Hold Boost while moving. Overheats, then cools |
+| Beach | 300 | one-time | Unlock travel to the coastal map |
 
 Cargo, Engine, Line depth, and Reel power form a compact vertical stack of full-width equipment rows. Beach and Engine boost remain two compressed feature cards side by side beneath them. The full upgrade menu fits without an internal scrollbar at supported desktop and mobile viewports. Reel power uses a CSS-drawn spool-and-handle pictogram that matches the existing harbor equipment icon treatment without adding another runtime asset.
 

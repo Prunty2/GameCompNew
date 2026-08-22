@@ -111,8 +111,8 @@ Beach reuses the same spot names and world X positions. Reloading always restore
 | Engine (6 tiers) | Faster crossings, less freshness loss |
 | Line (6 tiers) | Reach deeper bands; Beach middle/right require tiers 3/4 |
 | Reel power (5 tiers) | Reel 12% faster per tier, up to 1.60× speed |
-| Engine boost (300 shells) | Hold Boost for a short overclock that overheats |
-| Beach (120 shells) | Travel to the coastal map |
+| Engine boost (250 shells) | Hold Boost for a short overclock that overheats |
+| Beach (300 shells) | Travel to the coastal map |
 
 ### Feedback
 
