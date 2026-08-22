@@ -1,15 +1,11 @@
 import {
-  BALANCE,
   FISH,
   WORLD_SPOT_RESIDENTS,
-  engineSpeedMultiplier,
-  harborById,
   spotById,
   type FishSpecies,
   type SpotId,
   type WorldId,
 } from "./balance";
-import type { Contract } from "./simulation";
 
 export interface WaterReading {
   depthM: number;
@@ -26,14 +22,6 @@ export interface FishScienceProfile {
   habitat: string;
   ecologicalRole: string;
   evidence: string;
-}
-
-export interface RouteEstimate {
-  distanceKm: number;
-  safeMinutes: number;
-  fastMinutes: number;
-  safeArrivalFreshness: number;
-  fastArrivalFreshness: number;
 }
 
 export interface SurveyResult {
@@ -269,39 +257,6 @@ export function evaluateSurvey(
     expected,
     explanation: `${reading.temperatureC}°C water with ${reading.oxygenMgL.toFixed(1)} mg/L oxygen and ${reading.habitat} best matches the ${FISH[expected].name}. ${profile.evidence}`,
   };
-}
-
-export function estimateRoute(
-  contract: Pick<Contract, "spot" | "destination">,
-  engineTier: number,
-): RouteEstimate {
-  const origin = spotById(contract.spot);
-  const destination = harborById(contract.destination);
-  const distanceKm = Math.round(
-    Math.abs(destination.x - origin.x) * BALANCE.routeDistanceScaleKm * 10,
-  ) / 10;
-  const engineFactor = engineSpeedMultiplier(engineTier);
-  const safeSpeedKmPerMinute = BALANCE.maxSurfaceSpeed
-    * BALANCE.safeRouteSpeedMultiplier
-    * engineFactor
-    * BALANCE.routeDistanceScaleKm;
-  const fastSpeedKmPerMinute = BALANCE.maxSurfaceSpeed
-    * BALANCE.fastRouteSpeedMultiplier
-    * engineFactor
-    * BALANCE.routeDistanceScaleKm;
-  const safeMinutes = roundOne(distanceKm / safeSpeedKmPerMinute);
-  const fastMinutes = roundOne(distanceKm / fastSpeedKmPerMinute);
-  return {
-    distanceKm,
-    safeMinutes,
-    fastMinutes,
-    safeArrivalFreshness: Math.max(0, Math.round(100 - safeMinutes * BALANCE.routeFreshnessLossPerMinute)),
-    fastArrivalFreshness: Math.max(0, Math.round(100 - fastMinutes * BALANCE.routeFreshnessLossPerMinute)),
-  };
-}
-
-function roundOne(value: number): number {
-  return Math.round(value * 10) / 10;
 }
 
 function surveyTarget(spotId: SpotId, researchTarget: FishSpecies | undefined, world: WorldId): FishSpecies {

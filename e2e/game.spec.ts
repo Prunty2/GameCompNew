@@ -18,7 +18,7 @@ test("main menu presents centered play, settings, and credits actions", async ({
   await page.goto("/");
 
   const version = page.locator(".title-build-version");
-  await expect(version).toHaveText("v0.7.0 (PR #109)");
+  await expect(version).toHaveText("v0.8.0 (PR #115)");
   const versionBounds = await version.boundingBox();
   expect(versionBounds).not.toBeNull();
   expect(versionBounds!.x).toBeLessThan(24);
@@ -51,6 +51,44 @@ test("main menu presents centered play, settings, and credits actions", async ({
   expect(bounds[1].width).toBe(bounds[2].width);
   expect(Math.abs(bounds[0].center - viewportCenter)).toBeLessThanOrEqual(1);
   expect(Math.abs((bounds[1].center + bounds[2].center) / 2 - viewportCenter)).toBeLessThanOrEqual(1);
+});
+
+test("main menu periodically releases an irregular animated seagull flock", async ({ page }) => {
+  await page.goto("/");
+
+  const flock = page.locator(".menu-seagull-flock").first();
+  await expect(flock).toBeAttached({ timeout: 3_000 });
+  const flockSize = Number(await flock.getAttribute("data-flock-size"));
+  expect(flockSize).toBeGreaterThanOrEqual(2);
+  expect(flockSize).toBeLessThanOrEqual(5);
+  await expect(flock.locator(".menu-seagull")).toHaveCount(flockSize);
+  const flapAnimation = await flock.locator(".menu-seagull").first().evaluate((bird) => (
+    getComputedStyle(bird, "::before").animationName
+  ));
+  expect(flapAnimation).toBe("menu-seagull-flap");
+  await expect.poll(() => flock.locator(".menu-seagull").evaluateAll((birds) => (
+    birds.some((bird) => {
+      const bounds = bird.getBoundingClientRect();
+      return bounds.right > 0 && bounds.left < window.innerWidth;
+    })
+  )), { timeout: 4_000 }).toBe(true);
+
+  const flightDurations = await flock.locator(".menu-seagull").evaluateAll((birds) => (
+    birds.map((bird) => bird.getAnimations().find((animation) => {
+      const duration = animation.effect?.getTiming().duration;
+      return typeof duration === "number" && duration > 1_000;
+    })?.effect?.getTiming().duration)
+  ));
+  expect(new Set(flightDurations).size).toBeGreaterThan(1);
+});
+
+test("main menu seagulls stay still when reduced motion is requested", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  await page.waitForTimeout(1_200);
+
+  await expect(page.locator(".menu-seagull-flock")).toHaveCount(0);
+  await expect(page.locator(".menu-seagull-sky")).toHaveCSS("display", "none");
 });
 
 test("credits lists the team and returns to the main menu", async ({ page }) => {
@@ -589,7 +627,7 @@ test("market uses a scrollable fish-card grid and a focused detail view", async 
   await sellAllButton.click();
   await expect(page.locator("#delivery-notification")).toContainText("Sold, 3 fish");
   await expect(page.locator(".market-cargo-count")).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "No fresh fish to sell" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "No fish to sell" })).toBeDisabled();
   const scrollState = await list.evaluate((element) => ({
     clientHeight: element.clientHeight,
     scrollHeight: element.scrollHeight,
@@ -1245,7 +1283,7 @@ test("how to play instructions advance one card at a time", async ({ page }) => 
 
   await page.getByRole("button", { name: "Next" }).click();
   await page.getByRole("button", { name: "Next" }).click();
-  await expect(page.getByRole("heading", { name: "Catch and protect" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Catch and store" })).toBeVisible();
   await expect(page.locator(".help-card")).toContainText("hold the left mouse button while it is calm");
   await expect(page.locator(".help-card")).toContainText("When it races away, release");
 
