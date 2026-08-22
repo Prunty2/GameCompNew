@@ -1,6 +1,7 @@
 import { clamp, createRandom, type RandomSource } from "./math";
 import { fishingSpeciesMotion, stepFishingTargetMotion } from "./fishingMovement";
 import { fishingHighlightSpecies } from "./fishingPresentation";
+import { responsiveResidentCount, type FishingViewport } from "./fishingPopulation";
 import { FISHING_REEL_DURATION } from "./fishingReeling";
 import { fishingFightBehaviour, fishingFightCue, RESTING_FIGHT_MOTION, stepFishingFight } from "./fishingFight";
 import {
@@ -225,6 +226,17 @@ export interface NavigationGuidance {
 }
 
 const FISHING_CATCH_RADIUS = 0.058;
+const FISHING_DEPTH_BAND_TOP = 0.11;
+const FISHING_DEPTH_TIER_STEP = 0.13;
+const FISHING_DEPTH_BAND_HEIGHT = 0.17;
+const FISHING_HORIZONTAL_DISTRIBUTION_STEP = 0.61803398875;
+const FISHING_DEPTH_DISTRIBUTION_STEP = 0.75487766625;
+const FISHING_ENTRY_HOOK = { x: 0.5, y: 0.08 } as const;
+const FISHING_ENTRY_CLEARANCE = 0.12;
+const FISHING_SPECIES_DEPTH_BANDS: Partial<Record<FishSpecies, { top: number; bottom: number }>> = {
+  emeraldShiner: { top: 0.335, bottom: 0.405 },
+  whiteSucker: { top: 0.465, bottom: 0.535 },
+};
 const SEASON_SALES = 8;
 
 export function createSimulation(seed = 1, progress?: Partial<ProgressState>): Simulation {
@@ -409,7 +421,11 @@ export function getInteractionPrompt(simulation: Simulation): InteractionPrompt 
   };
 }
 
-export function startFishing(simulation: Simulation, spotId: SpotId): boolean {
+export function startFishing(
+  simulation: Simulation,
+  spotId: SpotId,
+  viewport: FishingViewport = { width: 1280, height: 720 },
+): boolean {
   const spot = spotById(spotId);
   const requiredDepthTier = spot.requiredDepthTier[simulation.world];
   if (requiredDepthTier > simulation.progress.upgrades.line) {
@@ -424,27 +440,52 @@ export function startFishing(simulation: Simulation, spotId: SpotId): boolean {
   const residents = residentsForSpot(simulation.world, spotId);
   simulation.boat.speed = 0;
   simulation.mode = "fishing";
+  let targetIndex = 0;
   simulation.fishing = {
     spot: spotId,
     startedAt: simulation.elapsed,
-    hook: { x: 0.5, y: 0.08 },
+    hook: { ...FISHING_ENTRY_HOOK },
     reeling: null,
     exitingAt: null,
     targets: residents.flatMap((fishSpecies, residentIndex) => (
       Array.from(
-        { length: residentCountForMarket(fishSpecies, simulation.progress.marketDay, simulation.seed) },
+        {
+          length: responsiveResidentCount(
+            residentCountForMarket(fishSpecies, simulation.progress.marketDay, simulation.seed),
+            viewport,
+          ),
+        },
         (_, schoolIndex) => {
           const fish = FISH[fishSpecies];
-          const index = residentIndex * 2 + schoolIndex;
-          const homeY = Math.min(0.92, 0.19 + fish.depthTier * 0.135 + simulation.random.next() * 0.05);
+          const index = targetIndex;
+          targetIndex += 1;
+          const x = 0.08 + (((index + 1) * FISHING_HORIZONTAL_DISTRIBUTION_STEP) % 1) * 0.84;
+          const speciesDepthBand = FISHING_SPECIES_DEPTH_BANDS[fishSpecies];
+          const depthBandTop = speciesDepthBand?.top
+            ?? FISHING_DEPTH_BAND_TOP + fish.depthTier * FISHING_DEPTH_TIER_STEP;
+          const depthBandBottom = speciesDepthBand?.bottom
+            ?? Math.min(0.92, depthBandTop + FISHING_DEPTH_BAND_HEIGHT);
+          const depthRatio = ((index + 1) * FISHING_DEPTH_DISTRIBUTION_STEP) % 1;
+          let homeY = depthBandTop + (depthBandBottom - depthBandTop) * depthRatio;
+          const entryHorizontalDistance = Math.abs(x - FISHING_ENTRY_HOOK.x);
+          if (entryHorizontalDistance < FISHING_ENTRY_CLEARANCE) {
+            const entryVerticalClearance = Math.sqrt(
+              FISHING_ENTRY_CLEARANCE ** 2 - entryHorizontalDistance ** 2,
+            );
+            homeY = Math.min(
+              depthBandBottom,
+              Math.max(homeY, FISHING_ENTRY_HOOK.y + entryVerticalClearance),
+            );
+          }
           return {
             species: fishSpecies,
-            x: 0.12 + ((index * 0.153) % 0.76),
+            x,
             y: homeY,
             direction: index % 2 === 0 ? 1 : -1,
             speed: 0.048 + fish.depthTier * 0.0075 + simulation.random.next() * 0.032,
             homeY,
-            phase: (index * 1.73 + fish.depthTier * 0.61) % (Math.PI * 2),
+            phase: (index * 1.73 + schoolIndex * 0.41 + residentIndex * 0.67 + fish.depthTier * 0.61)
+              % (Math.PI * 2),
             velocityX: 0,
             velocityY: 0,
           };
@@ -1201,6 +1242,7 @@ function createAvailableContract(simulation: Simulation, origin: HarborId): Cont
     bluegill: "sunwardShoal",
     yellowPerch: "sunwardShoal",
     emeraldShiner: "sunwardShoal",
+    whiteSucker: "sunwardShoal",
     northernPike: "mosswaterPool",
     largemouthBass: "mosswaterPool",
     bowfin: "mosswaterPool",

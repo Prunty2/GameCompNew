@@ -5,6 +5,7 @@ import {
   type FishSpecies,
   type HarborId,
 } from "./balance";
+import whiteSuckerUiUrl from "../assets/fish-white-sucker-ui.png";
 import {
   bulkSalePreview,
   marketHistory,
@@ -123,10 +124,13 @@ export function fishIcon(
   beachFishAtlasUrl: string,
   className: string,
 ): string {
+  if (species === "whiteSucker") {
+    return `<span class="market-fish-icon ${className}" role="img" aria-label="${FISH[species].name}" style="--fish-atlas-url: url(&quot;${whiteSuckerUiUrl}&quot;); --fish-atlas-x: 0%; --fish-atlas-y: 0%; --fish-atlas-size: 100% 100%"></span>`;
+  }
   const [column, row] = FISH[species].atlasCell;
   const beachSpecies = Object.values(BEACH_SPOT_RESIDENTS).some((residents) => residents.includes(species));
   const atlasUrl = beachSpecies ? beachFishAtlasUrl : fishAtlasUrl;
-  return `<span class="market-fish-icon ${className}" role="img" aria-label="${FISH[species].name}" style="--fish-atlas-url: url(&quot;${atlasUrl}&quot;); --fish-atlas-x: ${column * 50}%; --fish-atlas-y: ${row * 50}%"></span>`;
+  return `<span class="market-fish-icon ${className}" role="img" aria-label="${FISH[species].name}" style="--fish-atlas-url: url(&quot;${atlasUrl}&quot;); --fish-atlas-x: ${column * 50}%; --fish-atlas-y: ${row * 50}%; --fish-atlas-size: 300% 300%"></span>`;
 }
 
 function priceGraph(history: MarketHistoryPoint[], fishName: string): string {

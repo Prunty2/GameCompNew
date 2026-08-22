@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   BALANCE,
   BEACH_SPOT_RESIDENTS,
+  FISH,
   FISHING_SPOTS,
   SPOT_RESIDENTS,
   boatClassAt,
@@ -48,6 +49,7 @@ import {
   type InputState,
 } from "../game/simulation";
 import { strongerHarborFor } from "../game/market";
+import { responsiveResidentCount } from "../game/fishingPopulation";
 
 const idle: InputState = {
   travel: 0,
@@ -98,6 +100,7 @@ describe("FSHING side-on simulation", () => {
       "bluegill",
       "yellowPerch",
       "emeraldShiner",
+      "whiteSucker",
       "northernPike",
       "largemouthBass",
       "bowfin",
@@ -575,6 +578,75 @@ describe("FSHING side-on simulation", () => {
     expect(deepTarget?.y).toBeGreaterThan(maxFishingDepth(simulation));
     simulation.progress.upgrades.line = 5;
     expect(maxFishingDepth(simulation)).toBeGreaterThanOrEqual(deepTarget?.y ?? 1);
+  });
+
+  test("increases the deterministic catchable population for larger fishing viewports", () => {
+    const compact = createSimulation(12);
+    const reference = createSimulation(12);
+    const large = createSimulation(12);
+    compact.progress.upgrades.line = 1;
+    reference.progress.upgrades.line = 1;
+    large.progress.upgrades.line = 1;
+
+    expect(startFishing(compact, "mosswaterPool", { width: 390, height: 844 })).toBe(true);
+    expect(startFishing(reference, "mosswaterPool", { width: 1280, height: 720 })).toBe(true);
+    expect(startFishing(large, "mosswaterPool", { width: 2560, height: 1440 })).toBe(true);
+
+    const compactTargets = compact.fishing?.targets ?? [];
+    const referenceTargets = reference.fishing?.targets ?? [];
+    const largeTargets = large.fishing?.targets ?? [];
+    expect(compactTargets.length).toBeLessThanOrEqual(referenceTargets.length);
+    expect(largeTargets.length).toBeGreaterThan(referenceTargets.length);
+    expect(new Set(largeTargets.map((target) => target.species))).toEqual(
+      new Set(SPOT_RESIDENTS.mosswaterPool),
+    );
+
+    const repeated = createSimulation(12);
+    repeated.progress.upgrades.line = 1;
+    startFishing(repeated, "mosswaterPool", { width: 2560, height: 1440 });
+    expect(repeated.fishing?.targets).toEqual(largeTargets);
+  });
+
+  test("applies the thirty-percent fish-density reduction", () => {
+    expect(responsiveResidentCount(10, { width: 1280, height: 720 })).toBe(7);
+  });
+
+  test("spreads the Sunward population across shallow and upgrade-preview depths", () => {
+    const simulation = createSimulation(12);
+    expect(startFishing(simulation, "sunwardShoal", { width: 2048, height: 1152 })).toBe(true);
+
+    const targets = simulation.fishing?.targets ?? [];
+    const depths = targets.map((target) => target.homeY);
+    expect(Math.min(...depths)).toBeGreaterThanOrEqual(0.1);
+    expect(Math.max(...depths)).toBeGreaterThan(maxFishingDepth(simulation));
+    expect(Math.max(...depths) - Math.min(...depths)).toBeGreaterThan(0.3);
+  });
+
+  test("keeps Emerald Shiners entirely below the starter line limit", () => {
+    const simulation = createSimulation(12);
+    expect(startFishing(simulation, "sunwardShoal", { width: 2048, height: 1152 })).toBe(true);
+
+    const shiners = simulation.fishing?.targets.filter((target) => target.species === "emeraldShiner") ?? [];
+    expect(shiners.length).toBeGreaterThan(0);
+    expect(FISH.emeraldShiner.depthTier).toBe(1);
+    expect(Math.min(...shiners.map((target) => target.homeY))).toBeGreaterThanOrEqual(0.335);
+    expect(Math.max(...shiners.map((target) => target.homeY))).toBeLessThanOrEqual(0.405);
+    expect(Math.min(...shiners.map((target) => target.homeY))).toBeGreaterThan(maxFishingDepth(simulation));
+  });
+
+  test("places White Suckers in the deeper highlighted band behind line tier two", () => {
+    const simulation = createSimulation(12);
+    expect(startFishing(simulation, "sunwardShoal", { width: 2048, height: 1152 })).toBe(true);
+
+    const suckers = simulation.fishing?.targets.filter((target) => target.species === "whiteSucker") ?? [];
+    expect(suckers.length).toBeGreaterThan(0);
+    expect(FISH.whiteSucker.depthTier).toBe(2);
+    expect(Math.min(...suckers.map((target) => target.homeY))).toBeGreaterThanOrEqual(0.465);
+    expect(Math.max(...suckers.map((target) => target.homeY))).toBeLessThanOrEqual(0.535);
+    expect(Math.min(...suckers.map((target) => target.homeY))).toBeGreaterThan(maxFishingDepth(simulation));
+
+    simulation.progress.upgrades.line = 2;
+    expect(Math.max(...suckers.map((target) => target.homeY))).toBeLessThanOrEqual(maxFishingDepth(simulation));
   });
 
   test("supports ten cargo slots across seven cargo upgrades", () => {

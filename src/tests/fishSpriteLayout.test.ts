@@ -14,6 +14,10 @@ describe("fish sprite layout", () => {
     expect(fishAtlasCellAspect(768, 512)).toBeCloseTo(1.125);
   });
 
+  test("reads the White Sucker cells from its single-row sheet", () => {
+    expect(fishAtlasCellAspect(768, 192, 1)).toBeCloseTo(1);
+  });
+
   test("keeps destination aspect equal to the atlas cell", () => {
     expect(fishSpriteDestination(100, 1)).toEqual({ fishWidth: 100, fishHeight: 100 });
     const gloam = fishSpriteDestination(100, 1.125);

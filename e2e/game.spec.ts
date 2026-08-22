@@ -18,7 +18,7 @@ test("main menu presents centered play, settings, and credits actions", async ({
   await page.goto("/");
 
   const version = page.locator(".title-build-version");
-  await expect(version).toHaveText("v0.7.0 (PR #111)");
+  await expect(version).toHaveText("v0.7.0 (PR #109)");
   const versionBounds = await version.boundingBox();
   expect(versionBounds).not.toBeNull();
   expect(versionBounds!.x).toBeLessThan(24);
@@ -103,8 +103,8 @@ test("first assignment teaches the complete market sale loop", async ({ page }) 
   const bluegillListing = page.locator('[data-action="select-market-fish"][data-species="bluegill"]');
   await expect(page.getByRole("heading", { name: "Brindle Harbor" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Fish market" })).toBeVisible();
-  await expect(page.locator(".market-listing")).toHaveCount(9);
-  await expect(page.locator(".market-listing.is-locked")).toHaveCount(8);
+  await expect(page.locator(".market-listing")).toHaveCount(10);
+  await expect(page.locator(".market-listing.is-locked")).toHaveCount(9);
   await expect(page.locator(".market-listing.is-locked").first().locator(".market-lock-question")).toHaveText("?");
   await expect(page.locator(".market-listing.is-locked").first().locator(".market-listing-fish")).toHaveCSS("filter", /brightness\(0\)/);
   await expect(page.locator(".market-listing.is-locked").first()).not.toHaveAttribute("data-action");
@@ -529,7 +529,7 @@ test("market uses a scrollable fish-card grid and a focused detail view", async 
 
   const list = page.locator(".market-list");
   const listings = list.locator(".market-listing");
-  await expect(listings).toHaveCount(9);
+  await expect(listings).toHaveCount(10);
   await expect(list.locator(".market-listing.is-locked")).toHaveCount(0);
   await expect(listings.first().locator(".market-listing-fish")).toBeVisible();
   await expect(listings.first().locator(".market-listing-copy > strong")).not.toBeEmpty();
@@ -587,7 +587,7 @@ test("market uses a scrollable fish-card grid and a focused detail view", async 
   expect(desktopLayout.chartLeft).toBeGreaterThanOrEqual(desktopLayout.summaryRight);
 
   await page.getByRole("button", { name: "Back to market" }).click();
-  await expect(listings).toHaveCount(9);
+  await expect(listings).toHaveCount(10);
   await expect(sturgeonCard).toBeFocused();
 
   await sturgeonCard.click();
@@ -983,6 +983,24 @@ test("fishing descends through the sailing waterline into a site-specific scene"
   await expect.poll(async () => Number(await canvas.getAttribute("data-fishing-dive-progress"))).toBeGreaterThan(0.99);
 });
 
+test("larger windows render a larger catchable fish population", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.goto("/?e2e=1");
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  const canvas = page.locator("#game-canvas");
+  await page.evaluate(() => window.__FSHING_TEST__?.previewFishing("sunwardShoal", "bluegill"));
+  await expect.poll(async () => Number(await canvas.getAttribute("data-fishing-fish-count"))).toBeGreaterThanOrEqual(3);
+  const referenceCount = Number(await canvas.getAttribute("data-fishing-fish-count"));
+
+  await page.setViewportSize({ width: 2048, height: 1152 });
+  await page.evaluate(() => window.__FSHING_TEST__?.previewFishing("sunwardShoal", "bluegill"));
+  await expect.poll(async () => Number(await canvas.getAttribute("data-fishing-fish-count"))).toBeGreaterThan(referenceCount);
+  await expect.poll(async () => Number(await canvas.getAttribute("data-fishing-dive-progress"))).toBeGreaterThan(0.99);
+  await expect.poll(async () => Number(await canvas.getAttribute("data-fishing-fish-vertical-span"))).toBeGreaterThan(160);
+
+  expect(referenceCount).toBeGreaterThanOrEqual(3);
+});
+
 test("Escape leaves fishing without opening the pause menu", async ({ page }) => {
   await page.goto("/?e2e=1&e2eSpot=sunwardShoal");
   await page.getByRole("button", { name: "Play", exact: true }).click();
@@ -991,6 +1009,7 @@ test("Escape leaves fishing without opening the pause menu", async ({ page }) =>
 
   await expect.poll(async () => page.evaluate(() => window.__FSHING_TEST__?.mode())).toBe("fishing");
   const canvas = page.locator("#game-canvas");
+  await expect.poll(async () => Number(await canvas.getAttribute("data-fishing-dive-progress"))).toBeGreaterThan(0.1);
   const startingDiveProgress = Number(await canvas.getAttribute("data-fishing-dive-progress"));
   await page.keyboard.press("Escape");
 

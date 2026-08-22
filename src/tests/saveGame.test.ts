@@ -173,6 +173,7 @@ describe("versioned save data", () => {
     const save = defaultSave();
     save.progress.money = 92;
     save.progress.upgrades.engine = 1;
+    save.progress.discovered = ["bluegill", "whiteSucker"];
     save.progress.upgrades.reel = 5;
     save.settings.reducedMotion = true;
     saveGame(storage, save);

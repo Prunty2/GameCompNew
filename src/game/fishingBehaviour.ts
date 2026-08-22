@@ -70,6 +70,14 @@ export const FISHING_SPECIES_FIGHT_PROFILES: Record<FishSpecies, FishingSpeciesF
     pathFrequency: 1.3, steeringResponse: 5.2, motionDamping: 6.2, maximumSpeed: 0.31,
     wriggleFrequency: 17, wriggleAmplitude: 0.11,
   },
+  whiteSucker: {
+    style: "bottom-power", cycleSeconds: 4.7, runFraction: 0.26, thrashFraction: 0.12,
+    runIntensity: 0.7, thrashIntensity: 0.54, runPower: 0.94, thrashPower: 0.82,
+    reelResistance: 1.08, endurance: 1.02, recovery: 0.84, runSlip: 0.72, runSlack: 0.88,
+    horizontalRange: 0.075, verticalRange: 0.026, runDepthBias: 0.065,
+    pathFrequency: 0.46, steeringResponse: 3.2, motionDamping: 5, maximumSpeed: 0.21,
+    wriggleFrequency: 8.2, wriggleAmplitude: 0.14,
+  },
   northernPike: {
     style: "ambush-surge", cycleSeconds: 4.8, runFraction: 0.2, thrashFraction: 0.1,
     runIntensity: 1, thrashIntensity: 0.64, runPower: 1.2, thrashPower: 0.92,

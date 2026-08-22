@@ -123,6 +123,13 @@ export const FISH_SCIENCE: Record<FishSpecies, FishScienceProfile> = {
     ecologicalRole: "Transfers energy from plankton to predators.",
     evidence: "Its narrow silver body suits quick burst-and-coast swimming in dense schools.",
   },
+  whiteSucker: {
+    temperatureRangeC: [8, 24],
+    minimumOxygenMgL: 5,
+    habitat: "Lake and river bottoms over gravel, sand, or silt near shallow shoals",
+    ecologicalRole: "Benthic feeder that transfers insects and other bottom invertebrates to larger predators.",
+    evidence: "Its cylindrical body and steady rear-body strokes keep the downturned mouth close to bottom sediments.",
+  },
   northernPike: {
     temperatureRangeC: [8, 22],
     minimumOxygenMgL: 5,
@@ -225,6 +232,7 @@ const SURVEY_CHOICES: Record<FishSpecies, readonly [FishSpecies, FishSpecies, Fi
   bluegill: ["bluegill", "emeraldShiner", "lakeTrout"],
   yellowPerch: ["yellowPerch", "largemouthBass", "northernPike"],
   emeraldShiner: ["emeraldShiner", "largemouthBass", "yellowPerch"],
+  whiteSucker: ["whiteSucker", "yellowPerch", "bowfin"],
   northernPike: ["northernPike", "bluegill", "burbot"],
   largemouthBass: ["largemouthBass", "emeraldShiner", "lakeSturgeon"],
   bowfin: ["bowfin", "yellowPerch", "lakeTrout"],

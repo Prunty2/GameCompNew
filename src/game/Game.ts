@@ -398,7 +398,7 @@ export class Game {
     if (this.simulation.mode === "fishing") return;
     const prompt = getInteractionPrompt(this.simulation);
     if (prompt?.kind === "fishing" && prompt.enabled && prompt.spot) {
-      if (startFishing(this.simulation, prompt.spot)) {
+      if (startFishing(this.simulation, prompt.spot, this.fishingViewport())) {
         this.feedback.cue("cast");
         this.refreshHud();
       }
@@ -1681,6 +1681,10 @@ export class Game {
     if (document.hidden) this.onFocusLost();
   };
 
+  private fishingViewport(): { width: number; height: number } {
+    return { width: window.innerWidth, height: window.innerHeight };
+  }
+
   private installTestingBridge(): void {
     if (!import.meta.env.DEV || !new URLSearchParams(window.location.search).has("e2e")) return;
     window.__FSHING_TEST__ = {
@@ -1698,7 +1702,7 @@ export class Game {
           this.simulation.activeContract.species = species;
         }
         moveBoatForTesting(this.simulation, spot);
-        startFishing(this.simulation, id);
+        startFishing(this.simulation, id, this.fishingViewport());
         this.setOverlay(null);
         this.refreshHud();
       },

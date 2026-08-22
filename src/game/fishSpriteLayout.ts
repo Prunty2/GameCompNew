@@ -1,8 +1,12 @@
 const FISH_ATLAS_COLUMNS = 4;
 const FISH_ATLAS_ROWS = 3;
 
-export function fishAtlasCellAspect(atlasWidth: number, atlasHeight: number): number {
-  return (atlasWidth / FISH_ATLAS_COLUMNS) / Math.max(atlasHeight / FISH_ATLAS_ROWS, 1);
+export function fishAtlasCellAspect(
+  atlasWidth: number,
+  atlasHeight: number,
+  atlasRows = FISH_ATLAS_ROWS,
+): number {
+  return (atlasWidth / FISH_ATLAS_COLUMNS) / Math.max(atlasHeight / atlasRows, 1);
 }
 
 export function fishSpriteDestination(
