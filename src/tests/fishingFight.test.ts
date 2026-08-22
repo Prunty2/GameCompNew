@@ -15,7 +15,6 @@ const freshFight = {
   progress: 0,
   tension: 0.2,
   stamina: 1,
-  criticalSeconds: 0,
 };
 
 function playFight(species: FishSpecies, reelTier = 0): { seconds: number; broken: boolean; maximumTension: number } {
@@ -194,17 +193,25 @@ describe("fishing fight", () => {
     expect(maximumReel.broken).toBe(false);
   });
 
-  test("requires one continuous critical-tension window to break", () => {
-    const recovered = stepFishingFight(
+  test("breaks immediately when tension reaches the critical threshold", () => {
+    const safe = stepFishingFight(
       "bluegill",
-      { ...freshFight, tension: 0.5, criticalSeconds: 0.6 },
+      { ...freshFight, tension: 0.89 },
       false,
       0,
       0,
-      0.1,
+      0,
     );
-    expect(recovered.criticalSeconds).toBe(0);
-    expect(recovered.broken).toBe(false);
+    const critical = stepFishingFight(
+      "bluegill",
+      { ...freshFight, tension: 0.9 },
+      false,
+      0,
+      0,
+      0,
+    );
+    expect(safe.broken).toBe(false);
+    expect(critical.broken).toBe(true);
   });
 
   test("passive waiting cannot tire a fish through a lull", () => {

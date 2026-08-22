@@ -8,11 +8,16 @@ import {
   boatClassAt,
   engineSpeedMultiplier,
   harborById,
+  hookVerticalSpeedMultiplier,
   reelSpeedMultiplier,
   regionSurfaceTintAt,
   spotById,
   type FishSpecies,
 } from "../game/balance";
+import {
+  FISHING_LOSS_DEPTH_TOLERANCE,
+  FISHING_LOSS_SWIM_DURATION,
+} from "../game/fishingReeling";
 import {
   buyBeachAccess,
   beginFishingExit,
@@ -321,6 +326,8 @@ describe("FSHING side-on simulation", () => {
     expect(simulation.progress.upgrades.reel).toBe(5);
     expect(reelSpeedMultiplier(simulation.progress.upgrades.reel)).toBeCloseTo(1.6);
     expect(reelSpeedMultiplier(99)).toBeCloseTo(1.6);
+    expect(hookVerticalSpeedMultiplier(simulation.progress.upgrades.reel)).toBeCloseTo(1.25);
+    expect(hookVerticalSpeedMultiplier(99)).toBeCloseTo(1.25);
     expect(buyUpgrade(simulation, "reel")).toBe(false);
   });
 
@@ -454,7 +461,7 @@ describe("FSHING side-on simulation", () => {
     expect(simulation.cargo).toEqual([{ species: "bluegill" }]);
   });
 
-  test("breaks a critically strained line without ending the fishing session", () => {
+  test("breaks immediately, lets the fish escape, then retracts the bare line", () => {
     const simulation = createSimulation(9);
     expect(startFishing(simulation, "sunwardShoal")).toBe(true);
     const target = simulation.fishing?.targets[0];
@@ -463,16 +470,36 @@ describe("FSHING side-on simulation", () => {
     updateSimulation(simulation, idle, 0);
     const fight = simulation.fishing.reeling;
     if (!fight) throw new Error("Expected a hooked fish.");
-    fight.tension = 0.96;
-    fight.criticalSeconds = BALANCE.fishingBreakGraceSeconds - 0.05;
+    fight.progress = 0.9;
+    fight.tension = BALANCE.fishingCriticalTension;
 
-    updateSimulation(simulation, { ...idle, actionHeld: true }, 0.1);
+    updateSimulation(simulation, { ...idle, actionHeld: true }, 0);
 
     expect(simulation.mode).toBe("fishing");
-    expect(simulation.fishing?.reeling).toBeNull();
-    expect(simulation.fishing?.hook).toEqual({ x: 0.5, y: 0.08 });
+    expect(simulation.fishing?.reeling?.lostAt).toBe(simulation.elapsed);
     expect(consumeEvents(simulation)).toContainEqual({ type: "line-broke", species: "bluegill" });
     expect(simulation.cargo).toEqual([]);
+    const lossStartedAt = simulation.elapsed;
+    const returnDistance = Math.abs(target.y - target.homeY);
+    expect(returnDistance).toBeGreaterThan(FISHING_LOSS_DEPTH_TOLERANCE);
+
+    for (let elapsed = 0; elapsed < FISHING_LOSS_SWIM_DURATION; elapsed += 0.1) {
+      updateSimulation(simulation, idle, Math.min(0.1, FISHING_LOSS_SWIM_DURATION - elapsed));
+    }
+    expect(simulation.fishing?.reeling).not.toBeNull();
+
+    for (let index = 0; index < 200 && simulation.fishing?.reeling; index += 1) {
+      updateSimulation(simulation, idle, 0.1);
+    }
+    expect(simulation.fishing?.reeling).toBeNull();
+    expect(simulation.fishing?.hook).toEqual({ x: 0.5, y: 0.08 });
+    expect(Math.abs(target.y - target.homeY)).toBeLessThanOrEqual(FISHING_LOSS_DEPTH_TOLERANCE);
+    const minimumNormalSpeedReturn = Math.max(0, returnDistance - FISHING_LOSS_DEPTH_TOLERANCE) / 0.1;
+    expect(simulation.elapsed - lossStartedAt).toBeGreaterThanOrEqual(minimumNormalSpeedReturn);
+
+    const resumedAt = { x: target.x, y: target.y };
+    updateSimulation(simulation, idle, 0.1);
+    expect(Math.hypot(target.x - resumedAt.x, target.y - resumedAt.y)).toBeLessThan(0.02);
   });
 
   test("keeps fishing active while a manual exit rises to the surface", () => {
@@ -513,9 +540,30 @@ describe("FSHING side-on simulation", () => {
     expect(simulation.fishing?.hook.y).toBeCloseTo(
       startY + BALANCE.fishingHookDownSpeed * 0.1 - BALANCE.fishingHookUpSpeed * 0.1,
     );
-    expect(BALANCE.fishingHookHorizontalSpeed).toBe(0.25);
+    expect(BALANCE.fishingHookHorizontalSpeed).toBe(0.2125);
     expect(BALANCE.fishingHookUpSpeed).toBe(0.35);
     expect(BALANCE.fishingHookDownSpeed).toBe(0.25);
+  });
+
+  test("increases only vertical hook navigation by five percent per reel tier", () => {
+    const base = createSimulation(9);
+    const upgraded = createSimulation(9);
+    upgraded.progress.upgrades.reel = 4;
+    expect(startFishing(base, "sunwardShoal")).toBe(true);
+    expect(startFishing(upgraded, "sunwardShoal")).toBe(true);
+    const baseStart = { ...base.fishing!.hook };
+    const upgradedStart = { ...upgraded.fishing!.hook };
+
+    updateSimulation(base, { ...idle, hookX: 1, hookY: 1 }, 0.1);
+    updateSimulation(upgraded, { ...idle, hookX: 1, hookY: 1 }, 0.1);
+
+    const multiplier = 1 + 4 * 0.05;
+    expect(upgraded.fishing!.hook.y - upgradedStart.y).toBeCloseTo(
+      (base.fishing!.hook.y - baseStart.y) * multiplier,
+    );
+    expect(upgraded.fishing!.hook.x - upgradedStart.x).toBeCloseTo(
+      base.fishing!.hook.x - baseStart.x,
+    );
   });
 
   test("enforces cargo capacity and gates deep water with the fishing line", () => {

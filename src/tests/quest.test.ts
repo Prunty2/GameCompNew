@@ -126,7 +126,6 @@ describe("first-assignment quest prototype", () => {
       progress: 0,
       tension: 0.12,
       stamina: 1,
-      criticalSeconds: 0,
       behaviour: "calm",
       struggle: 0.08,
       motionX: 0,
@@ -134,6 +133,7 @@ describe("first-assignment quest prototype", () => {
       motionVx: 0,
       motionVy: 0,
       landingAt: null,
+      lostAt: null,
     };
     const hooked = questPresentation(simulation, playView);
     expect(hooked.title).toBe("Hold left click");
