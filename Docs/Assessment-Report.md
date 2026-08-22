@@ -4,8 +4,8 @@
 
 **Project:** FSHING, original browser game  
 **Team:** Liam, Saxon, Harrison, David  
-**Version documented:** 0.5.3 (PR #105)
-**Document date:** 21 August 2026  
+**Version documented:** 0.7.0 (PR #111)
+**Document date:** 22 August 2026
 **Submission components:** This report, source repository, and production build
 
 ---
@@ -20,12 +20,12 @@ The completed vertical slice contains:
 
 - one lake and one unlockable Beach, each with two harbors and three fishing grounds
 - eighteen real species (nine freshwater, nine south-eastern Australian coastal)
-- cargo, engine, and line upgrades, plus a rechargeable boost and Beach access; Beach middle/right grounds require line tiers 3/4
+- cargo, engine, line, and five-tier reel-power upgrades, plus a rechargeable boost and Beach access; Beach middle/right grounds require line tiers 3/4
 - deterministic reel-and-release fish fights with line tension, fish stamina, rarity scaling, and break recovery
 - seeded daily quotes, seven-day history, and freshness-adjusted sales
 - a five-step First Assignment, four-card How to play, credits, and an eight-sale season report
 - keyboard sailing and hook steering, pointer/touch menus, remappable controls, mute, high contrast, reduced motion, and pause on focus loss
-- deterministic gameplay tests, browser interaction tests, and version 11 validated saves
+- deterministic gameplay tests, browser interaction tests, and version 12 validated saves
 
 Product numbers and acceptance checks live in `Docs/Game-Brief.md`.
 
@@ -49,7 +49,7 @@ By the end of a season of eight sales, a player should be able to:
 
 Primary: Year 7–10 students and casual browser players who like collection, upgrades, and short objectives. Secondary: players on CrazyGames who need the game to boot without an SDK and remain usable on a keyboard or a touch menu.
 
-A first run does not assume specialist vocabulary. First Assignment names the Bluegill, the Sunward Shoal, and the sell action in plain language. Its instruction line adapts during the catch to explain left-click reeling and when to release for tension recovery.
+A first run does not assume specialist vocabulary. First Assignment names the Bluegill, the Sunward Shoal, and the sell action in plain language. During the catch the tutorial title switches between holding in a lull and letting a racing fish run, and a toast appears if the player horses a run.
 
 ### User needs
 
@@ -89,7 +89,7 @@ flowchart LR
 2. First Assignment highlights Bluegill. Open it, read today's quote, then **Track Bluegill**.
 3. Return to the lake. The badge reads **FISH AT Sunward Shoal**.
 4. Slow under the shoal until the hook cue appears, then drop the line.
-5. Steer onto a Bluegill. Hold left click on the water to gain ground, then release during struggle bursts or critical line tension. Background fish freeze and fade so the hooked fish remains the focus. The landed catch reaches the boat at 100% freshness.
+5. Steer onto a Bluegill. Hold left click while it is calm to gain ground, then release when it races away so the line can slacken. Background fish keep swimming in a subdued silhouette so the hooked fish remains the focus. The landed catch reaches the boat at 100% freshness.
 6. Guidance switches to **SELL AT** whichever harbor currently pays more.
 7. Dock, open Bluegill, sell. Shells land, the assignment completes, and prices will change when the next 210-second day begins.
 
@@ -110,6 +110,7 @@ Beach reuses the same spot names and world X positions. Reloading always restore
 | Cargo (7 tiers, 3→10 slots) | Carry more before docking |
 | Engine (6 tiers) | Faster crossings, less freshness loss |
 | Line (6 tiers) | Reach deeper bands; Beach middle/right require tiers 3/4 |
+| Reel power (5 tiers) | Reel 12% faster per tier, up to 1.60× speed |
 | Engine boost (300 shells) | Hold Boost for a short overclock that overheats |
 | Beach (120 shells) | Travel to the coastal map |
 
@@ -134,7 +135,7 @@ market.ts                quotes, history, freshness payouts
 marketView.ts            market HTML
 renderer.ts              Canvas drawing only
 input.ts / controls.ts   browser input → game intent
-saveGame.ts              version 11 validation and migration
+saveGame.ts              version 12 validation and migration
 platformService.ts       only CrazyGames SDK boundary
 feedbackService.ts       synthesized audio and haptics
 ```
@@ -152,7 +153,9 @@ payout ← max(1, round(quote × (0.25 + 0.75 × freshness / 100)))
 
 ### Fishing spawn
 
-A site spawns every resident. Count per resident follows that day's availability: 3 abundant, 2 normal, 1 scarce. Hook contact within radius 0.058 on a reachable depth starts a deterministic fight. Holding left click on the canvas, touch, or the Reel key gains ground, drains fish stamina, and raises tension; releasing lowers tension while allowing slight slip and stamina recovery. Non-hooked fish freeze, fade, and lose their targeting cues during the fight. Rarity scales pull strength and frequency. Sustained critical tension breaks the line without ending the fishing session, while a completed fight uses a 1.15 s landing transition and stores the catch at 100% freshness.
+A site spawns every resident. Count per resident follows that day's availability: 3 abundant, 2 normal, 1 scarce. Hook contact within radius 0.058 on a reachable depth starts a deterministic fight with an immediate, smoothly ramped 0.65 s escape run before the first lull. Holding left click, touch, or the Reel key during a lull gains ground and cools the line slightly; only an active run or thrash can increase tension. Releasing during a run lets the fish take line, which drops tension. Tension is read from the hook line colour and thickness rather than a corner meter. Non-hooked fish keep swimming, fade into subdued silhouettes, and lose their targeting cues during the fight. Free-swimming and hooked fish use bounded velocity and continuous steering rather than position impulses. Rarity supplies base difficulty while a researched profile gives each species its own run cadence, direction, depth bias, endurance, and body action; the source record is `Docs/Fish-Behaviour-Research.md`. Sustained critical tension breaks the line without ending the fishing session, while a completed fight uses a 1.15 s landing transition and stores the catch at 100% freshness.
+
+Sunward Shoal is the forgiving introduction: Bluegill, Yellow Perch, and Emerald Shiner have weak enough line loads to survive a continuous reel, while later habitats require the intended reel-and-release response.
 
 ### Determinism
 
@@ -160,7 +163,7 @@ Gameplay uses a fixed `1/120`-second step. Target positions and speeds come from
 
 ### Save validation
 
-Save version 11 treats stored data as untrusted. Money, upgrade tiers, volume, and counters are clamped. Species ids are filtered against the real list; retired fantasy ids migrate one-to-one. Duplicate discoveries are removed. The retired Outer permit field is ignored, while saved line tiers are preserved and now solely determine Outer Gloam access. Beach access defaults off. Malformed JSON becomes a valid new save. World, cargo, and clock are not persisted.
+Save version 12 treats stored data as untrusted. Money, upgrade tiers, volume, and counters are clamped. The new Reel power tier defaults to zero for older saves and is capped at five. Species ids are filtered against the real list; retired fantasy ids migrate one-to-one. Duplicate discoveries are removed. The retired Outer permit field is ignored, while saved line tiers are preserved and now solely determine Outer Gloam access. Beach access defaults off. Malformed JSON becomes a valid new save. World, cargo, and clock are not persisted.
 
 ## 6. Interface and accessibility design
 
@@ -242,7 +245,7 @@ Surface fishing grounds use a faint school, then a polarized lens, then a hook c
 | Fishing spots should feel alive | Resident schools, polarized lens on approach, hook only inside the interaction radius |
 | Lots of fish | Eighteen named real species with distinct swim gaits |
 | Water deeper only with upgrades | Six line tiers and a labelled underwater boundary |
-| Larger boats / more upgrades | Seven cargo tiers, six engine/line tiers, boost, Beach |
+| Larger boats / more upgrades | Seven cargo tiers, six engine/line tiers, five reel-power tiers, boost, Beach |
 | Different worlds | Lake and Beach palettes, piers, underwater plates, and fish sets |
 
 Delivery contracts, water surveys, and the field guide were removed from the player-facing loop after the market replaced jobs. Simulation helpers for surveys and contracts remain for tests and must not be treated as live UI.

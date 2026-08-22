@@ -20,7 +20,7 @@ export type FishSpecies =
   | "mulloway";
 export type HarborId = "brindle" | "gloam";
 export type SpotId = "sunwardShoal" | "mosswaterPool" | "outerGloam";
-export type UpgradeId = "cargo" | "engine" | "line";
+export type UpgradeId = "cargo" | "engine" | "line" | "reel";
 export type WorldId = "lake" | "beach";
 export type RegionId = "brindleCoast" | "mosswaterReach" | "violetGloam";
 export type FishRarity = "common" | "uncommon" | "rare" | "legendary";
@@ -58,13 +58,16 @@ export interface FishDefinition {
 
 export interface FishingFightProfile {
   reelProgressPerSecond: number;
-  tensionPerSecond: number;
-  tensionRecoveryPerSecond: number;
-  slipPerSecond: number;
+  thrashTensionPerSecond: number;
+  runTensionPerSecond: number;
+  calmSlackPerSecond: number;
+  thrashSlackPerSecond: number;
+  runSlackPerSecond: number;
+  calmSlipPerSecond: number;
+  thrashSlipPerSecond: number;
+  runSlipPerSecond: number;
   staminaDrainPerSecond: number;
   staminaRecoveryPerSecond: number;
-  struggleCycleSeconds: number;
-  struggleFraction: number;
 }
 
 export interface RegionDefinition {
@@ -110,7 +113,7 @@ export const BALANCE = {
   fishingLineStrengthPerTier: 0.12,
   fishingCriticalTension: 0.9,
   fishingBreakGraceSeconds: 0.7,
-  upgradeCosts: { cargo: 60, engine: 70, line: 55 },
+  upgradeCosts: { cargo: 60, engine: 70, line: 55, reel: 65 },
   beachAccessCost: 120,
   boostUnlockCost: 300,
   boostSpeedMultiplier: 1.35,
@@ -119,6 +122,8 @@ export const BALANCE = {
   boostCoolingSeconds: 10,
   boostRecoveryThreshold: 0.25,
   maxUpgradeTier: 6,
+  maxReelTier: 5,
+  reelSpeedPerTier: 0.12,
   engineSpeedPerTier: 0.11,
   maxEngineSpeedMultiplier: 1.95,
   maxCargoTier: 7,
@@ -130,44 +135,56 @@ export const BALANCE = {
 /** Rates are fractions of their respective fight meter per second. */
 export const FISHING_FIGHT_PROFILES: Record<FishRarity, FishingFightProfile> = {
   common: {
-    reelProgressPerSecond: 0.34,
-    tensionPerSecond: 0.68,
-    tensionRecoveryPerSecond: 0.78,
-    slipPerSecond: 0.035,
-    staminaDrainPerSecond: 0.23,
-    staminaRecoveryPerSecond: 0.035,
-    struggleCycleSeconds: 2.2,
-    struggleFraction: 0.42,
+    reelProgressPerSecond: 0.36,
+    thrashTensionPerSecond: 0.78,
+    runTensionPerSecond: 1.18,
+    calmSlackPerSecond: 0.2,
+    thrashSlackPerSecond: 0.72,
+    runSlackPerSecond: 1.42,
+    calmSlipPerSecond: 0.012,
+    thrashSlipPerSecond: 0.048,
+    runSlipPerSecond: 0.17,
+    staminaDrainPerSecond: 0.22,
+    staminaRecoveryPerSecond: 0.032,
   },
   uncommon: {
-    reelProgressPerSecond: 0.29,
-    tensionPerSecond: 0.76,
-    tensionRecoveryPerSecond: 0.73,
-    slipPerSecond: 0.045,
-    staminaDrainPerSecond: 0.19,
-    staminaRecoveryPerSecond: 0.04,
-    struggleCycleSeconds: 2,
-    struggleFraction: 0.48,
+    reelProgressPerSecond: 0.3,
+    thrashTensionPerSecond: 0.88,
+    runTensionPerSecond: 1.28,
+    calmSlackPerSecond: 0.18,
+    thrashSlackPerSecond: 0.64,
+    runSlackPerSecond: 1.28,
+    calmSlipPerSecond: 0.016,
+    thrashSlipPerSecond: 0.058,
+    runSlipPerSecond: 0.2,
+    staminaDrainPerSecond: 0.18,
+    staminaRecoveryPerSecond: 0.036,
   },
   rare: {
-    reelProgressPerSecond: 0.25,
-    tensionPerSecond: 0.84,
-    tensionRecoveryPerSecond: 0.68,
-    slipPerSecond: 0.055,
-    staminaDrainPerSecond: 0.16,
-    staminaRecoveryPerSecond: 0.045,
-    struggleCycleSeconds: 1.8,
-    struggleFraction: 0.54,
+    reelProgressPerSecond: 0.26,
+    thrashTensionPerSecond: 0.96,
+    runTensionPerSecond: 1.38,
+    calmSlackPerSecond: 0.16,
+    thrashSlackPerSecond: 0.56,
+    runSlackPerSecond: 1.16,
+    calmSlipPerSecond: 0.02,
+    thrashSlipPerSecond: 0.068,
+    runSlipPerSecond: 0.23,
+    staminaDrainPerSecond: 0.15,
+    staminaRecoveryPerSecond: 0.04,
   },
   legendary: {
     reelProgressPerSecond: 0.22,
-    tensionPerSecond: 0.94,
-    tensionRecoveryPerSecond: 0.64,
-    slipPerSecond: 0.065,
-    staminaDrainPerSecond: 0.13,
-    staminaRecoveryPerSecond: 0.05,
-    struggleCycleSeconds: 1.65,
-    struggleFraction: 0.6,
+    thrashTensionPerSecond: 1.04,
+    runTensionPerSecond: 1.5,
+    calmSlackPerSecond: 0.14,
+    thrashSlackPerSecond: 0.5,
+    runSlackPerSecond: 1.05,
+    calmSlipPerSecond: 0.024,
+    thrashSlipPerSecond: 0.078,
+    runSlipPerSecond: 0.26,
+    staminaDrainPerSecond: 0.12,
+    staminaRecoveryPerSecond: 0.045,
   },
 };
 
@@ -294,11 +311,18 @@ export function boatClassAt(tier: number): string {
 }
 
 export function upgradeTierCap(upgrade: UpgradeId): number {
-  return upgrade === "cargo" ? BALANCE.maxCargoTier : BALANCE.maxUpgradeTier;
+  if (upgrade === "cargo") return BALANCE.maxCargoTier;
+  if (upgrade === "reel") return BALANCE.maxReelTier;
+  return BALANCE.maxUpgradeTier;
 }
 
 export function engineSpeedMultiplier(tier: number): number {
   const clampedTier = Math.max(0, Math.min(BALANCE.maxUpgradeTier, Math.floor(tier)));
   if (clampedTier === BALANCE.maxUpgradeTier) return BALANCE.maxEngineSpeedMultiplier;
   return 1 + clampedTier * BALANCE.engineSpeedPerTier;
+}
+
+export function reelSpeedMultiplier(tier: number): number {
+  const clampedTier = Math.max(0, Math.min(BALANCE.maxReelTier, Math.floor(tier)));
+  return 1 + clampedTier * BALANCE.reelSpeedPerTier;
 }

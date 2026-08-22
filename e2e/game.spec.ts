@@ -18,7 +18,7 @@ test("main menu presents centered play, settings, and credits actions", async ({
   await page.goto("/");
 
   const version = page.locator(".title-build-version");
-  await expect(version).toHaveText("v0.5.3 (PR #109)");
+  await expect(version).toHaveText("v0.7.0 (PR #109)");
   const versionBounds = await version.boundingBox();
   expect(versionBounds).not.toBeNull();
   expect(versionBounds!.x).toBeLessThan(24);
@@ -185,22 +185,76 @@ test("hooked fish require active reel and release tension control", async ({ pag
 
   const canvas = page.locator("#game-canvas");
   await expect(canvas).toHaveAttribute("data-fishing-state", "fighting");
+  await expect(canvas).toHaveAttribute("data-fishing-fight-behaviour", "run");
+  await expect(canvas).toHaveAttribute("data-fishing-fight-cue", "release");
+  await expect(canvas).toHaveAttribute("data-fishing-fight-style", "kick-glide");
   await expect(page.locator("#context-action")).toBeHidden();
   await expect(canvas).toHaveAttribute("data-fishing-background-fish-opacity", "0.680");
-  const frozenPoseTime = await canvas.getAttribute("data-fishing-background-pose-elapsed");
+  const startingBackgroundPoseTime = Number(await canvas.getAttribute("data-fishing-background-pose-elapsed"));
   const startingProgress = Number(await canvas.getAttribute("data-fishing-reel-progress"));
+  const restColour = await canvas.getAttribute("data-fishing-line-colour");
 
   await canvas.dispatchEvent("pointerdown", { pointerId: 1, button: 0, isPrimary: true });
   await page.waitForTimeout(900);
   await canvas.dispatchEvent("pointerup", { pointerId: 1, button: 0, isPrimary: true });
   const pulledProgress = Number(await canvas.getAttribute("data-fishing-reel-progress"));
   const pulledTension = Number(await canvas.getAttribute("data-fishing-line-tension"));
+  const pulledColour = await canvas.getAttribute("data-fishing-line-colour");
   expect(pulledProgress).toBeGreaterThan(startingProgress);
-  await expect(canvas).toHaveAttribute("data-fishing-background-pose-elapsed", frozenPoseTime ?? "");
+  expect(pulledColour).not.toBe(restColour);
+  const movedBackgroundPoseTime = Number(await canvas.getAttribute("data-fishing-background-pose-elapsed"));
+  expect(movedBackgroundPoseTime).toBeGreaterThan(startingBackgroundPoseTime);
 
   await page.waitForTimeout(500);
   const restedTension = Number(await canvas.getAttribute("data-fishing-line-tension"));
   expect(restedTension).toBeLessThan(pulledTension);
+
+  const motionSamples = await canvas.evaluate(async (element) => {
+    const samples: Array<{ x: number; y: number }> = [];
+    for (let index = 0; index < 48; index += 1) {
+      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+      const canvas = element as HTMLCanvasElement;
+      samples.push({
+        x: Number(canvas.dataset.fishingFightMotionX),
+        y: Number(canvas.dataset.fishingFightMotionY),
+      });
+    }
+    return samples;
+  });
+  const maximumFrameStep = Math.max(...motionSamples.slice(1).map((sample, index) => Math.hypot(
+    sample.x - motionSamples[index]!.x,
+    sample.y - motionSamples[index]!.y,
+  )));
+  expect(maximumFrameStep).toBeLessThan(0.015);
+});
+
+test("first assignment catch step teaches left-click reel and line colour", async ({ page }) => {
+  await page.goto("/?e2e=1");
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.locator('[data-action="select-market-fish"][data-species="bluegill"]').click();
+  await page.locator('[data-action="track-market-fish"][data-species="bluegill"]').click();
+
+  await page.evaluate(() => window.__FSHING_TEST__?.previewFishing("sunwardShoal", "bluegill"));
+  await page.evaluate(() => window.__FSHING_TEST__?.hookSpecies("bluegill"));
+
+  const tutorial = page.locator("#market-tutorial");
+  await expect(tutorial).toContainText("Let it run");
+  await expect(tutorial).toContainText("racing away");
+
+  const canvas = page.locator("#game-canvas");
+  await expect(canvas).toHaveAttribute("data-fishing-fight-cue", "release");
+  await expect.poll(async () => canvas.getAttribute("data-fishing-fight-cue"), {
+    timeout: 3_000,
+    intervals: [50],
+  }).toMatch(/reel|resume/);
+  await expect(tutorial).toContainText("Hold left click");
+  await canvas.dispatchEvent("pointerdown", { pointerId: 1, button: 0, isPrimary: true });
+  await expect.poll(async () => canvas.getAttribute("data-fishing-fight-cue"), {
+    timeout: 8_000,
+    intervals: [50],
+  }).toMatch(/release|critical/);
+  await expect(tutorial).toContainText(/Let it run|Release to rest|Release left click/);
+  await canvas.dispatchEvent("pointerup", { pointerId: 1, button: 0, isPrimary: true });
 });
 
 test("first assignment follows the player back to the market list", async ({ page }) => {
@@ -268,26 +322,31 @@ test("upgrade tutorial walks through Upgrades after the player can afford one", 
   await expect(featureCards.locator(".upgrade-feature-icon")).toHaveCount(2);
   const regularLayout = await page.locator(".service-grid .service-card").evaluateAll((cards) => cards.map((card) => {
     const box = card.getBoundingClientRect();
-    return { x: box.x, y: box.y, height: box.height };
+    const meter = card.querySelector<HTMLElement>(".upgrade-meter")?.getBoundingClientRect();
+    return { x: box.x, y: box.y, height: box.height, meterHeight: meter?.height ?? 0 };
   }));
-  expect(regularLayout).toHaveLength(3);
-  expect(Math.abs(regularLayout[0]!.x - regularLayout[1]!.x)).toBeLessThan(2);
-  expect(Math.abs(regularLayout[1]!.x - regularLayout[2]!.x)).toBeLessThan(2);
-  expect(regularLayout[1]!.y).toBeGreaterThan(regularLayout[0]!.y);
-  expect(regularLayout[2]!.y).toBeGreaterThan(regularLayout[1]!.y);
-  expect(regularLayout[1]!.y - regularLayout[0]!.y - regularLayout[0]!.height).toBeGreaterThanOrEqual(10);
-  expect(regularLayout[2]!.y - regularLayout[1]!.y - regularLayout[1]!.height).toBeGreaterThanOrEqual(10);
+  expect(regularLayout).toHaveLength(4);
+  expect(regularLayout.every((card) => card.height >= 64 && card.meterHeight >= 17)).toBe(true);
+  for (let index = 1; index < regularLayout.length; index += 1) {
+    expect(Math.abs(regularLayout[index]!.x - regularLayout[0]!.x)).toBeLessThan(2);
+    expect(regularLayout[index]!.y).toBeGreaterThan(regularLayout[index - 1]!.y);
+  }
   const featureLayout = await featureCards.evaluateAll((cards) => cards.map((card) => {
     const box = card.getBoundingClientRect();
     return { x: box.x, y: box.y, height: box.height };
   }));
   expect(Math.abs(featureLayout[0]!.y - featureLayout[1]!.y)).toBeLessThan(2);
   expect(featureLayout[1]!.x).toBeGreaterThan(featureLayout[0]!.x);
-  expect(featureLayout[0]!.y - regularLayout[2]!.y - regularLayout[2]!.height).toBeGreaterThanOrEqual(14);
+  expect(featureLayout[0]!.y - regularLayout[3]!.y - regularLayout[3]!.height).toBeGreaterThanOrEqual(8);
   const regularCardHeight = await page.locator(".service-grid .service-card").first().evaluate(
     (card) => card.getBoundingClientRect().height,
   );
   expect(featureLayout[0]!.height).toBeGreaterThan(regularCardHeight + 40);
+  const desktopOverflow = await page.locator(".upgrades").evaluate((element) => ({
+    clientHeight: element.clientHeight,
+    scrollHeight: element.scrollHeight,
+  }));
+  expect(desktopOverflow.scrollHeight).toBeLessThanOrEqual(desktopOverflow.clientHeight + 1);
 
   await page.setViewportSize({ width: 390, height: 844 });
   const mobileFeatureLayout = await featureCards.evaluateAll((cards) => cards.map((card) => {
@@ -296,7 +355,22 @@ test("upgrade tutorial walks through Upgrades after the player can afford one", 
   }));
   expect(Math.abs(mobileFeatureLayout[0]!.y - mobileFeatureLayout[1]!.y)).toBeLessThan(2);
   expect(mobileFeatureLayout[1]!.x).toBeGreaterThan(mobileFeatureLayout[0]!.x);
-  expect(mobileFeatureLayout[0]!.height).toBeGreaterThanOrEqual(220);
+  expect(mobileFeatureLayout[0]!.height).toBeGreaterThanOrEqual(160);
+  const mobileRegularLayout = await page.locator(".service-grid .service-card").evaluateAll((cards) => cards.map((card) => {
+    const box = card.getBoundingClientRect();
+    const meter = card.querySelector<HTMLElement>(".upgrade-meter")?.getBoundingClientRect();
+    return { x: box.x, y: box.y, height: box.height, meterHeight: meter?.height ?? 0 };
+  }));
+  expect(mobileRegularLayout.every((card) => card.height >= 64 && card.meterHeight >= 16)).toBe(true);
+  for (let index = 1; index < mobileRegularLayout.length; index += 1) {
+    expect(Math.abs(mobileRegularLayout[index]!.x - mobileRegularLayout[0]!.x)).toBeLessThan(2);
+    expect(mobileRegularLayout[index]!.y).toBeGreaterThan(mobileRegularLayout[index - 1]!.y);
+  }
+  const mobileOverflow = await page.locator(".upgrades").evaluate((element) => ({
+    clientHeight: element.clientHeight,
+    scrollHeight: element.scrollHeight,
+  }));
+  expect(mobileOverflow.scrollHeight).toBeLessThanOrEqual(mobileOverflow.clientHeight + 1);
   const lineUpgrade = page.locator('[data-action="buy-upgrade"][data-upgrade="line"]');
   await expect(lineUpgrade).toHaveClass(/is-tutorial-target/);
   await lineUpgrade.click();
@@ -330,8 +404,41 @@ test("Lake upgrades show its middle and far-right fishing-line tiers", async ({ 
 
   await expect(page.getByRole("heading", { name: "Outer permit" })).toHaveCount(0);
   const lineCard = page.locator(".service-card").filter({ hasText: "Fishing line" });
-  await expect(lineCard).toContainText("Middle tier 1 · far right tier 3");
-  await expect(page.locator(".service-grid .service-card")).toHaveCount(3);
+  await expect(lineCard).toContainText("Middle tier 1 · right tier 3");
+  await expect(page.locator(".service-grid .service-card")).toHaveCount(4);
+});
+
+test("Reel power purchases all five faster-reeling tiers", async ({ page }) => {
+  await page.goto("/?e2e=1");
+  await page.evaluate(() => {
+    window.localStorage.setItem("gamecomp-new.save", JSON.stringify({
+      version: 12,
+      progress: {
+        money: 1_000,
+        upgrades: {},
+        marketTutorialStep: "done",
+        upgradeTutorialStep: "done",
+      },
+      settings: {},
+    }));
+  });
+  await page.reload();
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.getByRole("button", { name: "Upgrades", exact: true }).click();
+
+  const reelCard = page.locator(".service-card").filter({ hasText: "Reel power" });
+  const meter = reelCard.locator(".upgrade-meter");
+  await expect(reelCard).toContainText("+12% reel speed");
+  await expect(meter).toHaveAttribute("aria-label", "Reel power tier 0 of 5");
+  await expect(meter.locator("i")).toHaveCount(5);
+  for (let tier = 1; tier <= 5; tier += 1) {
+    await reelCard.locator('[data-action="buy-upgrade"]').click();
+    await expect(meter).toHaveAttribute("aria-label", `Reel power tier ${tier} of 5`);
+    await expect(meter.locator("i.is-filled")).toHaveCount(tier);
+  }
+  await expect(reelCard.locator('[data-action="buy-upgrade"]')).toBeDisabled();
+  await expect(reelCard).toContainText("Maximum tier");
+  await expect(page.locator(".shell-balance strong")).toHaveText("125");
 });
 
 test("Beach fishing requires line tier 3 in the middle and tier 4 at the far right", async ({ page }) => {
@@ -361,7 +468,7 @@ test("Beach fishing requires line tier 3 in the middle and tier 4 at the far rig
   await page.getByRole("button", { name: "Dock · Brindle Harbor" }).click();
   await page.getByRole("button", { name: "Upgrades", exact: true }).click();
   const lineCard = page.locator(".service-card").filter({ hasText: "Fishing line" });
-  await expect(lineCard).toContainText("Middle tier 3 · far right tier 4");
+  await expect(lineCard).toContainText("Middle tier 3 · right tier 4");
   await lineCard.locator('[data-action="buy-upgrade"]').click();
   await page.locator('[data-action="undock"]').click();
 
@@ -950,10 +1057,11 @@ test("reels a hooked fish to the boat before securing the catch", async ({ page 
     const state = await canvas.getAttribute("data-fishing-state");
     if (state !== "fighting") return state;
     const tension = Number(await canvas.getAttribute("data-fishing-line-tension"));
-    if (!holdingReel && tension < 0.68) {
+    const behaviour = await canvas.getAttribute("data-fishing-fight-behaviour");
+    if (!holdingReel && behaviour !== "run" && tension < 0.68) {
       await page.keyboard.down("e");
       holdingReel = true;
-    } else if (holdingReel && tension > 0.78) {
+    } else if (holdingReel && (behaviour === "run" || tension > 0.78)) {
       await page.keyboard.up("e");
       holdingReel = false;
     }
@@ -1097,8 +1205,8 @@ test("how to play instructions advance one card at a time", async ({ page }) => 
   await page.getByRole("button", { name: "Next" }).click();
   await page.getByRole("button", { name: "Next" }).click();
   await expect(page.getByRole("heading", { name: "Catch and protect" })).toBeVisible();
-  await expect(page.locator(".help-card")).toContainText("hold the left mouse button anywhere on the water");
-  await expect(page.locator(".help-card")).toContainText("TENSION · CRITICAL");
+  await expect(page.locator(".help-card")).toContainText("hold the left mouse button while it is calm");
+  await expect(page.locator(".help-card")).toContainText("When it races away, release");
 
   for (let step = 3; step < 4; step += 1) {
     await page.getByRole("button", { name: "Next" }).click();

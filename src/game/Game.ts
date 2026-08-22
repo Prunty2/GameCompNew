@@ -39,6 +39,7 @@ import {
   rebindControl,
   type ControlAction,
 } from "./controls";
+import { FISHING_FIGHT_RESUME_TENSION } from "./fishingFight";
 import { InputController } from "./input";
 import {
   captureRenderMotion,
@@ -85,6 +86,7 @@ import {
   syncUpgradeTutorial,
   travelToWorld,
   trackMarketSpecies,
+  tutorialPrompt,
   undock,
   unlockBoostForTesting,
   updateSimulation,
@@ -105,6 +107,10 @@ const SCENE_REVEAL_DURATION = 160;
 const DELIVERY_NOTIFICATION_DURATION = 4_000;
 const DELIVERY_NOTIFICATION_EXIT_DURATION = 280;
 const VISIBILITY_TOLERANCE = 0.5;
+const FIGHT_IDLE_REEL_SECONDS = 2.4;
+const FIGHT_HIGH_TENSION_COACH = 0.78;
+const FIGHT_HIGH_TENSION_HOLD_SECONDS = 0.35;
+const FIGHT_REST_TOO_LONG_SECONDS = 2.6;
 
 function isFullyVisibleWithinClippingParents(element: HTMLElement, rect: DOMRect): boolean {
   if (
@@ -217,6 +223,11 @@ export class Game {
   private resetConfirming = false;
   private overlayEntering = false;
   private lineWasCritical = false;
+  private fightCoachKind: string | null = null;
+  private fightCoachHookedAt: number | null = null;
+  private fightHadReel = false;
+  private fightRestSince = 0;
+  private fightHighTensionSince = 0;
   private readonly visualTestSpot = import.meta.env.DEV
     ? new URLSearchParams(window.location.search).get("e2eSpot") as SpotId | null
     : null;
@@ -304,6 +315,7 @@ export class Game {
       if (this.input.consumeAction()) this.handleInteract();
       this.handleSimulationEvents();
       this.updateFishingStrainFeedback();
+      this.updateFishingFightCoaching();
     } else {
       this.accumulator = 0;
       this.previousRenderMotion = captureRenderMotion(this.simulation);
@@ -419,9 +431,81 @@ export class Game {
     if (critical && !this.lineWasCritical) {
       this.feedback.cue("line-strain");
       this.pulseFeedback("collision");
-      this.showToast("LINE STRAIN — release left click or Reel before the line breaks.");
+      this.showToast("The line is red — let the fish run. Release until the colour cools.");
     }
     this.lineWasCritical = critical;
+  }
+
+  private updateFishingFightCoaching(): void {
+    const fight = this.simulation.fishing?.reeling;
+    if (!fight || fight.landingAt !== null) {
+      this.fightCoachKind = null;
+      this.fightCoachHookedAt = null;
+      this.fightHadReel = false;
+      this.fightRestSince = 0;
+      this.fightHighTensionSince = 0;
+      return;
+    }
+    if (this.fightCoachHookedAt !== fight.hookedAt) {
+      this.fightCoachKind = null;
+      this.fightCoachHookedAt = fight.hookedAt;
+      this.fightHadReel = false;
+      this.fightRestSince = 0;
+      this.fightHighTensionSince = 0;
+    }
+    if (this.simulation.progress.marketTutorialStep !== "catch") return;
+
+    const holding = this.input.read().actionHeld;
+    const elapsed = this.simulation.elapsed;
+    if (holding) {
+      this.fightHadReel = true;
+      this.fightRestSince = 0;
+    } else if (this.fightRestSince === 0) {
+      this.fightRestSince = elapsed;
+    }
+
+    if (holding && fight.tension >= FIGHT_HIGH_TENSION_COACH) {
+      if (this.fightHighTensionSince === 0) this.fightHighTensionSince = elapsed;
+    } else {
+      this.fightHighTensionSince = 0;
+    }
+
+    const fightAge = elapsed - fight.hookedAt;
+    const restTime = this.fightRestSince === 0 ? 0 : elapsed - this.fightRestSince;
+    const highTensionHold = this.fightHighTensionSince === 0 ? 0 : elapsed - this.fightHighTensionSince;
+
+    if (holding && fight.behaviour === "run") {
+      this.coachFight("run-hold", "The fish is racing away. Release left click so the line can slacken.");
+    } else if (!this.fightHadReel && fightAge >= FIGHT_IDLE_REEL_SECONDS && fight.behaviour === "calm") {
+      this.coachFight("idle-reel", "Hold left click while the fish is calm to reel it in.");
+    } else if (
+      holding
+      && highTensionHold >= FIGHT_HIGH_TENSION_HOLD_SECONDS
+      && fight.tension < BALANCE.fishingCriticalTension
+    ) {
+      this.coachFight("high-tension", "The line is turning red. Let the fish run — release left click.");
+    } else if (
+      this.fightHadReel
+      && !holding
+      && fight.behaviour === "calm"
+      && restTime >= FIGHT_REST_TOO_LONG_SECONDS
+      && fight.tension <= FISHING_FIGHT_RESUME_TENSION
+    ) {
+      this.coachFight("resume", "The fish has calmed. Hold left click to reel.");
+    }
+
+    if (holding && (this.fightCoachKind === "idle-reel" || this.fightCoachKind === "resume")) {
+      this.fightCoachKind = "reeling";
+    }
+    if (!holding && (this.fightCoachKind === "high-tension" || this.fightCoachKind === "run-hold")) {
+      this.fightCoachKind = "resting";
+    }
+  }
+
+  private coachFight(kind: string, message: string): void {
+    if (this.fightCoachKind === kind) return;
+    this.fightCoachKind = kind;
+    this.showToast(message);
   }
 
   private handleEvent(event: SimulationEvent): void {
@@ -434,7 +518,7 @@ export class Game {
       case "line-broke":
         this.feedback.cue("deny");
         this.pulseFeedback("collision");
-        this.showToast(`${FISH[event.species].name} broke free. Ease off when line tension is critical, then try again.`);
+        this.showToast(`${FISH[event.species].name} broke free. Let it race away when it runs, then reel the lulls.`);
         break;
       case "sold":
         this.feedback.cue("delivery");
@@ -501,9 +585,12 @@ export class Game {
 
     const guidance = navigationGuidance(simulation);
     const navigationStatus = this.uiRoot.querySelector<HTMLElement>(".navigation-status");
+    const fishingStatus = simulation.mode === "fishing" ? tutorialPrompt(simulation) : null;
     const navigationStatusText = this.overlay === null && simulation.mode === "cruising" && guidance
       ? `${guidance.kicker} ${guidance.label}. ${guidance.instruction}`
-      : "";
+      : this.overlay === null && fishingStatus
+        ? fishingStatus
+        : "";
     if (navigationStatus && navigationStatus.textContent !== navigationStatusText) {
       navigationStatus.textContent = navigationStatusText;
     }
@@ -754,7 +841,7 @@ export class Game {
         )
       : activeSection === "cargo"
         ? `<aside class="cargo-section" aria-labelledby="cargo-heading"><div class="cargo-inventory-heading"><h3 id="cargo-heading">Fish inventory</h3><span>${this.simulation.cargo.length} carried · ${availableCargoSlots} unlocked</span></div><div class="cargo-slot-grid" aria-label="Cargo inventory">${cargoMarkup}</div></aside>`
-        : `<section class="upgrades" aria-label="Upgrades"><div class="service-grid">${this.upgradeCard("cargo", "Cargo", "+1 cargo slot")}${this.upgradeCard("engine", "Engine", "+11% speed")}${this.upgradeCard("line", "Fishing line", this.simulation.world === "beach" ? "Middle tier 3 · far right tier 4" : "Middle tier 1 · far right tier 3")}</div><div class="upgrade-feature-grid">${this.boostCard()}${this.beachCard()}</div></section>`;
+        : `<section class="upgrades" aria-label="Upgrades"><div class="service-grid">${this.upgradeCard("cargo", "Cargo", "+1 cargo slot")}${this.upgradeCard("engine", "Engine", "+11% speed")}${this.upgradeCard("line", "Fishing line", this.simulation.world === "beach" ? "Middle tier 3 · right tier 4" : "Middle tier 1 · right tier 3")}${this.upgradeCard("reel", "Reel power", "+12% reel speed")}</div><div class="upgrade-feature-grid">${this.boostCard()}${this.beachCard()}</div></section>`;
     const tabs = `<nav class="harbor-tabs has-3-tabs" aria-label="Harbor sections" style="--harbor-tab-count: 3">${availableSections.map((section) => `<button class="harbor-tab ${activeSection === section ? "is-active" : ""}" type="button" data-action="harbor-section" data-harbor-section="${section}" aria-label="${capitalise(section)}" aria-pressed="${activeSection === section}"><span class="ui-icon icon-${HARBOR_SECTION_ICON[section]}" aria-hidden="true"></span><span>${capitalise(section)}</span></button>`).join("")}</nav>`;
     const mainFooterAction = activeSection === "market" && this.marketDetailOpen
       ? `<button class="leave-button market-footer-back" type="button" data-action="close-market-fish-detail" aria-label="Back to market"><span class="harbor-back-arrow" aria-hidden="true">←</span><strong>Back to market</strong></button>`
@@ -783,8 +870,7 @@ export class Game {
     const tierCap = upgradeTierCap(upgrade);
     const maximum = tier >= tierCap;
     const cost = upgradeCost(upgrade, tier);
-    const displayLevel = Math.min(tier + 1, tierCap);
-    return `<article class="service-card"><span class="ui-icon icon-${upgrade}" aria-hidden="true"></span><div class="service-copy"><h4>${title}</h4><p>${maximum ? "Maximum tier" : detail}</p></div>${this.upgradeMeter(title, displayLevel, tierCap)}<button class="service-purchase" type="button" data-action="buy-upgrade" data-upgrade="${upgrade}" aria-label="${maximum ? `${title} at maximum tier` : `Upgrade ${title} for ${cost} shells`}" ${maximum || this.simulation.progress.money < cost ? "disabled" : ""}>${maximum ? "<strong>MAX</strong>" : `<span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${cost}</strong>`}</button></article>`;
+    return `<article class="service-card"><span class="ui-icon icon-${upgrade}" aria-hidden="true"></span><div class="service-copy"><h4>${title}</h4><p>${maximum ? "Maximum tier" : detail}</p></div>${this.upgradeMeter(title, tier, tierCap)}<button class="service-purchase" type="button" data-action="buy-upgrade" data-upgrade="${upgrade}" aria-label="${maximum ? `${title} at maximum tier` : `Upgrade ${title} for ${cost} shells`}" ${maximum || this.simulation.progress.money < cost ? "disabled" : ""}>${maximum ? "<strong>MAX</strong>" : `<span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${cost}</strong>`}</button></article>`;
   }
 
   private beachCard(): string {
@@ -803,8 +889,8 @@ export class Game {
     return `<article class="service-card upgrade-feature-card"><img class="upgrade-feature-icon" src="${upgradeEngineBoostUrl}" alt="" aria-hidden="true" /><div class="service-copy"><h4>Engine boost</h4><p>${unlocked ? "Hold Shift to overclock" : "+35% speed until heat builds"}</p></div><span class="service-owned" aria-label="${unlocked ? "Engine boost owned" : "One-time unlock"}">${unlocked ? "OWNED" : "ABILITY"}</span><button class="service-purchase" type="button" data-action="buy-boost" aria-label="${unlocked ? "Engine boost owned" : `Unlock Engine boost for ${BALANCE.boostUnlockCost} shells`}" ${unlocked || this.simulation.progress.money < BALANCE.boostUnlockCost ? "disabled" : ""}>${unlocked ? "<strong>OWNED</strong>" : `<span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${BALANCE.boostUnlockCost}</strong>`}</button></article>`;
   }
 
-  private upgradeMeter(label: string, level: number, tierCap: number): string {
-    return `<span class="upgrade-meter" aria-label="${label} level ${level} of ${tierCap}" style="--upgrade-tier-count: ${tierCap}">${Array.from({ length: tierCap }, (_, index) => `<i class="${index < level ? "is-filled" : ""}" aria-hidden="true"></i>`).join("")}</span>`;
+  private upgradeMeter(label: string, tier: number, tierCap: number): string {
+    return `<span class="upgrade-meter" aria-label="${label} tier ${tier} of ${tierCap}" style="--upgrade-tier-count: ${tierCap}">${Array.from({ length: tierCap }, (_, index) => `<i class="${index < tier ? "is-filled" : ""}" aria-hidden="true"></i>`).join("")}</span>`;
   }
 
   private pauseScreen(): string {
@@ -984,7 +1070,7 @@ export class Game {
       },
       {
         title: "Catch and protect",
-        body: `Hook a fish, then hold the left mouse button anywhere on the water to reel. Watch TENSION: release when FISH PULLING or TENSION · CRITICAL appears, wait for the meter to fall, then hold again. Repeat until REEL fills. Keyboard players can hold <kbd>${formatKey(this.save.settings.controls.action)}</kbd>; touch players hold the water.`,
+        body: `Hook a fish, then hold the left mouse button while it is calm to reel. When it races away, release so it can take line — that is what drops tension. Reeling against a run turns the line red. Repeat: reel the lulls, let the runs go, until the fish reaches the boat. Keyboard players can hold <kbd>${formatKey(this.save.settings.controls.action)}</kbd>; touch players hold the water.`,
       },
       {
         title: "Sell and invest",
@@ -1666,7 +1752,7 @@ export class Game {
 }
 
 function upgradeName(upgrade: UpgradeId): string {
-  return { cargo: "Boat and cargo", engine: "Engine", line: "Fishing line" }[upgrade];
+  return { cargo: "Boat and cargo", engine: "Engine", line: "Fishing line", reel: "Reel power" }[upgrade];
 }
 
 function capitalise(value: string): string {
