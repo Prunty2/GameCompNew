@@ -4,7 +4,7 @@
 
 **Project:** FSHING, original browser game  
 **Team:** Liam, Saxon, Harrison, David  
-**Version documented:** 0.6.0 (PR #108)
+**Version documented:** 0.7.0 (PR #111)
 **Document date:** 22 August 2026
 **Submission components:** This report, source repository, and production build
 
