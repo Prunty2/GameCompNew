@@ -140,7 +140,7 @@ Simulation step is `1/120` s. Gameplay RNG is seeded. The boat travels only on t
 | Camera view width | 0.30 world (1.18× while boosting, unless reduced motion) | world width |
 | Freshness lifetime | 150 | seconds from 100% to 0% |
 | Catch radius | 0.058 | fishing space |
-| Hook speeds | 0.25 horizontal, 0.35 up, 0.25 down | fishing space / s |
+| Hook speeds | 0.2125 horizontal, 0.35 up, 0.25 down | fishing space / s |
 | Landing / exit duration | 1.15 | seconds |
 | Critical line tension | 90% | tension threshold |
 | Line strength per tier | +12% | tension resistance |

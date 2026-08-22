@@ -541,7 +541,7 @@ describe("FSHING side-on simulation", () => {
     expect(simulation.fishing?.hook.y).toBeCloseTo(
       startY + BALANCE.fishingHookDownSpeed * 0.1 - BALANCE.fishingHookUpSpeed * 0.1,
     );
-    expect(BALANCE.fishingHookHorizontalSpeed).toBe(0.25);
+    expect(BALANCE.fishingHookHorizontalSpeed).toBe(0.2125);
     expect(BALANCE.fishingHookUpSpeed).toBe(0.35);
     expect(BALANCE.fishingHookDownSpeed).toBe(0.25);
   });

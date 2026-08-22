@@ -107,7 +107,7 @@ export const BALANCE = {
   dockRadius: 0.027,
   fishingRadius: 0.027,
   interactionMaxSpeed: 0.026,
-  fishingHookHorizontalSpeed: 0.25,
+  fishingHookHorizontalSpeed: 0.2125,
   fishingHookUpSpeed: 0.35,
   fishingHookDownSpeed: 0.25,
   fishingLineStrengthPerTier: 0.12,
