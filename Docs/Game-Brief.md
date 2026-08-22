@@ -61,6 +61,8 @@ Paid unlock (300 shells) from Upgrades. Travel is immediate and undocks the boat
 | `mosswaterPool` | Mosswater Pool | 0.50 | 1 | 3 | Longnose Gar, Northern Pike, Largemouth Bass, Bowfin | Dusky Flathead, Luderick, Eastern Australian Salmon |
 | `outerGloam` | Outer Gloam | 0.82 | 3 | 4 | Cisco, Lake Trout, Burbot, Lake Sturgeon | Snapper, Yellowtail Kingfish, Mulloway |
 
+At Lake Outer Gloam, the visible depth order is deliberately stepped: Cisco school near the top (`0.10-0.18`), Lake Trout cruise through the upper-middle (`0.25-0.39`), Burbot occupy the lower reachable water (`0.50-0.60`), and Lake Sturgeon remain below the tier-3 line until the line is upgraded further.
+
 Harbors:
 
 | Id | Name | World x | Undock spawn |

@@ -646,16 +646,30 @@ describe("FSHING side-on simulation", () => {
     expect(gar.every((target) => isFishingTargetReachable(simulation, target))).toBe(true);
   });
 
-  test("places Cisco in Outer Gloam's highlighted open-water band", () => {
+  test("steps Outer Gloam residents through the diagrammed depth bands", () => {
     const simulation = createSimulation(12);
     simulation.progress.upgrades.line = 3;
     expect(startFishing(simulation, "outerGloam", { width: 2048, height: 1152 })).toBe(true);
     const cisco = simulation.fishing?.targets.filter((target) => target.species === "cisco") ?? [];
+    const lakeTrout = simulation.fishing?.targets.filter((target) => target.species === "lakeTrout") ?? [];
+    const burbot = simulation.fishing?.targets.filter((target) => target.species === "burbot") ?? [];
+    const lakeSturgeon = simulation.fishing?.targets.filter((target) => target.species === "lakeSturgeon") ?? [];
 
     expect(cisco.length).toBeGreaterThan(0);
-    expect(Math.min(...cisco.map((target) => target.homeY))).toBeGreaterThanOrEqual(0.24);
-    expect(Math.max(...cisco.map((target) => target.homeY))).toBeLessThanOrEqual(0.4);
-    expect(cisco.every((target) => isFishingTargetReachable(simulation, target))).toBe(true);
+    expect(lakeTrout.length).toBeGreaterThan(0);
+    expect(burbot.length).toBeGreaterThan(0);
+    expect(lakeSturgeon.length).toBeGreaterThan(0);
+    expect(Math.min(...cisco.map((target) => target.homeY))).toBeGreaterThanOrEqual(0.1);
+    expect(Math.max(...cisco.map((target) => target.homeY))).toBeLessThanOrEqual(0.18);
+    expect(Math.min(...lakeTrout.map((target) => target.homeY))).toBeGreaterThanOrEqual(0.25);
+    expect(Math.max(...lakeTrout.map((target) => target.homeY))).toBeLessThanOrEqual(0.39);
+    expect(Math.min(...burbot.map((target) => target.homeY))).toBeGreaterThanOrEqual(0.5);
+    expect(Math.max(...burbot.map((target) => target.homeY))).toBeLessThanOrEqual(0.6);
+    expect(Math.min(...lakeSturgeon.map((target) => target.homeY))).toBeGreaterThan(0.675);
+    expect([...cisco, ...lakeTrout, ...burbot].every((target) => (
+      isFishingTargetReachable(simulation, target)
+    ))).toBe(true);
+    expect(lakeSturgeon.every((target) => !isFishingTargetReachable(simulation, target))).toBe(true);
   });
 
   test("spreads the Sunward population across shallow and upgrade-preview depths", () => {

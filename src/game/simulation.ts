@@ -205,7 +205,9 @@ const FISHING_SPECIES_DEPTH_BANDS: Partial<Record<FishSpecies, { top: number; bo
   emeraldShiner: { top: 0.335, bottom: 0.405 },
   whiteSucker: { top: 0.465, bottom: 0.535 },
   longnoseGar: { top: 0.09, bottom: 0.16 },
-  cisco: { top: 0.24, bottom: 0.4 },
+  cisco: { top: 0.1, bottom: 0.18 },
+  lakeTrout: { top: 0.25, bottom: 0.39 },
+  burbot: { top: 0.5, bottom: 0.6 },
 };
 const SEASON_SALES = 8;
 
