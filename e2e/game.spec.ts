@@ -59,10 +59,10 @@ test("credits lists the team and returns to the main menu", async ({ page }) => 
 
   await expect(page.getByRole("heading", { name: "Credits" })).toBeVisible();
   await expect(page.locator(".credits-list dt")).toHaveText(["Liam", "Saxon", "Harrison", "David"]);
-  await expect(page.getByText("Game Designer / Programmer / Gameplay Tester")).toBeVisible();
-  await expect(page.getByText("Game Designer / Visual Designer / Gameplay Tester")).toBeVisible();
-  await expect(page.getByText("Story Writer / Documentation / Gameplay Tester")).toBeVisible();
-  await expect(page.getByText("Audio Designer / Marine Specialist / Gameplay Tester")).toBeVisible();
+  await expect(page.getByText("Lead Programmer / Game Designer / Gameplay Tester")).toBeVisible();
+  await expect(page.getByText("Programmer / Visual Designer / Gameplay Tester")).toBeVisible();
+  await expect(page.getByText("Progression Writer / Documentation / Gameplay Tester")).toBeVisible();
+  await expect(page.getByText("Sound Designer / Marine Specialist")).toBeVisible();
 
   const entries = page.locator(".credit-entry");
   const flags = page.locator(".credit-flag");

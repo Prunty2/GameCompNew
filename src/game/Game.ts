@@ -1011,19 +1011,19 @@ export class Game {
           <dl class="credits-list">
             <div class="credit-entry">
               <dt>${australianFlag}<span class="credit-name">Liam</span></dt>
-              <dd>Game Designer <span>/</span> Programmer <span>/</span> Gameplay Tester</dd>
+              <dd>Lead Programmer <span>/</span> Game Designer <span>/</span> Gameplay Tester</dd>
             </div>
             <div class="credit-entry">
               <dt>${australianFlag}<span class="credit-name">Saxon</span></dt>
-              <dd>Game Designer <span>/</span> Visual Designer <span>/</span> Gameplay Tester</dd>
+              <dd>Programmer <span>/</span> Visual Designer <span>/</span> Gameplay Tester</dd>
             </div>
             <div class="credit-entry">
               <dt>${australianFlag}<span class="credit-name">Harrison</span></dt>
-              <dd>Story Writer <span>/</span> Documentation <span>/</span> Gameplay Tester</dd>
+              <dd>Progression Writer <span>/</span> Documentation <span>/</span> Gameplay Tester</dd>
             </div>
             <div class="credit-entry">
               <dt>${australianFlag}<span class="credit-name">David</span></dt>
-              <dd>Audio Designer <span>/</span> Marine Specialist <span>/</span> Gameplay Tester</dd>
+              <dd>Sound Designer <span>/</span> Marine Specialist</dd>
             </div>
           </dl>
           <button class="primary-button credits-back" type="button" data-action="back"><span aria-hidden="true">←</span><strong>Back</strong></button>
