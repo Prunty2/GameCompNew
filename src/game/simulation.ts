@@ -102,7 +102,7 @@ export interface ProgressState {
 export type MarketTutorialStep = "inspect" | "track" | "catch" | "sell" | "complete" | "done";
 export type UpgradeTutorialStep = "locked" | "open-services" | "buy" | "done";
 
-const CORE_UPGRADES: UpgradeId[] = ["line", "cargo", "engine"];
+const CORE_UPGRADES: UpgradeId[] = ["line", "cargo", "engine", "reel"];
 
 export interface MarketSaleResult {
   species: FishSpecies;
@@ -239,6 +239,7 @@ export function createSimulation(seed = 1, progress?: Partial<ProgressState>): S
       engine: clampInteger(progress?.upgrades?.engine, 0, BALANCE.maxUpgradeTier),
       lamp: clampInteger(progress?.upgrades?.lamp, 0, BALANCE.maxUpgradeTier),
       line: clampInteger(progress?.upgrades?.line, 0, BALANCE.maxUpgradeTier),
+      reel: clampInteger(progress?.upgrades?.reel, 0, BALANCE.maxReelTier),
     },
     beachUnlocked: progress?.beachUnlocked === true,
     boostUnlocked: progress?.boostUnlocked === true,
@@ -1109,6 +1110,7 @@ function updateFishingFight(simulation: Simulation, input: InputState, dt: numbe
     simulation.progress.upgrades.line,
     dt,
     fight.direction,
+    simulation.progress.upgrades.reel,
   );
   fight.progress = next.progress;
   fight.tension = next.tension;

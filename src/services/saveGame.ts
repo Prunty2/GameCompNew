@@ -19,17 +19,17 @@ export interface GameSettings {
 }
 
 export interface SaveData {
-  version: 11;
+  version: 12;
   progress: ProgressState;
   settings: GameSettings;
 }
 
 export function defaultSave(): SaveData {
   return {
-    version: 11,
+    version: 12,
     progress: {
       money: 0,
-      upgrades: { cargo: 0, engine: 0, lamp: 0, line: 0 },
+      upgrades: { cargo: 0, engine: 0, lamp: 0, line: 0, reel: 0 },
       beachUnlocked: false,
       boostUnlocked: false,
       completedContracts: 0,
@@ -68,7 +68,7 @@ export function loadSave(storage: SaveStorage): SaveData {
     const learning = objectValue(progress.learning);
     const settings = objectValue(candidate.settings);
     return {
-      version: 11,
+      version: 12,
       progress: {
         money: finiteInteger(progress.money, 0, 999_999),
         upgrades: readUpgrades(upgrades),
@@ -141,6 +141,7 @@ function readUpgrades(candidate: Record<string, unknown>): UpgradeProgress {
     engine: finiteInteger(candidate.engine, 0, BALANCE.maxUpgradeTier),
     lamp: finiteInteger(candidate.lamp, 0, BALANCE.maxUpgradeTier),
     line: finiteInteger(candidate.line, 0, BALANCE.maxUpgradeTier),
+    reel: finiteInteger(candidate.reel, 0, BALANCE.maxReelTier),
   };
 }
 
@@ -193,6 +194,7 @@ function readUpgradeTutorialStep(progress: Record<string, unknown>): UpgradeTuto
     || finiteInteger(upgrades.engine, 0, 99) > 0
     || finiteInteger(upgrades.lamp, 0, 99) > 0
     || finiteInteger(upgrades.line, 0, 99) > 0
+    || finiteInteger(upgrades.reel, 0, 99) > 0
     || progress.boostUnlocked === true
     || progress.beachUnlocked === true;
   return purchased ? "done" : "locked";

@@ -2,6 +2,7 @@ import {
   BALANCE,
   FISH,
   FISHING_FIGHT_PROFILES,
+  reelSpeedMultiplier,
   type FishSpecies,
 } from "./balance";
 import {
@@ -144,6 +145,7 @@ export function stepFishingFight(
   lineTier: number,
   dt: number,
   direction: -1 | 1 = 1,
+  reelTier = 0,
 ): FishingFightStep {
   const fish = FISH[species];
   const rarityProfile = FISHING_FIGHT_PROFILES[fish.rarity];
@@ -177,7 +179,7 @@ export function stepFishingFight(
       : pose.kind === "thrash"
         ? rarityProfile.thrashTensionPerSecond * speciesProfile.thrashPower * thrash
         : 0;
-    progress += reelRate * safeDt;
+    progress += reelRate * reelSpeedMultiplier(reelTier) * safeDt;
     tension += tensionRate / lineStrength * safeDt;
     if (pose.kind === "calm") {
       tension -= rarityProfile.calmSlackPerSecond * 0.18 * safeDt;

@@ -1730,19 +1730,19 @@
   }
 }
 
-/* Upgrades use a vertical tier-card stack plus a larger side-by-side feature pair. */
+/* Four bench-sized equipment cards sit above the larger feature pair without scrolling. */
 .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .upgrades {
   display: flex;
   flex-direction: column;
-  gap: clamp(12px, 2vh, 18px);
+  gap: clamp(8px, 1.4vh, 12px);
   min-height: 0;
   padding: 0 4px;
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .service-grid {
-  grid-template-columns: 1fr;
-  gap: clamp(8px, 1.5vh, 14px);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(7px, 1.2vh, 10px);
 }
 
 .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .service-grid .service-card {
@@ -1862,14 +1862,60 @@
 
 @media (max-width: 700px) {
   .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .upgrades {
-    gap: 8px;
+    gap: 6px;
     padding: 0;
-    overflow-y: auto;
+    overflow: hidden;
   }
 
   .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .service-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 6px;
+  }
+
+  .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .service-grid .service-card {
+    min-height: 104px;
+    grid-template-columns: 34px minmax(0, 1fr);
+    grid-template-rows: auto 15px 34px;
+    gap: 4px 6px;
+    padding: 6px;
+  }
+
+  .harbor-screen.is-first-voyage.is-expanded-harbor .service-grid .service-card > .ui-icon {
+    width: 34px;
+    height: 34px;
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .harbor-screen.is-first-voyage.is-expanded-harbor .service-grid .service-copy {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+  }
+
+  .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .service-grid .service-card h4 {
+    font-size: 0.72rem;
+  }
+
+  .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .service-grid .service-card p {
+    margin-top: 1px;
+    font-size: 0.53rem;
+    line-height: 1.1;
+  }
+
+  .harbor-screen.is-first-voyage.is-expanded-harbor .service-grid .upgrade-meter {
+    height: 15px;
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .harbor-screen.is-first-voyage.is-expanded-harbor .service-grid .service-purchase {
+    width: 100%;
+    min-width: 0;
+    min-height: 34px;
+    grid-column: 1 / -1;
+    grid-row: 3;
+    border-radius: 8px;
   }
 
   .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .upgrade-feature-grid {
@@ -1878,17 +1924,17 @@
   }
 
   .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .upgrade-feature-card {
-    min-height: 230px;
+    min-height: 190px;
     grid-template-columns: 1fr;
-    grid-template-rows: 82px auto 1fr auto;
+    grid-template-rows: 68px auto 1fr auto;
     gap: 5px;
     padding: 9px;
     text-align: center;
   }
 
   .harbor-screen.is-first-voyage.is-expanded-harbor .upgrade-feature-card .upgrade-feature-icon {
-    width: 82px;
-    height: 82px;
+    width: 68px;
+    height: 68px;
     grid-column: 1;
     grid-row: 1;
     justify-self: center;

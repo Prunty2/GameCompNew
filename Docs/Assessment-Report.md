@@ -20,12 +20,12 @@ The completed vertical slice contains:
 
 - one lake and one unlockable Beach, each with two harbors and three fishing grounds
 - eighteen real species (nine freshwater, nine south-eastern Australian coastal)
-- cargo, engine, and line upgrades, plus a rechargeable boost and Beach access; Beach middle/right grounds require line tiers 3/4
+- cargo, engine, line, and five-tier reel-power upgrades, plus a rechargeable boost and Beach access; Beach middle/right grounds require line tiers 3/4
 - deterministic reel-and-release fish fights with line tension, fish stamina, rarity scaling, and break recovery
 - seeded daily quotes, seven-day history, and freshness-adjusted sales
 - a five-step First Assignment, four-card How to play, credits, and an eight-sale season report
 - keyboard sailing and hook steering, pointer/touch menus, remappable controls, mute, high contrast, reduced motion, and pause on focus loss
-- deterministic gameplay tests, browser interaction tests, and version 11 validated saves
+- deterministic gameplay tests, browser interaction tests, and version 12 validated saves
 
 Product numbers and acceptance checks live in `Docs/Game-Brief.md`.
 
@@ -110,6 +110,7 @@ Beach reuses the same spot names and world X positions. Reloading always restore
 | Cargo (7 tiers, 3→10 slots) | Carry more before docking |
 | Engine (6 tiers) | Faster crossings, less freshness loss |
 | Line (6 tiers) | Reach deeper bands; Beach middle/right require tiers 3/4 |
+| Reel power (5 tiers) | Reel 12% faster per tier, up to 1.60× speed |
 | Engine boost (300 shells) | Hold Boost for a short overclock that overheats |
 | Beach (120 shells) | Travel to the coastal map |
 
@@ -134,7 +135,7 @@ market.ts                quotes, history, freshness payouts
 marketView.ts            market HTML
 renderer.ts              Canvas drawing only
 input.ts / controls.ts   browser input → game intent
-saveGame.ts              version 11 validation and migration
+saveGame.ts              version 12 validation and migration
 platformService.ts       only CrazyGames SDK boundary
 feedbackService.ts       synthesized audio and haptics
 ```
@@ -162,7 +163,7 @@ Gameplay uses a fixed `1/120`-second step. Target positions and speeds come from
 
 ### Save validation
 
-Save version 11 treats stored data as untrusted. Money, upgrade tiers, volume, and counters are clamped. Species ids are filtered against the real list; retired fantasy ids migrate one-to-one. Duplicate discoveries are removed. The retired Outer permit field is ignored, while saved line tiers are preserved and now solely determine Outer Gloam access. Beach access defaults off. Malformed JSON becomes a valid new save. World, cargo, and clock are not persisted.
+Save version 12 treats stored data as untrusted. Money, upgrade tiers, volume, and counters are clamped. The new Reel power tier defaults to zero for older saves and is capped at five. Species ids are filtered against the real list; retired fantasy ids migrate one-to-one. Duplicate discoveries are removed. The retired Outer permit field is ignored, while saved line tiers are preserved and now solely determine Outer Gloam access. Beach access defaults off. Malformed JSON becomes a valid new save. World, cargo, and clock are not persisted.
 
 ## 6. Interface and accessibility design
 
@@ -244,7 +245,7 @@ Surface fishing grounds use a faint school, then a polarized lens, then a hook c
 | Fishing spots should feel alive | Resident schools, polarized lens on approach, hook only inside the interaction radius |
 | Lots of fish | Eighteen named real species with distinct swim gaits |
 | Water deeper only with upgrades | Six line tiers and a labelled underwater boundary |
-| Larger boats / more upgrades | Seven cargo tiers, six engine/line tiers, boost, Beach |
+| Larger boats / more upgrades | Seven cargo tiers, six engine/line tiers, five reel-power tiers, boost, Beach |
 | Different worlds | Lake and Beach palettes, piers, underwater plates, and fish sets |
 
 Delivery contracts, water surveys, and the field guide were removed from the player-facing loop after the market replaced jobs. Simulation helpers for surveys and contracts remain for tests and must not be treated as live UI.

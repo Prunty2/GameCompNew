@@ -324,24 +324,28 @@ test("upgrade tutorial walks through Upgrades after the player can afford one", 
     const box = card.getBoundingClientRect();
     return { x: box.x, y: box.y, height: box.height };
   }));
-  expect(regularLayout).toHaveLength(3);
-  expect(Math.abs(regularLayout[0]!.x - regularLayout[1]!.x)).toBeLessThan(2);
-  expect(Math.abs(regularLayout[1]!.x - regularLayout[2]!.x)).toBeLessThan(2);
-  expect(regularLayout[1]!.y).toBeGreaterThan(regularLayout[0]!.y);
-  expect(regularLayout[2]!.y).toBeGreaterThan(regularLayout[1]!.y);
-  expect(regularLayout[1]!.y - regularLayout[0]!.y - regularLayout[0]!.height).toBeGreaterThanOrEqual(10);
-  expect(regularLayout[2]!.y - regularLayout[1]!.y - regularLayout[1]!.height).toBeGreaterThanOrEqual(10);
+  expect(regularLayout).toHaveLength(4);
+  expect(Math.abs(regularLayout[0]!.y - regularLayout[1]!.y)).toBeLessThan(2);
+  expect(regularLayout[1]!.x).toBeGreaterThan(regularLayout[0]!.x);
+  expect(Math.abs(regularLayout[2]!.y - regularLayout[3]!.y)).toBeLessThan(2);
+  expect(regularLayout[3]!.x).toBeGreaterThan(regularLayout[2]!.x);
+  expect(regularLayout[2]!.y).toBeGreaterThan(regularLayout[0]!.y);
   const featureLayout = await featureCards.evaluateAll((cards) => cards.map((card) => {
     const box = card.getBoundingClientRect();
     return { x: box.x, y: box.y, height: box.height };
   }));
   expect(Math.abs(featureLayout[0]!.y - featureLayout[1]!.y)).toBeLessThan(2);
   expect(featureLayout[1]!.x).toBeGreaterThan(featureLayout[0]!.x);
-  expect(featureLayout[0]!.y - regularLayout[2]!.y - regularLayout[2]!.height).toBeGreaterThanOrEqual(14);
+  expect(featureLayout[0]!.y - regularLayout[2]!.y - regularLayout[2]!.height).toBeGreaterThanOrEqual(8);
   const regularCardHeight = await page.locator(".service-grid .service-card").first().evaluate(
     (card) => card.getBoundingClientRect().height,
   );
   expect(featureLayout[0]!.height).toBeGreaterThan(regularCardHeight + 40);
+  const desktopOverflow = await page.locator(".upgrades").evaluate((element) => ({
+    clientHeight: element.clientHeight,
+    scrollHeight: element.scrollHeight,
+  }));
+  expect(desktopOverflow.scrollHeight).toBeLessThanOrEqual(desktopOverflow.clientHeight + 1);
 
   await page.setViewportSize({ width: 390, height: 844 });
   const mobileFeatureLayout = await featureCards.evaluateAll((cards) => cards.map((card) => {
@@ -350,7 +354,19 @@ test("upgrade tutorial walks through Upgrades after the player can afford one", 
   }));
   expect(Math.abs(mobileFeatureLayout[0]!.y - mobileFeatureLayout[1]!.y)).toBeLessThan(2);
   expect(mobileFeatureLayout[1]!.x).toBeGreaterThan(mobileFeatureLayout[0]!.x);
-  expect(mobileFeatureLayout[0]!.height).toBeGreaterThanOrEqual(220);
+  expect(mobileFeatureLayout[0]!.height).toBeGreaterThanOrEqual(180);
+  const mobileRegularLayout = await page.locator(".service-grid .service-card").evaluateAll((cards) => cards.map((card) => {
+    const box = card.getBoundingClientRect();
+    return { x: box.x, y: box.y };
+  }));
+  expect(Math.abs(mobileRegularLayout[0]!.y - mobileRegularLayout[1]!.y)).toBeLessThan(2);
+  expect(mobileRegularLayout[1]!.x).toBeGreaterThan(mobileRegularLayout[0]!.x);
+  expect(Math.abs(mobileRegularLayout[2]!.y - mobileRegularLayout[3]!.y)).toBeLessThan(2);
+  const mobileOverflow = await page.locator(".upgrades").evaluate((element) => ({
+    clientHeight: element.clientHeight,
+    scrollHeight: element.scrollHeight,
+  }));
+  expect(mobileOverflow.scrollHeight).toBeLessThanOrEqual(mobileOverflow.clientHeight + 1);
   const lineUpgrade = page.locator('[data-action="buy-upgrade"][data-upgrade="line"]');
   await expect(lineUpgrade).toHaveClass(/is-tutorial-target/);
   await lineUpgrade.click();
@@ -384,8 +400,41 @@ test("Lake upgrades show its middle and far-right fishing-line tiers", async ({ 
 
   await expect(page.getByRole("heading", { name: "Outer permit" })).toHaveCount(0);
   const lineCard = page.locator(".service-card").filter({ hasText: "Fishing line" });
-  await expect(lineCard).toContainText("Middle tier 1 · far right tier 3");
-  await expect(page.locator(".service-grid .service-card")).toHaveCount(3);
+  await expect(lineCard).toContainText("Middle tier 1 · right tier 3");
+  await expect(page.locator(".service-grid .service-card")).toHaveCount(4);
+});
+
+test("Reel power purchases all five faster-reeling tiers", async ({ page }) => {
+  await page.goto("/?e2e=1");
+  await page.evaluate(() => {
+    window.localStorage.setItem("gamecomp-new.save", JSON.stringify({
+      version: 12,
+      progress: {
+        money: 1_000,
+        upgrades: {},
+        marketTutorialStep: "done",
+        upgradeTutorialStep: "done",
+      },
+      settings: {},
+    }));
+  });
+  await page.reload();
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.getByRole("button", { name: "Upgrades", exact: true }).click();
+
+  const reelCard = page.locator(".service-card").filter({ hasText: "Reel power" });
+  const meter = reelCard.locator(".upgrade-meter");
+  await expect(reelCard).toContainText("+12% reel speed");
+  await expect(meter).toHaveAttribute("aria-label", "Reel power tier 0 of 5");
+  await expect(meter.locator("i")).toHaveCount(5);
+  for (let tier = 1; tier <= 5; tier += 1) {
+    await reelCard.locator('[data-action="buy-upgrade"]').click();
+    await expect(meter).toHaveAttribute("aria-label", `Reel power tier ${tier} of 5`);
+    await expect(meter.locator("i.is-filled")).toHaveCount(tier);
+  }
+  await expect(reelCard.locator('[data-action="buy-upgrade"]')).toBeDisabled();
+  await expect(reelCard).toContainText("Maximum tier");
+  await expect(page.locator(".shell-balance strong")).toHaveText("125");
 });
 
 test("Beach fishing requires line tier 3 in the middle and tier 4 at the far right", async ({ page }) => {
@@ -415,7 +464,7 @@ test("Beach fishing requires line tier 3 in the middle and tier 4 at the far rig
   await page.getByRole("button", { name: "Dock · Brindle Harbor" }).click();
   await page.getByRole("button", { name: "Upgrades", exact: true }).click();
   const lineCard = page.locator(".service-card").filter({ hasText: "Fishing line" });
-  await expect(lineCard).toContainText("Middle tier 3 · far right tier 4");
+  await expect(lineCard).toContainText("Middle tier 3 · right tier 4");
   await lineCard.locator('[data-action="buy-upgrade"]').click();
   await page.locator('[data-action="undock"]').click();
 

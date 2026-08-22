@@ -841,7 +841,7 @@ export class Game {
         )
       : activeSection === "cargo"
         ? `<aside class="cargo-section" aria-labelledby="cargo-heading"><div class="cargo-inventory-heading"><h3 id="cargo-heading">Fish inventory</h3><span>${this.simulation.cargo.length} carried · ${availableCargoSlots} unlocked</span></div><div class="cargo-slot-grid" aria-label="Cargo inventory">${cargoMarkup}</div></aside>`
-        : `<section class="upgrades" aria-label="Upgrades"><div class="service-grid">${this.upgradeCard("cargo", "Cargo", "+1 cargo slot")}${this.upgradeCard("engine", "Engine", "+11% speed")}${this.upgradeCard("line", "Fishing line", this.simulation.world === "beach" ? "Middle tier 3 · far right tier 4" : "Middle tier 1 · far right tier 3")}</div><div class="upgrade-feature-grid">${this.boostCard()}${this.beachCard()}</div></section>`;
+        : `<section class="upgrades" aria-label="Upgrades"><div class="service-grid">${this.upgradeCard("cargo", "Cargo", "+1 cargo slot")}${this.upgradeCard("engine", "Engine", "+11% speed")}${this.upgradeCard("line", "Fishing line", this.simulation.world === "beach" ? "Middle tier 3 · right tier 4" : "Middle tier 1 · right tier 3")}${this.upgradeCard("reel", "Reel power", "+12% reel speed")}</div><div class="upgrade-feature-grid">${this.boostCard()}${this.beachCard()}</div></section>`;
     const tabs = `<nav class="harbor-tabs has-3-tabs" aria-label="Harbor sections" style="--harbor-tab-count: 3">${availableSections.map((section) => `<button class="harbor-tab ${activeSection === section ? "is-active" : ""}" type="button" data-action="harbor-section" data-harbor-section="${section}" aria-label="${capitalise(section)}" aria-pressed="${activeSection === section}"><span class="ui-icon icon-${HARBOR_SECTION_ICON[section]}" aria-hidden="true"></span><span>${capitalise(section)}</span></button>`).join("")}</nav>`;
     const mainFooterAction = activeSection === "market" && this.marketDetailOpen
       ? `<button class="leave-button market-footer-back" type="button" data-action="close-market-fish-detail" aria-label="Back to market"><span class="harbor-back-arrow" aria-hidden="true">←</span><strong>Back to market</strong></button>`
@@ -870,8 +870,7 @@ export class Game {
     const tierCap = upgradeTierCap(upgrade);
     const maximum = tier >= tierCap;
     const cost = upgradeCost(upgrade, tier);
-    const displayLevel = Math.min(tier + 1, tierCap);
-    return `<article class="service-card"><span class="ui-icon icon-${upgrade}" aria-hidden="true"></span><div class="service-copy"><h4>${title}</h4><p>${maximum ? "Maximum tier" : detail}</p></div>${this.upgradeMeter(title, displayLevel, tierCap)}<button class="service-purchase" type="button" data-action="buy-upgrade" data-upgrade="${upgrade}" aria-label="${maximum ? `${title} at maximum tier` : `Upgrade ${title} for ${cost} shells`}" ${maximum || this.simulation.progress.money < cost ? "disabled" : ""}>${maximum ? "<strong>MAX</strong>" : `<span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${cost}</strong>`}</button></article>`;
+    return `<article class="service-card"><span class="ui-icon icon-${upgrade}" aria-hidden="true"></span><div class="service-copy"><h4>${title}</h4><p>${maximum ? "Maximum tier" : detail}</p></div>${this.upgradeMeter(title, tier, tierCap)}<button class="service-purchase" type="button" data-action="buy-upgrade" data-upgrade="${upgrade}" aria-label="${maximum ? `${title} at maximum tier` : `Upgrade ${title} for ${cost} shells`}" ${maximum || this.simulation.progress.money < cost ? "disabled" : ""}>${maximum ? "<strong>MAX</strong>" : `<span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${cost}</strong>`}</button></article>`;
   }
 
   private beachCard(): string {
@@ -890,8 +889,8 @@ export class Game {
     return `<article class="service-card upgrade-feature-card"><img class="upgrade-feature-icon" src="${upgradeEngineBoostUrl}" alt="" aria-hidden="true" /><div class="service-copy"><h4>Engine boost</h4><p>${unlocked ? "Hold Shift to overclock" : "+35% speed until heat builds"}</p></div><span class="service-owned" aria-label="${unlocked ? "Engine boost owned" : "One-time unlock"}">${unlocked ? "OWNED" : "ABILITY"}</span><button class="service-purchase" type="button" data-action="buy-boost" aria-label="${unlocked ? "Engine boost owned" : `Unlock Engine boost for ${BALANCE.boostUnlockCost} shells`}" ${unlocked || this.simulation.progress.money < BALANCE.boostUnlockCost ? "disabled" : ""}>${unlocked ? "<strong>OWNED</strong>" : `<span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${BALANCE.boostUnlockCost}</strong>`}</button></article>`;
   }
 
-  private upgradeMeter(label: string, level: number, tierCap: number): string {
-    return `<span class="upgrade-meter" aria-label="${label} level ${level} of ${tierCap}" style="--upgrade-tier-count: ${tierCap}">${Array.from({ length: tierCap }, (_, index) => `<i class="${index < level ? "is-filled" : ""}" aria-hidden="true"></i>`).join("")}</span>`;
+  private upgradeMeter(label: string, tier: number, tierCap: number): string {
+    return `<span class="upgrade-meter" aria-label="${label} tier ${tier} of ${tierCap}" style="--upgrade-tier-count: ${tierCap}">${Array.from({ length: tierCap }, (_, index) => `<i class="${index < tier ? "is-filled" : ""}" aria-hidden="true"></i>`).join("")}</span>`;
   }
 
   private pauseScreen(): string {
@@ -1749,7 +1748,7 @@ export class Game {
 }
 
 function upgradeName(upgrade: UpgradeId): string {
-  return { cargo: "Boat and cargo", engine: "Engine", line: "Fishing line" }[upgrade];
+  return { cargo: "Boat and cargo", engine: "Engine", line: "Fishing line", reel: "Reel power" }[upgrade];
 }
 
 function capitalise(value: string): string {

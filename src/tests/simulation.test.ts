@@ -7,6 +7,7 @@ import {
   boatClassAt,
   engineSpeedMultiplier,
   harborById,
+  reelSpeedMultiplier,
   regionSurfaceTintAt,
   spotById,
 } from "../game/balance";
@@ -308,6 +309,18 @@ describe("FSHING side-on simulation", () => {
     expect(simulation.boat.speed).toBeCloseTo(
       BALANCE.maxSurfaceSpeed * BALANCE.maxEngineSpeedMultiplier,
     );
+  });
+
+  test("supports five reel-power upgrades with a capped sixty-percent speed increase", () => {
+    const simulation = createSimulation(1, { money: 10_000 });
+    expect(reelSpeedMultiplier(0)).toBe(1);
+    for (let tier = 0; tier < BALANCE.maxReelTier; tier += 1) {
+      expect(buyUpgrade(simulation, "reel")).toBe(true);
+    }
+    expect(simulation.progress.upgrades.reel).toBe(5);
+    expect(reelSpeedMultiplier(simulation.progress.upgrades.reel)).toBeCloseTo(1.6);
+    expect(reelSpeedMultiplier(99)).toBeCloseTo(1.6);
+    expect(buyUpgrade(simulation, "reel")).toBe(false);
   });
 
   test("unlocks boost for 300 shells and applies a temporary 35% speed increase", () => {
