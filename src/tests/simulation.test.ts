@@ -25,6 +25,7 @@ import {
   getInteractionPrompt,
   inspectMarketSpecies,
   interact,
+  isFishingTargetReachable,
   learningAccuracy,
   maxFishingDepth,
   moveBoatForTesting,
@@ -101,6 +102,7 @@ describe("FSHING side-on simulation", () => {
       "yellowPerch",
       "emeraldShiner",
       "whiteSucker",
+      "longnoseGar",
       "northernPike",
       "largemouthBass",
       "bowfin",
@@ -574,7 +576,8 @@ describe("FSHING side-on simulation", () => {
     );
     expect(maxFishingDepth(simulation)).toBeCloseTo(0.425);
 
-    const deepTarget = simulation.fishing?.targets.find((target) => target.species === "largemouthBass");
+    const deepTarget = simulation.fishing?.targets.find((target) => target.y > maxFishingDepth(simulation));
+    expect(deepTarget).toBeDefined();
     expect(deepTarget?.y).toBeGreaterThan(maxFishingDepth(simulation));
     simulation.progress.upgrades.line = 5;
     expect(maxFishingDepth(simulation)).toBeGreaterThanOrEqual(deepTarget?.y ?? 1);
@@ -609,6 +612,40 @@ describe("FSHING side-on simulation", () => {
 
   test("applies the thirty-percent fish-density reduction", () => {
     expect(responsiveResidentCount(10, { width: 1280, height: 720 })).toBe(7);
+  });
+
+  test("gives Mosswater a denser population than the global baseline", () => {
+    expect(responsiveResidentCount(2, { width: 1280, height: 720 })).toBe(1);
+    expect(responsiveResidentCount(2, { width: 1280, height: 720 }, 1)).toBe(2);
+  });
+
+  test("uses actual swimming depth for Mosswater reachability", () => {
+    const simulation = createSimulation(12);
+    simulation.progress.upgrades.line = 1;
+    expect(startFishing(simulation, "mosswaterPool")).toBe(true);
+    const bass = simulation.fishing?.targets.find((target) => target.species === "largemouthBass");
+    expect(bass).toBeDefined();
+    expect(FISH.largemouthBass.depthTier).toBe(2);
+    bass!.x = 0.5;
+    bass!.y = maxFishingDepth(simulation) - 0.01;
+    bass!.homeY = bass!.y;
+    simulation.fishing!.hook = { x: bass!.x, y: bass!.y };
+
+    expect(isFishingTargetReachable(simulation, bass!)).toBe(true);
+    updateSimulation(simulation, idle, 0);
+    expect(simulation.fishing?.reeling?.species).toBe("largemouthBass");
+  });
+
+  test("keeps Longnose Gar in Mosswater's surface band", () => {
+    const simulation = createSimulation(12);
+    simulation.progress.upgrades.line = 1;
+    expect(startFishing(simulation, "mosswaterPool", { width: 2048, height: 1152 })).toBe(true);
+    const gar = simulation.fishing?.targets.filter((target) => target.species === "longnoseGar") ?? [];
+
+    expect(gar.length).toBeGreaterThan(0);
+    expect(Math.min(...gar.map((target) => target.homeY))).toBeGreaterThanOrEqual(0.09);
+    expect(Math.max(...gar.map((target) => target.homeY))).toBeLessThanOrEqual(0.16);
+    expect(gar.every((target) => isFishingTargetReachable(simulation, target))).toBe(true);
   });
 
   test("spreads the Sunward population across shallow and upgrade-preview depths", () => {

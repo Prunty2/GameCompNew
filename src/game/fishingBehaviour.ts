@@ -10,6 +10,7 @@ export type FishingFightStyle =
   | "deep-sustained"
   | "bottom-writhe"
   | "bottom-power"
+  | "surface-stalk"
   | "schooling-run"
   | "cautious-pulse"
   | "sand-dive"
@@ -77,6 +78,14 @@ export const FISHING_SPECIES_FIGHT_PROFILES: Record<FishSpecies, FishingSpeciesF
     horizontalRange: 0.075, verticalRange: 0.026, runDepthBias: 0.065,
     pathFrequency: 0.46, steeringResponse: 3.2, motionDamping: 5, maximumSpeed: 0.21,
     wriggleFrequency: 8.2, wriggleAmplitude: 0.14,
+  },
+  longnoseGar: {
+    style: "surface-stalk", cycleSeconds: 4.6, runFraction: 0.2, thrashFraction: 0.12,
+    runIntensity: 0.82, thrashIntensity: 0.62, runPower: 0.92, thrashPower: 0.86,
+    reelResistance: 1, endurance: 0.96, recovery: 0.86, runSlip: 1.02, runSlack: 1,
+    horizontalRange: 0.13, verticalRange: 0.03, runDepthBias: -0.045,
+    pathFrequency: 0.44, steeringResponse: 4.8, motionDamping: 4.8, maximumSpeed: 0.32,
+    wriggleFrequency: 7.5, wriggleAmplitude: 0.12,
   },
   northernPike: {
     style: "ambush-surge", cycleSeconds: 4.8, runFraction: 0.2, thrashFraction: 0.1,

@@ -103,8 +103,8 @@ test("first assignment teaches the complete market sale loop", async ({ page }) 
   const bluegillListing = page.locator('[data-action="select-market-fish"][data-species="bluegill"]');
   await expect(page.getByRole("heading", { name: "Brindle Harbor" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Fish market" })).toBeVisible();
-  await expect(page.locator(".market-listing")).toHaveCount(10);
-  await expect(page.locator(".market-listing.is-locked")).toHaveCount(9);
+  await expect(page.locator(".market-listing")).toHaveCount(11);
+  await expect(page.locator(".market-listing.is-locked")).toHaveCount(10);
   await expect(page.locator(".market-listing.is-locked").first().locator(".market-lock-question")).toHaveText("?");
   await expect(page.locator(".market-listing.is-locked").first().locator(".market-listing-fish")).toHaveCSS("filter", /brightness\(0\)/);
   await expect(page.locator(".market-listing.is-locked").first()).not.toHaveAttribute("data-action");
@@ -529,10 +529,14 @@ test("market uses a scrollable fish-card grid and a focused detail view", async 
 
   const list = page.locator(".market-list");
   const listings = list.locator(".market-listing");
-  await expect(listings).toHaveCount(10);
+  await expect(listings).toHaveCount(11);
   await expect(list.locator(".market-listing.is-locked")).toHaveCount(0);
   await expect(listings.first().locator(".market-listing-fish")).toBeVisible();
   await expect(listings.first().locator(".market-listing-copy > strong")).not.toBeEmpty();
+  await expect(page.locator('[data-species="longnoseGar"] .market-fish-icon')).toHaveAttribute(
+    "style",
+    /fish-longnose-gar-ui/,
+  );
   await expect(listings.first().locator(".market-price-pill")).toHaveText(/^\d+$/);
   await expect(listings.first().locator(".market-cargo-count")).toHaveText("×3");
   await expect(listings.first().locator(".market-cargo-count")).toHaveAttribute("aria-label", "3 Bluegill in cargo");
@@ -587,7 +591,7 @@ test("market uses a scrollable fish-card grid and a focused detail view", async 
   expect(desktopLayout.chartLeft).toBeGreaterThanOrEqual(desktopLayout.summaryRight);
 
   await page.getByRole("button", { name: "Back to market" }).click();
-  await expect(listings).toHaveCount(10);
+  await expect(listings).toHaveCount(11);
   await expect(sturgeonCard).toBeFocused();
 
   await sturgeonCard.click();
@@ -1027,7 +1031,7 @@ test("all three fishing spots render their habitat-specific real species", async
   const canvas = page.locator("#game-canvas");
   const sites = [
     { id: "sunwardShoal", name: "Sunward Shoal", species: "bluegill", label: "Bluegill", rarity: "common" },
-    { id: "mosswaterPool", name: "Mosswater Pool", species: "largemouthBass", label: "Largemouth Bass", rarity: "uncommon" },
+    { id: "mosswaterPool", name: "Mosswater Pool", species: "longnoseGar", label: "Longnose Gar", rarity: "uncommon" },
     { id: "outerGloam", name: "Outer Gloam", species: "lakeTrout", label: "Lake Trout", rarity: "rare" },
   ] as const;
 

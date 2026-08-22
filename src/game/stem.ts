@@ -130,6 +130,13 @@ export const FISH_SCIENCE: Record<FishSpecies, FishScienceProfile> = {
     ecologicalRole: "Benthic feeder that transfers insects and other bottom invertebrates to larger predators.",
     evidence: "Its cylindrical body and steady rear-body strokes keep the downturned mouth close to bottom sediments.",
   },
+  longnoseGar: {
+    temperatureRangeC: [18, 29],
+    minimumOxygenMgL: 2,
+    habitat: "Warm, quiet vegetated bays, tributaries, and river backwaters near the surface",
+    ecologicalRole: "Surface-oriented ambush predator that controls smaller fish populations.",
+    evidence: "Its air-breathing swim bladder brings it to the surface, where its rigid armored body drifts before a quick sideways strike.",
+  },
   northernPike: {
     temperatureRangeC: [8, 22],
     minimumOxygenMgL: 5,
@@ -233,6 +240,7 @@ const SURVEY_CHOICES: Record<FishSpecies, readonly [FishSpecies, FishSpecies, Fi
   yellowPerch: ["yellowPerch", "largemouthBass", "northernPike"],
   emeraldShiner: ["emeraldShiner", "largemouthBass", "yellowPerch"],
   whiteSucker: ["whiteSucker", "yellowPerch", "bowfin"],
+  longnoseGar: ["longnoseGar", "northernPike", "bowfin"],
   northernPike: ["northernPike", "bluegill", "burbot"],
   largemouthBass: ["largemouthBass", "emeraldShiner", "lakeSturgeon"],
   bowfin: ["bowfin", "yellowPerch", "lakeTrout"],

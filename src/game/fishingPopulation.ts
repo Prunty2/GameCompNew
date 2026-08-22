@@ -11,7 +11,8 @@ const MAXIMUM_FISH_SIZE = 92;
 const FISH_SIZE_RATIO = 0.105;
 const MINIMUM_CAPACITY_SCALE = 0.75;
 const MAXIMUM_CAPACITY_SCALE = 2.5;
-const POPULATION_DENSITY_MULTIPLIER = 0.7;
+export const DEFAULT_POPULATION_DENSITY_MULTIPLIER = 0.7;
+export const MOSSWATER_POPULATION_DENSITY_MULTIPLIER = 1;
 
 /**
  * Estimates how many readable fish silhouettes fit in a viewport. This mirrors
@@ -32,9 +33,13 @@ export function fishingPopulationScale(viewport: FishingViewport): number {
   return clamp(visibleSlots / referenceSlots, MINIMUM_CAPACITY_SCALE, MAXIMUM_CAPACITY_SCALE);
 }
 
-export function responsiveResidentCount(baseCount: number, viewport: FishingViewport): number {
+export function responsiveResidentCount(
+  baseCount: number,
+  viewport: FishingViewport,
+  densityMultiplier = DEFAULT_POPULATION_DENSITY_MULTIPLIER,
+): number {
   return Math.max(
     1,
-    Math.round(Math.max(1, baseCount) * fishingPopulationScale(viewport) * POPULATION_DENSITY_MULTIPLIER),
+    Math.round(Math.max(1, baseCount) * fishingPopulationScale(viewport) * Math.max(0, densityMultiplier)),
   );
 }

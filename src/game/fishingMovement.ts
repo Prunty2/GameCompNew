@@ -75,6 +75,13 @@ export const FISHING_MOVEMENT_PROFILES: Record<FishSpecies, FishingMovementProfi
     depthAmplitude: 0.006, depthFrequency: 0.25, jukeStrength: 0.04, jukeChance: 0.08,
     bodyFrequency: 2.2, flexAmount: 0.018,
   },
+  longnoseGar: {
+    gait: "subcarangiform", cruise: 0.22, speedVariance: 0.05, burstStrength: 1.7,
+    burstFrequency: 0.24, burstChance: 0.3, burstSharpness: 9,
+    turnFrequency: 0.12, reverseChance: 0.24, turnEase: 0.24,
+    depthAmplitude: 0.006, depthFrequency: 0.2, jukeStrength: 0.08, jukeChance: 0.08,
+    bodyFrequency: 2.1, flexAmount: 0.012,
+  },
   northernPike: {
     gait: "subcarangiform", cruise: 0.12, speedVariance: 0.08, burstStrength: 3.1,
     burstFrequency: 0.28, burstChance: 0.38, burstSharpness: 10,

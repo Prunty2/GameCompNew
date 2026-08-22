@@ -1,7 +1,12 @@
 import { clamp, createRandom, type RandomSource } from "./math";
 import { fishingSpeciesMotion, stepFishingTargetMotion } from "./fishingMovement";
 import { fishingHighlightSpecies } from "./fishingPresentation";
-import { responsiveResidentCount, type FishingViewport } from "./fishingPopulation";
+import {
+  DEFAULT_POPULATION_DENSITY_MULTIPLIER,
+  MOSSWATER_POPULATION_DENSITY_MULTIPLIER,
+  responsiveResidentCount,
+  type FishingViewport,
+} from "./fishingPopulation";
 import { FISHING_REEL_DURATION } from "./fishingReeling";
 import { fishingFightBehaviour, fishingFightCue, RESTING_FIGHT_MOTION, stepFishingFight } from "./fishingFight";
 import {
@@ -236,6 +241,7 @@ const FISHING_ENTRY_CLEARANCE = 0.12;
 const FISHING_SPECIES_DEPTH_BANDS: Partial<Record<FishSpecies, { top: number; bottom: number }>> = {
   emeraldShiner: { top: 0.335, bottom: 0.405 },
   whiteSucker: { top: 0.465, bottom: 0.535 },
+  longnoseGar: { top: 0.09, bottom: 0.16 },
 };
 const SEASON_SALES = 8;
 
@@ -438,6 +444,9 @@ export function startFishing(
   }
 
   const residents = residentsForSpot(simulation.world, spotId);
+  const populationDensity = simulation.world === "lake" && spotId === "mosswaterPool"
+    ? MOSSWATER_POPULATION_DENSITY_MULTIPLIER
+    : DEFAULT_POPULATION_DENSITY_MULTIPLIER;
   simulation.boat.speed = 0;
   simulation.mode = "fishing";
   let targetIndex = 0;
@@ -453,6 +462,7 @@ export function startFishing(
           length: responsiveResidentCount(
             residentCountForMarket(fishSpecies, simulation.progress.marketDay, simulation.seed),
             viewport,
+            populationDensity,
           ),
         },
         (_, schoolIndex) => {
@@ -881,6 +891,10 @@ export function maxFishingDepth(simulation: Simulation): number {
   return Math.min(0.94, 0.3 + simulation.progress.upgrades.line * 0.125);
 }
 
+export function isFishingTargetReachable(simulation: Simulation, target: Pick<FishingTarget, "y">): boolean {
+  return target.y <= maxFishingDepth(simulation) + Number.EPSILON * 16;
+}
+
 export function upgradeCost(upgrade: UpgradeId, tier: number): number {
   return BALANCE.upgradeCosts[upgrade] + Math.max(0, tier) * 55;
 }
@@ -1099,7 +1113,7 @@ function updateFishing(simulation: Simulation, input: InputState, dt: number): v
   fishing.hook.x = clamp(fishing.hook.x + input.hookX * BALANCE.fishingHookHorizontalSpeed * dt, 0.07, 0.93);
   fishing.hook.y = clamp(fishing.hook.y + input.hookY * verticalSpeed * dt, 0.07, maxFishingDepth(simulation));
   for (const [targetIndex, target] of fishing.targets.entries()) {
-    const reachable = FISH[target.species].depthTier <= simulation.progress.upgrades.line;
+    const reachable = isFishingTargetReachable(simulation, target);
     if (reachable && distance(fishing.hook, target) <= FISHING_CATCH_RADIUS) {
       const opening = fishingFightBehaviour(target.species, 0, 1);
       fishing.reeling = {
@@ -1243,6 +1257,7 @@ function createAvailableContract(simulation: Simulation, origin: HarborId): Cont
     yellowPerch: "sunwardShoal",
     emeraldShiner: "sunwardShoal",
     whiteSucker: "sunwardShoal",
+    longnoseGar: "mosswaterPool",
     northernPike: "mosswaterPool",
     largemouthBass: "mosswaterPool",
     bowfin: "mosswaterPool",

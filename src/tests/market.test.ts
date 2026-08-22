@@ -83,6 +83,7 @@ describe("fish market", () => {
     expect(spotForSpecies("bluegill").id).toBe("sunwardShoal");
     expect(spotForSpecies("lakeSturgeon").id).toBe("outerGloam");
     expect(spotForSpecies("seaMullet").id).toBe("sunwardShoal");
+    expect(spotForSpecies("longnoseGar").id).toBe("mosswaterPool");
     expect(spotForSpecies("mulloway").id).toBe("outerGloam");
     expect(worldForSpecies("bluegill")).toBe("lake");
     expect(worldForSpecies("snapper")).toBe("beach");

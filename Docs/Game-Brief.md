@@ -56,7 +56,7 @@ Paid unlock (120 shells) from Upgrades. Travel is immediate and undocks the boat
 | Spot id | Display name | x | Lake line | Beach line | Lake residents | Beach residents |
 | --- | --- | --- | --- | --- | --- | --- |
 | `sunwardShoal` | Sunward Shoal | 0.18 | 0 | 0 | Bluegill, Yellow Perch, Emerald Shiner, White Sucker | Sea Mullet, Yellowfin Bream, Sand Whiting |
-| `mosswaterPool` | Mosswater Pool | 0.50 | 1 | 3 | Northern Pike, Largemouth Bass, Bowfin | Dusky Flathead, Luderick, Eastern Australian Salmon |
+| `mosswaterPool` | Mosswater Pool | 0.50 | 1 | 3 | Longnose Gar, Northern Pike, Largemouth Bass, Bowfin | Dusky Flathead, Luderick, Eastern Australian Salmon |
 | `outerGloam` | Outer Gloam | 0.82 | 3 | 4 | Lake Trout, Burbot, Lake Sturgeon | Snapper, Yellowtail Kingfish, Mulloway |
 
 Harbors:
@@ -78,6 +78,7 @@ Depth tier is the primary price driver. Rarity separates fish that share a depth
 | Yellow Perch | Lake | Sunward Shoal | 0 | common | 22 |
 | Emerald Shiner | Lake | Sunward Shoal | 1 | uncommon | 40 |
 | White Sucker | Lake | Sunward Shoal | 2 | uncommon | 58 |
+| Longnose Gar | Lake | Mosswater Pool | 1 | uncommon | 46 |
 | Northern Pike | Lake | Mosswater Pool | 1 | uncommon | 40 |
 | Largemouth Bass | Lake | Mosswater Pool | 2 | uncommon | 52 |
 | Bowfin | Lake | Mosswater Pool | 2 | rare | 64 |
@@ -120,7 +121,7 @@ Hidden market conditions still change quotes, availability, and fog math:
 | Cold current | Deep fish abundant, shallow fish scarce |
 | Fog banks | Slight price lift and tighter supply |
 
-Availability sets the baseline number of each resident while fishing: abundant 3, normal 2, scarce 1. The final catchable population is tuned to 70% of the viewport-capacity result, accounting for both screen area and rendered fish size. Larger windows still show more fish after sprites approach their size cap, while compact screens reduce crowding without removing any resident species. Fish use low-discrepancy vertical spacing across their habitat-appropriate depth band rather than collecting on one horizontal shelf. At Sunward Shoal, Emerald Shiners occupy 0.335–0.405 fishing depth, entirely below the starter line and reachable at line tier 1. White Suckers occupy the deeper 0.465–0.535 bottom band and become reachable at line tier 2. Both remain visible as dimmed upgrade previews while locked. Condition names are not shown in the harbor UI.
+Availability sets the baseline number of each resident while fishing: abundant 3, normal 2, scarce 1. The final catchable population is normally tuned to 70% of the viewport-capacity result, accounting for both screen area and rendered fish size; Lake Mosswater Pool uses 100% because its larger silhouettes and layered vegetation otherwise leave the upgraded ground visibly sparse. Larger windows still show more fish after sprites approach their size cap, while compact screens reduce crowding without removing any resident species. Fish use low-discrepancy vertical spacing across their habitat-appropriate depth band rather than collecting on one horizontal shelf. Longnose Gar occupy Mosswater's 0.09–0.16 surface band and remain reachable as soon as the spot unlocks at line tier 1. At Sunward Shoal, Emerald Shiners occupy 0.335–0.405 fishing depth, entirely below the starter line and reachable at line tier 1. White Suckers occupy the deeper 0.465–0.535 bottom band and become reachable at line tier 2. Fish are dimmed and blocked according to their actual swimming position relative to the line limit, so a higher-tier species that swims above the boundary remains fully visible and catchable. Condition names are not shown in the harbor UI.
 
 ## Sailing and fishing
 
@@ -152,7 +153,7 @@ Simulation step is `1/120` s. Gameplay RNG is seeded. The boat travels only on t
 | Night start | 140 | seconds into the day |
 | Night fade | 25 | seconds |
 
-Hook depth is `min(0.94, 0.3 + lineTier × 0.125)`. Fish below the line limit are visible and dimmed but cannot be hooked. Escape while fishing reels the empty line and returns to sailing; it does not pause.
+Hook depth is `min(0.94, 0.3 + lineTier × 0.125)`. Fish whose current position is below the line limit are visible and dimmed but cannot be hooked. Escape while fishing reels the empty line and returns to sailing; it does not pause.
 
 Hooking a fish begins a deterministic line fight built from fish behaviour, not a generic hold-to-fill meter. Holding the primary mouse button directly on the fishing canvas reels; touch hold and the remappable Reel key remain equivalent accessibility inputs. Every hook-up opens with a smoothly ramped 0.65-second escape run, followed by the first calm reeling window, then cycles through calm lulls, runs, and short thrashes. Reeling during a lull gains ground at modest tension and tires the fish. Reeling against a run loads the line fast. Releasing during a run lets the fish take line, slip farther from the boat, and drop tension. Waiting through a lull barely slacks the line and does not tire the fish. Tired fish stop running and become easier to land. There is no on-water fight HUD. Line tension is shown by the hook line itself: cream when safe, amber as it tightens, red at the 90% critical threshold, and slightly thicker as strain rises. The hooked fish follows a continuous velocity-limited path; it accelerates, turns, rolls, rises, or dives instead of receiving discrete random displacement impulses. Reduced motion holds the fight offset still. Non-colour feedback remains: the tutorial title, toasts, sound, vibration, live-region copy, and the canvas `aria-label`. The hooked fish is drawn over the lower hook so only the eye and line stay visible. There is no separate on-screen Reel button.
 
@@ -302,7 +303,7 @@ A build matches this brief when:
 
 - Title shows Play, Settings, Credits, and `vX.Y.Z (PR #N)`
 - A new save can complete First Assignment: inspect Bluegill, track, catch at Sunward Shoal, sell
-- Market lists ten Lake species or nine Beach species, with undiscovered cards locked
+- Market lists eleven Lake species or nine Beach species, with undiscovered cards locked
 - Quotes differ by harbor and day, and selling pays freshness-adjusted shells
 - Line tier gates the Lake middle/right spots at tiers 1/3 and the Beach middle/right spots at tiers 3/4
 - Beach unlock swaps coastal fish and art, then travel returns to the lake

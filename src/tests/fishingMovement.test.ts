@@ -71,6 +71,13 @@ describe("species-specific fishing movement", () => {
     expect(Math.max(...motions.map((motion) => motion.horizontalMultiplier))).toBeGreaterThan(2.4);
   });
 
+  test("keeps longnose gar nearly still between surface stalking bursts", () => {
+    const motions = Array.from({ length: 1200 }, (_, index) => fishingSpeciesMotion("longnoseGar", index * 0.05, 0.7));
+    expect(motions.filter((motion) => motion.horizontalMultiplier < 0.35).length).toBeGreaterThan(650);
+    expect(Math.max(...motions.map((motion) => Math.abs(motion.depthOffset)))).toBeLessThan(0.01);
+    expect(Math.max(...motions.map((motion) => motion.horizontalMultiplier))).toBeGreaterThan(1.2);
+  });
+
   test("eases desired speed into continuous target velocity", () => {
     const dt = 1 / 120;
     let target: FishingTargetMotionState = {
