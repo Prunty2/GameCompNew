@@ -415,7 +415,8 @@ describe("FSHING side-on simulation", () => {
     updateSimulation(simulation, idle, 0);
     expect(simulation.mode).toBe("fishing");
     expect(simulation.fishing?.reeling).toMatchObject({ species: "bluegill" });
-    expect(tutorialPrompt(simulation)).toContain("Hold left click or Reel");
+    expect(tutorialPrompt(simulation)).toContain("Hold left click or Reel to pull in the Bluegill");
+    expect(tutorialPrompt(simulation)).toContain("the line turns red");
     expect(simulation.cargo).toEqual([]);
     for (let index = 0; index < 180 && simulation.mode === "fishing"; index += 1) {
       const tension = simulation.fishing?.reeling?.tension ?? 0;

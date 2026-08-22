@@ -49,7 +49,7 @@ By the end of a season of eight sales, a player should be able to:
 
 Primary: Year 7–10 students and casual browser players who like collection, upgrades, and short objectives. Secondary: players on CrazyGames who need the game to boot without an SDK and remain usable on a keyboard or a touch menu.
 
-A first run does not assume specialist vocabulary. First Assignment names the Bluegill, the Sunward Shoal, and the sell action in plain language. Its instruction line adapts during the catch to explain left-click reeling and when to release for tension recovery.
+A first run does not assume specialist vocabulary. First Assignment names the Bluegill, the Sunward Shoal, and the sell action in plain language. During the catch the tutorial title switches between hold and release, and a toast appears if the player ignores the line colour.
 
 ### User needs
 
@@ -89,7 +89,7 @@ flowchart LR
 2. First Assignment highlights Bluegill. Open it, read today's quote, then **Track Bluegill**.
 3. Return to the lake. The badge reads **FISH AT Sunward Shoal**.
 4. Slow under the shoal until the hook cue appears, then drop the line.
-5. Steer onto a Bluegill. Hold left click on the water to gain ground, then release during struggle bursts or critical line tension. Background fish freeze and fade so the hooked fish remains the focus. The landed catch reaches the boat at 100% freshness.
+5. Steer onto a Bluegill. Hold left click on the water to gain ground, then release when the fish pulls or the fishing line turns red. Background fish freeze and fade so the hooked fish remains the focus. The landed catch reaches the boat at 100% freshness.
 6. Guidance switches to **SELL AT** whichever harbor currently pays more.
 7. Dock, open Bluegill, sell. Shells land, the assignment completes, and prices will change when the next 210-second day begins.
 
@@ -153,7 +153,7 @@ payout ← max(1, round(quote × (0.25 + 0.75 × freshness / 100)))
 
 ### Fishing spawn
 
-A site spawns every resident. Count per resident follows that day's availability: 3 abundant, 2 normal, 1 scarce. Hook contact within radius 0.058 on a reachable depth starts a deterministic fight. Holding left click on the canvas, touch, or the Reel key gains ground, drains fish stamina, and raises tension; releasing lowers tension while allowing slight slip and stamina recovery. Non-hooked fish freeze, fade, and lose their targeting cues during the fight. Rarity scales pull strength and frequency. Sustained critical tension breaks the line without ending the fishing session, while a completed fight uses a 1.15 s landing transition and stores the catch at 100% freshness.
+A site spawns every resident. Count per resident follows that day's availability: 3 abundant, 2 normal, 1 scarce. Hook contact within radius 0.058 on a reachable depth starts a deterministic fight. Holding left click on the canvas, touch, or the Reel key gains ground, drains fish stamina, and raises tension; releasing lowers tension while allowing slight slip and stamina recovery. Tension is read from the hook line colour and thickness rather than a corner meter. Non-hooked fish freeze, fade, and lose their targeting cues during the fight. Rarity scales pull strength and frequency. Sustained critical tension breaks the line without ending the fishing session, while a completed fight uses a 1.15 s landing transition and stores the catch at 100% freshness.
 
 ### Determinism
 

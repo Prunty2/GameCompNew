@@ -2,7 +2,7 @@ import { clamp, createRandom, type RandomSource } from "./math";
 import { fishingSpeciesMotion } from "./fishingMovement";
 import { fishingHighlightSpecies } from "./fishingPresentation";
 import { FISHING_REEL_DURATION } from "./fishingReeling";
-import { stepFishingFight } from "./fishingFight";
+import { fishingFightCue, stepFishingFight } from "./fishingFight";
 import {
   BALANCE,
   FISH,
@@ -975,10 +975,19 @@ export function tutorialPrompt(simulation: Simulation): string | null {
   if (simulation.progress.marketTutorialStep === "done" || simulation.progress.marketTutorialStep === "complete") return null;
   if (simulation.mode === "fishing" && simulation.fishing) {
     if (simulation.fishing.reeling) {
-      if (simulation.fishing.reeling.landingAt !== null) {
-        return `Landing the ${FISH[simulation.fishing.reeling.species].name}.`;
+      const name = FISH[simulation.fishing.reeling.species].name;
+      switch (fishingFightCue(simulation.fishing.reeling)) {
+        case "landed":
+          return `Landing the ${name}.`;
+        case "critical":
+          return `Release left click or Reel; the ${name}'s line is red and about to snap.`;
+        case "release":
+          return `Release left click or Reel; the ${name} is pulling and the line is tightening.`;
+        case "resume":
+          return `Hold left click or Reel again to pull in the ${name}; tension has fallen.`;
+        case "reel":
+          return `Hold left click or Reel to pull in the ${name}; the line turns red as tension rises.`;
       }
-      return `Hold left click or Reel to pull in the ${FISH[simulation.fishing.reeling.species].name}; release before line tension stays critical.`;
     }
     if (simulation.fishing.exitingAt !== null) return "Reeling in the line and returning to the surface.";
     const target = fishingHighlightSpecies(

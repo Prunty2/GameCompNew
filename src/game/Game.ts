@@ -39,6 +39,7 @@ import {
   rebindControl,
   type ControlAction,
 } from "./controls";
+import { FISHING_FIGHT_RESUME_TENSION } from "./fishingFight";
 import { InputController } from "./input";
 import {
   captureRenderMotion,
@@ -86,6 +87,7 @@ import {
   syncUpgradeTutorial,
   travelToWorld,
   trackMarketSpecies,
+  tutorialPrompt,
   undock,
   unlockBoostForTesting,
   updateSimulation,
@@ -106,6 +108,10 @@ const SCENE_REVEAL_DURATION = 160;
 const DELIVERY_NOTIFICATION_DURATION = 4_000;
 const DELIVERY_NOTIFICATION_EXIT_DURATION = 280;
 const VISIBILITY_TOLERANCE = 0.5;
+const FIGHT_IDLE_REEL_SECONDS = 2.4;
+const FIGHT_HIGH_TENSION_COACH = 0.78;
+const FIGHT_HIGH_TENSION_HOLD_SECONDS = 0.35;
+const FIGHT_REST_TOO_LONG_SECONDS = 2.6;
 
 function isFullyVisibleWithinClippingParents(element: HTMLElement, rect: DOMRect): boolean {
   if (
@@ -218,6 +224,11 @@ export class Game {
   private resetConfirming = false;
   private overlayEntering = false;
   private lineWasCritical = false;
+  private fightCoachKind: string | null = null;
+  private fightCoachHookedAt: number | null = null;
+  private fightHadReel = false;
+  private fightRestSince = 0;
+  private fightHighTensionSince = 0;
   private readonly visualTestSpot = import.meta.env.DEV
     ? new URLSearchParams(window.location.search).get("e2eSpot") as SpotId | null
     : null;
@@ -305,6 +316,7 @@ export class Game {
       if (this.input.consumeAction()) this.handleInteract();
       this.handleSimulationEvents();
       this.updateFishingStrainFeedback();
+      this.updateFishingFightCoaching();
     } else {
       this.accumulator = 0;
       this.previousRenderMotion = captureRenderMotion(this.simulation);
@@ -420,9 +432,78 @@ export class Game {
     if (critical && !this.lineWasCritical) {
       this.feedback.cue("line-strain");
       this.pulseFeedback("collision");
-      this.showToast("LINE STRAIN — release left click or Reel before the line breaks.");
+      this.showToast("The line is red — release left click or Reel before it snaps.");
     }
     this.lineWasCritical = critical;
+  }
+
+  private updateFishingFightCoaching(): void {
+    const fight = this.simulation.fishing?.reeling;
+    if (!fight || fight.landingAt !== null) {
+      this.fightCoachKind = null;
+      this.fightCoachHookedAt = null;
+      this.fightHadReel = false;
+      this.fightRestSince = 0;
+      this.fightHighTensionSince = 0;
+      return;
+    }
+    if (this.fightCoachHookedAt !== fight.hookedAt) {
+      this.fightCoachKind = null;
+      this.fightCoachHookedAt = fight.hookedAt;
+      this.fightHadReel = false;
+      this.fightRestSince = 0;
+      this.fightHighTensionSince = 0;
+    }
+    if (this.simulation.progress.marketTutorialStep !== "catch") return;
+
+    const holding = this.input.read().actionHeld;
+    const elapsed = this.simulation.elapsed;
+    if (holding) {
+      this.fightHadReel = true;
+      this.fightRestSince = 0;
+    } else if (this.fightRestSince === 0) {
+      this.fightRestSince = elapsed;
+    }
+
+    if (holding && fight.tension >= FIGHT_HIGH_TENSION_COACH) {
+      if (this.fightHighTensionSince === 0) this.fightHighTensionSince = elapsed;
+    } else {
+      this.fightHighTensionSince = 0;
+    }
+
+    const fightAge = elapsed - fight.hookedAt;
+    const restTime = this.fightRestSince === 0 ? 0 : elapsed - this.fightRestSince;
+    const highTensionHold = this.fightHighTensionSince === 0 ? 0 : elapsed - this.fightHighTensionSince;
+
+    if (!this.fightHadReel && fightAge >= FIGHT_IDLE_REEL_SECONDS) {
+      this.coachFight("idle-reel", "Hold left click on the water to reel. The line colour shows tension.");
+    } else if (
+      holding
+      && highTensionHold >= FIGHT_HIGH_TENSION_HOLD_SECONDS
+      && fight.tension < BALANCE.fishingCriticalTension
+    ) {
+      this.coachFight("high-tension", "The line is turning red. Release left click before it snaps.");
+    } else if (
+      this.fightHadReel
+      && !holding
+      && restTime >= FIGHT_REST_TOO_LONG_SECONDS
+      && fight.tension <= FISHING_FIGHT_RESUME_TENSION
+    ) {
+      this.coachFight("resume", "Hold left click again. Resting too long lets the fish slip away.");
+    }
+
+    if (holding && (this.fightCoachKind === "idle-reel" || this.fightCoachKind === "resume")) {
+      this.fightCoachKind = "reeling";
+    }
+    if (!holding && this.fightCoachKind === "high-tension") {
+      this.fightCoachKind = "resting";
+    }
+  }
+
+  private coachFight(kind: string, message: string): void {
+    if (this.fightCoachKind === kind) return;
+    this.fightCoachKind = kind;
+    this.showToast(message);
   }
 
   private handleEvent(event: SimulationEvent): void {
@@ -435,7 +516,7 @@ export class Game {
       case "line-broke":
         this.feedback.cue("deny");
         this.pulseFeedback("collision");
-        this.showToast(`${FISH[event.species].name} broke free. Ease off when line tension is critical, then try again.`);
+        this.showToast(`${FISH[event.species].name} broke free. Release when the line turns red, then hold again.`);
         break;
       case "sold":
         this.feedback.cue("delivery");
@@ -510,9 +591,12 @@ export class Game {
 
     const guidance = navigationGuidance(simulation);
     const navigationStatus = this.uiRoot.querySelector<HTMLElement>(".navigation-status");
+    const fishingStatus = simulation.mode === "fishing" ? tutorialPrompt(simulation) : null;
     const navigationStatusText = this.overlay === null && simulation.mode === "cruising" && guidance
       ? `${guidance.kicker} ${guidance.label}. ${guidance.instruction}`
-      : "";
+      : this.overlay === null && fishingStatus
+        ? fishingStatus
+        : "";
     if (navigationStatus && navigationStatus.textContent !== navigationStatusText) {
       navigationStatus.textContent = navigationStatusText;
     }
@@ -998,7 +1082,7 @@ export class Game {
       },
       {
         title: "Catch and protect",
-        body: `Hook a fish, then hold the left mouse button anywhere on the water to reel. Watch TENSION: release when FISH PULLING or TENSION · CRITICAL appears, wait for the meter to fall, then hold again. Repeat until REEL fills. Keyboard players can hold <kbd>${formatKey(this.save.settings.controls.action)}</kbd>; touch players hold the water.`,
+        body: `Hook a fish, then hold the left mouse button anywhere on the water to reel. Watch the fishing line: cream is safe, red means release before it snaps. After the colour cools, hold again. Repeat until the fish reaches the boat. Keyboard players can hold <kbd>${formatKey(this.save.settings.controls.action)}</kbd>; touch players hold the water.`,
       },
       {
         title: "Sell and invest",

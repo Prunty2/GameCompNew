@@ -48,16 +48,17 @@ import {
   fishingFishPose,
   fishingFocusPresentation,
   fishingHighlightSpecies,
+  fishingLineAppearance,
   fishingPointToScreen,
   fishingReelCameraProgress,
   fishingViewLayout,
   type FishingViewLayout,
 } from "./fishingPresentation";
+import { fishingFightCue, fishingFightWriggle } from "./fishingFight";
 import {
   fishingReelProgress,
   fishingReelSchoolOpacity,
 } from "./fishingReeling";
-import { fishingFightWriggle } from "./fishingFight";
 import {
   surfaceFishingCue,
   surfaceFishingLocationVisibility,
@@ -314,6 +315,8 @@ export class CanvasRenderer {
       delete this.canvas.dataset.fishingState;
       delete this.canvas.dataset.fishingReelProgress;
       delete this.canvas.dataset.fishingLineTension;
+      delete this.canvas.dataset.fishingLineColour;
+      delete this.canvas.dataset.fishingFightCue;
       delete this.canvas.dataset.fishingFishStamina;
       delete this.canvas.dataset.targetRarity;
       this.canvas.setAttribute("aria-label", "Game area");
@@ -616,19 +619,23 @@ export class CanvasRenderer {
     this.canvas.dataset.fishingState = fishing.reeling
       ? fishing.reeling.landingAt === null ? "fighting" : "landing"
       : fishing.exitingAt !== null ? "exiting" : "steering";
+    const line = fishingLineAppearance(fishing.reeling?.tension ?? 0, settings.highContrast);
+    this.canvas.dataset.fishingLineColour = line.colour;
     if (fishing.reeling) {
       this.canvas.dataset.fishingReelProgress = fishing.reeling.progress.toFixed(3);
       this.canvas.dataset.fishingLineTension = fishing.reeling.tension.toFixed(3);
+      this.canvas.dataset.fishingFightCue = fishingFightCue(fishing.reeling);
       this.canvas.dataset.fishingFishStamina = fishing.reeling.stamina.toFixed(3);
     } else {
       delete this.canvas.dataset.fishingReelProgress;
       delete this.canvas.dataset.fishingLineTension;
+      delete this.canvas.dataset.fishingFightCue;
       delete this.canvas.dataset.fishingFishStamina;
     }
     this.canvas.setAttribute(
       "aria-label",
       fishing.reeling
-        ? `Fishing at ${spot.name}. Fighting ${FISH[fishing.reeling.species].name}. Hold left click, touch, or the Reel key to pull. Reel progress ${Math.round(fishing.reeling.progress * 100)} percent. Line tension ${Math.round(fishing.reeling.tension * 100)} percent.`
+        ? fishingFightAriaLabel(spot.name, fishing.reeling)
         : fishing.exitingAt !== null
           ? `Leaving ${spot.name} and returning to the lake surface.`
         : targetSpecies
@@ -707,13 +714,18 @@ export class CanvasRenderer {
           y: restingHook.y + (layout.surfaceY + 10 - restingHook.y) * fightPull,
         }
       : restingHook;
-    context.strokeStyle = settings.highContrast ? "#ffffff" : "#f4e2b9";
-    context.lineWidth = settings.highContrast ? 3 : 2;
+    const hookSize = clamp(Math.min(width, height) * 0.076, 46, 68);
+    const hooked = fishing.reeling !== null;
+    const hookDrawY = hooked ? hook.y - hookSize * 0.12 : hook.y;
+    const lineEndY = hooked ? hookDrawY - hookSize * 0.16 : hook.y;
+    context.strokeStyle = line.colour;
+    context.lineWidth = line.width;
+    context.lineCap = "round";
     context.beginPath();
     context.moveTo(width * 0.5, layout.surfaceY - 2);
-    context.lineTo(hook.x, hook.y);
+    context.lineTo(hook.x, lineEndY);
     context.stroke();
-    const hookSize = clamp(Math.min(width, height) * 0.076, 46, 68);
+    this.drawTackleCell(1, 1, hook.x, hookDrawY, hookSize, hookSize);
     if (fishing.reeling) {
       const wriggle = fishingFightWriggle(
         simulation.elapsed,
@@ -721,10 +733,10 @@ export class CanvasRenderer {
         fishing.reeling.struggle,
         settings.reducedMotion,
       );
-      const fishOffset = fishing.reeling.direction * hookSize * 0.24;
+      const fishOffset = fishing.reeling.direction * hookSize * 0.22;
       context.save();
       context.globalAlpha = 1;
-      context.translate(hook.x - fishOffset, hook.y + hookSize * 0.08);
+      context.translate(hook.x - fishOffset, hook.y + hookSize * 0.04);
       context.rotate(wriggle * 0.18);
       context.scale(1, 1 + Math.abs(wriggle) * 0.06);
       this.drawFish(
@@ -738,7 +750,6 @@ export class CanvasRenderer {
       );
       context.restore();
     }
-    this.drawTackleCell(1, 1, hook.x, hook.y, hookSize, hookSize);
     if (focus.showTargetGuides) {
       this.drawQuestHookGuide(simulation, fishing, hook, width, layout, maximumDepth, settings);
     } else {
@@ -748,76 +759,10 @@ export class CanvasRenderer {
     if (focus.showTargetGuides && targetSpecies) {
       this.drawFishingTargetGuide(targetSpecies, width, height, settings.highContrast, layout.surfaceY);
     }
-    if (fishing.reeling) {
-      this.drawReelingCue(fishing.reeling, width, height, settings.highContrast);
-    } else {
+    if (!fishing.reeling) {
       this.drawFishingControlCue(width, height, settings.highContrast);
     }
     context.restore();
-  }
-
-  private drawReelingCue(
-    fight: NonNullable<NonNullable<Simulation["fishing"]>["reeling"]>,
-    width: number,
-    height: number,
-    highContrast: boolean,
-  ): void {
-    const { context } = this;
-    const barWidth = clamp(width * 0.3, 170, 280);
-    const x = clamp(width * 0.035, 14, 36);
-    const y = height - clamp(height * 0.16, 92, 126);
-    const critical = fight.tension >= BALANCE.fishingCriticalTension;
-    const status = fight.landingAt !== null
-      ? "LANDING CATCH"
-      : critical
-        ? "LINE STRAIN · RELEASE LEFT CLICK"
-        : fight.struggle >= 0.55
-          ? "FISH PULLING · RELEASE LEFT CLICK"
-          : "HOLD LEFT CLICK · RELEASE TO REST";
-    context.save();
-    context.textAlign = "left";
-    context.textBaseline = "bottom";
-    context.fillStyle = highContrast ? "#ffffff" : "#f4e6c5";
-    context.font = `900 ${clamp(height * 0.021, 14, 19)}px system-ui, sans-serif`;
-    context.fillText(`${fishShortName(fight.species)} · ${status}`, x, y - 14);
-    this.drawFightMeter(x, y, barWidth, fight.progress, highContrast ? "#ffffff" : "#e8a44d", "REEL", highContrast);
-    this.drawFightMeter(
-      x,
-      y + 25,
-      barWidth,
-      fight.tension,
-      critical ? "#ffebe0" : highContrast ? "#ffffff" : "#62c9b4",
-      critical ? "TENSION · CRITICAL" : "TENSION",
-      highContrast,
-    );
-    const fishState = fight.stamina <= 0.25 ? "TIRED" : fight.stamina <= 0.6 ? "WEAKENING" : "STRONG";
-    context.fillStyle = highContrast ? "#ffffff" : "#d9c9a5";
-    context.font = `800 ${clamp(height * 0.015, 11, 14)}px system-ui, sans-serif`;
-    context.fillText(`FISH ${fishState}`, x, y + 65);
-    context.restore();
-  }
-
-  private drawFightMeter(
-    x: number,
-    y: number,
-    width: number,
-    value: number,
-    colour: string,
-    label: string,
-    highContrast: boolean,
-  ): void {
-    const { context } = this;
-    context.fillStyle = "rgba(3, 12, 21, 0.72)";
-    context.fillRect(x, y, width, 10);
-    context.fillStyle = colour;
-    context.fillRect(x, y, width * clamp(value, 0, 1), 10);
-    context.strokeStyle = highContrast ? "#ffffff" : "rgba(244, 230, 197, 0.7)";
-    context.lineWidth = 1;
-    context.strokeRect(x, y, width, 10);
-    context.fillStyle = highContrast ? "#ffffff" : "#f4e6c5";
-    context.font = "800 10px system-ui, sans-serif";
-    context.textBaseline = "bottom";
-    context.fillText(label, x, y - 1);
   }
 
   private drawFishingEnvironment(
@@ -1905,6 +1850,25 @@ function tintAlpha(source: HTMLCanvasElement, colour: string): HTMLCanvasElement
   return output;
 }
 
+
+function fishingFightAriaLabel(
+  spotName: string,
+  fight: NonNullable<NonNullable<Simulation["fishing"]>["reeling"]>,
+): string {
+  const cue = fishingFightCue(fight);
+  const tensionPercent = Math.round(fight.tension * 100);
+  const tensionState = cue === "critical"
+    ? "critical, release now"
+    : cue === "release"
+      ? "high, release to rest"
+      : "safe";
+  const action = cue === "landed"
+    ? "Landing the catch."
+    : cue === "critical" || cue === "release"
+      ? "Release left click, touch, or the Reel key until the line cools."
+      : "Hold left click, touch, or the Reel key to pull.";
+  return `Fishing at ${spotName}. Fighting ${FISH[fight.species].name}. ${action} Reel progress ${Math.round(fight.progress * 100)} percent. Line tension ${tensionPercent} percent, ${tensionState}.`;
+}
 
 function fishShortName(species: FishSpecies): string {
   return FISH[species].name.toUpperCase();

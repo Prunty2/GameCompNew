@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { fishingStruggleIntensity, stepFishingFight } from "../game/fishingFight";
+import { fishingFightCue, fishingStruggleIntensity, stepFishingFight } from "../game/fishingFight";
 
 const freshFight = {
   progress: 0,
@@ -86,5 +86,15 @@ describe("fishing fight", () => {
     const waiting = stepFishingFight("bluegill", { ...freshFight, stamina: 0.5 }, false, 1, 0, 0.1);
     expect(waiting.progress).toBe(0);
     expect(waiting.stamina).toBeGreaterThan(0.5);
+  });
+
+  test("maps fight meters onto reel, rest, and resume cues", () => {
+    expect(fishingFightCue({ tension: 0.2, struggle: 0.1, progress: 0, landingAt: null })).toBe("reel");
+    expect(fishingFightCue({ tension: 0.8, struggle: 0.1, progress: 0.2, landingAt: null })).toBe("release");
+    expect(fishingFightCue({ tension: 0.5, struggle: 0.7, progress: 0.2, landingAt: null })).toBe("release");
+    expect(fishingFightCue({ tension: 0.2, struggle: 0.7, progress: 0, landingAt: null })).toBe("reel");
+    expect(fishingFightCue({ tension: 0.96, struggle: 0.2, progress: 0.4, landingAt: null })).toBe("critical");
+    expect(fishingFightCue({ tension: 0.3, struggle: 0.1, progress: 0.4, landingAt: null })).toBe("resume");
+    expect(fishingFightCue({ tension: 0.2, struggle: 0.1, progress: 1, landingAt: 12 })).toBe("landed");
   });
 });

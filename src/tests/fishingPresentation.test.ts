@@ -8,6 +8,7 @@ import {
   fishingFishPose,
   fishingFocusPresentation,
   fishingHighlightSpecies,
+  fishingLineAppearance,
   fishingPointToScreen,
   fishingReelCameraProgress,
   fishingViewLayout,
@@ -94,5 +95,20 @@ describe("fishing presentation", () => {
     expect(FISH.burbot.rarity).toBe("rare");
     expect(FISH.lakeSturgeon.rarity).toBe("legendary");
     expect(new Set(Object.values(FISHING_ENVIRONMENT_KEYS))).toHaveProperty("size", 3);
+  });
+
+  test("warms the fishing line from cream through amber to red as tension rises", () => {
+    const rest = fishingLineAppearance(0.12, false);
+    const warning = fishingLineAppearance(0.6, false);
+    const critical = fishingLineAppearance(0.94, false);
+    expect(rest.colour).toMatch(/^#[0-9a-f]{6}$/);
+    expect(warning.colour).not.toBe(rest.colour);
+    expect(critical.colour).not.toBe(warning.colour);
+    expect(critical.width).toBeGreaterThan(rest.width);
+
+    const contrastSafe = fishingLineAppearance(0, true);
+    const contrastCritical = fishingLineAppearance(0.94, true);
+    expect(contrastSafe.colour).toBe("#ffffff");
+    expect(contrastCritical.colour).not.toBe(contrastSafe.colour);
   });
 });

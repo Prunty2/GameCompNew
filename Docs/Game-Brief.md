@@ -9,11 +9,11 @@ FSHING is a single-player side-on fishing market game for desktop and mobile bro
 1. Dock at a harbor and open the **Fish market**.
 2. Inspect a discovered species, read today's local quote and its seven-day graph, then **Track** it.
 3. Sail to that species' fishing ground. Slow down until the hook cue appears, then drop the line.
-4. Steer the hook onto a reachable fish. Hold left click on the water (or touch / the Reel key) to pull it closer, then release during struggle bursts or critical line tension. Landed catches reach the boat at 100% freshness.
+4. Steer the hook onto a reachable fish. Hold left click on the water (or touch / the Reel key) to pull it closer, then release during struggle bursts or when the fishing line turns red. Landed catches reach the boat at 100% freshness.
 5. Freshness falls while the simulation is running. Dock at the harbor that currently pays more and sell every fresh catch of that species.
 6. Spend shells on cargo, engine, line, boost, the Outer Gloam permit, or Beach access.
 
-A new save starts docked at Brindle Harbor on the lake with Bluegill already discovered. The first run is a four-step **First Assignment** that walks through inspect → track → catch → sell. Each tutorial pill includes a short instruction that changes with the player's current screen and, during the catch, explains left-click reeling, releasing on fish pulls or critical tension, and resuming after tension falls. The sale ends that assignment. When the player can afford a dock upgrade, a second tutorial walks through Upgrades.
+A new save starts docked at Brindle Harbor on the lake with Bluegill already discovered. The first run is a four-step **First Assignment** that walks through inspect → track → catch → sell. Each tutorial pill includes a short instruction that changes with the player's current screen. During the catch the title switches to **Hold left click** or **Release to rest**, explains that the line colour shows tension, and toasts if the player never reels, holds a reddening line, or rests too long. The sale ends that assignment. When the player can afford a dock upgrade, a second tutorial walks through Upgrades.
 
 After eight market sales the game shows a season report, then returns to the same market. Trading does not stop.
 
@@ -37,7 +37,7 @@ Market → Track → Sail → Fish → Reel → Sell while fresh → Upgrade →
 
 There is no field guide, no title How to play button, no on-water money HUD, and no on-screen movement pads.
 
-On-water chrome is the night moon indicator, the boost gauge after unlock, the context action (dock or drop line), toasts, the sale popup, and the tutorial pill until it is finished or skipped. A destination badge on the canvas points at the current market, fishing ground, or sell harbor. Screen-reader status repeats that guidance. After the first assignment, that badge is hidden unless a fish is tracked.
+On-water chrome is the night moon indicator, the boost gauge after unlock, the context action (dock or drop line), toasts, the sale popup, the colour of the fishing line during a fight, and the tutorial pill until it is finished or skipped. A destination badge on the canvas points at the current market, fishing ground, or sell harbor. Screen-reader status repeats that guidance. After the first assignment, that badge is hidden unless a fish is tracked.
 
 Scene changes between title, harbor, and the water use a waterline cover/reveal.
 
@@ -143,7 +143,7 @@ Simulation step is `1/120` s. Gameplay RNG is seeded. The boat travels only on t
 | Catch radius | 0.058 | fishing space |
 | Hook speeds | 0.25 horizontal, 0.35 up, 0.25 down | fishing space / s |
 | Landing / exit duration | 1.15 | seconds |
-| Critical line tension | 90% | meter threshold |
+| Critical line tension | 90% | tension threshold |
 | Break grace | 0.7 | seconds continuously at critical tension |
 | Line strength per tier | +12% | tension resistance |
 | Dive duration | 0.85 | seconds |
@@ -153,13 +153,13 @@ Simulation step is `1/120` s. Gameplay RNG is seeded. The boat travels only on t
 
 Hook depth is `min(0.94, 0.3 + lineTier × 0.125)`. Fish below the line limit are visible and dimmed but cannot be hooked. Escape while fishing reels the empty line and returns to sailing; it does not pause.
 
-Hooking a fish begins a deterministic line fight. Holding the primary mouse button directly on the fishing canvas reels; touch hold and the remappable Reel key remain equivalent accessibility inputs. Releasing lowers tension but lets the fish slip backwards slightly and recover a little stamina. Reeling actively tires the fish, so waiting without engaging is not optimal. Fish struggle in readable pulses that raise tension and reduce reel speed. The HUD explicitly says **HOLD LEFT CLICK** and presents reel progress, line tension, fish condition, non-colour warning text, sound, and vibration. There is no separate on-screen Reel button.
+Hooking a fish begins a deterministic line fight. Holding the primary mouse button directly on the fishing canvas reels; touch hold and the remappable Reel key remain equivalent accessibility inputs. Releasing lowers tension but lets the fish slip backwards slightly and recover a little stamina. Reeling actively tires the fish, so waiting without engaging is not optimal. Fish struggle in readable pulses that raise tension and reduce reel speed. There is no on-water fight HUD. Line tension is shown by the hook line itself: cream when safe, amber as it tightens, red at the 90% critical threshold, and slightly thicker as strain rises. Non-colour feedback remains: the tutorial title, toasts, sound, vibration, live-region copy, and the canvas `aria-label`. The hooked fish is drawn over the lower hook so only the eye and line stay visible. There is no separate on-screen Reel button.
 
 During a fight, every non-hooked fish freezes on its current animation frame and becomes a clearly visible dark silhouette at 68% opacity. Tracked-fish outlines, chevrons, tutorial hook arrows, and the large species portrait are hidden until the fight ends so the hooked fish remains the sole visual focus. Keeping tension at or above 90% for 0.7 seconds breaks the line, returns the hook to the top, and leaves the player at the same fishing ground for an immediate retry. It does not remove cargo or money.
 
 Fight profiles scale by rarity: common fish have faster reel progress, quicker fatigue, shorter struggle windows, and more forgiving tension recovery; uncommon, rare, and legendary fish progressively reel more slowly, pull harder, slip farther, and struggle more often. Line tiers reduce tension gain by 12% per tier as well as extending maximum depth. After reel progress fills, the existing 1.15-second landing transition completes the catch.
 
-Each species has a deterministic swim gait. The tracked species gets a rarity outline, a hook-guidance cue, and a named specimen in the fishing HUD, but only when that fish lives at the current site. Nothing is highlighted while no fish is tracked.
+Each species has a deterministic swim gait. The tracked species gets a rarity outline, a hook-guidance cue, and a named specimen portrait while steering, but only when that fish lives at the current site. Those targeting cues hide during a fight. Nothing is highlighted while no fish is tracked.
 
 ## Upgrades
 
@@ -188,7 +188,7 @@ Saved as `marketTutorialStep`. Skip is always available. The prompt is a top-cen
 | --- | --- |
 | 1 of 4 | Choose Bluegill |
 | 2 of 4 | Track the catch |
-| 3 of 4 | Catch a Bluegill at Sunward Shoal |
+| 3 of 4 | Catch a Bluegill at Sunward Shoal; after the hook-up the title becomes **Hold left click**, then **Release to rest** when the line tightens |
 | 4 of 4 | Sell while fresh |
 
 The sale ends the assignment. Older saves with `completedContracts > 0` or leftover `complete` load as `done`.
@@ -225,7 +225,7 @@ Development shortcuts: `B` grants a temporary boost. In `npm run dev`, `G` jumps
 - Live regions for toasts, sales, tutorial, and navigation
 - Fishing canvas `aria-label` includes the site, and the tracked target and rarity when a fish is tracked
 - Locked market cards and disabled actions have text, not colour alone
-- Line strain uses meter position, explicit status text, sound, vibration, and a live-region warning rather than colour alone
+- Line strain uses line thickness, tutorial and toast wording, sound, vibration, and a live-region warning rather than colour alone
 
 The in-fishing “W A S D MOVE HOOK” cue presents all four movement keys in one horizontal row. It is hardcoded and does not follow rebinds.
 

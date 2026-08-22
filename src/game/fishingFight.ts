@@ -18,6 +18,30 @@ export interface FishingFightStep extends FishingFightMeters {
   landed: boolean;
 }
 
+export type FishingFightCue = "reel" | "release" | "resume" | "critical" | "landed";
+
+export const FISHING_FIGHT_RELEASE_TENSION = 0.72;
+export const FISHING_FIGHT_RESUME_TENSION = 0.45;
+export const FISHING_FIGHT_PULLING_STRUGGLE = 0.55;
+
+export function fishingFightCue(fight: {
+  tension: number;
+  struggle: number;
+  progress: number;
+  landingAt: number | null;
+}): FishingFightCue {
+  if (fight.landingAt !== null) return "landed";
+  if (fight.tension >= BALANCE.fishingCriticalTension) return "critical";
+  if (
+    fight.tension >= FISHING_FIGHT_RELEASE_TENSION
+    || fight.struggle >= FISHING_FIGHT_PULLING_STRUGGLE && fight.tension >= FISHING_FIGHT_RESUME_TENSION
+  ) {
+    return "release";
+  }
+  if (fight.progress > 0.08 && fight.tension <= FISHING_FIGHT_RESUME_TENSION) return "resume";
+  return "reel";
+}
+
 export function fishingStruggleIntensity(
   species: FishSpecies,
   fightAge: number,
