@@ -18,7 +18,7 @@ test("main menu presents centered play, settings, and credits actions", async ({
   await page.goto("/");
 
   const version = page.locator(".title-build-version");
-  await expect(version).toHaveText("v0.5.3 (PR #105)");
+  await expect(version).toHaveText("v0.5.3 (PR #109)");
   const versionBounds = await version.boundingBox();
   expect(versionBounds).not.toBeNull();
   expect(versionBounds!.x).toBeLessThan(24);
@@ -899,6 +899,7 @@ test("Escape leaves fishing without opening the pause menu", async ({ page }) =>
 
   await expect.poll(async () => page.evaluate(() => window.__FSHING_TEST__?.mode())).toBe("fishing");
   const canvas = page.locator("#game-canvas");
+  await expect.poll(async () => Number(await canvas.getAttribute("data-fishing-dive-progress"))).toBeGreaterThan(0.1);
   const startingDiveProgress = Number(await canvas.getAttribute("data-fishing-dive-progress"));
   await page.keyboard.press("Escape");
 
