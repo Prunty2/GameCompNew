@@ -4361,9 +4361,55 @@ kbd {
     radial-gradient(circle at 50% 43%, transparent 10%, rgb(4 20 27 / 12%) 55%, rgb(4 20 27 / 48%) 100%),
     linear-gradient(rgb(6 28 36 / 10%), rgb(6 28 36 / 30%));
   backdrop-filter: none;
+  overflow: hidden;
+}
+
+.menu-seagull-sky {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.menu-seagull-flock {
+  position: absolute;
+  inset: 0;
+}
+
+.menu-seagull {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  width: var(--seagull-size);
+  height: var(--seagull-size);
+  will-change: transform, opacity;
+}
+
+.menu-seagull::before {
+  position: absolute;
+  inset: 0;
+  background-image: var(--seagull-flight-art);
+  background-position: 0 0;
+  background-repeat: no-repeat;
+  background-size: 400% 100%;
+  content: "";
+  filter: drop-shadow(0 2px 2px rgb(2 15 21 / 28%));
+  animation: menu-seagull-flap 620ms steps(4) var(--seagull-flap-delay) infinite;
+}
+
+.menu-seagull-flock.is-flying-left .menu-seagull::before {
+  transform: scaleX(-1);
+}
+
+@keyframes menu-seagull-flap {
+  to { background-position: 133.333% 0; }
 }
 
 .title-panel {
+  position: relative;
+  z-index: 1;
   width: min(680px, 94vw);
   min-width: 0;
   height: auto;
@@ -4465,6 +4511,7 @@ kbd {
 }
 
 .title-build-version {
+  z-index: 1;
   position: absolute;
   bottom: max(12px, env(safe-area-inset-bottom));
   left: max(14px, env(safe-area-inset-left));
@@ -4476,6 +4523,16 @@ kbd {
   line-height: 1;
   text-shadow: 0 1px 3px rgb(2 15 21 / 80%);
   user-select: none;
+}
+
+.reduced-motion .menu-seagull-sky {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-seagull-sky {
+    display: none;
+  }
 }
 
 @media (max-height: 650px) {

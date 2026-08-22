@@ -317,8 +317,9 @@ describe("FSHING side-on simulation", () => {
     expect(buyUpgrade(simulation, "reel")).toBe(false);
   });
 
-  test("unlocks boost for 300 shells and applies a temporary 35% speed increase", () => {
-    const simulation = createSimulation(1, { money: 300 });
+  test("unlocks boost for 250 shells and applies a temporary 35% speed increase", () => {
+    expect(BALANCE.boostUnlockCost).toBe(250);
+    const simulation = createSimulation(1, { money: BALANCE.boostUnlockCost });
     expect(buyBoost(simulation)).toBe(true);
     expect(simulation.progress.money).toBe(0);
     expect(simulation.progress.boostUnlocked).toBe(true);
@@ -654,6 +655,7 @@ describe("FSHING side-on simulation", () => {
   });
 
   test("unlocks Beach permanently and travels there only from a dock", () => {
+    expect(BALANCE.beachAccessCost).toBe(300);
     const simulation = createSimulation(1, { money: BALANCE.beachAccessCost });
     expect(simulation.world).toBe("lake");
     expect(travelToWorld(simulation, "beach")).toBe(false);

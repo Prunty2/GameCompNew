@@ -53,6 +53,44 @@ test("main menu presents centered play, settings, and credits actions", async ({
   expect(Math.abs((bounds[1].center + bounds[2].center) / 2 - viewportCenter)).toBeLessThanOrEqual(1);
 });
 
+test("main menu periodically releases an irregular animated seagull flock", async ({ page }) => {
+  await page.goto("/");
+
+  const flock = page.locator(".menu-seagull-flock").first();
+  await expect(flock).toBeAttached({ timeout: 3_000 });
+  const flockSize = Number(await flock.getAttribute("data-flock-size"));
+  expect(flockSize).toBeGreaterThanOrEqual(2);
+  expect(flockSize).toBeLessThanOrEqual(5);
+  await expect(flock.locator(".menu-seagull")).toHaveCount(flockSize);
+  const flapAnimation = await flock.locator(".menu-seagull").first().evaluate((bird) => (
+    getComputedStyle(bird, "::before").animationName
+  ));
+  expect(flapAnimation).toBe("menu-seagull-flap");
+  await expect.poll(() => flock.locator(".menu-seagull").evaluateAll((birds) => (
+    birds.some((bird) => {
+      const bounds = bird.getBoundingClientRect();
+      return bounds.right > 0 && bounds.left < window.innerWidth;
+    })
+  )), { timeout: 4_000 }).toBe(true);
+
+  const flightDurations = await flock.locator(".menu-seagull").evaluateAll((birds) => (
+    birds.map((bird) => bird.getAnimations().find((animation) => {
+      const duration = animation.effect?.getTiming().duration;
+      return typeof duration === "number" && duration > 1_000;
+    })?.effect?.getTiming().duration)
+  ));
+  expect(new Set(flightDurations).size).toBeGreaterThan(1);
+});
+
+test("main menu seagulls stay still when reduced motion is requested", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  await page.waitForTimeout(1_200);
+
+  await expect(page.locator(".menu-seagull-flock")).toHaveCount(0);
+  await expect(page.locator(".menu-seagull-sky")).toHaveCSS("display", "none");
+});
+
 test("credits lists the team and returns to the main menu", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Credits" }).click();
