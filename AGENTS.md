@@ -121,7 +121,7 @@ Run `npm run check` before finishing code changes. Also run `npm run build` for 
 - `src/game/Game.ts` coordinates lifecycle, overlays, and HUD; keep rules out of this file.
 - `src/game/simulation.ts` owns deterministic world state and fixed-step updates.
 - `src/game/balance.ts` owns species, spots, harbors, costs, and motion constants.
-- `src/game/market.ts` owns quotes, history, and freshness sale math; `src/game/marketView.ts` owns market HTML.
+- `src/game/market.ts` owns quotes, history, and sale math; `src/game/marketView.ts` owns market HTML.
 - `src/game/input.ts` and `src/game/controls.ts` translate browser input into game-level intent.
 - `src/game/renderer.ts` draws state but must not change it. Surface framing lives in `camera.ts` and `panorama.ts`; fishing presentation lives in `fishingMovement.ts`, `fishingPresentation.ts`, and `fishingReeling.ts`.
 - `src/services/platformService.ts` is the only CrazyGames SDK boundary.

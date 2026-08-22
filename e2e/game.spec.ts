@@ -18,7 +18,7 @@ test("main menu presents centered play, settings, and credits actions", async ({
   await page.goto("/");
 
   const version = page.locator(".title-build-version");
-  await expect(version).toHaveText("v0.7.0 (PR #109)");
+  await expect(version).toHaveText("v0.8.0 (PR #115)");
   const versionBounds = await version.boundingBox();
   expect(versionBounds).not.toBeNull();
   expect(versionBounds!.x).toBeLessThan(24);
@@ -586,7 +586,7 @@ test("market uses a scrollable fish-card grid and a focused detail view", async 
   await sellAllButton.click();
   await expect(page.locator("#delivery-notification")).toContainText("Sold, 3 fish");
   await expect(page.locator(".market-cargo-count")).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "No fresh fish to sell" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "No fish to sell" })).toBeDisabled();
   const scrollState = await list.evaluate((element) => ({
     clientHeight: element.clientHeight,
     scrollHeight: element.scrollHeight,
@@ -1242,7 +1242,7 @@ test("how to play instructions advance one card at a time", async ({ page }) => 
 
   await page.getByRole("button", { name: "Next" }).click();
   await page.getByRole("button", { name: "Next" }).click();
-  await expect(page.getByRole("heading", { name: "Catch and protect" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Catch and store" })).toBeVisible();
   await expect(page.locator(".help-card")).toContainText("hold the left mouse button while it is calm");
   await expect(page.locator(".help-card")).toContainText("When it races away, release");
 
