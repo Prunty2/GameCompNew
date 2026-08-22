@@ -16,6 +16,7 @@ import {
   SURFACE_Y,
   WORLD_SPOT_RESIDENTS,
   engineSpeedMultiplier,
+  hookVerticalSpeedMultiplier,
   harborById,
   residentsForSpot,
   spotById,
@@ -1099,7 +1100,8 @@ function updateFishing(simulation: Simulation, input: InputState, dt: number): v
     updateFishingFight(simulation, input, dt);
     return;
   }
-  const verticalSpeed = input.hookY < 0 ? BALANCE.fishingHookUpSpeed : BALANCE.fishingHookDownSpeed;
+  const verticalSpeed = (input.hookY < 0 ? BALANCE.fishingHookUpSpeed : BALANCE.fishingHookDownSpeed)
+    * hookVerticalSpeedMultiplier(simulation.progress.upgrades.reel);
   fishing.hook.x = clamp(fishing.hook.x + input.hookX * BALANCE.fishingHookHorizontalSpeed * dt, 0.07, 0.93);
   fishing.hook.y = clamp(fishing.hook.y + input.hookY * verticalSpeed * dt, 0.07, maxFishingDepth(simulation));
   for (const [targetIndex, target] of fishing.targets.entries()) {

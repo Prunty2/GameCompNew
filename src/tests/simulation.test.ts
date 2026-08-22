@@ -8,6 +8,7 @@ import {
   boatClassAt,
   engineSpeedMultiplier,
   harborById,
+  hookVerticalSpeedMultiplier,
   reelSpeedMultiplier,
   regionSurfaceTintAt,
   spotById,
@@ -327,6 +328,8 @@ describe("FSHING side-on simulation", () => {
     expect(simulation.progress.upgrades.reel).toBe(5);
     expect(reelSpeedMultiplier(simulation.progress.upgrades.reel)).toBeCloseTo(1.6);
     expect(reelSpeedMultiplier(99)).toBeCloseTo(1.6);
+    expect(hookVerticalSpeedMultiplier(simulation.progress.upgrades.reel)).toBeCloseTo(1.25);
+    expect(hookVerticalSpeedMultiplier(99)).toBeCloseTo(1.25);
     expect(buyUpgrade(simulation, "reel")).toBe(false);
   });
 
@@ -541,6 +544,27 @@ describe("FSHING side-on simulation", () => {
     expect(BALANCE.fishingHookHorizontalSpeed).toBe(0.25);
     expect(BALANCE.fishingHookUpSpeed).toBe(0.35);
     expect(BALANCE.fishingHookDownSpeed).toBe(0.25);
+  });
+
+  test("increases only vertical hook navigation by five percent per reel tier", () => {
+    const base = createSimulation(9);
+    const upgraded = createSimulation(9);
+    upgraded.progress.upgrades.reel = 4;
+    expect(startFishing(base, "sunwardShoal")).toBe(true);
+    expect(startFishing(upgraded, "sunwardShoal")).toBe(true);
+    const baseStart = { ...base.fishing!.hook };
+    const upgradedStart = { ...upgraded.fishing!.hook };
+
+    updateSimulation(base, { ...idle, hookX: 1, hookY: 1 }, 0.1);
+    updateSimulation(upgraded, { ...idle, hookX: 1, hookY: 1 }, 0.1);
+
+    const multiplier = 1 + 4 * 0.05;
+    expect(upgraded.fishing!.hook.y - upgradedStart.y).toBeCloseTo(
+      (base.fishing!.hook.y - baseStart.y) * multiplier,
+    );
+    expect(upgraded.fishing!.hook.x - upgradedStart.x).toBeCloseTo(
+      base.fishing!.hook.x - baseStart.x,
+    );
   });
 
   test("enforces cargo capacity and gates deep water with the fishing line", () => {

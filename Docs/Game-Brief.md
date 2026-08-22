@@ -145,6 +145,7 @@ Simulation step is `1/120` s. Gameplay RNG is seeded. The boat travels only on t
 | Critical line tension | 90% | tension threshold |
 | Line strength per tier | +12% | tension resistance |
 | Reel speed per tier | +12% | progress while actively reeling; five-tier cap |
+| Hook vertical speed per reel tier | +5% | hidden navigation bonus; five-tier cap |
 | Hook-up opening run | 0.65 | seconds of immediate escape before the first lull |
 | Dive duration | 0.85 | seconds |
 | Day length | 210 | seconds |
