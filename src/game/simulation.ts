@@ -2,7 +2,7 @@ import { clamp, createRandom, type RandomSource } from "./math";
 import { fishingSpeciesMotion, stepFishingTargetMotion } from "./fishingMovement";
 import { fishingHighlightSpecies } from "./fishingPresentation";
 import {
-  BEACH_SUNWARD_POPULATION_DENSITY_MULTIPLIER,
+  BEACH_SUNWARD_POPULATION_BONUS,
   DEFAULT_POPULATION_DENSITY_MULTIPLIER,
   MOSSWATER_POPULATION_DENSITY_MULTIPLIER,
   responsiveResidentCount,
@@ -413,11 +413,23 @@ export function startFishing(
   }
 
   const residents = residentsForSpot(simulation.world, spotId);
-  const populationDensity = simulation.world === "beach" && spotId === "sunwardShoal"
-    ? BEACH_SUNWARD_POPULATION_DENSITY_MULTIPLIER
-    : simulation.world === "lake" && spotId === "mosswaterPool"
-      ? MOSSWATER_POPULATION_DENSITY_MULTIPLIER
-      : DEFAULT_POPULATION_DENSITY_MULTIPLIER;
+  const populationDensity = simulation.world === "lake" && spotId === "mosswaterPool"
+    ? MOSSWATER_POPULATION_DENSITY_MULTIPLIER
+    : DEFAULT_POPULATION_DENSITY_MULTIPLIER;
+  const residentCounts = residents.map((fishSpecies) => responsiveResidentCount(
+    residentCountForMarket(fishSpecies, simulation.progress.marketDay, simulation.seed),
+    viewport,
+    populationDensity,
+  ));
+  if (simulation.world === "beach" && spotId === "sunwardShoal") {
+    residentCounts
+      .map((count, index) => ({ count, index }))
+      .sort((left, right) => left.count - right.count || left.index - right.index)
+      .slice(0, BEACH_SUNWARD_POPULATION_BONUS)
+      .forEach(({ index }) => {
+        residentCounts[index] += 1;
+      });
+  }
   simulation.boat.speed = 0;
   simulation.mode = "fishing";
   let targetIndex = 0;
@@ -430,11 +442,7 @@ export function startFishing(
     targets: residents.flatMap((fishSpecies, residentIndex) => (
       Array.from(
         {
-          length: responsiveResidentCount(
-            residentCountForMarket(fishSpecies, simulation.progress.marketDay, simulation.seed),
-            viewport,
-            populationDensity,
-          ),
+          length: residentCounts[residentIndex],
         },
         (_, schoolIndex) => {
           const fish = FISH[fishSpecies];

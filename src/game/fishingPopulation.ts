@@ -13,7 +13,7 @@ const MINIMUM_CAPACITY_SCALE = 0.75;
 const MAXIMUM_CAPACITY_SCALE = 2.5;
 export const DEFAULT_POPULATION_DENSITY_MULTIPLIER = 0.7;
 export const MOSSWATER_POPULATION_DENSITY_MULTIPLIER = 0.7;
-export const BEACH_SUNWARD_POPULATION_DENSITY_MULTIPLIER = 1;
+export const BEACH_SUNWARD_POPULATION_BONUS = 2;
 
 /**
  * Estimates how many readable fish silhouettes fit in a viewport. This mirrors

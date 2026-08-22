@@ -57,7 +57,7 @@ import {
 } from "../game/simulation";
 import { marketAvailability, marketQuote, strongerHarborFor } from "../game/market";
 import {
-  BEACH_SUNWARD_POPULATION_DENSITY_MULTIPLIER,
+  BEACH_SUNWARD_POPULATION_BONUS,
   DEFAULT_POPULATION_DENSITY_MULTIPLIER,
   MOSSWATER_POPULATION_DENSITY_MULTIPLIER,
   responsiveResidentCount,
@@ -668,37 +668,37 @@ describe("FSHING side-on simulation", () => {
     )).toBe(7);
   });
 
-  test("increases only Beach Sunward to the full population-density baseline", () => {
-    expect(BEACH_SUNWARD_POPULATION_DENSITY_MULTIPLIER).toBe(1);
+  test("adds a stable two-fish bonus across Beach Sunward's smallest schools", () => {
+    expect(BEACH_SUNWARD_POPULATION_BONUS).toBe(2);
     expect(DEFAULT_POPULATION_DENSITY_MULTIPLIER).toBe(0.7);
-    expect(responsiveResidentCount(
-      10,
-      { width: 1280, height: 720 },
-      BEACH_SUNWARD_POPULATION_DENSITY_MULTIPLIER,
-    )).toBe(10);
-
-    const simulation = createSimulation(12);
-    simulation.world = "beach";
-    const viewport = { width: 1280, height: 720 };
-    expect(startFishing(simulation, "sunwardShoal", viewport)).toBe(true);
     const availabilityCounts = { abundant: 3, normal: 2, scarce: 1 } as const;
-    const expectedTargetCount = BEACH_SPOT_RESIDENTS.sunwardShoal.reduce((total, species) => (
-      total + responsiveResidentCount(
-        availabilityCounts[marketAvailability(species, simulation.progress.marketDay, simulation.seed)],
-        viewport,
-        BEACH_SUNWARD_POPULATION_DENSITY_MULTIPLIER,
-      )
-    ), 0);
-    const defaultTargetCount = BEACH_SPOT_RESIDENTS.sunwardShoal.reduce((total, species) => (
-      total + responsiveResidentCount(
-        availabilityCounts[marketAvailability(species, simulation.progress.marketDay, simulation.seed)],
+    const scenarios = [
+      { seed: 12, marketDay: 0, viewport: { width: 960, height: 540 } },
+      { seed: 18, marketDay: 3, viewport: { width: 1280, height: 720 } },
+      { seed: 27, marketDay: 8, viewport: { width: 2560, height: 1440 } },
+    ];
+
+    for (const { seed, marketDay, viewport } of scenarios) {
+      const simulation = createSimulation(seed);
+      simulation.world = "beach";
+      simulation.progress.marketDay = marketDay;
+      expect(startFishing(simulation, "sunwardShoal", viewport)).toBe(true);
+
+      const defaultCounts = BEACH_SPOT_RESIDENTS.sunwardShoal.map((species) => responsiveResidentCount(
+        availabilityCounts[marketAvailability(species, marketDay, seed)],
         viewport,
         DEFAULT_POPULATION_DENSITY_MULTIPLIER,
-      )
-    ), 0);
+      ));
+      const actualCounts = BEACH_SPOT_RESIDENTS.sunwardShoal.map((species) => (
+        simulation.fishing?.targets.filter((target) => target.species === species).length ?? 0
+      ));
+      const increments = actualCounts.map((count, index) => count - defaultCounts[index]);
 
-    expect(simulation.fishing?.targets).toHaveLength(expectedTargetCount);
-    expect(expectedTargetCount).toBeGreaterThan(defaultTargetCount);
+      expect(actualCounts.reduce((total, count) => total + count, 0)).toBe(
+        defaultCounts.reduce((total, count) => total + count, 0) + BEACH_SUNWARD_POPULATION_BONUS,
+      );
+      expect(increments.sort()).toEqual([0, 0, 1, 1]);
+    }
   });
 
   test("uses actual swimming depth for Mosswater reachability", () => {
