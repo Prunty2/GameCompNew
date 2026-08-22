@@ -511,6 +511,26 @@ describe("FSHING side-on simulation", () => {
     expect(unlockedTravel.boat.x).toBeGreaterThan(0.76);
   });
 
+  test("uses higher fishing-line gates for the Beach middle and far-right spots", () => {
+    const simulation = createSimulation(1, { money: BALANCE.beachAccessCost });
+    expect(buyBeachAccess(simulation)).toBe(true);
+    expect(travelToWorld(simulation, "beach")).toBe(true);
+
+    simulation.progress.upgrades.line = 2;
+    expect(startFishing(simulation, "mosswaterPool")).toBe(false);
+    expect(consumeEvents(simulation)).toContainEqual({ type: "depth-locked", tier: 3 });
+
+    simulation.progress.upgrades.line = 3;
+    expect(startFishing(simulation, "mosswaterPool")).toBe(true);
+    simulation.mode = "cruising";
+    simulation.fishing = null;
+    expect(startFishing(simulation, "outerGloam")).toBe(false);
+    expect(consumeEvents(simulation)).toContainEqual({ type: "depth-locked", tier: 4 });
+
+    simulation.progress.upgrades.line = 4;
+    expect(startFishing(simulation, "outerGloam")).toBe(true);
+  });
+
   test("fills each fishing site with habitat residents and unlocks depth by line tier", () => {
     const simulation = createSimulation(12);
     undock(simulation);

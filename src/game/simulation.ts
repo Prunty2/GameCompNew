@@ -378,13 +378,14 @@ export function getInteractionPrompt(simulation: Simulation): InteractionPrompt 
 
   const spot = nearestHorizontal(simulation.boat.x, FISHING_SPOTS, BALANCE.fishingRadius);
   if (!spot) return null;
-  if (spot.requiredDepthTier > simulation.progress.upgrades.line) {
+  const requiredDepthTier = spot.requiredDepthTier[simulation.world];
+  if (requiredDepthTier > simulation.progress.upgrades.line) {
     return {
       kind: "fishing",
       spot: spot.id,
-      label: `Line tier ${spot.requiredDepthTier} required · ${spot.name}`,
+      label: `Line tier ${requiredDepthTier} required · ${spot.name}`,
       enabled: false,
-      reason: `Upgrade line depth to tier ${spot.requiredDepthTier}`,
+      reason: `Upgrade line depth to tier ${requiredDepthTier}`,
     };
   }
   if (simulation.cargo.length >= cargoCapacity(simulation)) {
@@ -402,8 +403,9 @@ export function getInteractionPrompt(simulation: Simulation): InteractionPrompt 
 
 export function startFishing(simulation: Simulation, spotId: SpotId): boolean {
   const spot = spotById(spotId);
-  if (spot.requiredDepthTier > simulation.progress.upgrades.line) {
-    pushEventOnce(simulation, { type: "depth-locked", tier: spot.requiredDepthTier });
+  const requiredDepthTier = spot.requiredDepthTier[simulation.world];
+  if (requiredDepthTier > simulation.progress.upgrades.line) {
+    pushEventOnce(simulation, { type: "depth-locked", tier: requiredDepthTier });
     return false;
   }
   if (simulation.cargo.length >= cargoCapacity(simulation)) {
@@ -1173,7 +1175,7 @@ function createAvailableContract(simulation: Simulation, origin: HarborId): Cont
     const fish = FISH[candidate];
     const spot = spotById(spotForSpecies[candidate]);
     return fish.depthTier <= simulation.progress.upgrades.line
-      && spot.requiredDepthTier <= simulation.progress.upgrades.line;
+      && spot.requiredDepthTier[simulation.world] <= simulation.progress.upgrades.line;
   });
   if (availableSpecies.length === 0) return null;
   const species = availableSpecies[simulation.progress.completedContracts % availableSpecies.length];

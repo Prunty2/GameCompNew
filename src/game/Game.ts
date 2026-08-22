@@ -754,7 +754,7 @@ export class Game {
         )
       : activeSection === "cargo"
         ? `<aside class="cargo-section" aria-labelledby="cargo-heading"><div class="cargo-inventory-heading"><h3 id="cargo-heading">Fish inventory</h3><span>${this.simulation.cargo.length} carried · ${availableCargoSlots} unlocked</span></div><div class="cargo-slot-grid" aria-label="Cargo inventory">${cargoMarkup}</div></aside>`
-        : `<section class="upgrades" aria-label="Upgrades"><div class="service-grid">${this.upgradeCard("cargo", "Cargo", "+1 cargo slot")}${this.upgradeCard("engine", "Engine", "+11% speed")}${this.upgradeCard("line", "Fishing line", "Depth · strength · Outer at tier 3")}</div><div class="upgrade-feature-grid">${this.boostCard()}${this.beachCard()}</div></section>`;
+        : `<section class="upgrades" aria-label="Upgrades"><div class="service-grid">${this.upgradeCard("cargo", "Cargo", "+1 cargo slot")}${this.upgradeCard("engine", "Engine", "+11% speed")}${this.upgradeCard("line", "Fishing line", this.simulation.world === "beach" ? "Middle tier 3 · far right tier 4" : "Middle tier 1 · far right tier 3")}</div><div class="upgrade-feature-grid">${this.boostCard()}${this.beachCard()}</div></section>`;
     const tabs = `<nav class="harbor-tabs has-3-tabs" aria-label="Harbor sections" style="--harbor-tab-count: 3">${availableSections.map((section) => `<button class="harbor-tab ${activeSection === section ? "is-active" : ""}" type="button" data-action="harbor-section" data-harbor-section="${section}" aria-label="${capitalise(section)}" aria-pressed="${activeSection === section}"><span class="ui-icon icon-${HARBOR_SECTION_ICON[section]}" aria-hidden="true"></span><span>${capitalise(section)}</span></button>`).join("")}</nav>`;
     const mainFooterAction = activeSection === "market" && this.marketDetailOpen
       ? `<button class="leave-button market-footer-back" type="button" data-action="close-market-fish-detail" aria-label="Back to market"><span class="harbor-back-arrow" aria-hidden="true">←</span><strong>Back to market</strong></button>`
@@ -1602,7 +1602,7 @@ export class Game {
       sailToHarbor: (id) => moveBoatForTesting(this.simulation, harborById(id)),
       previewFishing: (id, species) => {
         const spot = spotById(id);
-        this.simulation.progress.upgrades.line = spot.requiredDepthTier;
+        this.simulation.progress.upgrades.line = spot.requiredDepthTier[this.simulation.world];
         if (!this.simulation.progress.discovered.includes(species)) {
           this.simulation.progress.discovered.push(species);
         }
