@@ -59,7 +59,6 @@ import {
   beginFishingExit,
   buyBoost,
   buyBeachAccess,
-  buyPermit,
   buyUpgrade,
   cargoCapacity,
   closeMarketSpeciesDetail,
@@ -544,10 +543,6 @@ export class Game {
         this.feedback.cue("deny");
         this.showToast("Cargo hold full. Deliver or release a catch.");
         break;
-      case "locked-region":
-        this.feedback.cue("deny");
-        this.showToast("Outer Gloam is permit water. Turn back or buy access at Gloam Ferry.");
-        break;
       case "depth-locked":
         this.feedback.cue("deny");
         this.showToast(`Upgrade line depth to tier ${event.tier} to fish this water.`);
@@ -563,10 +558,6 @@ export class Game {
         this.feedback.cue("upgrade");
         this.pulseFeedback("upgrade");
         this.showToast(`${upgradeName(event.upgrade)} upgraded to tier ${this.simulation.progress.upgrades[event.upgrade]}.`);
-        break;
-      case "permit":
-        this.feedback.cue("upgrade");
-        this.showToast("Outer Gloam permit granted. Watch the night water.");
         break;
       case "beach-unlocked":
         this.feedback.cue("upgrade");
@@ -850,7 +841,7 @@ export class Game {
         )
       : activeSection === "cargo"
         ? `<aside class="cargo-section" aria-labelledby="cargo-heading"><div class="cargo-inventory-heading"><h3 id="cargo-heading">Fish inventory</h3><span>${this.simulation.cargo.length} carried · ${availableCargoSlots} unlocked</span></div><div class="cargo-slot-grid" aria-label="Cargo inventory">${cargoMarkup}</div></aside>`
-        : `<section class="upgrades" aria-label="Upgrades"><div class="service-grid">${this.upgradeCard("cargo", "Cargo", "+1 cargo slot")}${this.upgradeCard("engine", "Engine", "+11% speed")}${this.upgradeCard("line", "Fishing line", "Next depth · +12% strength")}${harborId === "gloam" ? this.permitCard() : ""}</div><div class="upgrade-feature-grid">${this.boostCard()}${this.beachCard()}</div></section>`;
+        : `<section class="upgrades" aria-label="Upgrades"><div class="service-grid">${this.upgradeCard("cargo", "Cargo", "+1 cargo slot")}${this.upgradeCard("engine", "Engine", "+11% speed")}${this.upgradeCard("line", "Fishing line", this.simulation.world === "beach" ? "Middle tier 3 · far right tier 4" : "Middle tier 1 · far right tier 3")}</div><div class="upgrade-feature-grid">${this.boostCard()}${this.beachCard()}</div></section>`;
     const tabs = `<nav class="harbor-tabs has-3-tabs" aria-label="Harbor sections" style="--harbor-tab-count: 3">${availableSections.map((section) => `<button class="harbor-tab ${activeSection === section ? "is-active" : ""}" type="button" data-action="harbor-section" data-harbor-section="${section}" aria-label="${capitalise(section)}" aria-pressed="${activeSection === section}"><span class="ui-icon icon-${HARBOR_SECTION_ICON[section]}" aria-hidden="true"></span><span>${capitalise(section)}</span></button>`).join("")}</nav>`;
     const mainFooterAction = activeSection === "market" && this.marketDetailOpen
       ? `<button class="leave-button market-footer-back" type="button" data-action="close-market-fish-detail" aria-label="Back to market"><span class="harbor-back-arrow" aria-hidden="true">←</span><strong>Back to market</strong></button>`
@@ -881,11 +872,6 @@ export class Game {
     const cost = upgradeCost(upgrade, tier);
     const displayLevel = Math.min(tier + 1, tierCap);
     return `<article class="service-card"><span class="ui-icon icon-${upgrade}" aria-hidden="true"></span><div class="service-copy"><h4>${title}</h4><p>${maximum ? "Maximum tier" : detail}</p></div>${this.upgradeMeter(title, displayLevel, tierCap)}<button class="service-purchase" type="button" data-action="buy-upgrade" data-upgrade="${upgrade}" aria-label="${maximum ? `${title} at maximum tier` : `Upgrade ${title} for ${cost} shells`}" ${maximum || this.simulation.progress.money < cost ? "disabled" : ""}>${maximum ? "<strong>MAX</strong>" : `<span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${cost}</strong>`}</button></article>`;
-  }
-
-  private permitCard(): string {
-    const unlocked = this.simulation.progress.outerUnlocked;
-    return `<article class="service-card"><span class="ui-icon icon-permit" aria-hidden="true"></span><div class="service-copy"><h4>Outer permit</h4><p>Outer water access</p></div>${this.upgradeMeter("Outer permit", unlocked ? BALANCE.maxUpgradeTier : 0, BALANCE.maxUpgradeTier)}<button class="service-purchase" type="button" data-action="buy-permit" aria-label="${unlocked ? "Outer permit owned" : `Buy Outer permit for ${BALANCE.permitCost} shells`}" ${unlocked || this.simulation.progress.money < BALANCE.permitCost ? "disabled" : ""}>${unlocked ? "<strong>OWNED</strong>" : `<span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${BALANCE.permitCost}</strong>`}</button></article>`;
   }
 
   private beachCard(): string {
@@ -1309,7 +1295,6 @@ export class Game {
     this.save.progress = {
       money: this.simulation.progress.money,
       upgrades: { ...this.simulation.progress.upgrades },
-      outerUnlocked: this.simulation.progress.outerUnlocked,
       beachUnlocked: this.simulation.progress.beachUnlocked,
       boostUnlocked: this.simulation.progress.boostUnlocked,
       completedContracts: this.simulation.progress.completedContracts,
@@ -1624,12 +1609,6 @@ export class Game {
         }
         break;
       }
-      case "buy-permit":
-        if (buyPermit(this.simulation)) {
-          this.handleSimulationEvents();
-          this.renderOverlay();
-        }
-        break;
       case "buy-boost":
         if (buyBoost(this.simulation)) {
           this.handleSimulationEvents();
@@ -1710,8 +1689,7 @@ export class Game {
       sailToHarbor: (id) => moveBoatForTesting(this.simulation, harborById(id)),
       previewFishing: (id, species) => {
         const spot = spotById(id);
-        this.simulation.progress.upgrades.line = spot.requiredDepthTier;
-        this.simulation.progress.outerUnlocked = true;
+        this.simulation.progress.upgrades.line = spot.requiredDepthTier[this.simulation.world];
         if (!this.simulation.progress.discovered.includes(species)) {
           this.simulation.progress.discovered.push(species);
         }

@@ -78,14 +78,13 @@ export interface LearningProgress {
 }
 
 export interface UpgradeProgress extends Record<UpgradeId, number> {
-  /** Retained only so version 10 saves containing the removed Lamp tier still round-trip safely. */
+  /** Retained only so older saves containing the removed Lamp tier still round-trip safely. */
   lamp: number;
 }
 
 export interface ProgressState {
   money: number;
   upgrades: UpgradeProgress;
-  outerUnlocked: boolean;
   beachUnlocked: boolean;
   boostUnlocked: boolean;
   completedContracts: number;
@@ -173,11 +172,9 @@ export type SimulationEvent =
   | { type: "market-day"; day: number }
   | { type: "docked"; harbor: HarborId }
   | { type: "full-cargo" }
-  | { type: "locked-region" }
   | { type: "depth-locked"; tier: number }
   | { type: "rescued"; harbor: HarborId; cost: number }
   | { type: "upgrade"; upgrade: UpgradeId }
-  | { type: "permit" }
   | { type: "beach-unlocked" }
   | { type: "boost-unlocked"; temporary: boolean }
   | { type: "released"; species: FishSpecies }
@@ -241,7 +238,6 @@ export function createSimulation(seed = 1, progress?: Partial<ProgressState>): S
       lamp: clampInteger(progress?.upgrades?.lamp, 0, BALANCE.maxUpgradeTier),
       line: clampInteger(progress?.upgrades?.line, 0, BALANCE.maxUpgradeTier),
     },
-    outerUnlocked: progress?.outerUnlocked === true,
     beachUnlocked: progress?.beachUnlocked === true,
     boostUnlocked: progress?.boostUnlocked === true,
     completedContracts: clampInteger(progress?.completedContracts, 0, 99_999),
@@ -387,16 +383,14 @@ export function getInteractionPrompt(simulation: Simulation): InteractionPrompt 
 
   const spot = nearestHorizontal(simulation.boat.x, FISHING_SPOTS, BALANCE.fishingRadius);
   if (!spot) return null;
-  if (spot.requiresPermit && !simulation.progress.outerUnlocked) {
-    return { kind: "fishing", spot: spot.id, label: "Permit required · Outer Gloam", enabled: false, reason: "Permit required" };
-  }
-  if (spot.requiredDepthTier > simulation.progress.upgrades.line) {
+  const requiredDepthTier = spot.requiredDepthTier[simulation.world];
+  if (requiredDepthTier > simulation.progress.upgrades.line) {
     return {
       kind: "fishing",
       spot: spot.id,
-      label: `Line tier ${spot.requiredDepthTier} required · ${spot.name}`,
+      label: `Line tier ${requiredDepthTier} required · ${spot.name}`,
       enabled: false,
-      reason: `Upgrade line depth to tier ${spot.requiredDepthTier}`,
+      reason: `Upgrade line depth to tier ${requiredDepthTier}`,
     };
   }
   if (simulation.cargo.length >= cargoCapacity(simulation)) {
@@ -414,12 +408,9 @@ export function getInteractionPrompt(simulation: Simulation): InteractionPrompt 
 
 export function startFishing(simulation: Simulation, spotId: SpotId): boolean {
   const spot = spotById(spotId);
-  if (spot.requiresPermit && !simulation.progress.outerUnlocked) {
-    pushEventOnce(simulation, { type: "locked-region" });
-    return false;
-  }
-  if (spot.requiredDepthTier > simulation.progress.upgrades.line) {
-    pushEventOnce(simulation, { type: "depth-locked", tier: spot.requiredDepthTier });
+  const requiredDepthTier = spot.requiredDepthTier[simulation.world];
+  if (requiredDepthTier > simulation.progress.upgrades.line) {
+    pushEventOnce(simulation, { type: "depth-locked", tier: requiredDepthTier });
     return false;
   }
   if (simulation.cargo.length >= cargoCapacity(simulation)) {
@@ -758,15 +749,6 @@ export function buyUpgrade(simulation: Simulation, upgrade: UpgradeId): boolean 
   simulation.progress.upgrades[upgrade] += 1;
   completeUpgradeTutorial(simulation, upgrade);
   simulation.events.push({ type: "upgrade", upgrade });
-  return true;
-}
-
-export function buyPermit(simulation: Simulation): boolean {
-  if (!simulation.dockedAt || simulation.progress.outerUnlocked || simulation.progress.money < BALANCE.permitCost) return false;
-  simulation.progress.money -= BALANCE.permitCost;
-  simulation.progress.outerUnlocked = true;
-  completeUpgradeTutorial(simulation);
-  simulation.events.push({ type: "permit" });
   return true;
 }
 
@@ -1227,7 +1209,7 @@ function createAvailableContract(simulation: Simulation, origin: HarborId): Cont
     const fish = FISH[candidate];
     const spot = spotById(spotForSpecies[candidate]);
     return fish.depthTier <= simulation.progress.upgrades.line
-      && (!spot.requiresPermit || simulation.progress.outerUnlocked);
+      && spot.requiredDepthTier[simulation.world] <= simulation.progress.upgrades.line;
   });
   if (availableSpecies.length === 0) return null;
   const species = availableSpecies[simulation.progress.completedContracts % availableSpecies.length];
@@ -1367,8 +1349,7 @@ function hasPurchasedProgression(progress: Partial<ProgressState> | undefined): 
     || (upgrades?.lamp ?? 0) > 0
     || (upgrades?.line ?? 0) > 0
     || progress.boostUnlocked === true
-    || progress.beachUnlocked === true
-    || progress.outerUnlocked === true;
+    || progress.beachUnlocked === true;
 }
 
 function pushEventOnce(simulation: Simulation, event: SimulationEvent): void {

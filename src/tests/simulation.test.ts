@@ -14,7 +14,6 @@ import {
   buyBeachAccess,
   beginFishingExit,
   buyBoost,
-  buyPermit,
   buyUpgrade,
   cargoCapacity,
   closeMarketSpeciesDetail,
@@ -494,16 +493,15 @@ describe("FSHING side-on simulation", () => {
     expect(BALANCE.fishingHookDownSpeed).toBe(0.25);
   });
 
-  test("enforces cargo capacity and gates deep permit water", () => {
+  test("enforces cargo capacity and gates deep water with the fishing line", () => {
     const simulation = createSimulation();
     expect(resolveCatch(simulation, "northernPike")).toBe(true);
     expect(resolveCatch(simulation, "bluegill")).toBe(true);
     expect(resolveCatch(simulation, "yellowPerch")).toBe(true);
     expect(resolveCatch(simulation, "emeraldShiner")).toBe(false);
     expect(startFishing(simulation, "outerGloam")).toBe(false);
+    expect(consumeEvents(simulation)).toContainEqual({ type: "depth-locked", tier: 3 });
 
-    simulation.progress.money = BALANCE.permitCost;
-    expect(buyPermit(simulation)).toBe(true);
     simulation.cargo = [];
     expect(startFishing(simulation, "outerGloam")).toBe(false);
     simulation.progress.upgrades.line = 3;
@@ -516,6 +514,26 @@ describe("FSHING side-on simulation", () => {
       updateSimulation(unlockedTravel, { ...idle, travel: 1 }, 1 / 120);
     }
     expect(unlockedTravel.boat.x).toBeGreaterThan(0.76);
+  });
+
+  test("uses higher fishing-line gates for the Beach middle and far-right spots", () => {
+    const simulation = createSimulation(1, { money: BALANCE.beachAccessCost });
+    expect(buyBeachAccess(simulation)).toBe(true);
+    expect(travelToWorld(simulation, "beach")).toBe(true);
+
+    simulation.progress.upgrades.line = 2;
+    expect(startFishing(simulation, "mosswaterPool")).toBe(false);
+    expect(consumeEvents(simulation)).toContainEqual({ type: "depth-locked", tier: 3 });
+
+    simulation.progress.upgrades.line = 3;
+    expect(startFishing(simulation, "mosswaterPool")).toBe(true);
+    simulation.mode = "cruising";
+    simulation.fishing = null;
+    expect(startFishing(simulation, "outerGloam")).toBe(false);
+    expect(consumeEvents(simulation)).toContainEqual({ type: "depth-locked", tier: 4 });
+
+    simulation.progress.upgrades.line = 4;
+    expect(startFishing(simulation, "outerGloam")).toBe(true);
   });
 
   test("fills each fishing site with habitat residents and unlocks depth by line tier", () => {

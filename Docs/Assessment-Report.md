@@ -4,7 +4,7 @@
 
 **Project:** FSHING, original browser game  
 **Team:** Liam, Saxon, Harrison, David  
-**Version documented:** 0.5.1 (PR #103)
+**Version documented:** 0.5.3 (PR #105)
 **Document date:** 21 August 2026  
 **Submission components:** This report, source repository, and production build
 
@@ -20,12 +20,12 @@ The completed vertical slice contains:
 
 - one lake and one unlockable Beach, each with two harbors and three fishing grounds
 - eighteen real species (nine freshwater, nine south-eastern Australian coastal)
-- cargo, engine, and line upgrades, plus a rechargeable boost, Outer Gloam permit, and Beach access
+- cargo, engine, and line upgrades, plus a rechargeable boost and Beach access; Beach middle/right grounds require line tiers 3/4
 - deterministic reel-and-release fish fights with line tension, fish stamina, rarity scaling, and break recovery
 - seeded daily quotes, seven-day history, and freshness-adjusted sales
 - a five-step First Assignment, four-card How to play, credits, and an eight-sale season report
 - keyboard sailing and hook steering, pointer/touch menus, remappable controls, mute, high contrast, reduced motion, and pause on focus loss
-- deterministic gameplay tests, browser interaction tests, and version 10 validated saves
+- deterministic gameplay tests, browser interaction tests, and version 11 validated saves
 
 Product numbers and acceptance checks live in `Docs/Game-Brief.md`.
 
@@ -95,11 +95,11 @@ flowchart LR
 
 ### World
 
-| Site | Region | Line | Permit | Lake residents | Beach residents |
-| --- | --- | --- | --- | ---: | --- |
-| Sunward Shoal | Brindle Coast | T0 | no | Bluegill, Yellow Perch, Emerald Shiner | Sea Mullet, Yellowfin Bream, Sand Whiting |
-| Mosswater Pool | Mosswater Reach | T1 | no | Northern Pike, Largemouth Bass, Bowfin | Dusky Flathead, Luderick, Eastern Australian Salmon |
-| Outer Gloam | Violet Gloam | T3 | yes | Lake Trout, Burbot, Lake Sturgeon | Snapper, Yellowtail Kingfish, Mulloway |
+| Site | Region | Lake line | Beach line | Lake residents | Beach residents |
+| --- | --- | --- | --- | --- | --- |
+| Sunward Shoal | Brindle Coast | T0 | T0 | Bluegill, Yellow Perch, Emerald Shiner | Sea Mullet, Yellowfin Bream, Sand Whiting |
+| Mosswater Pool | Mosswater Reach | T1 | T3 | Northern Pike, Largemouth Bass, Bowfin | Dusky Flathead, Luderick, Eastern Australian Salmon |
+| Outer Gloam | Violet Gloam | T3 | T4 | Lake Trout, Burbot, Lake Sturgeon | Snapper, Yellowtail Kingfish, Mulloway |
 
 Beach reuses the same spot names and world X positions. Reloading always restores the lake at Brindle; world, cargo, and time of day are not saved.
 
@@ -109,9 +109,8 @@ Beach reuses the same spot names and world X positions. Reloading always restore
 | --- | --- |
 | Cargo (7 tiers, 3→10 slots) | Carry more before docking |
 | Engine (6 tiers) | Faster crossings, less freshness loss |
-| Line (6 tiers) | Reach the next underwater band |
+| Line (6 tiers) | Reach deeper bands; Beach middle/right require tiers 3/4 |
 | Engine boost (300 shells) | Hold Boost for a short overclock that overheats |
-| Outer permit (85 shells, Gloam only) | Fish Outer Gloam |
 | Beach (120 shells) | Travel to the coastal map |
 
 ### Feedback
@@ -135,7 +134,7 @@ market.ts                quotes, history, freshness payouts
 marketView.ts            market HTML
 renderer.ts              Canvas drawing only
 input.ts / controls.ts   browser input → game intent
-saveGame.ts              version 10 validation and migration
+saveGame.ts              version 11 validation and migration
 platformService.ts       only CrazyGames SDK boundary
 feedbackService.ts       synthesized audio and haptics
 ```
@@ -161,7 +160,7 @@ Gameplay uses a fixed `1/120`-second step. Target positions and speeds come from
 
 ### Save validation
 
-Save version 10 treats stored data as untrusted. Money, upgrade tiers, volume, and counters are clamped. Species ids are filtered against the real list; retired fantasy ids migrate one-to-one. Duplicate discoveries are removed. Beach access defaults off. Malformed JSON becomes a valid new save. World, cargo, and clock are not persisted.
+Save version 11 treats stored data as untrusted. Money, upgrade tiers, volume, and counters are clamped. Species ids are filtered against the real list; retired fantasy ids migrate one-to-one. Duplicate discoveries are removed. The retired Outer permit field is ignored, while saved line tiers are preserved and now solely determine Outer Gloam access. Beach access defaults off. Malformed JSON becomes a valid new save. World, cargo, and clock are not persisted.
 
 ## 6. Interface and accessibility design
 
@@ -243,7 +242,7 @@ Surface fishing grounds use a faint school, then a polarized lens, then a hook c
 | Fishing spots should feel alive | Resident schools, polarized lens on approach, hook only inside the interaction radius |
 | Lots of fish | Eighteen named real species with distinct swim gaits |
 | Water deeper only with upgrades | Six line tiers and a labelled underwater boundary |
-| Larger boats / more upgrades | Seven cargo tiers, six engine/line tiers, boost, permit, Beach |
+| Larger boats / more upgrades | Seven cargo tiers, six engine/line tiers, boost, Beach |
 | Different worlds | Lake and Beach palettes, piers, underwater plates, and fish sets |
 
 Delivery contracts, water surveys, and the field guide were removed from the player-facing loop after the market replaced jobs. Simulation helpers for surveys and contracts remain for tests and must not be treated as live UI.
@@ -253,7 +252,7 @@ Delivery contracts, water surveys, and the field guide were removed from the pla
 Unit/model tests cover:
 
 - map scale, movement, facing, braking, speed, bounds, and determinism
-- fishing targets, catch radius, reel progress, tension breaks, fish stamina, line strength, cargo capacity, depth gates, and permits
+- fishing targets, catch radius, reel progress, tension breaks, fish stamina, line strength, cargo capacity, and depth gates
 - market quotes, harbor demand, freshness payouts, and Beach premiums
 - First Assignment, cargo release/restore, Beach travel, boost heat, season completion
 - night fade, destination-badge layout, fishing presentation and reeling
@@ -312,7 +311,7 @@ Solution: First Assignment still forces one Bluegill sale, then the board opens.
 Solution: Beach is a paid unlock, travel happens from a dock, and reload always returns to the lake at Brindle.
 
 **Challenge: nine fantasy silhouettes were not enough once Beach shipped.**  
-Solution: two real-species atlases and six swim sheets, with fantasy ids migrated in version 10 saves.
+Solution: two real-species atlases and six swim sheets, with fantasy ids migrated in validated saves.
 
 **Challenge: a fast sale was always obvious if both harbors paid the same.**  
 Solution: per-harbor demand, a 6% daily cap, and freshness so a longer crossing can still be the better realised payout.
