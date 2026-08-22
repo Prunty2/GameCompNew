@@ -23,7 +23,6 @@ export interface FishingFightMeters {
   progress: number;
   tension: number;
   stamina: number;
-  criticalSeconds: number;
   motion?: FishingFightMotion;
 }
 
@@ -203,20 +202,15 @@ export function stepFishingFight(
   progress = clamp(progress, 0, 1);
   tension = clamp(tension, 0, 1);
   nextStamina = clamp(nextStamina, 0, 1);
-  const criticalSeconds = tension >= BALANCE.fishingCriticalTension
-    ? meters.criticalSeconds + safeDt
-    : 0;
-
   return {
     progress,
     tension,
     stamina: nextStamina,
-    criticalSeconds,
     motion,
     style: speciesProfile.style,
     behaviour: pose.kind,
     struggle: pose.intensity,
-    broken: criticalSeconds >= BALANCE.fishingBreakGraceSeconds,
+    broken: tension >= BALANCE.fishingCriticalTension,
     landed: progress >= 1,
   };
 }

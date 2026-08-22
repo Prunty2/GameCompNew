@@ -1,12 +1,21 @@
 import { describe, expect, test } from "vitest";
 import {
+  FISHING_LOSS_DURATION,
+  FISHING_LOSS_SWIM_DURATION,
   FISHING_REEL_DURATION,
+  fishingLossProgress,
   fishingReelProgress,
   fishingReelSchoolOpacity,
   fishingReelWriggle,
 } from "../game/fishingReeling";
 
 describe("fishing reeling", () => {
+  test("sequences the fish escape before the broken line retracts", () => {
+    expect(fishingLossProgress(10, 10)).toEqual({ swim: 0, retract: 0 });
+    expect(fishingLossProgress(10 + FISHING_LOSS_SWIM_DURATION, 10)).toEqual({ swim: 1, retract: 0 });
+    expect(fishingLossProgress(10 + FISHING_LOSS_DURATION, 10)).toEqual({ swim: 1, retract: 1 });
+  });
+
   test("eases from the hooked point to the boat over a fixed duration", () => {
     expect(fishingReelProgress(10, 10)).toBe(0);
     expect(fishingReelProgress(10 + FISHING_REEL_DURATION / 2, 10)).toBeCloseTo(0.5);

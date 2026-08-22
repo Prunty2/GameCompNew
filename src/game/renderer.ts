@@ -58,6 +58,7 @@ import {
 import { fishingFightCue, fishingFightWriggle } from "./fishingFight";
 import { FISHING_SPECIES_FIGHT_PROFILES } from "./fishingBehaviour";
 import {
+  fishingLossProgress,
   fishingReelProgress,
   fishingReelSchoolOpacity,
 } from "./fishingReeling";
@@ -638,6 +639,9 @@ export class CanvasRenderer {
     const reelProgress = fishing.reeling && fishing.reeling.landingAt !== null
       ? fishingReelProgress(simulation.elapsed, fishing.reeling.landingAt)
       : 0;
+    const loss = fishing.reeling?.lostAt == null
+      ? null
+      : fishingLossProgress(simulation.elapsed, fishing.reeling.lostAt);
     const exitProgress = fishing.exitingAt === null
       ? 0
       : fishingReelProgress(simulation.elapsed, fishing.exitingAt);
@@ -673,9 +677,18 @@ export class CanvasRenderer {
       delete this.canvas.dataset.targetRarity;
     }
     this.canvas.dataset.fishingState = fishing.reeling
-      ? fishing.reeling.landingAt === null ? "fighting" : "landing"
+      ? fishing.reeling.lostAt !== null ? loss?.retract === 0 ? "fish-escaping" : "line-retracting"
+        : fishing.reeling.landingAt === null ? "fighting" : "landing"
       : fishing.exitingAt !== null ? "exiting" : "steering";
-    const line = fishingLineAppearance(fishing.reeling?.tension ?? 0, settings.highContrast);
+    this.canvas.dataset.fishingHookVisible = String(fishing.reeling?.lostAt == null);
+    if (loss) {
+      this.canvas.dataset.fishingLossSwimProgress = loss.swim.toFixed(3);
+      this.canvas.dataset.fishingLossRetractProgress = loss.retract.toFixed(3);
+    } else {
+      delete this.canvas.dataset.fishingLossSwimProgress;
+      delete this.canvas.dataset.fishingLossRetractProgress;
+    }
+    const line = fishingLineAppearance(loss ? 0 : fishing.reeling?.tension ?? 0, settings.highContrast);
     this.canvas.dataset.fishingLineColour = line.colour;
     if (fishing.reeling) {
       this.canvas.dataset.fishingReelProgress = fishing.reeling.progress.toFixed(3);
@@ -699,7 +712,9 @@ export class CanvasRenderer {
     this.canvas.setAttribute(
       "aria-label",
       fishing.reeling
-        ? fishingFightAriaLabel(spot.name, fishing.reeling)
+        ? loss
+          ? `Fishing at ${spot.name}. The line snapped. The fish is swimming free while the bare line retracts.`
+          : fishingFightAriaLabel(spot.name, fishing.reeling)
         : fishing.exitingAt !== null
           ? `Leaving ${spot.name} and returning to the lake surface.`
         : targetSpecies
@@ -785,6 +800,11 @@ export class CanvasRenderer {
       hook.x += fishing.reeling.motionX * fightMotionScale;
       hook.y += fishing.reeling.motionY * fightMotionScale;
     }
+    const fishOrigin = { ...hook };
+    if (loss) {
+      hook.x += (width * 0.5 - hook.x) * loss.retract;
+      hook.y += (layout.surfaceY + 10 - hook.y) * loss.retract;
+    }
     const hookSize = clamp(Math.min(width, height) * 0.076, 46, 68);
     const hooked = fishing.reeling !== null;
     const hookDrawY = hooked ? hook.y - hookSize * 0.12 : hook.y;
@@ -796,7 +816,7 @@ export class CanvasRenderer {
     context.moveTo(width * 0.5, layout.surfaceY - 2);
     context.lineTo(hook.x, lineEndY);
     context.stroke();
-    this.drawTackleCell(1, 1, hook.x, hookDrawY, hookSize, hookSize);
+    if (!loss) this.drawTackleCell(1, 1, hook.x, hookDrawY, hookSize, hookSize);
     if (fishing.reeling) {
       const wriggle = fishingFightWriggle(
         fishing.reeling.species,
@@ -812,7 +832,9 @@ export class CanvasRenderer {
       const fishOffset = facing * hookSize * 0.22;
       context.save();
       context.globalAlpha = 1;
-      context.translate(hook.x - fishOffset, hook.y + hookSize * 0.04);
+      const escapeDistance = loss ? loss.swim * width * 0.28 * fishing.reeling.direction : 0;
+      const escapeRise = loss ? loss.swim * Math.min(width, height) * 0.035 : 0;
+      context.translate(fishOrigin.x - fishOffset + escapeDistance, fishOrigin.y + hookSize * 0.04 - escapeRise);
       context.rotate(wriggle * (fishing.reeling.behaviour === "thrash" ? 0.45 : 0.22));
       context.scale(1, 1 + Math.abs(wriggle) * 0.05);
       this.drawFish(

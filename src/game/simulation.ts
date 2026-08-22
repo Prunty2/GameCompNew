@@ -2,7 +2,7 @@ import { clamp, createRandom, type RandomSource } from "./math";
 import { fishingSpeciesMotion, stepFishingTargetMotion } from "./fishingMovement";
 import { fishingHighlightSpecies } from "./fishingPresentation";
 import { responsiveResidentCount, type FishingViewport } from "./fishingPopulation";
-import { FISHING_REEL_DURATION } from "./fishingReeling";
+import { FISHING_LOSS_DURATION, FISHING_REEL_DURATION } from "./fishingReeling";
 import { fishingFightBehaviour, fishingFightCue, RESTING_FIGHT_MOTION, stepFishingFight } from "./fishingFight";
 import {
   BALANCE,
@@ -148,7 +148,6 @@ export interface FishingReelState {
   progress: number;
   tension: number;
   stamina: number;
-  criticalSeconds: number;
   behaviour: "calm" | "run" | "thrash";
   struggle: number;
   motionX: number;
@@ -156,6 +155,7 @@ export interface FishingReelState {
   motionVx: number;
   motionVy: number;
   landingAt: number | null;
+  lostAt: number | null;
 }
 
 export interface DeliveryResult {
@@ -1112,7 +1112,6 @@ function updateFishing(simulation: Simulation, input: InputState, dt: number): v
         progress: 0,
         tension: 0.12,
         stamina: 1,
-        criticalSeconds: 0,
         behaviour: opening.kind,
         struggle: opening.intensity,
         motionX: RESTING_FIGHT_MOTION.x,
@@ -1120,6 +1119,7 @@ function updateFishing(simulation: Simulation, input: InputState, dt: number): v
         motionVx: RESTING_FIGHT_MOTION.vx,
         motionVy: RESTING_FIGHT_MOTION.vy,
         landingAt: null,
+        lostAt: null,
       };
       return;
     }
@@ -1130,6 +1130,22 @@ function updateFishingFight(simulation: Simulation, input: InputState, dt: numbe
   const fishing = simulation.fishing;
   const fight = fishing?.reeling;
   if (!fishing || !fight) return;
+  if (fight.lostAt !== null) {
+    if (simulation.elapsed - fight.lostAt >= FISHING_LOSS_DURATION) {
+      const escapedTarget = fishing.targets[fight.targetIndex];
+      if (escapedTarget) {
+        escapedTarget.x = fight.direction === 1 ? 0.96 : 0.04;
+        escapedTarget.y = clamp(fishing.hook.y + fight.motionY, 0.08, 0.94);
+        escapedTarget.direction = fight.direction;
+        escapedTarget.phase += Math.PI / 2;
+        escapedTarget.velocityX = 0;
+        escapedTarget.velocityY = 0;
+      }
+      fishing.hook = { x: 0.5, y: 0.08 };
+      fishing.reeling = null;
+    }
+    return;
+  }
   if (fight.landingAt !== null) {
     if (simulation.elapsed - fight.landingAt >= FISHING_REEL_DURATION) {
       resolveCatch(simulation, fight.species);
@@ -1143,7 +1159,6 @@ function updateFishingFight(simulation: Simulation, input: InputState, dt: numbe
       progress: fight.progress,
       tension: fight.tension,
       stamina: fight.stamina,
-      criticalSeconds: fight.criticalSeconds,
       motion: { x: fight.motionX, y: fight.motionY, vx: fight.motionVx, vy: fight.motionVy },
     },
     input.actionHeld,
@@ -1156,7 +1171,6 @@ function updateFishingFight(simulation: Simulation, input: InputState, dt: numbe
   fight.progress = next.progress;
   fight.tension = next.tension;
   fight.stamina = next.stamina;
-  fight.criticalSeconds = next.criticalSeconds;
   fight.behaviour = next.behaviour;
   fight.struggle = next.struggle;
   fight.motionX = next.motion.x;
@@ -1164,15 +1178,7 @@ function updateFishingFight(simulation: Simulation, input: InputState, dt: numbe
   fight.motionVx = next.motion.vx;
   fight.motionVy = next.motion.vy;
   if (next.broken) {
-    const escapedTarget = fishing.targets[fight.targetIndex];
-    if (escapedTarget) {
-      escapedTarget.x = escapedTarget.direction === 1 ? 0.88 : 0.12;
-      escapedTarget.phase += Math.PI / 2;
-      escapedTarget.velocityX = 0;
-      escapedTarget.velocityY = 0;
-    }
-    fishing.hook = { x: 0.5, y: 0.08 };
-    fishing.reeling = null;
+    fight.lostAt = simulation.elapsed;
     simulation.events.push({ type: "line-broke", species: fight.species });
     return;
   }

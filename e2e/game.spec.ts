@@ -228,6 +228,45 @@ test("hooked fish require active reel and release tension control", async ({ pag
   expect(maximumFrameStep).toBeLessThan(0.015);
 });
 
+test("a snapped line lets the fish escape before retracting without a hook", async ({ page }) => {
+  await page.goto("/?e2e=1");
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.evaluate(() => window.__FSHING_TEST__?.previewFishing("sunwardShoal", "bluegill"));
+  await page.evaluate(() => window.__FSHING_TEST__?.hookSpecies("bluegill"));
+
+  const canvas = page.locator("#game-canvas");
+  await expect(canvas).toHaveAttribute("data-fishing-state", "fighting");
+  await page.evaluate(() => window.__FSHING_TEST__?.snapLine());
+
+  const toast = page.locator("#toast");
+  await expect(toast).toHaveClass(/is-line-snap/);
+  await expect(toast).toContainText("The line snapped!");
+  await expect(toast.locator(".toast-danger-icon")).toHaveText("×");
+  const [toastBox, tutorialBox, viewport] = await Promise.all([
+    toast.boundingBox(),
+    page.locator("#market-tutorial").boundingBox(),
+    page.evaluate(() => ({ width: window.innerWidth })),
+  ]);
+  expect(toastBox).not.toBeNull();
+  expect(tutorialBox).not.toBeNull();
+  expect(Math.abs((toastBox!.x + toastBox!.width / 2) - viewport.width / 2)).toBeLessThan(2);
+  expect(toastBox!.y).toBeGreaterThanOrEqual(tutorialBox!.y + tutorialBox!.height + 8);
+  await expect(canvas).toHaveAttribute("data-fishing-state", "fish-escaping");
+  await expect(canvas).toHaveAttribute("data-fishing-hook-visible", "false");
+  await expect.poll(async () => Number(await canvas.getAttribute("data-fishing-loss-swim-progress"))).toBeGreaterThan(0.1);
+
+  await expect(canvas).toHaveAttribute("data-fishing-state", "line-retracting");
+  await expect.poll(async () => Number(await canvas.getAttribute("data-fishing-loss-retract-progress"))).toBeGreaterThan(0.1);
+  await expect(canvas).toHaveAttribute(
+    "aria-label",
+    "Fishing at Sunward Shoal. The line snapped. The fish is swimming free while the bare line retracts.",
+  );
+
+  await expect(canvas).toHaveAttribute("data-fishing-state", "steering");
+  await expect(canvas).toHaveAttribute("data-fishing-hook-visible", "true");
+  await expect.poll(async () => page.evaluate(() => window.__FSHING_TEST__?.mode())).toBe("fishing");
+});
+
 test("first assignment catch step teaches left-click reel and line colour", async ({ page }) => {
   await page.goto("/?e2e=1");
   await page.getByRole("button", { name: "Play", exact: true }).click();

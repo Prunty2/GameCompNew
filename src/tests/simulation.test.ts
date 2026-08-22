@@ -12,6 +12,7 @@ import {
   regionSurfaceTintAt,
   spotById,
 } from "../game/balance";
+import { FISHING_LOSS_DURATION, FISHING_LOSS_SWIM_DURATION } from "../game/fishingReeling";
 import {
   buyBeachAccess,
   beginFishingExit,
@@ -455,7 +456,7 @@ describe("FSHING side-on simulation", () => {
     expect(simulation.cargo).toEqual([{ species: "bluegill", freshness: 100 }]);
   });
 
-  test("breaks a critically strained line without ending the fishing session", () => {
+  test("breaks immediately, lets the fish escape, then retracts the bare line", () => {
     const simulation = createSimulation(9);
     expect(startFishing(simulation, "sunwardShoal")).toBe(true);
     const target = simulation.fishing?.targets[0];
@@ -464,16 +465,26 @@ describe("FSHING side-on simulation", () => {
     updateSimulation(simulation, idle, 0);
     const fight = simulation.fishing.reeling;
     if (!fight) throw new Error("Expected a hooked fish.");
-    fight.tension = 0.96;
-    fight.criticalSeconds = BALANCE.fishingBreakGraceSeconds - 0.05;
+    fight.tension = BALANCE.fishingCriticalTension;
 
-    updateSimulation(simulation, { ...idle, actionHeld: true }, 0.1);
+    updateSimulation(simulation, { ...idle, actionHeld: true }, 0);
 
     expect(simulation.mode).toBe("fishing");
-    expect(simulation.fishing?.reeling).toBeNull();
-    expect(simulation.fishing?.hook).toEqual({ x: 0.5, y: 0.08 });
+    expect(simulation.fishing?.reeling?.lostAt).toBe(simulation.elapsed);
     expect(consumeEvents(simulation)).toContainEqual({ type: "line-broke", species: "bluegill" });
     expect(simulation.cargo).toEqual([]);
+
+    for (let elapsed = 0; elapsed < FISHING_LOSS_SWIM_DURATION; elapsed += 0.1) {
+      updateSimulation(simulation, idle, Math.min(0.1, FISHING_LOSS_SWIM_DURATION - elapsed));
+    }
+    expect(simulation.fishing?.reeling).not.toBeNull();
+
+    for (let elapsed = FISHING_LOSS_SWIM_DURATION; elapsed < FISHING_LOSS_DURATION; elapsed += 0.1) {
+      updateSimulation(simulation, idle, Math.min(0.1, FISHING_LOSS_DURATION - elapsed));
+    }
+    updateSimulation(simulation, idle, 0.001);
+    expect(simulation.fishing?.reeling).toBeNull();
+    expect(simulation.fishing?.hook).toEqual({ x: 0.5, y: 0.08 });
   });
 
   test("keeps fishing active while a manual exit rises to the surface", () => {

@@ -392,6 +392,45 @@ input:focus-visible {
   transform: translateY(0);
 }
 
+.toast.is-line-snap {
+  z-index: 90;
+  right: auto;
+  left: 50%;
+  border-color: rgb(239 102 91 / 58%);
+  transform: translate(-50%, -10px);
+  transition: opacity 180ms ease;
+}
+
+.game-ui:has(.market-tutorial:not([hidden])) .toast.is-line-snap {
+  top: calc(max(18px, env(safe-area-inset-top)) + 96px);
+  right: auto;
+  bottom: auto;
+}
+
+.toast.is-line-snap.is-visible {
+  transform: translate(-50%, 0);
+}
+
+.toast.is-line-snap::before {
+  background: #ef665b;
+  box-shadow: 0 0 10px rgb(239 102 91 / 42%);
+}
+
+.toast-danger-icon {
+  display: grid;
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  border: 2px solid #ff9d95;
+  border-radius: 50%;
+  background: rgb(128 25 27 / 55%);
+  color: #ffd8d4;
+  font-size: 1.35rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
 .toast.has-action {
   min-height: 52px;
   padding: 8px 8px 8px 18px;

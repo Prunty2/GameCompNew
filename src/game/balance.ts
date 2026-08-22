@@ -112,7 +112,6 @@ export const BALANCE = {
   fishingHookDownSpeed: 0.25,
   fishingLineStrengthPerTier: 0.12,
   fishingCriticalTension: 0.9,
-  fishingBreakGraceSeconds: 0.7,
   upgradeCosts: { cargo: 60, engine: 70, line: 55, reel: 65 },
   beachAccessCost: 120,
   boostUnlockCost: 300,

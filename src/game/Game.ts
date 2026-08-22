@@ -178,6 +178,7 @@ declare global {
       grantMoney(amount: number): void;
       discoverAllFish(): void;
       hookSpecies(species: FishSpecies): void;
+      snapLine(): void;
       damage(amount: number): void;
       setElapsed(seconds: number): void;
       elapsed(): number;
@@ -427,6 +428,7 @@ export class Game {
     const critical = fight !== undefined
       && fight !== null
       && fight.landingAt === null
+      && fight.lostAt === null
       && fight.tension >= BALANCE.fishingCriticalTension;
     if (critical && !this.lineWasCritical) {
       this.feedback.cue("line-strain");
@@ -438,7 +440,7 @@ export class Game {
 
   private updateFishingFightCoaching(): void {
     const fight = this.simulation.fishing?.reeling;
-    if (!fight || fight.landingAt !== null) {
+    if (!fight || fight.landingAt !== null || fight.lostAt !== null) {
       this.fightCoachKind = null;
       this.fightCoachHookedAt = null;
       this.fightHadReel = false;
@@ -518,7 +520,7 @@ export class Game {
       case "line-broke":
         this.feedback.cue("deny");
         this.pulseFeedback("collision");
-        this.showToast(`${FISH[event.species].name} broke free. Let it race away when it runs, then reel the lulls.`);
+        this.showLineSnapToast();
         break;
       case "sold":
         this.feedback.cue("delivery");
@@ -1329,10 +1331,32 @@ export class Game {
     if (!toast) return;
     window.clearTimeout(this.toastTimer);
     this.pendingCargoRelease = null;
-    toast.classList.remove("has-action");
+    toast.classList.remove("has-action", "is-line-snap");
     toast.textContent = message;
     toast.classList.add("is-visible");
     this.toastTimer = window.setTimeout(() => toast.classList.remove("is-visible"), this.save.settings.reducedMotion ? 4_500 : 3_200);
+  }
+
+  private showLineSnapToast(): void {
+    const toast = this.uiRoot.querySelector<HTMLElement>("#toast");
+    if (!toast) return;
+    window.clearTimeout(this.toastTimer);
+    this.pendingCargoRelease = null;
+    const icon = document.createElement("span");
+    icon.className = "toast-danger-icon";
+    icon.setAttribute("aria-hidden", "true");
+    icon.textContent = "×";
+    const message = document.createElement("span");
+    message.textContent = "The line snapped!";
+    toast.replaceChildren(icon, message);
+    toast.classList.remove("is-visible", "has-action", "is-line-snap");
+    toast.classList.add("is-line-snap");
+    void toast.offsetWidth;
+    toast.classList.add("is-visible");
+    this.toastTimer = window.setTimeout(() => {
+      toast.classList.remove("is-visible", "is-line-snap");
+      toast.replaceChildren();
+    }, this.save.settings.reducedMotion ? 4_500 : 3_200);
   }
 
   private showCargoReleaseToast(species: FishSpecies, focusUndo: boolean): void {
@@ -1347,6 +1371,7 @@ export class Game {
     undo.dataset.action = "undo-release";
     undo.textContent = "Undo";
     toast.replaceChildren(message, undo);
+    toast.classList.remove("is-line-snap");
     toast.classList.add("is-visible", "has-action");
     const dismiss = (): void => {
       if (document.activeElement === undo) {
@@ -1732,6 +1757,14 @@ export class Game {
         if (!this.simulation.fishing || !target) return;
         this.simulation.fishing.hook = { x: target.x, y: target.y };
         updateSimulation(this.simulation, { travel: 0, hookX: 0, hookY: 0, boost: false, actionHeld: false }, 0);
+        this.refreshHud();
+      },
+      snapLine: () => {
+        const fight = this.simulation.fishing?.reeling;
+        if (!fight || fight.landingAt !== null || fight.lostAt !== null) return;
+        fight.tension = BALANCE.fishingCriticalTension;
+        updateSimulation(this.simulation, { travel: 0, hookX: 0, hookY: 0, boost: false, actionHeld: true }, FIXED_STEP);
+        this.handleSimulationEvents();
         this.refreshHud();
       },
       damage: (amount) => {

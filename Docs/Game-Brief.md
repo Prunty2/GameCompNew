@@ -143,7 +143,6 @@ Simulation step is `1/120` s. Gameplay RNG is seeded. The boat travels only on t
 | Hook speeds | 0.25 horizontal, 0.35 up, 0.25 down | fishing space / s |
 | Landing / exit duration | 1.15 | seconds |
 | Critical line tension | 90% | tension threshold |
-| Break grace | 0.7 | seconds continuously at critical tension |
 | Line strength per tier | +12% | tension resistance |
 | Reel speed per tier | +12% | progress while actively reeling; five-tier cap |
 | Hook-up opening run | 0.65 | seconds of immediate escape before the first lull |
@@ -158,7 +157,7 @@ Hooking a fish begins a deterministic line fight built from fish behaviour, not 
 
 Reel power has five purchasable tiers. Each tier multiplies reel progress by another 12%, reaching 1.60× at tier 5 without changing fish stamina, line tension, run timing, or release physics.
 
-During a fight, every non-hooked fish keeps swimming and animating as a clearly visible dark silhouette at 68% opacity. Tracked-fish outlines, chevrons, tutorial hook arrows, and the large species portrait are hidden until the fight ends so the hooked fish remains the sole visual focus. Tension can only rise while the hooked fish is actively running or thrashing; calm reeling cools the line slightly. Keeping tension at or above 90% for 0.7 seconds breaks the line, returns the hook to the top, and leaves the player at the same fishing ground for an immediate retry. It does not remove cargo or money.
+During a fight, every non-hooked fish keeps swimming and animating as a clearly visible dark silhouette at 68% opacity. Tracked-fish outlines, chevrons, tutorial hook arrows, and the large species portrait are hidden until the fight ends so the hooked fish remains the sole visual focus. Tension can only rise while the hooked fish is actively running or thrashing; calm reeling cools the line slightly. Reaching 90% tension breaks the line immediately. The fish visibly swims free before the bare line retracts quickly, with no hook sprite on its end, and a matching top-centre danger pill says **The line snapped!** beside a red X. The player stays at the same fishing ground for an immediate retry; cargo and money are unchanged.
 
 The Lake's three Sunward Shoal fish are intentionally forgiving starters. Their weak runs create proportionally low tension, and Bluegill, Yellow Perch, and Emerald Shiner can all be landed with a steady continuous reel even if a new player misses the release cue. Later fish still require deliberate reel-and-release control.
 
