@@ -45,6 +45,7 @@ import {
 } from "./camera";
 import {
   FISHING_RARITY_COLOURS,
+  fishingDepthRequirementLabel,
   fishingDiveProgress,
   fishingFishPose,
   fishingFocusPresentation,
@@ -741,7 +742,13 @@ export class CanvasRenderer {
     if (maximumDepth < 0.93) {
       context.fillStyle = "rgba(3, 12, 21, 0.2)";
       context.fillRect(0, depthLine, width, height - depthLine);
-      this.drawFishingLineLimit(depthLine, width, height, settings.highContrast);
+      this.drawFishingLineLimit(
+        depthLine,
+        width,
+        height,
+        settings.highContrast,
+        simulation.progress.upgrades.line + 1,
+      );
     }
 
     for (const [targetIndex, target] of fishing.targets.entries()) {
@@ -1070,7 +1077,13 @@ export class CanvasRenderer {
     context.restore();
   }
 
-  private drawFishingLineLimit(depthLine: number, width: number, height: number, highContrast: boolean): void {
+  private drawFishingLineLimit(
+    depthLine: number,
+    width: number,
+    height: number,
+    highContrast: boolean,
+    requiredDepthLevel: number,
+  ): void {
     const art = this.art;
     if (!art) return;
     const { context } = this;
@@ -1099,7 +1112,7 @@ export class CanvasRenderer {
     context.textAlign = "right";
     context.textBaseline = "top";
     const labelY = height < 520 ? depthLine - 24 : depthLine + 17;
-    context.fillText(height < 520 ? "UPGRADE LINE" : "UPGRADE LINE TO GO DEEPER", width - 24, labelY);
+    context.fillText(fishingDepthRequirementLabel(requiredDepthLevel), width - 24, labelY);
     context.restore();
   }
 
