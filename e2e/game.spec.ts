@@ -18,7 +18,7 @@ test("main menu presents centered play, settings, and credits actions", async ({
   await page.goto("/");
 
   const version = page.locator(".title-build-version");
-  await expect(version).toHaveText("v0.7.0 (PR #109)");
+  await expect(version).toHaveText("v0.8.0 (PR #114)");
   const versionBounds = await version.boundingBox();
   expect(versionBounds).not.toBeNull();
   expect(versionBounds!.x).toBeLessThan(24);
