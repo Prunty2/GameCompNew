@@ -151,7 +151,7 @@ describe("first-assignment quest prototype", () => {
     expect(critical.instruction).toContain("red and about to snap");
   });
 
-  test("leads a fresh catch to the stronger harbor and the Sell button", () => {
+  test("leads a catch to the stronger harbor and the Sell button", () => {
     const simulation = createSimulation();
     inspectMarketSpecies(simulation, "bluegill");
     trackMarketSpecies(simulation, "bluegill");

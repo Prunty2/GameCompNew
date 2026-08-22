@@ -48,6 +48,7 @@ import {
 } from "./renderInterpolation";
 import { CanvasRenderer } from "./renderer";
 import { fishIcon, marketBoardMarkup } from "./marketView";
+import { MenuSeagulls, seagullFlightUrl } from "./menuSeagulls";
 import {
   chooseQuestArrowSide,
   questPresentation,
@@ -193,6 +194,7 @@ export class Game {
   private readonly renderer: CanvasRenderer;
   private readonly input: InputController;
   private readonly feedback: FeedbackService;
+  private readonly menuSeagulls = new MenuSeagulls();
   private simulation: Simulation;
   private previousRenderMotion: RenderMotionSnapshot;
   private lastTime = 0;
@@ -240,6 +242,7 @@ export class Game {
     preloadImage(gloamDockNightUrl),
     preloadImage(binIconUrl),
     preloadImage(padlockIconUrl),
+    preloadImage(seagullFlightUrl),
     preloadImage(wordmarkUrl),
     preloadImage(uiButtonUrl),
     preloadImage(uiIconsUrl),
@@ -513,7 +516,7 @@ export class Game {
       case "caught":
         this.feedback.cue("catch");
         this.pulseFeedback("catch");
-        this.showToast(`${FISH[event.species].name} secured. Freshness is falling.`);
+        this.showToast(`${FISH[event.species].name} secured in cargo.`);
         break;
       case "line-broke":
         this.feedback.cue("deny");
@@ -751,6 +754,7 @@ export class Game {
   private renderOverlay(): void {
     const host = this.uiRoot.querySelector<HTMLElement>("#overlay-host");
     if (!host) return;
+    this.menuSeagulls.stop();
     if (this.overlay === null) {
       host.innerHTML = "";
       this.refreshQuestGuide();
@@ -759,6 +763,7 @@ export class Game {
     switch (this.overlay) {
       case "title":
         host.innerHTML = this.titleScreen();
+        this.startMenuSeagulls();
         break;
       case "harbor":
         host.innerHTML = this.harborScreen();
@@ -791,6 +796,7 @@ export class Game {
       : "";
     return `
       <section class="screen-overlay title-screen${returnClass}" role="dialog" aria-label="FSHING main menu">
+        <div class="menu-seagull-sky" aria-hidden="true"></div>
         <div class="title-panel">
           <img class="wordmark" src="${wordmarkUrl}" alt="FSHING" />
           <div class="title-actions">
@@ -808,6 +814,11 @@ export class Game {
       </section>`;
   }
 
+  private startMenuSeagulls(): void {
+    const sky = this.uiRoot.querySelector<HTMLElement>(".menu-seagull-sky");
+    if (sky) this.menuSeagulls.start(sky, this.save.settings.reducedMotion);
+  }
+
   private harborScreen(): string {
     return this.marketHarborScreen();
   }
@@ -822,8 +833,7 @@ export class Game {
       const item = this.simulation.cargo[index];
       const slotNumber = String(index + 1).padStart(2, "0");
       if (item) {
-        const freshness = Math.ceil(item.freshness);
-        return `<article class="cargo-slot is-occupied" aria-label="Cargo slot ${index + 1}: ${FISH[item.species].name}, ${freshness}% fresh"><span class="cargo-slot-number">${slotNumber}</span>${fishIcon(item.species, fishAtlasUiUrl, beachFishAtlasUiUrl, "cargo-fish")}<div class="cargo-slot-copy"><strong>${FISH[item.species].name}</strong><small>${freshness}% fresh</small></div><button class="cargo-release" type="button" data-action="release" data-index="${index}" aria-label="Release ${FISH[item.species].name} from cargo"><span class="cargo-release-tooltip" aria-hidden="true">Release</span><span class="cargo-release-art" aria-hidden="true"><img class="cargo-bin-body" src="${binIconUrl}" alt="" /><img class="cargo-bin-lid" src="${binIconUrl}" alt="" /></span></button></article>`;
+        return `<article class="cargo-slot is-occupied" aria-label="Cargo slot ${index + 1}: ${FISH[item.species].name}, ready to sell"><span class="cargo-slot-number">${slotNumber}</span>${fishIcon(item.species, fishAtlasUiUrl, beachFishAtlasUiUrl, "cargo-fish")}<div class="cargo-slot-copy"><strong>${FISH[item.species].name}</strong><small>Ready to sell</small></div><button class="cargo-release" type="button" data-action="release" data-index="${index}" aria-label="Release ${FISH[item.species].name} from cargo"><span class="cargo-release-tooltip" aria-hidden="true">Release</span><span class="cargo-release-art" aria-hidden="true"><img class="cargo-bin-body" src="${binIconUrl}" alt="" /><img class="cargo-bin-lid" src="${binIconUrl}" alt="" /></span></button></article>`;
       }
       if (index < availableCargoSlots) {
         return `<div class="cargo-slot is-empty" aria-label="Cargo slot ${index + 1}: empty"><span class="cargo-slot-number">${slotNumber}</span><span class="ui-icon icon-cargo" aria-hidden="true"></span><small>Empty</small></div>`;
@@ -878,8 +888,7 @@ export class Game {
     const destination: WorldId = this.simulation.world === "beach" ? "lake" : "beach";
     const destinationName = capitalise(destination);
     if (unlocked) {
-      const activeJob = this.simulation.activeContract !== null;
-      return `<article class="service-card upgrade-feature-card"><img class="upgrade-feature-icon" src="${upgradeBeachUrl}" alt="" aria-hidden="true" /><div class="service-copy"><h4>Beach</h4><p>${activeJob ? "Finish the active job before travelling" : "Surf club · pier · lighthouse"}</p></div><span class="service-owned" aria-label="Beach location unlocked">UNLOCKED</span><button class="service-purchase" type="button" data-action="travel-world" data-world="${destination}" aria-label="Travel to ${destinationName}" ${activeJob ? "disabled" : ""}><strong>${destination === "beach" ? "VISIT" : "RETURN"}</strong></button></article>`;
+      return `<article class="service-card upgrade-feature-card"><img class="upgrade-feature-icon" src="${upgradeBeachUrl}" alt="" aria-hidden="true" /><div class="service-copy"><h4>Beach</h4><p>Surf club · pier · lighthouse</p></div><span class="service-owned" aria-label="Beach location unlocked">UNLOCKED</span><button class="service-purchase" type="button" data-action="travel-world" data-world="${destination}" aria-label="Travel to ${destinationName}"><strong>${destination === "beach" ? "VISIT" : "RETURN"}</strong></button></article>`;
     }
     return `<article class="service-card upgrade-feature-card"><img class="upgrade-feature-icon" src="${upgradeBeachUrl}" alt="" aria-hidden="true" /><div class="service-copy"><h4>Beach</h4><p>Unlock the seaside town</p></div><span class="service-owned" aria-label="One-time location unlock">LOCATION</span><button class="service-purchase" type="button" data-action="buy-beach" aria-label="Unlock Beach for ${BALANCE.beachAccessCost} shells" ${this.simulation.progress.money < BALANCE.beachAccessCost ? "disabled" : ""}><span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${BALANCE.beachAccessCost}</strong></button></article>`;
   }
@@ -1069,12 +1078,12 @@ export class Game {
         body: `Track a listing, then use <kbd>${formatKey(this.save.settings.controls.left)}</kbd> and <kbd>${formatKey(this.save.settings.controls.right)}</kbd> to follow its marker. When the hook appears, press <kbd>${formatKey(this.save.settings.controls.action)}</kbd>.`,
       },
       {
-        title: "Catch and protect",
+        title: "Catch and store",
         body: `Hook a fish, then hold the left mouse button while it is calm to reel. When it races away, release so it can take line — that is what drops tension. Reeling against a run turns the line red. Repeat: reel the lulls, let the runs go, until the fish reaches the boat. Keyboard players can hold <kbd>${formatKey(this.save.settings.controls.action)}</kbd>; touch players hold the water.`,
       },
       {
         title: "Sell and invest",
-        body: "Open a fish listing to sell every fresh catch of that species. A bigger cargo hold increases each trip's potential, while line upgrades reach deeper fish and withstand more tension.",
+        body: "Open a fish listing to sell every catch of that species for the displayed quote. A bigger cargo hold increases each trip's potential, while line upgrades reach deeper fish and withstand more tension.",
       },
     ];
     const step = steps[this.helpStep] ?? steps[0];
@@ -1118,7 +1127,7 @@ export class Game {
             <div><small>Market earnings</small><strong>${this.simulation.progress.marketEarnings}</strong><span>shells earned from fish</span></div>
             <div><small>Current market day</small><strong>${this.simulation.progress.marketDay}</strong><span>daily prices observed</span></div>
           </div>
-          <p class="reflection-prompt"><strong>Reflect:</strong> Which harbor offered the best sales? When was a longer crossing worth the freshness loss? Which habitat produced your strongest catch?</p>
+          <p class="reflection-prompt"><strong>Reflect:</strong> Which harbor offered the best sales? When was a longer crossing worth the higher quote? Which habitat produced your strongest catch?</p>
           <button class="primary-button" type="button" data-action="continue-season">Continue trading</button>
         </div>
       </section>`;
@@ -1697,10 +1706,6 @@ export class Game {
           this.simulation.progress.discovered.push(species);
         }
         this.simulation.progress.marketTarget = species;
-        if (this.simulation.activeContract) {
-          this.simulation.activeContract.spot = id;
-          this.simulation.activeContract.species = species;
-        }
         moveBoatForTesting(this.simulation, spot);
         startFishing(this.simulation, id, this.fishingViewport());
         this.setOverlay(null);

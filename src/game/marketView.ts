@@ -71,7 +71,7 @@ export function marketBoardMarkup(
     simulation.seed,
   );
   const sellAllLabel = bulkSale.quantity === 0
-    ? "No fresh fish to sell"
+    ? "No fish to sell"
     : `Sell all ${bulkSale.quantity} fish for ${bulkSale.total} shells`;
   const sellAllContent = bulkSale.quantity === 0
     ? sellAllLabel
@@ -107,7 +107,7 @@ function marketDetailMarkup(
           <span class="market-price-pill is-large"><span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${quote.price}</strong><small>each</small></span>
         </div>
         <button class="market-track-button ${isTracked ? "is-tracked" : ""}" type="button" data-action="track-market-fish" data-species="${species}" aria-pressed="${isTracked}">${isTracked ? "✓ Tracking this fish" : `Track ${fish.name}`}</button>
-        <button class="primary-button market-sell-button" type="button" data-action="sell-market-fish" data-species="${species}" ${sale.quantity === 0 ? "disabled" : ""}>${sale.quantity === 0 ? "No fresh fish to sell" : `Sell ${sale.quantity} fish · ${sale.total} shells`}</button>
+        <button class="primary-button market-sell-button" type="button" data-action="sell-market-fish" data-species="${species}" ${sale.quantity === 0 ? "disabled" : ""}>${sale.quantity === 0 ? "No fish to sell" : `Sell ${sale.quantity} fish · ${sale.total} shells`}</button>
       </section>
       <section class="market-chart-shell" aria-labelledby="price-history-title">
         <div class="market-chart-heading">

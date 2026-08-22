@@ -4,7 +4,7 @@
 
 **Project:** FSHING, original browser game  
 **Team:** Liam, Saxon, Harrison, David  
-**Version documented:** 0.7.0 (PR #111)
+**Version documented:** 0.8.0 (PR #115)
 **Document date:** 22 August 2026
 **Submission components:** This report, source repository, and production build
 
@@ -12,9 +12,9 @@
 
 ## 1. Executive summary
 
-FSHING is a side-on fishing market game. The player runs a working boat across a lake that spans several camera widths, later unlocking a second coastal map. At each harbor a live board lists today's quotes. The player tracks a species, sails to its habitat, drops a line, and sells the catch before freshness collapses. The two harbors do not pay the same price, so the crossing itself is the trading decision.
+FSHING is a side-on fishing market game. The player runs a working boat across a lake that spans several camera widths, later unlocking a second coastal map. At each harbor a live board lists today's quotes. The player tracks a species, sails to its habitat, drops a line, and sells the catch at the stronger market. The two harbors do not pay the same price, so the crossing itself is the trading decision.
 
-The game teaches by consequence rather than a quiz. A slow trip wastes freshness. A deeper line reaches more valuable fish. Tracking one listing turns the lake into a route between a fishing ground and the stronger market.
+The game teaches by consequence rather than a quiz. A deeper line reaches more valuable fish, while a larger cargo hold makes each trip more productive. Tracking one listing turns the lake into a route between a fishing ground and the stronger market.
 
 The completed vertical slice contains:
 
@@ -22,7 +22,7 @@ The completed vertical slice contains:
 - eighteen real species (nine freshwater, nine south-eastern Australian coastal)
 - cargo, engine, line, and five-tier reel-power upgrades, plus a rechargeable boost and Beach access; Beach middle/right grounds require line tiers 3/4
 - deterministic reel-and-release fish fights with line tension, fish stamina, rarity scaling, and break recovery
-- seeded daily quotes, seven-day history, and freshness-adjusted sales
+- seeded daily quotes, seven-day history, and full-quote sales
 - a five-step First Assignment, four-card How to play, credits, and an eight-sale season report
 - keyboard sailing and hook steering, pointer/touch menus, remappable controls, mute, high contrast, reduced motion, and pause on focus loss
 - deterministic gameplay tests, browser interaction tests, and version 12 validated saves
@@ -33,7 +33,7 @@ Product numbers and acceptance checks live in `Docs/Game-Brief.md`.
 
 ### Game purpose
 
-Give the player a short, readable trading loop: read a market, catch a real species in a habitat that matches it, and choose where to sell before the fish spoils.
+Give the player a short, readable trading loop: read a market, catch a real species in a habitat that matches it, and choose where to sell it.
 
 ### Player outcomes
 
@@ -43,7 +43,7 @@ By the end of a season of eight sales, a player should be able to:
 2. use the seven-day graph to decide whether to sell today or wait
 3. compare Brindle Harbor and Gloam Ferry instead of always selling at the nearest dock
 4. spend shells on cargo, speed, or depth with a reason
-5. recover from a full hold or a spoiled catch without restarting
+5. recover from a full hold or an accidental release without restarting
 
 ### Target audience
 
@@ -77,7 +77,7 @@ flowchart LR
   B --> C["Sail to its ground"]
   C --> D["Drop the line"]
   D --> E["Hook and reel"]
-  E --> F["Freshness starts"]
+  E --> F["Catch enters cargo"]
   F --> G["Sell at the stronger harbor"]
   G --> H["Upgrade"]
   H --> A
@@ -89,7 +89,7 @@ flowchart LR
 2. First Assignment highlights Bluegill. Open it, read today's quote, then **Track Bluegill**.
 3. Return to the lake. The badge reads **FISH AT Sunward Shoal**.
 4. Slow under the shoal until the hook cue appears, then drop the line.
-5. Steer onto a Bluegill. Hold left click while it is calm to gain ground, then release when it races away so the line can slacken. Background fish keep swimming in a subdued silhouette so the hooked fish remains the focus. The landed catch reaches the boat at 100% freshness.
+5. Steer onto a Bluegill. Hold left click while it is calm to gain ground, then release when it races away so the line can slacken. Background fish keep swimming in a subdued silhouette so the hooked fish remains the focus. The landed catch enters cargo and remains sellable.
 6. Guidance switches to **SELL AT** whichever harbor currently pays more.
 7. Dock, open Bluegill, sell. Shells land, the assignment completes, and prices will change when the next 210-second day begins.
 
@@ -108,7 +108,7 @@ Beach reuses the same spot names and world X positions. Reloading always restore
 | Purchase | Effect |
 | --- | --- |
 | Cargo (7 tiers, 3→10 slots) | Carry more before docking |
-| Engine (6 tiers) | Faster crossings, less freshness loss |
+| Engine (6 tiers) | Faster crossings between fishing grounds and harbors |
 | Line (6 tiers) | Reach deeper bands; Beach middle/right require tiers 3/4 |
 | Reel power (5 tiers) | Reel 12% faster per tier, up to 1.60× speed |
 | Engine boost (250 shells) | Hold Boost for a short overclock that overheats |
@@ -131,7 +131,7 @@ main.ts                  startup and dependency wiring
 Game.ts                  lifecycle and HTML overlays
 simulation.ts            deterministic gameplay state and rules
 balance.ts               units, prices, fish, sites, regions
-market.ts                quotes, history, freshness payouts
+market.ts                quotes, history, sale payouts
 marketView.ts            market HTML
 renderer.ts              Canvas drawing only
 input.ts / controls.ts   browser input → game intent
@@ -144,16 +144,15 @@ Fishing presentation, camera, panorama, steam, and the destination badge are sep
 
 ### Market quote
 
-Each harbor/species/day price is hashed from the simulation seed (7), then stepped at most 6% from the previous day. Harbor demand, a scarcity factor, a small weather factor, and a slow cycle all multiply the species' whole-fish value. Selling applies freshness:
+Each harbor/species/day price is hashed from the simulation seed (7), then stepped at most 6% from the previous day. Harbor demand, a scarcity factor, a small weather factor, and a slow cycle all multiply the species' whole-fish value. Every sold catch pays the displayed quote:
 
 ```text
-payout ← 0                              IF freshness <= 0
-payout ← max(1, round(quote × (0.25 + 0.75 × freshness / 100)))
+payout ← quote
 ```
 
 ### Fishing spawn
 
-A site spawns every resident. Count per resident follows that day's availability: 3 abundant, 2 normal, 1 scarce, scaled to 70% of responsive viewport capacity. Hook contact within radius 0.058 on a fish whose current swimming position is above the line limit starts a deterministic fight with an immediate, smoothly ramped 0.65 s escape run before the first lull. Holding left click, touch, or the Reel key during a lull gains ground and cools the line slightly; only an active run or thrash can increase tension. Releasing during a run lets the fish take line, which drops tension. Tension is read from the hook line colour and thickness rather than a corner meter. Non-hooked fish keep swimming, fade into subdued silhouettes, and lose their targeting cues during the fight. Free-swimming and hooked fish use bounded velocity and continuous steering rather than position impulses. Rarity supplies base difficulty while a researched profile gives each species its own run cadence, direction, depth bias, endurance, and body action; the source record is `Docs/Fish-Behaviour-Research.md`. Sustained critical tension breaks the line without ending the fishing session, while a completed fight uses a 1.15-second landing transition and stores the catch at 100% freshness.
+A site spawns every resident. Count per resident follows that day's availability: 3 abundant, 2 normal, 1 scarce, scaled to 70% of responsive viewport capacity. Hook contact within radius 0.058 on a fish whose current swimming position is above the line limit starts a deterministic fight with an immediate, smoothly ramped 0.65 s escape run before the first lull. Holding left click, touch, or the Reel key during a lull gains ground and cools the line slightly; only an active run or thrash can increase tension. Releasing during a run lets the fish take line, which drops tension. Tension is read from the hook line colour and thickness rather than a corner meter. Non-hooked fish keep swimming, fade into subdued silhouettes, and lose their targeting cues during the fight. Free-swimming and hooked fish use bounded velocity and continuous steering rather than position impulses. Rarity supplies base difficulty while a researched profile gives each species its own run cadence, direction, depth bias, endurance, and body action; the source record is `Docs/Fish-Behaviour-Research.md`. Sustained critical tension breaks the line without ending the fishing session, while a completed fight uses a 1.15-second landing transition and stores the catch in cargo.
 
 Sunward Shoal is the forgiving introduction: Bluegill, Yellow Perch, and Emerald Shiner have weak enough line loads to survive a continuous reel, while later habitats require the intended reel-and-release response.
 
@@ -248,7 +247,7 @@ Surface fishing grounds use a faint school, then a polarized lens, then a hook c
 | Larger boats / more upgrades | Seven cargo tiers, six engine/line tiers, five reel-power tiers, boost, Beach |
 | Different worlds | Lake and Beach palettes, piers, underwater plates, and fish sets |
 
-Delivery contracts, water surveys, and the field guide were removed from the player-facing loop after the market replaced jobs. Simulation helpers for surveys and contracts remain for tests and must not be treated as live UI.
+Delivery contracts, water surveys, and the field guide were removed from the player-facing loop after the market replaced jobs. The unused delivery-contract route helpers have also been deleted; only survey helpers remain for tests and must not be treated as live UI.
 
 ### Automated test strategy
 
@@ -256,7 +255,7 @@ Unit/model tests cover:
 
 - map scale, movement, facing, braking, speed, bounds, and determinism
 - fishing targets, catch radius, reel progress, tension breaks, fish stamina, line strength, cargo capacity, and depth gates
-- market quotes, harbor demand, freshness payouts, and Beach premiums
+- market quotes, harbor demand, full-quote payouts, and Beach premiums
 - First Assignment, cargo release/restore, Beach travel, boost heat, season completion
 - night fade, destination-badge layout, fishing presentation and reeling
 - save corruption, fantasy-species migration, clamping, and round-trip persistence
@@ -273,12 +272,13 @@ Browser tests cover:
 
 ### Automated verification record
 
-Local verification on 21 August 2026:
+Local verification on 22 August 2026:
 
 | Check | Result | Evidence |
 | --- | --- | --- |
-| Unit/model suite | Pass | 89 of 89 Vitest tests passed |
-| SDK-unavailable fallback | Pass | Browser suite aborts CrazyGames and still completes local play |
+| Typecheck and unit/model suite | Pass | Strict TypeScript passed; 144 of 144 Vitest tests passed |
+| Production build | Pass | Vite transformed 78 modules and produced `dist/` |
+| Browser suite and SDK fallback | Pass | 36 of 36 Playwright tests passed; the suite aborts CrazyGames and still completes local play |
 
 Typecheck, production build, and the Playwright suite should be run before merge (`npm run check`, `npm run build`, `npm run test:e2e`).
 
@@ -290,7 +290,7 @@ Automated tests prove states, not whether a new player understands the market. T
 | --- | --- | --- | --- | --- | --- |
 | First Assignment completion | Observe without verbal help | 3/3 complete | — | — | — |
 | Time to first sale | Stopwatch | Under 4 minutes | — | — | — |
-| Harbor choice | Ask why they sold where they did | 2/3 mention price or freshness | — | — | — |
+| Harbor choice | Ask why they sold where they did | 2/3 mention price | — | — | — |
 | Control errors | Count wrong or unclear actions | No repeated blocker | — | — | — |
 | Readability | Toggle contrast and reduced motion | All information remains available | — | — | — |
 | Enjoyment | 1–5 plus reason | Mean at least 3.5 | — | — | — |
@@ -299,7 +299,7 @@ Automated tests prove states, not whether a new player understands the market. T
 
 ### What is effective
 
-The market replaced a contract checklist with a choice the player can repeat: which fish, which harbor, how much freshness to spend on the crossing. Tracking a listing gives the lake a destination without a quest log.
+The market replaced a contract checklist with a choice the player can repeat: which fish to target, which harbor pays more, and whether to sell now or watch another market day. Tracking a listing gives the lake a destination without a quest log.
 
 Splitting market math, fishing motion, and overlays kept the loop testable. Quotes can be checked without Canvas. Swim gaits can be checked without the harbor HTML.
 
@@ -316,8 +316,8 @@ Solution: Beach is a paid unlock, travel happens from a dock, and reload always 
 **Challenge: nine fantasy silhouettes were not enough once Beach shipped.**  
 Solution: two real-species atlases and six swim sheets, with fantasy ids migrated in validated saves.
 
-**Challenge: a fast sale was always obvious if both harbors paid the same.**  
-Solution: per-harbor demand, a 6% daily cap, and freshness so a longer crossing can still be the better realised payout.
+**Challenge: a market choice disappears if both harbors pay the same.**
+Solution: per-harbor demand and a 6% daily cap keep the two quotes distinct while making every displayed price trustworthy.
 
 ### Limitations
 
@@ -333,20 +333,20 @@ Solution: per-harbor demand, a 6% daily cap, and freshness so a longer crossing 
 2. Persist world, cargo, and clock, or tell the player that they reset.
 3. Show both harbor quotes on the detail card so help text matches the UI.
 4. Retitle the season report to match the market loop.
-5. Decide whether leftover survey/contract helpers should be deleted or re-exposed.
+5. Decide whether leftover survey helpers should be deleted or re-exposed.
 
 ## 10. Rubric evidence map
 
 | Rubric criterion | Evidence in this submission |
 | --- | --- |
-| Game purpose | Sections 1–2; playable market, freshness, habitat grounds |
+| Game purpose | Sections 1–2; playable market and habitat grounds |
 | Target audience | Section 2; First Assignment, short loop, accessibility |
 | Gameplay mechanics | Section 4 and `Docs/Game-Brief.md` |
 | Design plans and assets | Sections 6–7; `Docs/Asset-Manifest.md` |
 | Algorithms | Section 5; market quote, spawn counts, determinism, save validation |
 | Computational thinking | Decomposed modules, seeded tests |
 | User-centred design | User-needs table, hierarchy, accessibility |
-| Testing and iteration | Section 8; 89 unit tests, 24 browser tests, honest playtest protocol |
+| Testing and iteration | Section 8; 144 unit tests, 36 browser tests, honest playtest protocol |
 | Functional game | Onboarding-to-sale loop, Beach, upgrades, persistence |
 | Reflection | Section 9 |
 
@@ -354,7 +354,7 @@ Solution: per-harbor demand, a 6% daily cap, and freshness so a longer crossing 
 
 - [ ] Replace the human-playtest blank cells with real observations.
 - [x] Keep `Docs/Game-Brief.md` aligned with the playable loop.
-- [x] 89 unit/model tests pass.
+- [x] 144 unit/model tests pass.
 - [ ] Run `npm run check`, `npm run build`, and `npm run test:e2e` on the submission machine.
 - [x] Confirm CrazyGames SDK failure still falls back locally (browser suite aborts the SDK).
 - [x] Confirm a refresh retains money, unlocks, discoveries, and tutorial completion.

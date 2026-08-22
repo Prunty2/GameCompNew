@@ -49,7 +49,7 @@ import {
   updateSimulation,
   type InputState,
 } from "../game/simulation";
-import { strongerHarborFor } from "../game/market";
+import { marketQuote, strongerHarborFor } from "../game/market";
 import {
   MOSSWATER_POPULATION_DENSITY_MULTIPLIER,
   responsiveResidentCount,
@@ -142,21 +142,14 @@ describe("FSHING side-on simulation", () => {
     expect(tutorialPrompt(simulation)).toContain(`Dock at ${betterHarbor.name}`);
   });
 
-  test("sends spoiled and full cargo to an actionable next step", () => {
-    const spoiled = createSimulation();
-    trackMarketSpecies(spoiled, "bluegill");
-    undock(spoiled);
-    spoiled.cargo = [{ species: "bluegill", freshness: 0 }];
-    expect(navigationGuidance(spoiled)).toMatchObject({ kicker: "FISH AT", label: "Sunward Shoal" });
-    expect(navigationGuidance(spoiled)?.instruction).toContain("catch a Bluegill");
-
+  test("sends full cargo to an actionable next step", () => {
     const full = createSimulation();
     trackMarketSpecies(full, "bluegill");
     undock(full);
     full.cargo = [
-      { species: "yellowPerch", freshness: 100 },
-      { species: "emeraldShiner", freshness: 100 },
-      { species: "northernPike", freshness: 100 },
+      { species: "yellowPerch" },
+      { species: "emeraldShiner" },
+      { species: "northernPike" },
     ];
     expect(navigationGuidance(full)).toMatchObject({ kicker: "MANAGE CARGO", label: "Brindle Harbor" });
     expect(navigationGuidance(full)?.instruction).toContain("sell or release a catch");
@@ -164,7 +157,6 @@ describe("FSHING side-on simulation", () => {
 
   test("uses the nearest harbor when the first assignment is active and no species is tracked", () => {
     const simulation = createSimulation();
-    simulation.availableContract = null;
     undock(simulation);
     simulation.boat.x = 0.89;
     expect(navigationGuidance(simulation)).toMatchObject({ kicker: "MARKET AT", label: "Gloam Ferry" });
@@ -179,9 +171,9 @@ describe("FSHING side-on simulation", () => {
     const full = createSimulation(1, { marketTutorialStep: "done" });
     undock(full);
     full.cargo = [
-      { species: "yellowPerch", freshness: 100 },
-      { species: "emeraldShiner", freshness: 100 },
-      { species: "northernPike", freshness: 100 },
+      { species: "yellowPerch" },
+      { species: "emeraldShiner" },
+      { species: "northernPike" },
     ];
     expect(navigationGuidance(full)).toBeNull();
 
@@ -223,7 +215,6 @@ describe("FSHING side-on simulation", () => {
     }
     expect(first.boat).toEqual(second.boat);
     expect(first.elapsed).toBe(second.elapsed);
-    expect(first.availableContract).toEqual(second.availableContract);
 
     startFishing(first, "sunwardShoal");
     startFishing(second, "sunwardShoal");
@@ -380,7 +371,7 @@ describe("FSHING side-on simulation", () => {
     expect(getInteractionPrompt(simulation)?.label).toContain("Drop line");
     expect(startFishing(simulation, "sunwardShoal")).toBe(true);
     expect(resolveCatch(simulation, "bluegill")).toBe(true);
-    expect(simulation.cargo[0]?.freshness).toBe(100);
+    expect(simulation.cargo[0]).toEqual({ species: "bluegill" });
     expect(simulation.progress.marketTutorialStep).toBe("sell");
 
     const harbor = strongerHarborFor("bluegill", simulation.progress.marketDay, simulation.seed);
@@ -459,7 +450,7 @@ describe("FSHING side-on simulation", () => {
       updateSimulation(simulation, { ...idle, actionHeld: holding }, 0.1);
     }
     expect(simulation.mode).toBe("cruising");
-    expect(simulation.cargo).toEqual([{ species: "bluegill", freshness: 100 }]);
+    expect(simulation.cargo).toEqual([{ species: "bluegill" }]);
   });
 
   test("breaks a critically strained line without ending the fishing session", () => {
@@ -815,25 +806,44 @@ describe("FSHING side-on simulation", () => {
     expect(simulation.events.some((event) => event.type === "season-complete")).toBe(true);
   });
 
-  test("sells every fresh fish in one market transaction and keeps spoiled cargo", () => {
+  test("sells every fish in one market transaction", () => {
     const simulation = createSimulation(9, { marketSales: 2, marketEarnings: 10 });
     simulation.progress.marketTarget = "yellowPerch";
     simulation.progress.marketTutorialStep = "sell";
     simulation.cargo = [
-      { species: "bluegill", freshness: 100 },
-      { species: "yellowPerch", freshness: 50 },
-      { species: "lakeTrout", freshness: 0 },
+      { species: "bluegill" },
+      { species: "yellowPerch" },
+      { species: "lakeTrout" },
     ];
     const moneyBefore = simulation.progress.money;
     const result = sellAllFishAtMarket(simulation);
 
-    expect(result).toMatchObject({ harbor: "brindle", quantity: 2 });
+    expect(result).toMatchObject({ harbor: "brindle", quantity: 3 });
     expect(simulation.progress.money).toBe(moneyBefore + result!.payment);
     expect(simulation.progress.marketSales).toBe(3);
     expect(simulation.progress.marketEarnings).toBe(10 + result!.payment);
     expect(simulation.progress.marketTutorialStep).toBe("done");
-    expect(simulation.cargo).toEqual([{ species: "lakeTrout", freshness: 0 }]);
+    expect(simulation.cargo).toEqual([]);
     expect(simulation.events).toContainEqual({ type: "sold", result });
+  });
+
+  test("sells both Northern Pike at the full displayed quote", () => {
+    const simulation = createSimulation(7);
+    simulation.cargo = [
+      { species: "northernPike" },
+      { species: "northernPike" },
+    ];
+    const quote = marketQuote(
+      "northernPike",
+      "brindle",
+      simulation.progress.marketDay,
+      simulation.seed,
+    );
+
+    const result = sellSpeciesAtMarket(simulation, "northernPike");
+
+    expect(result).toMatchObject({ quantity: 2, quote: quote.price, payment: quote.price * 2 });
+    expect(simulation.cargo).toEqual([]);
   });
 
 });

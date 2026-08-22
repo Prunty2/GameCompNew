@@ -1026,7 +1026,7 @@ export class CanvasRenderer {
             ...simulation,
             cargo: [
               ...simulation.cargo,
-              { species: simulation.fishing.reeling.species, freshness: 100 },
+              { species: simulation.fishing.reeling.species },
             ],
             mode: "cruising",
             fishing: null,

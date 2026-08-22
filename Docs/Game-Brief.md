@@ -1,6 +1,6 @@
 # FSHING — game brief
 
-This brief is the product source of truth. It describes the playable game in `v0.7.0` (build label `v0.7.0 (PR #111)`), not leftover simulation APIs.
+This brief is the product source of truth. It describes the playable game in `v0.8.0` (build label `v0.8.0 (PR #115)`), not leftover simulation APIs.
 
 FSHING is a single-player side-on fishing market game for desktop and mobile browsers. The player pilots a working boat across a lake, and later an unlockable Beach, then sells catches at two harbors whose prices move each in-game day.
 
@@ -9,8 +9,8 @@ FSHING is a single-player side-on fishing market game for desktop and mobile bro
 1. Dock at a harbor and open the **Fish market**.
 2. Inspect a discovered species, read today's local quote and its seven-day graph, then **Track** it.
 3. Sail to that species' fishing ground. Slow down until the hook cue appears, then drop the line.
-4. Steer the hook onto a reachable fish. Hold left click on the water (or touch / the Reel key) while the fish is calm to pull it closer. When it races away, release so it can take line — that is what drops tension. Reeling against a run turns the line red. Landed catches reach the boat at 100% freshness.
-5. Freshness falls while the simulation is running. Dock at the harbor that currently pays more and sell every fresh catch of that species.
+4. Steer the hook onto a reachable fish. Hold left click on the water (or touch / the Reel key) while the fish is calm to pull it closer. When it races away, release so it can take line — that is what drops tension. Reeling against a run turns the line red. Landed catches are stored in cargo until sold or released.
+5. Dock at the harbor that currently pays more and sell every catch of that species for the displayed quote.
 6. Spend shells on cargo, engine, line, boost, or Beach access. Line upgrades unlock the middle and far-right grounds at world-specific tiers.
 
 A new save starts docked at Brindle Harbor on the lake with Bluegill already discovered. The first run is a four-step **First Assignment** that walks through inspect → track → catch → sell. Each tutorial pill includes a short instruction that changes with the player's current screen. During the catch the title first shows **Let it run**, then switches to **Hold left click** in the first lull, explains that a racing fish slacks the line, and toasts if the player horses a run, never reels a lull, or rests too long. The sale ends that assignment. When the player can afford a dock upgrade, a second tutorial walks through Upgrades.
@@ -18,21 +18,21 @@ A new save starts docked at Brindle Harbor on the lake with Bluegill already dis
 After eight market sales the game shows a season report, then returns to the same market. Trading does not stop.
 
 ```text
-Market → Track → Sail → Fish → Reel → Sell while fresh → Upgrade → Market
+Market → Track → Sail → Fish → Reel → Sell → Upgrade → Market
 ```
 
 ## Screens
 
 | Screen | How it opens | What it contains |
 | --- | --- | --- |
-| Title | Launch, or Title screen from pause | Wordmark, Play, Settings, Credits, `v0.7.0 (PR #111)` |
+| Title | Launch, or Title screen from pause | Wordmark, Play, Settings, Credits, `v0.8.0 (PR #115)` |
 | Harbor | Play from a docked start, or docking | Market / Cargo / Upgrades tabs, shell balance, Help, Return to Lake or Beach |
 | Market detail | Selecting a discovered listing | Species art, current-harbor price, Track, Sell, 7-day graph |
 | Pause | Escape or Pause on the water | Resume, Settings, How to play, Title screen |
 | Settings | Title or pause | Mute, volume, high contrast, reduced motion, Controls, Reset save |
 | Controls | Settings | Seven remappable actions, Reset defaults |
 | Credits | Title | Liam, Saxon, Harrison, David |
-| How to play | Harbor Help or pause | Four cards: read the market, track and catch, catch and protect, sell and invest |
+| How to play | Harbor Help or pause | Four cards: read the market, track and catch, manage cargo, sell and invest |
 | Season report | Eighth market sale | Discoveries, sales, earnings, market day, Continue trading |
 
 There is no field guide, no title How to play button, no on-water money HUD, and no on-screen movement pads.
@@ -40,6 +40,8 @@ There is no field guide, no title How to play button, no on-water money HUD, and
 On-water chrome is the night moon indicator, the boost gauge after unlock, the context action (dock or drop line), toasts, the sale popup, the colour of the fishing line during a fight, and the tutorial pill until it is finished or skipped. A destination badge on the canvas points at the current market, fishing ground, or sell harbor. Screen-reader status repeats that guidance. After the first assignment, that badge is hidden unless a fish is tracked.
 
 Scene changes between title, harbor, and the water use a waterline cover/reveal.
+
+The title sky periodically carries a flock of two to five animated seagulls. Each flock may cross in either direction, while individual birds vary their size, launch delay, flap phase, speed, and curved vertical drift so the formation stays loose and natural. Decorative flights are omitted when reduced motion is enabled.
 
 ## Worlds
 
@@ -105,11 +107,10 @@ Each harbor has a seeded daily quote per species. The simulation seed is 7. A ma
 Sale payout for one catch:
 
 ```text
-if freshness <= 0: 0
-else: max(1, round(quote × (0.25 + 0.75 × freshness / 100)))
+payout = quote
 ```
 
-Selling a listing sells every fresh catch of that species at the current harbor. Spoiled fish stay in cargo until released.
+Selling a listing sells every cargo catch of that species at the current harbor. Catches do not decay or become unsellable.
 
 The detail view shows the **docked harbor's** price, trend, and seven-day graph. Hovering a graph point shows that day's price as a number. It does not list the other harbor. After a tracked catch, on-water guidance points at whichever harbor currently quotes higher.
 
@@ -140,7 +141,6 @@ Simulation step is `1/120` s. Gameplay RNG is seeded. The boat travels only on t
 | Boost thrust | 1.75× | while active |
 | Boost heat | 8 s to overheat, 10 s to cool, recover at 25% | seconds |
 | Camera view width | 0.30 world (1.18× while boosting, unless reduced motion) | world width |
-| Freshness lifetime | 150 | seconds from 100% to 0% |
 | Catch radius | 0.058 | fishing space |
 | Hook speeds | 0.25 horizontal, 0.35 up, 0.25 down | fishing space / s |
 | Landing / exit duration | 1.15 | seconds |
@@ -175,7 +175,7 @@ Costs are `base + currentTier × 55` shells.
 | Upgrade | Base | Cap | Player-facing effect |
 | --- | --- | --- | --- |
 | Cargo | 60 | 7 | +1 slot per tier. Start 3, max 10 |
-| Engine | 70 | 6 | Faster travel, so less freshness loss |
+| Engine | 70 | 6 | Faster travel between fishing grounds and harbors |
 | Fishing line | 55 | 6 | Deeper hook limit and +12% fight strength per tier. Lake: middle tier 1, far right tier 3. Beach: middle tier 3, far right tier 4 |
 | Reel power | 65 | 5 | +12% reel speed per tier; 1.60× at tier 5 |
 | Engine boost | 250 | one-time | Hold Boost while moving. Overheats, then cools |
@@ -196,7 +196,7 @@ Saved as `marketTutorialStep`. Skip is always available. The prompt is a top-cen
 | 1 of 4 | Choose Bluegill |
 | 2 of 4 | Track the catch |
 | 3 of 4 | Catch a Bluegill at Sunward Shoal; after hook-up the title becomes **Let it run**, then **Hold left click** when the fish first calms |
-| 4 of 4 | Sell while fresh |
+| 4 of 4 | Sell the catch |
 
 The sale ends the assignment. Older saves with `completedContracts > 0` or leftover `complete` load as `done`.
 
@@ -305,7 +305,7 @@ A build matches this brief when:
 - Title shows Play, Settings, Credits, and `vX.Y.Z (PR #N)`
 - A new save can complete First Assignment: inspect Bluegill, track, catch at Sunward Shoal, sell
 - Market lists twelve Lake species or nine Beach species, with undiscovered cards locked
-- Quotes differ by harbor and day, and selling pays freshness-adjusted shells
+- Quotes differ by harbor and day, and every catch sells for the displayed quote
 - Line tier gates the Lake middle/right spots at tiers 1/3 and the Beach middle/right spots at tiers 3/4
 - Beach unlock swaps coastal fish and art, then travel returns to the lake
 - Keyboard sailing, hook steering, pause, mute, high contrast, and reduced motion work

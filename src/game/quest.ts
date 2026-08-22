@@ -424,7 +424,7 @@ function catchQuestCopy(simulation: Simulation): { title: string; instruction: s
       case "landed":
         return {
           title: "Catch landed",
-          instruction: "The fish is landed; get ready to sell it while fresh.",
+          instruction: "The fish is landed; get ready to sell it.",
         };
       case "critical":
         return {
@@ -476,7 +476,7 @@ function questInstruction(simulation: Simulation, step: Exclude<MarketTutorialSt
     case "catch":
       return catchQuestCopy(simulation).instruction;
     case "sell":
-      return "Follow SELL AT, dock, open Bluegill, and sell the fresh catch.";
+      return "Follow SELL AT, dock, open Bluegill, and sell the catch.";
     case "complete":
       return "The first market loop is complete.";
   }
