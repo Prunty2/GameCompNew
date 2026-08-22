@@ -14,7 +14,6 @@ import {
   buyBeachAccess,
   beginFishingExit,
   buyBoost,
-  buyPermit,
   buyUpgrade,
   cargoCapacity,
   closeMarketSpeciesDetail,
@@ -489,16 +488,15 @@ describe("FSHING side-on simulation", () => {
     expect(BALANCE.fishingHookDownSpeed).toBe(0.25);
   });
 
-  test("enforces cargo capacity and gates deep permit water", () => {
+  test("enforces cargo capacity and gates deep water with the fishing line", () => {
     const simulation = createSimulation();
     expect(resolveCatch(simulation, "northernPike")).toBe(true);
     expect(resolveCatch(simulation, "bluegill")).toBe(true);
     expect(resolveCatch(simulation, "yellowPerch")).toBe(true);
     expect(resolveCatch(simulation, "emeraldShiner")).toBe(false);
     expect(startFishing(simulation, "outerGloam")).toBe(false);
+    expect(consumeEvents(simulation)).toContainEqual({ type: "depth-locked", tier: 3 });
 
-    simulation.progress.money = BALANCE.permitCost;
-    expect(buyPermit(simulation)).toBe(true);
     simulation.cargo = [];
     expect(startFishing(simulation, "outerGloam")).toBe(false);
     simulation.progress.upgrades.line = 3;
