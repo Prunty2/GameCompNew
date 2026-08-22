@@ -18,7 +18,7 @@ test("main menu presents centered play, settings, and credits actions", async ({
   await page.goto("/");
 
   const version = page.locator(".title-build-version");
-  await expect(version).toHaveText("v0.5.3 (PR #105)");
+  await expect(version).toHaveText("v0.6.0 (PR #108)");
   const versionBounds = await version.boundingBox();
   expect(versionBounds).not.toBeNull();
   expect(versionBounds!.x).toBeLessThan(24);
@@ -185,22 +185,76 @@ test("hooked fish require active reel and release tension control", async ({ pag
 
   const canvas = page.locator("#game-canvas");
   await expect(canvas).toHaveAttribute("data-fishing-state", "fighting");
+  await expect(canvas).toHaveAttribute("data-fishing-fight-behaviour", "run");
+  await expect(canvas).toHaveAttribute("data-fishing-fight-cue", "release");
+  await expect(canvas).toHaveAttribute("data-fishing-fight-style", "kick-glide");
   await expect(page.locator("#context-action")).toBeHidden();
   await expect(canvas).toHaveAttribute("data-fishing-background-fish-opacity", "0.680");
-  const frozenPoseTime = await canvas.getAttribute("data-fishing-background-pose-elapsed");
+  const startingBackgroundPoseTime = Number(await canvas.getAttribute("data-fishing-background-pose-elapsed"));
   const startingProgress = Number(await canvas.getAttribute("data-fishing-reel-progress"));
+  const restColour = await canvas.getAttribute("data-fishing-line-colour");
 
   await canvas.dispatchEvent("pointerdown", { pointerId: 1, button: 0, isPrimary: true });
   await page.waitForTimeout(900);
   await canvas.dispatchEvent("pointerup", { pointerId: 1, button: 0, isPrimary: true });
   const pulledProgress = Number(await canvas.getAttribute("data-fishing-reel-progress"));
   const pulledTension = Number(await canvas.getAttribute("data-fishing-line-tension"));
+  const pulledColour = await canvas.getAttribute("data-fishing-line-colour");
   expect(pulledProgress).toBeGreaterThan(startingProgress);
-  await expect(canvas).toHaveAttribute("data-fishing-background-pose-elapsed", frozenPoseTime ?? "");
+  expect(pulledColour).not.toBe(restColour);
+  const movedBackgroundPoseTime = Number(await canvas.getAttribute("data-fishing-background-pose-elapsed"));
+  expect(movedBackgroundPoseTime).toBeGreaterThan(startingBackgroundPoseTime);
 
   await page.waitForTimeout(500);
   const restedTension = Number(await canvas.getAttribute("data-fishing-line-tension"));
   expect(restedTension).toBeLessThan(pulledTension);
+
+  const motionSamples = await canvas.evaluate(async (element) => {
+    const samples: Array<{ x: number; y: number }> = [];
+    for (let index = 0; index < 48; index += 1) {
+      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+      const canvas = element as HTMLCanvasElement;
+      samples.push({
+        x: Number(canvas.dataset.fishingFightMotionX),
+        y: Number(canvas.dataset.fishingFightMotionY),
+      });
+    }
+    return samples;
+  });
+  const maximumFrameStep = Math.max(...motionSamples.slice(1).map((sample, index) => Math.hypot(
+    sample.x - motionSamples[index]!.x,
+    sample.y - motionSamples[index]!.y,
+  )));
+  expect(maximumFrameStep).toBeLessThan(0.015);
+});
+
+test("first assignment catch step teaches left-click reel and line colour", async ({ page }) => {
+  await page.goto("/?e2e=1");
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.locator('[data-action="select-market-fish"][data-species="bluegill"]').click();
+  await page.locator('[data-action="track-market-fish"][data-species="bluegill"]').click();
+
+  await page.evaluate(() => window.__FSHING_TEST__?.previewFishing("sunwardShoal", "bluegill"));
+  await page.evaluate(() => window.__FSHING_TEST__?.hookSpecies("bluegill"));
+
+  const tutorial = page.locator("#market-tutorial");
+  await expect(tutorial).toContainText("Let it run");
+  await expect(tutorial).toContainText("racing away");
+
+  const canvas = page.locator("#game-canvas");
+  await expect(canvas).toHaveAttribute("data-fishing-fight-cue", "release");
+  await expect.poll(async () => canvas.getAttribute("data-fishing-fight-cue"), {
+    timeout: 3_000,
+    intervals: [50],
+  }).toMatch(/reel|resume/);
+  await expect(tutorial).toContainText("Hold left click");
+  await canvas.dispatchEvent("pointerdown", { pointerId: 1, button: 0, isPrimary: true });
+  await expect.poll(async () => canvas.getAttribute("data-fishing-fight-cue"), {
+    timeout: 8_000,
+    intervals: [50],
+  }).toMatch(/release|critical/);
+  await expect(tutorial).toContainText(/Let it run|Release to rest|Release left click/);
+  await canvas.dispatchEvent("pointerup", { pointerId: 1, button: 0, isPrimary: true });
 });
 
 test("first assignment follows the player back to the market list", async ({ page }) => {
@@ -931,10 +985,11 @@ test("reels a hooked fish to the boat before securing the catch", async ({ page 
     const state = await canvas.getAttribute("data-fishing-state");
     if (state !== "fighting") return state;
     const tension = Number(await canvas.getAttribute("data-fishing-line-tension"));
-    if (!holdingReel && tension < 0.68) {
+    const behaviour = await canvas.getAttribute("data-fishing-fight-behaviour");
+    if (!holdingReel && behaviour !== "run" && tension < 0.68) {
       await page.keyboard.down("e");
       holdingReel = true;
-    } else if (holdingReel && tension > 0.78) {
+    } else if (holdingReel && (behaviour === "run" || tension > 0.78)) {
       await page.keyboard.up("e");
       holdingReel = false;
     }
@@ -1078,8 +1133,8 @@ test("how to play instructions advance one card at a time", async ({ page }) => 
   await page.getByRole("button", { name: "Next" }).click();
   await page.getByRole("button", { name: "Next" }).click();
   await expect(page.getByRole("heading", { name: "Catch and protect" })).toBeVisible();
-  await expect(page.locator(".help-card")).toContainText("hold the left mouse button anywhere on the water");
-  await expect(page.locator(".help-card")).toContainText("TENSION · CRITICAL");
+  await expect(page.locator(".help-card")).toContainText("hold the left mouse button while it is calm");
+  await expect(page.locator(".help-card")).toContainText("When it races away, release");
 
   for (let step = 3; step < 4; step += 1) {
     await page.getByRole("button", { name: "Next" }).click();

@@ -111,6 +111,7 @@ describe("first-assignment quest prototype", () => {
     expect(fishing.hookFollow).toBe(true);
     expect(fishing.title).toBe("Catch Bluegill");
     expect(fishing.instruction).toContain("Steer the hook onto Bluegill");
+    expect(fishing.instruction).toContain("hold left click");
     const targetIndex = questHookTargetIndex(simulation);
     expect(targetIndex).toBeGreaterThanOrEqual(0);
     if (targetIndex === null) throw new Error("Expected the tutorial to select a Bluegill target");
@@ -126,12 +127,28 @@ describe("first-assignment quest prototype", () => {
       tension: 0.12,
       stamina: 1,
       criticalSeconds: 0,
-      struggle: 0,
+      behaviour: "calm",
+      struggle: 0.08,
+      motionX: 0,
+      motionY: 0,
+      motionVx: 0,
+      motionVy: 0,
       landingAt: null,
     };
-    expect(questPresentation(simulation, playView).instruction).toBe(
-      "Hold left click to reel. Release when the fish pulls or tension is critical; hold again after tension falls.",
-    );
+    const hooked = questPresentation(simulation, playView);
+    expect(hooked.title).toBe("Hold left click");
+    expect(hooked.instruction).toContain("while the fish is calm");
+
+    simulation.fishing.reeling.behaviour = "run";
+    simulation.fishing.reeling.struggle = 0.8;
+    const running = questPresentation(simulation, playView);
+    expect(running.title).toBe("Let it run");
+    expect(running.instruction).toContain("racing away");
+
+    simulation.fishing.reeling.tension = 0.94;
+    const critical = questPresentation(simulation, playView);
+    expect(critical.title).toBe("Release left click");
+    expect(critical.instruction).toContain("red and about to snap");
   });
 
   test("leads a fresh catch to the stronger harbor and the Sell button", () => {

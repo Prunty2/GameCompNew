@@ -1,4 +1,5 @@
 import {
+  BALANCE,
   residentsForSpot,
   type FishRarity,
   type FishSpecies,
@@ -29,6 +30,19 @@ export interface FishingFocusPresentation {
   backgroundPoseElapsed: number;
   showTargetGuides: boolean;
 }
+
+export interface FishingLineAppearance {
+  colour: string;
+  width: number;
+}
+
+const LINE_COLOUR_SAFE = "#f4e2b9";
+const LINE_COLOUR_WARN = "#e8a44d";
+const LINE_COLOUR_CRITICAL = "#e45a3a";
+const LINE_COLOUR_PEAK = "#ff8a6a";
+const LINE_COLOUR_HIGH_CONTRAST_SAFE = "#ffffff";
+const LINE_COLOUR_HIGH_CONTRAST_WARN = "#ffe08a";
+const LINE_COLOUR_HIGH_CONTRAST_CRITICAL = "#ff6240";
 
 export const FISHING_DIVE_DURATION = 0.85;
 
@@ -68,7 +82,7 @@ export function fishingFocusPresentation(
   const fightActive = hookedAt !== null;
   return {
     backgroundFishOpacity: clamp(schoolOpacity, 0, 1) * (fightActive ? 0.68 : 1),
-    backgroundPoseElapsed: fightActive ? hookedAt : elapsed,
+    backgroundPoseElapsed: elapsed,
     showTargetGuides: !fightActive,
   };
 }
@@ -144,6 +158,46 @@ export function fishingHighlightSpecies(
 ): FishSpecies | null {
   if (!marketTarget) return null;
   return residentsForSpot(world, spotId).includes(marketTarget) ? marketTarget : null;
+}
+
+export function fishingLineAppearance(tension: number, highContrast: boolean): FishingLineAppearance {
+  const amount = clamp(tension, 0, 1);
+  const warnAt = 0.55;
+  const criticalAt = BALANCE.fishingCriticalTension;
+  const colour = highContrast
+    ? amount >= criticalAt
+      ? mixHex(LINE_COLOUR_HIGH_CONTRAST_CRITICAL, "#ffd0c4", (amount - criticalAt) / Math.max(0.01, 1 - criticalAt))
+      : amount >= warnAt
+        ? mixHex(LINE_COLOUR_HIGH_CONTRAST_WARN, LINE_COLOUR_HIGH_CONTRAST_CRITICAL, (amount - warnAt) / (criticalAt - warnAt))
+        : mixHex(LINE_COLOUR_HIGH_CONTRAST_SAFE, LINE_COLOUR_HIGH_CONTRAST_WARN, amount / warnAt)
+    : amount >= criticalAt
+      ? mixHex(LINE_COLOUR_CRITICAL, LINE_COLOUR_PEAK, (amount - criticalAt) / Math.max(0.01, 1 - criticalAt))
+      : amount >= warnAt
+        ? mixHex(LINE_COLOUR_WARN, LINE_COLOUR_CRITICAL, (amount - warnAt) / (criticalAt - warnAt))
+        : mixHex(LINE_COLOUR_SAFE, LINE_COLOUR_WARN, amount / warnAt);
+  return {
+    colour,
+    width: (highContrast ? 3 : 2) + amount * (highContrast ? 2.2 : 2.6),
+  };
+}
+
+function mixHex(from: string, to: string, amount: number): string {
+  const t = clamp(amount, 0, 1);
+  const start = parseHex(from);
+  const end = parseHex(to);
+  const channel = (index: number): string => Math.round(start[index] + (end[index] - start[index]) * t)
+    .toString(16)
+    .padStart(2, "0");
+  return `#${channel(0)}${channel(1)}${channel(2)}`;
+}
+
+function parseHex(colour: string): readonly [number, number, number] {
+  const hex = colour.replace("#", "");
+  return [
+    Number.parseInt(hex.slice(0, 2), 16),
+    Number.parseInt(hex.slice(2, 4), 16),
+    Number.parseInt(hex.slice(4, 6), 16),
+  ];
 }
 
 function clamp(value: number, minimum: number, maximum: number): number {

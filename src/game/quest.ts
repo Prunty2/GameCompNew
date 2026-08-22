@@ -1,4 +1,5 @@
 import { BALANCE } from "./balance";
+import { fishingFightCue } from "./fishingFight";
 import {
   cheapestAffordableUpgrade,
   getInteractionPrompt,
@@ -98,7 +99,7 @@ export function questPresentation(
     || assignmentStep === "catch"
     || assignmentStep === "sell"
   ) {
-    const copy = QUEST_COPY[assignmentStep];
+    const copy = assignmentCopy(simulation, assignmentStep);
     if (screenHidden) {
       return {
         active: false,
@@ -106,7 +107,7 @@ export function questPresentation(
         step: assignmentStep,
         heading: "Tutorial",
         title: copy.title,
-        instruction: questInstruction(simulation, assignmentStep),
+        instruction: copy.instruction,
         index: copy.index,
         totalSteps: 4,
         uiTargetSelector: null,
@@ -120,7 +121,7 @@ export function questPresentation(
       step: assignmentStep,
       heading: "Tutorial",
       title: copy.title,
-      instruction: questInstruction(simulation, assignmentStep),
+      instruction: copy.instruction,
       index: copy.index,
       totalSteps: 4,
       uiTargetSelector: questUiTargetSelector(simulation, view, assignmentStep),
@@ -404,27 +405,76 @@ function idlePresentation(step: QuestGuideStep, hidden: boolean): QuestPresentat
   };
 }
 
+function assignmentCopy(
+  simulation: Simulation,
+  step: Exclude<MarketTutorialStep, "done">,
+): { index: number; title: string; instruction: string } {
+  const copy = QUEST_COPY[step];
+  if (step !== "catch") {
+    return { ...copy, instruction: questInstruction(simulation, step) };
+  }
+  const coaching = catchQuestCopy(simulation);
+  return { index: copy.index, title: coaching.title, instruction: coaching.instruction };
+}
+
+function catchQuestCopy(simulation: Simulation): { title: string; instruction: string } {
+  const fight = simulation.fishing?.reeling;
+  if (fight) {
+    switch (fishingFightCue(fight)) {
+      case "landed":
+        return {
+          title: "Catch landed",
+          instruction: "The fish is landed; get ready to sell it while fresh.",
+        };
+      case "critical":
+        return {
+          title: "Release left click",
+          instruction: "The line is red and about to snap. Let the fish run until the colour cools, then reel.",
+        };
+      case "release":
+        return fight.behaviour === "run"
+          ? {
+            title: "Let it run",
+            instruction: "The fish is racing away. Release left click so it can take line and the tension can fall.",
+          }
+          : {
+            title: "Release to rest",
+            instruction: "The fish is shaking the line. Release left click until it calms, then reel.",
+          };
+      case "resume":
+        return {
+          title: "Hold left click",
+          instruction: "The run is over. Hold left click again to reel while the fish is calm.",
+        };
+      case "reel":
+        return {
+          title: "Hold left click",
+          instruction: "Hold left click while the fish is calm. Release when it races away so the line can slacken.",
+        };
+    }
+  }
+  if (simulation.mode === "fishing") {
+    return {
+      title: "Catch Bluegill",
+      instruction: "Steer the hook onto Bluegill. Then hold left click to reel.",
+    };
+  }
+  return {
+    title: "Catch Bluegill",
+    instruction: simulation.dockedAt
+      ? "Return to the lake, then follow the marker to Sunward Shoal."
+      : "Follow the marker to Sunward Shoal, slow down, and drop the line.",
+  };
+}
+
 function questInstruction(simulation: Simulation, step: Exclude<MarketTutorialStep, "done">): string {
   switch (step) {
     case "inspect":
       return "Open Bluegill on the market board to see its price and habitat.";
     case "track":
       return "Choose Track so the lake marker leads you to its fishing ground.";
-    case "catch": {
-      const fight = simulation.fishing?.reeling;
-      if (fight && fight.landingAt !== null) {
-        return "The fish is landed; get ready to sell it while fresh.";
-      }
-      if (fight) {
-        return "Hold left click to reel. Release when the fish pulls or tension is critical; hold again after tension falls.";
-      }
-      if (simulation.mode === "fishing") {
-        return "Steer the hook onto Bluegill. The other fish will become dark silhouettes once it is hooked.";
-      }
-      return simulation.dockedAt
-        ? "Return to the lake, then follow the marker to Sunward Shoal."
-        : "Follow the marker to Sunward Shoal, slow down, and drop the line.";
-    }
+    case "catch":
+      return catchQuestCopy(simulation).instruction;
     case "sell":
       return "Follow SELL AT, dock, open Bluegill, and sell the fresh catch.";
     case "complete":

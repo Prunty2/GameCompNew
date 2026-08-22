@@ -414,11 +414,26 @@ describe("FSHING side-on simulation", () => {
     updateSimulation(simulation, idle, 0);
     expect(simulation.mode).toBe("fishing");
     expect(simulation.fishing?.reeling).toMatchObject({ species: "bluegill" });
-    expect(tutorialPrompt(simulation)).toContain("Hold left click or Reel");
+    expect(tutorialPrompt(simulation)).toContain("Release left click or Reel");
+    expect(tutorialPrompt(simulation)).toContain("racing away");
     expect(simulation.cargo).toEqual([]);
+    const hookedTargetIndex = simulation.fishing.reeling?.targetIndex;
+    const backgroundTargetIndex = simulation.fishing.targets.findIndex((_, index) => index !== hookedTargetIndex);
+    const backgroundBefore = simulation.fishing.targets[backgroundTargetIndex];
+    if (!backgroundBefore) throw new Error("Expected a non-hooked background fish.");
+    const backgroundStart = { x: backgroundBefore.x, y: backgroundBefore.y };
+    updateSimulation(simulation, idle, 0.1);
+    const backgroundAfter = simulation.fishing?.targets[backgroundTargetIndex];
+    expect(backgroundAfter).toBeDefined();
+    expect(backgroundAfter?.x).not.toBe(backgroundStart.x);
+    expect(backgroundAfter?.y).not.toBe(backgroundStart.y);
     for (let index = 0; index < 180 && simulation.mode === "fishing"; index += 1) {
-      const tension = simulation.fishing?.reeling?.tension ?? 0;
-      updateSimulation(simulation, { ...idle, actionHeld: tension < 0.72 }, 0.1);
+      const fight = simulation.fishing?.reeling;
+      const holding = fight !== undefined
+        && fight !== null
+        && fight.behaviour !== "run"
+        && fight.tension < 0.72;
+      updateSimulation(simulation, { ...idle, actionHeld: holding }, 0.1);
     }
     expect(simulation.mode).toBe("cruising");
     expect(simulation.cargo).toEqual([{ species: "bluegill", freshness: 100 }]);
