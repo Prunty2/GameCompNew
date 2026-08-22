@@ -55,7 +55,7 @@ Paid unlock (120 shells) from Upgrades. Travel is immediate and undocks the boat
 
 | Spot id | Display name | x | Lake line | Beach line | Lake residents | Beach residents |
 | --- | --- | --- | --- | --- | --- | --- |
-| `sunwardShoal` | Sunward Shoal | 0.18 | 0 | 0 | Bluegill, Yellow Perch, Emerald Shiner | Sea Mullet, Yellowfin Bream, Sand Whiting |
+| `sunwardShoal` | Sunward Shoal | 0.18 | 0 | 0 | Bluegill, Yellow Perch, Emerald Shiner, White Sucker | Sea Mullet, Yellowfin Bream, Sand Whiting |
 | `mosswaterPool` | Mosswater Pool | 0.50 | 1 | 3 | Northern Pike, Largemouth Bass, Bowfin | Dusky Flathead, Luderick, Eastern Australian Salmon |
 | `outerGloam` | Outer Gloam | 0.82 | 3 | 4 | Lake Trout, Burbot, Lake Sturgeon | Snapper, Yellowtail Kingfish, Mulloway |
 
@@ -76,7 +76,8 @@ Depth tier is the primary price driver. Rarity separates fish that share a depth
 | --- | --- | --- | --- | --- | ---: |
 | Bluegill | Lake | Sunward Shoal | 0 | common | 18 |
 | Yellow Perch | Lake | Sunward Shoal | 0 | common | 22 |
-| Emerald Shiner | Lake | Sunward Shoal | 0 | uncommon | 28 |
+| Emerald Shiner | Lake | Sunward Shoal | 1 | uncommon | 40 |
+| White Sucker | Lake | Sunward Shoal | 2 | uncommon | 58 |
 | Northern Pike | Lake | Mosswater Pool | 1 | uncommon | 40 |
 | Largemouth Bass | Lake | Mosswater Pool | 2 | uncommon | 52 |
 | Bowfin | Lake | Mosswater Pool | 2 | rare | 64 |
@@ -119,7 +120,7 @@ Hidden market conditions still change quotes, availability, and fog math:
 | Cold current | Deep fish abundant, shallow fish scarce |
 | Fog banks | Slight price lift and tighter supply |
 
-Availability sets the baseline number of each resident while fishing: abundant 3, normal 2, scarce 1. The final catchable population is tuned to 70% of the viewport-capacity result, accounting for both screen area and rendered fish size. Larger windows still show more fish after sprites approach their size cap, while compact screens reduce crowding without removing any resident species. Fish use low-discrepancy vertical spacing across their habitat-appropriate depth band rather than collecting on one horizontal shelf. Emerald Shiners occupy the lower part of the starter-line range, from 0.225 to 0.292 fishing depth. Condition names are not shown in the harbor UI.
+Availability sets the baseline number of each resident while fishing: abundant 3, normal 2, scarce 1. The final catchable population is tuned to 70% of the viewport-capacity result, accounting for both screen area and rendered fish size. Larger windows still show more fish after sprites approach their size cap, while compact screens reduce crowding without removing any resident species. Fish use low-discrepancy vertical spacing across their habitat-appropriate depth band rather than collecting on one horizontal shelf. At Sunward Shoal, Emerald Shiners occupy 0.335–0.405 fishing depth, entirely below the starter line and reachable at line tier 1. White Suckers occupy the deeper 0.465–0.535 bottom band and become reachable at line tier 2. Both remain visible as dimmed upgrade previews while locked. Condition names are not shown in the harbor UI.
 
 ## Sailing and fishing
 
@@ -294,7 +295,7 @@ A build matches this brief when:
 
 - Title shows Play, Settings, Credits, and `vX.Y.Z (PR #N)`
 - A new save can complete First Assignment: inspect Bluegill, track, catch at Sunward Shoal, sell
-- Market lists nine species for the current world, with undiscovered cards locked
+- Market lists ten Lake species or nine Beach species, with undiscovered cards locked
 - Quotes differ by harbor and day, and selling pays freshness-adjusted shells
 - Line tier gates the Lake middle/right spots at tiers 1/3 and the Beach middle/right spots at tiers 3/4
 - Beach unlock swaps coastal fish and art, then travel returns to the lake

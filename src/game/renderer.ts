@@ -12,6 +12,7 @@ import beachSurfFishingUrl from "../assets/fishing-beach-surf.jpg";
 import gloamFishAtlasUrl from "../assets/fish-gloam-swim.png";
 import mosswaterFishAtlasUrl from "../assets/fish-mosswater-swim.png";
 import sunwardFishAtlasUrl from "../assets/fish-sunward-swim.png";
+import whiteSuckerFishAtlasUrl from "../assets/fish-white-sucker-swim.png";
 import fishingLineLimitFloatUrl from "../assets/fishing-line-limit-float.png";
 import mosswaterFishingUrl from "../assets/fishing-mosswater-pool.jpg";
 import gloamFishingUrl from "../assets/fishing-outer-gloam.jpg";
@@ -113,7 +114,7 @@ interface LoadedArt {
   world: HTMLCanvasElement;
 }
 
-type FishSheetId = SpotId | "beachSurf" | "beachBay" | "beachReef";
+type FishSheetId = SpotId | "whiteSucker" | "beachSurf" | "beachBay" | "beachReef";
 
 const SURFACE_FISH_CELLS = [
   [0, 0],
@@ -128,6 +129,7 @@ const FISH_SPRITE_CELLS: Record<FishSpecies, { sheet: FishSheetId; row: number }
   bluegill: { sheet: "sunwardShoal", row: 0 },
   yellowPerch: { sheet: "sunwardShoal", row: 1 },
   emeraldShiner: { sheet: "sunwardShoal", row: 2 },
+  whiteSucker: { sheet: "whiteSucker", row: 0 },
   northernPike: { sheet: "mosswaterPool", row: 0 },
   largemouthBass: { sheet: "mosswaterPool", row: 1 },
   bowfin: { sheet: "mosswaterPool", row: 2 },
@@ -143,6 +145,16 @@ const FISH_SPRITE_CELLS: Record<FishSpecies, { sheet: FishSheetId; row: number }
   snapper: { sheet: "beachReef", row: 0 },
   yellowtailKingfish: { sheet: "beachReef", row: 1 },
   mulloway: { sheet: "beachReef", row: 2 },
+};
+
+const FISH_SHEET_ROWS: Record<FishSheetId, number> = {
+  sunwardShoal: 3,
+  mosswaterPool: 3,
+  outerGloam: 3,
+  whiteSucker: 1,
+  beachSurf: 3,
+  beachBay: 3,
+  beachReef: 3,
 };
 
 // Center of the visible hook-and-arc paint inside each 192 × 256 authored atlas cell.
@@ -184,6 +196,7 @@ export class CanvasRenderer {
       loadImage(harborPierUrl),
       loadImage(playerBoatUrl),
       loadImage(sunwardFishAtlasUrl),
+      loadImage(whiteSuckerFishAtlasUrl),
       loadImage(mosswaterFishAtlasUrl),
       loadImage(gloamFishAtlasUrl),
       loadImage(beachSurfFishAtlasUrl),
@@ -210,6 +223,7 @@ export class CanvasRenderer {
       pier,
       boat,
       sunwardFish,
+      whiteSuckerFish,
       mosswaterFish,
       gloamFish,
       beachSurfFish,
@@ -229,6 +243,7 @@ export class CanvasRenderer {
     ]) => {
       const keyedFish: Record<FishSheetId, HTMLCanvasElement> = {
         sunwardShoal: keyMagenta(sunwardFish, false, true),
+        whiteSucker: keyMagenta(whiteSuckerFish, false, true),
         mosswaterPool: keyMagenta(mosswaterFish, false, true),
         outerGloam: keyMagenta(gloamFish, false, true),
         beachSurf: keyMagenta(beachSurfFish, false, true),
@@ -237,6 +252,7 @@ export class CanvasRenderer {
       };
       const tintedFish = (colour: string): Record<FishSheetId, HTMLCanvasElement> => ({
         sunwardShoal: tintAlpha(keyedFish.sunwardShoal, colour),
+        whiteSucker: tintAlpha(keyedFish.whiteSucker, colour),
         mosswaterPool: tintAlpha(keyedFish.mosswaterPool, colour),
         outerGloam: tintAlpha(keyedFish.outerGloam, colour),
         beachSurf: tintAlpha(keyedFish.beachSurf, colour),
@@ -1578,7 +1594,16 @@ export class CanvasRenderer {
       [-offset * 0.72, offset * 0.72],
       [offset * 0.72, offset * 0.72],
     ] as const) {
-      this.drawFishAtlasCell(outlineAtlas, animationFrame, spriteCell.row, offsetX, offsetY, fishWidth, fishHeight);
+      this.drawFishAtlasCell(
+        outlineAtlas,
+        animationFrame,
+        spriteCell.row,
+        FISH_SHEET_ROWS[spriteCell.sheet],
+        offsetX,
+        offsetY,
+        fishWidth,
+        fishHeight,
+      );
     }
     context.restore();
   }
@@ -1665,6 +1690,7 @@ export class CanvasRenderer {
       bluegill: [1.05, 1],
       yellowPerch: [1.14, 0.95],
       emeraldShiner: [1.46, 0.72],
+      whiteSucker: [1.48, 0.68],
       northernPike: [1.56, 0.7],
       largemouthBass: [1.12, 0.96],
       bowfin: [1.44, 0.76],
@@ -1692,20 +1718,30 @@ export class CanvasRenderer {
     const art = this.art;
     if (!art) return;
     const spriteCell = FISH_SPRITE_CELLS[species];
-    this.drawFishAtlasCell(art.fish[spriteCell.sheet], animationFrame, spriteCell.row, x, y, width, height);
+    this.drawFishAtlasCell(
+      art.fish[spriteCell.sheet],
+      animationFrame,
+      spriteCell.row,
+      FISH_SHEET_ROWS[spriteCell.sheet],
+      x,
+      y,
+      width,
+      height,
+    );
   }
 
   private drawFishAtlasCell(
     atlas: HTMLCanvasElement,
     column: number,
     row: number,
+    rowCount: number,
     x: number,
     y: number,
     width: number,
     height: number,
   ): void {
     const sourceWidth = atlas.width / 4;
-    const sourceHeight = atlas.height / 3;
+    const sourceHeight = atlas.height / rowCount;
     this.context.drawImage(
       atlas,
       column * sourceWidth,

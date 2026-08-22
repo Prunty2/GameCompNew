@@ -103,8 +103,8 @@ test("first assignment teaches the complete market sale loop", async ({ page }) 
   const bluegillListing = page.locator('[data-action="select-market-fish"][data-species="bluegill"]');
   await expect(page.getByRole("heading", { name: "Brindle Harbor" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Fish market" })).toBeVisible();
-  await expect(page.locator(".market-listing")).toHaveCount(9);
-  await expect(page.locator(".market-listing.is-locked")).toHaveCount(8);
+  await expect(page.locator(".market-listing")).toHaveCount(10);
+  await expect(page.locator(".market-listing.is-locked")).toHaveCount(9);
   await expect(page.locator(".market-listing.is-locked").first().locator(".market-lock-question")).toHaveText("?");
   await expect(page.locator(".market-listing.is-locked").first().locator(".market-listing-fish")).toHaveCSS("filter", /brightness\(0\)/);
   await expect(page.locator(".market-listing.is-locked").first()).not.toHaveAttribute("data-action");
@@ -422,7 +422,7 @@ test("market uses a scrollable fish-card grid and a focused detail view", async 
 
   const list = page.locator(".market-list");
   const listings = list.locator(".market-listing");
-  await expect(listings).toHaveCount(9);
+  await expect(listings).toHaveCount(10);
   await expect(list.locator(".market-listing.is-locked")).toHaveCount(0);
   await expect(listings.first().locator(".market-listing-fish")).toBeVisible();
   await expect(listings.first().locator(".market-listing-copy > strong")).not.toBeEmpty();
@@ -480,7 +480,7 @@ test("market uses a scrollable fish-card grid and a focused detail view", async 
   expect(desktopLayout.chartLeft).toBeGreaterThanOrEqual(desktopLayout.summaryRight);
 
   await page.getByRole("button", { name: "Back to market" }).click();
-  await expect(listings).toHaveCount(9);
+  await expect(listings).toHaveCount(10);
   await expect(sturgeonCard).toBeFocused();
 
   await sturgeonCard.click();

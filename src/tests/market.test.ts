@@ -117,7 +117,7 @@ describe("fish market", () => {
     const peers: Array<readonly [FishSpecies, FishSpecies]> = [
       ["bluegill", "seaMullet"],
       ["yellowPerch", "yellowfinBream"],
-      ["emeraldShiner", "sandWhiting"],
+      ["emeraldShiner", "duskyFlathead"],
       ["northernPike", "duskyFlathead"],
       ["largemouthBass", "luderick"],
       ["bowfin", "easternAustralianSalmon"],

@@ -2,6 +2,7 @@ export type FishSpecies =
   | "bluegill"
   | "yellowPerch"
   | "emeraldShiner"
+  | "whiteSucker"
   | "northernPike"
   | "largemouthBass"
   | "bowfin"
@@ -182,7 +183,8 @@ export const HARBORS: readonly HarborDefinition[] = [
 export const FISH: Record<FishSpecies, FishDefinition> = {
   bluegill: { id: "bluegill", name: "Bluegill", shape: "Deep body · dark ear flap", value: 18, depthTier: 0, atlasCell: [0, 0], hue: 0, scale: 0.86, rarity: "common" },
   yellowPerch: { id: "yellowPerch", name: "Yellow Perch", shape: "Golden flank · dark bars", value: 22, depthTier: 0, atlasCell: [1, 0], hue: 0, scale: 0.82, rarity: "common" },
-  emeraldShiner: { id: "emeraldShiner", name: "Emerald Shiner", shape: "Silver body · forked tail", value: 28, depthTier: 0, atlasCell: [2, 0], hue: 0, scale: 0.76, rarity: "uncommon" },
+  emeraldShiner: { id: "emeraldShiner", name: "Emerald Shiner", shape: "Silver body · forked tail", value: 40, depthTier: 1, atlasCell: [2, 0], hue: 0, scale: 0.76, rarity: "uncommon" },
+  whiteSucker: { id: "whiteSucker", name: "White Sucker", shape: "Olive body · downturned mouth", value: 58, depthTier: 2, atlasCell: [0, 0], hue: 0, scale: 0.98, rarity: "uncommon" },
   northernPike: { id: "northernPike", name: "Northern Pike", shape: "Long body · duckbill snout", value: 40, depthTier: 1, atlasCell: [0, 1], hue: 0, scale: 1, rarity: "uncommon" },
   largemouthBass: { id: "largemouthBass", name: "Largemouth Bass", shape: "Heavy jaw · dark side band", value: 52, depthTier: 2, atlasCell: [1, 1], hue: 0, scale: 1.02, rarity: "uncommon" },
   bowfin: { id: "bowfin", name: "Bowfin", shape: "Long dorsal fin · rounded tail", value: 64, depthTier: 2, atlasCell: [2, 1], hue: 0, scale: 1.06, rarity: "rare" },
@@ -207,7 +209,7 @@ export const FISHING_SPOTS: readonly FishingSpotDefinition[] = [
 ];
 
 export const SPOT_RESIDENTS: Record<SpotId, readonly FishSpecies[]> = {
-  sunwardShoal: ["bluegill", "yellowPerch", "emeraldShiner"],
+  sunwardShoal: ["bluegill", "yellowPerch", "emeraldShiner", "whiteSucker"],
   mosswaterPool: ["northernPike", "largemouthBass", "bowfin"],
   outerGloam: ["lakeTrout", "burbot", "lakeSturgeon"],
 };

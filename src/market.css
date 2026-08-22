@@ -180,7 +180,7 @@
   background-image: var(--fish-atlas-url);
   background-position: var(--fish-atlas-x) var(--fish-atlas-y);
   background-repeat: no-repeat;
-  background-size: 300% 300%;
+  background-size: var(--fish-atlas-size, 300% 300%);
 }
 
 .market-listing-fish {

@@ -227,7 +227,8 @@ const FISHING_DEPTH_DISTRIBUTION_STEP = 0.75487766625;
 const FISHING_ENTRY_HOOK = { x: 0.5, y: 0.08 } as const;
 const FISHING_ENTRY_CLEARANCE = 0.12;
 const FISHING_SPECIES_DEPTH_BANDS: Partial<Record<FishSpecies, { top: number; bottom: number }>> = {
-  emeraldShiner: { top: 0.225, bottom: 0.292 },
+  emeraldShiner: { top: 0.335, bottom: 0.405 },
+  whiteSucker: { top: 0.465, bottom: 0.535 },
 };
 const SEASON_SALES = 8;
 
@@ -1194,6 +1195,7 @@ function createAvailableContract(simulation: Simulation, origin: HarborId): Cont
     bluegill: "sunwardShoal",
     yellowPerch: "sunwardShoal",
     emeraldShiner: "sunwardShoal",
+    whiteSucker: "sunwardShoal",
     northernPike: "mosswaterPool",
     largemouthBass: "mosswaterPool",
     bowfin: "mosswaterPool",
