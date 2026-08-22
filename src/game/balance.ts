@@ -97,12 +97,11 @@ export const BALANCE = {
   dockRadius: 0.027,
   fishingRadius: 0.027,
   interactionMaxSpeed: 0.026,
-  fishingHookHorizontalSpeed: 0.25,
+  fishingHookHorizontalSpeed: 0.2125,
   fishingHookUpSpeed: 0.35,
   fishingHookDownSpeed: 0.25,
   fishingLineStrengthPerTier: 0.12,
   fishingCriticalTension: 0.9,
-  fishingBreakGraceSeconds: 0.7,
   upgradeCosts: { cargo: 60, engine: 70, line: 55, reel: 65 },
   beachAccessCost: 300,
   boostUnlockCost: 250,
@@ -114,6 +113,7 @@ export const BALANCE = {
   maxUpgradeTier: 6,
   maxReelTier: 5,
   reelSpeedPerTier: 0.12,
+  hookVerticalSpeedPerReelTier: 0.05,
   engineSpeedPerTier: 0.11,
   maxEngineSpeedMultiplier: 1.95,
   maxCargoTier: 7,
@@ -315,4 +315,9 @@ export function engineSpeedMultiplier(tier: number): number {
 export function reelSpeedMultiplier(tier: number): number {
   const clampedTier = Math.max(0, Math.min(BALANCE.maxReelTier, Math.floor(tier)));
   return 1 + clampedTier * BALANCE.reelSpeedPerTier;
+}
+
+export function hookVerticalSpeedMultiplier(reelTier: number): number {
+  const clampedTier = Math.max(0, Math.min(BALANCE.maxReelTier, Math.floor(reelTier)));
+  return 1 + clampedTier * BALANCE.hookVerticalSpeedPerReelTier;
 }
