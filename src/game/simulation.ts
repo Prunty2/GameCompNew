@@ -1132,15 +1132,6 @@ function updateFishingFight(simulation: Simulation, input: InputState, dt: numbe
   if (!fishing || !fight) return;
   if (fight.lostAt !== null) {
     if (simulation.elapsed - fight.lostAt >= FISHING_LOSS_DURATION) {
-      const escapedTarget = fishing.targets[fight.targetIndex];
-      if (escapedTarget) {
-        escapedTarget.x = fight.direction === 1 ? 0.96 : 0.04;
-        escapedTarget.y = clamp(fishing.hook.y + fight.motionY, 0.08, 0.94);
-        escapedTarget.direction = fight.direction;
-        escapedTarget.phase += Math.PI / 2;
-        escapedTarget.velocityX = 0;
-        escapedTarget.velocityY = 0;
-      }
       fishing.hook = { x: 0.5, y: 0.08 };
       fishing.reeling = null;
     }
@@ -1178,6 +1169,15 @@ function updateFishingFight(simulation: Simulation, input: InputState, dt: numbe
   fight.motionVx = next.motion.vx;
   fight.motionVy = next.motion.vy;
   if (next.broken) {
+    const escapedTarget = fishing.targets[fight.targetIndex];
+    if (escapedTarget) {
+      escapedTarget.x = clamp(fishing.hook.x + fight.direction * 0.28, 0.04, 0.96);
+      escapedTarget.y = clamp(fishing.hook.y + fight.motionY - 0.035, 0.08, 0.94);
+      escapedTarget.direction = fight.direction;
+      escapedTarget.phase += Math.PI / 2;
+      escapedTarget.velocityX = 0;
+      escapedTarget.velocityY = 0;
+    }
     fight.lostAt = simulation.elapsed;
     simulation.events.push({ type: "line-broke", species: fight.species });
     return;

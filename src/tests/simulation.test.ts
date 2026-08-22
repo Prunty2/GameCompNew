@@ -473,6 +473,7 @@ describe("FSHING side-on simulation", () => {
     expect(simulation.fishing?.reeling?.lostAt).toBe(simulation.elapsed);
     expect(consumeEvents(simulation)).toContainEqual({ type: "line-broke", species: "bluegill" });
     expect(simulation.cargo).toEqual([]);
+    const escapeDestination = { x: target.x, y: target.y };
 
     for (let elapsed = 0; elapsed < FISHING_LOSS_SWIM_DURATION; elapsed += 0.1) {
       updateSimulation(simulation, idle, Math.min(0.1, FISHING_LOSS_SWIM_DURATION - elapsed));
@@ -485,6 +486,11 @@ describe("FSHING side-on simulation", () => {
     updateSimulation(simulation, idle, 0.001);
     expect(simulation.fishing?.reeling).toBeNull();
     expect(simulation.fishing?.hook).toEqual({ x: 0.5, y: 0.08 });
+    expect(target.x).toBeCloseTo(escapeDestination.x, 5);
+    expect(target.y).toBeCloseTo(escapeDestination.y, 5);
+
+    updateSimulation(simulation, idle, 0.1);
+    expect(Math.hypot(target.x - escapeDestination.x, target.y - escapeDestination.y)).toBeLessThan(0.02);
   });
 
   test("keeps fishing active while a manual exit rises to the surface", () => {

@@ -832,9 +832,27 @@ export class CanvasRenderer {
       const fishOffset = facing * hookSize * 0.22;
       context.save();
       context.globalAlpha = 1;
-      const escapeDistance = loss ? loss.swim * width * 0.28 * fishing.reeling.direction : 0;
-      const escapeRise = loss ? loss.swim * Math.min(width, height) * 0.035 : 0;
-      context.translate(fishOrigin.x - fishOffset + escapeDistance, fishOrigin.y + hookSize * 0.04 - escapeRise);
+      const fishStart = {
+        x: fishOrigin.x - fishOffset,
+        y: fishOrigin.y + hookSize * 0.04,
+      };
+      const escapedTarget = loss ? fishing.targets[fishing.reeling.targetIndex] : null;
+      const escapedPose = escapedTarget
+        ? fishingFishPose(escapedTarget.species, simulation.elapsed, escapedTarget.phase, settings.reducedMotion)
+        : null;
+      const escapedPoint = escapedTarget
+        ? fishingPointToScreen(escapedTarget, width, layout, maximumDepth)
+        : null;
+      const fishDestination = escapedPoint && escapedPose
+        ? {
+            x: escapedPoint.x,
+            y: escapedPoint.y + escapedPose.verticalOffsetRatio * layout.underwaterHeight,
+          }
+        : fishStart;
+      context.translate(
+        fishStart.x + (fishDestination.x - fishStart.x) * (loss?.swim ?? 0),
+        fishStart.y + (fishDestination.y - fishStart.y) * (loss?.swim ?? 0),
+      );
       context.rotate(wriggle * (fishing.reeling.behaviour === "thrash" ? 0.45 : 0.22));
       context.scale(1, 1 + Math.abs(wriggle) * 0.05);
       this.drawFish(
