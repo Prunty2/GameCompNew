@@ -148,8 +148,7 @@ export type SimulationEvent =
   | { type: "upgrade"; upgrade: UpgradeId }
   | { type: "beach-unlocked" }
   | { type: "boost-unlocked"; temporary: boolean }
-  | { type: "released"; species: FishSpecies }
-  | { type: "season-complete" };
+  | { type: "released"; species: FishSpecies };
 
 export interface Simulation {
   boat: BoatState;
@@ -540,7 +539,6 @@ export function sellSpeciesAtMarket(
   simulation.events.push({ type: "sold", result });
   if (!simulation.progress.seasonCompleted && simulation.progress.marketSales >= SEASON_SALES) {
     simulation.progress.seasonCompleted = true;
-    simulation.events.push({ type: "season-complete" });
   }
   return result;
 }
@@ -573,7 +571,6 @@ export function sellAllFishAtMarket(simulation: Simulation): MarketBulkSaleResul
   simulation.events.push({ type: "sold", result });
   if (!simulation.progress.seasonCompleted && simulation.progress.marketSales >= SEASON_SALES) {
     simulation.progress.seasonCompleted = true;
-    simulation.events.push({ type: "season-complete" });
   }
   return result;
 }

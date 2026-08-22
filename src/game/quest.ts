@@ -18,7 +18,6 @@ export type QuestOverlay =
   | "credits"
   | "controls"
   | "help"
-  | "seasonReport"
   | null;
 
 export type QuestHarborSection = "market" | "cargo" | "upgrades";
@@ -385,8 +384,7 @@ function isQuestScreenHidden(view: QuestViewContext): boolean {
     || view.overlay === "settings"
     || view.overlay === "credits"
     || view.overlay === "controls"
-    || view.overlay === "help"
-    || view.overlay === "seasonReport";
+    || view.overlay === "help";
 }
 
 function idlePresentation(step: QuestGuideStep, hidden: boolean): QuestPresentation {

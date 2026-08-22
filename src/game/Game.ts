@@ -158,7 +158,6 @@ type OverlayScreen =
   | "credits"
   | "controls"
   | "help"
-  | "seasonReport"
   | null;
 
 type HarborSection = "market" | "cargo" | "upgrades";
@@ -219,7 +218,6 @@ export class Game {
   private sceneTransitioning = false;
   private sceneTransitionTarget: OverlayScreen | undefined;
   private queuedOverlay: { next: OverlayScreen; useSceneTransition: boolean } | null = null;
-  private seasonReportQueued = false;
   private questGuide: QuestPresentation | null = null;
   private lastQuestMarkup = "";
   private resetConfirming = false;
@@ -419,10 +417,6 @@ export class Game {
       this.syncSave();
       this.refreshHud();
     }
-    if (events.some((event) => event.type === "sold") && this.seasonReportQueued) {
-      this.seasonReportQueued = false;
-      this.setOverlay("seasonReport");
-    }
   }
 
   private updateFishingStrainFeedback(): void {
@@ -576,9 +570,6 @@ export class Game {
         break;
       case "released":
         this.feedback.cue("cast");
-        break;
-      case "season-complete":
-        this.seasonReportQueued = true;
         break;
     }
   }
@@ -782,9 +773,6 @@ export class Game {
         break;
       case "help":
         host.innerHTML = this.helpScreen();
-        break;
-      case "seasonReport":
-        host.innerHTML = this.seasonReportScreen();
         break;
     }
     this.refreshQuestGuide();
@@ -1115,24 +1103,6 @@ export class Game {
       </section>`;
   }
 
-  private seasonReportScreen(): string {
-    return `
-      <section class="screen-overlay sheet-overlay science-overlay" role="dialog" aria-labelledby="season-title">
-        <div class="art-panel science-panel result-panel side-sheet">
-          <span class="panel-eyebrow">End-of-season evaluation</span><h2 id="season-title">Research season complete</h2>
-          <p>You completed ${this.simulation.progress.marketSales} market sales and earned ${this.simulation.progress.marketEarnings} shells. The exchange remains open after this report.</p>
-          <div class="report-grid">
-            <div><small>Species discovered</small><strong>${this.simulation.progress.discovered.length} / ${Object.keys(FISH).length}</strong><span>recorded this season</span></div>
-            <div><small>Market sales</small><strong>${this.simulation.progress.marketSales}</strong><span>transactions completed</span></div>
-            <div><small>Market earnings</small><strong>${this.simulation.progress.marketEarnings}</strong><span>shells earned from fish</span></div>
-            <div><small>Current market day</small><strong>${this.simulation.progress.marketDay}</strong><span>daily prices observed</span></div>
-          </div>
-          <p class="reflection-prompt"><strong>Reflect:</strong> Which harbor offered the best sales? When was a longer crossing worth the higher quote? Which habitat produced your strongest catch?</p>
-          <button class="primary-button" type="button" data-action="continue-season">Continue trading</button>
-        </div>
-      </section>`;
-  }
-
   private setOverlay(next: OverlayScreen, useSceneTransition = false): void {
     if (this.sceneTransitioning) {
       this.queuedOverlay = { next, useSceneTransition };
@@ -1258,7 +1228,6 @@ export class Game {
     this.harborSection = "market";
     this.selectedMarketSpecies = "bluegill";
     this.marketDetailOpen = false;
-    this.seasonReportQueued = false;
     this.pendingCargoRelease = null;
     this.questGuide = null;
     this.lastQuestMarkup = "";
@@ -1608,7 +1577,6 @@ export class Game {
         }
         this.setOverlay(null, true);
         break;
-      case "continue-season": this.harborSection = "market"; this.marketDetailOpen = false; this.setOverlay("harbor"); break;
       case "buy-upgrade": {
         const upgrade = target.dataset.upgrade as UpgradeId | undefined;
         if (upgrade && buyUpgrade(this.simulation, upgrade)) {
