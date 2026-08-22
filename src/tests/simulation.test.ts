@@ -549,6 +549,33 @@ describe("FSHING side-on simulation", () => {
     expect(maxFishingDepth(simulation)).toBeGreaterThanOrEqual(deepTarget?.y ?? 1);
   });
 
+  test("increases the deterministic catchable population for larger fishing viewports", () => {
+    const compact = createSimulation(12);
+    const reference = createSimulation(12);
+    const large = createSimulation(12);
+    compact.progress.upgrades.line = 1;
+    reference.progress.upgrades.line = 1;
+    large.progress.upgrades.line = 1;
+
+    expect(startFishing(compact, "mosswaterPool", { width: 390, height: 844 })).toBe(true);
+    expect(startFishing(reference, "mosswaterPool", { width: 1280, height: 720 })).toBe(true);
+    expect(startFishing(large, "mosswaterPool", { width: 2048, height: 1152 })).toBe(true);
+
+    const compactTargets = compact.fishing?.targets ?? [];
+    const referenceTargets = reference.fishing?.targets ?? [];
+    const largeTargets = large.fishing?.targets ?? [];
+    expect(compactTargets.length).toBeLessThanOrEqual(referenceTargets.length);
+    expect(largeTargets.length).toBeGreaterThan(referenceTargets.length);
+    expect(new Set(largeTargets.map((target) => target.species))).toEqual(
+      new Set(SPOT_RESIDENTS.mosswaterPool),
+    );
+
+    const repeated = createSimulation(12);
+    repeated.progress.upgrades.line = 1;
+    startFishing(repeated, "mosswaterPool", { width: 2048, height: 1152 });
+    expect(repeated.fishing?.targets).toEqual(largeTargets);
+  });
+
   test("supports ten cargo slots across seven cargo upgrades", () => {
     const simulation = createSimulation(1, { money: 10_000 });
     expect(cargoCapacity(simulation)).toBe(3);

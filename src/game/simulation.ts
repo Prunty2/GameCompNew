@@ -1,6 +1,7 @@
 import { clamp, createRandom, type RandomSource } from "./math";
 import { fishingSpeciesMotion } from "./fishingMovement";
 import { fishingHighlightSpecies } from "./fishingPresentation";
+import { responsiveResidentCount, type FishingViewport } from "./fishingPopulation";
 import { FISHING_REEL_DURATION } from "./fishingReeling";
 import { stepFishingFight } from "./fishingFight";
 import {
@@ -401,7 +402,11 @@ export function getInteractionPrompt(simulation: Simulation): InteractionPrompt 
   };
 }
 
-export function startFishing(simulation: Simulation, spotId: SpotId): boolean {
+export function startFishing(
+  simulation: Simulation,
+  spotId: SpotId,
+  viewport: FishingViewport = { width: 1280, height: 720 },
+): boolean {
   const spot = spotById(spotId);
   const requiredDepthTier = spot.requiredDepthTier[simulation.world];
   if (requiredDepthTier > simulation.progress.upgrades.line) {
@@ -416,6 +421,7 @@ export function startFishing(simulation: Simulation, spotId: SpotId): boolean {
   const residents = residentsForSpot(simulation.world, spotId);
   simulation.boat.speed = 0;
   simulation.mode = "fishing";
+  let targetIndex = 0;
   simulation.fishing = {
     spot: spotId,
     startedAt: simulation.elapsed,
@@ -424,19 +430,26 @@ export function startFishing(simulation: Simulation, spotId: SpotId): boolean {
     exitingAt: null,
     targets: residents.flatMap((fishSpecies, residentIndex) => (
       Array.from(
-        { length: residentCountForMarket(fishSpecies, simulation.progress.marketDay, simulation.seed) },
+        {
+          length: responsiveResidentCount(
+            residentCountForMarket(fishSpecies, simulation.progress.marketDay, simulation.seed),
+            viewport,
+          ),
+        },
         (_, schoolIndex) => {
           const fish = FISH[fishSpecies];
-          const index = residentIndex * 2 + schoolIndex;
+          const index = targetIndex;
+          targetIndex += 1;
           const homeY = Math.min(0.92, 0.19 + fish.depthTier * 0.135 + simulation.random.next() * 0.05);
           return {
             species: fishSpecies,
-            x: 0.12 + ((index * 0.153) % 0.76),
+            x: 0.08 + (((index + 1) * 0.61803398875) % 1) * 0.84,
             y: homeY,
             direction: index % 2 === 0 ? 1 : -1,
             speed: 0.048 + fish.depthTier * 0.0075 + simulation.random.next() * 0.032,
             homeY,
-            phase: (index * 1.73 + fish.depthTier * 0.61) % (Math.PI * 2),
+            phase: (index * 1.73 + schoolIndex * 0.41 + residentIndex * 0.67 + fish.depthTier * 0.61)
+              % (Math.PI * 2),
           };
         },
       )

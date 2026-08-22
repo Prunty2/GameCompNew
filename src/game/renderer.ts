@@ -311,6 +311,7 @@ export class CanvasRenderer {
       delete this.canvas.dataset.fishingSurfaceSpriteOpacity;
       delete this.canvas.dataset.fishingSurfaceBlend;
       delete this.canvas.dataset.fishingSpot;
+      delete this.canvas.dataset.fishingFishCount;
       delete this.canvas.dataset.fishingState;
       delete this.canvas.dataset.fishingReelProgress;
       delete this.canvas.dataset.fishingLineTension;
@@ -607,6 +608,7 @@ export class CanvasRenderer {
     this.canvas.dataset.fishingSurfaceSpriteOpacity = reelProgress.toFixed(3);
     this.canvas.dataset.fishingSurfaceBlend = surfaceProgress.toFixed(3);
     this.canvas.dataset.fishingSpot = spot.id;
+    this.canvas.dataset.fishingFishCount = String(fishing.targets.length);
     if (targetSpecies) {
       this.canvas.dataset.targetRarity = FISH[targetSpecies].rarity;
     } else {
