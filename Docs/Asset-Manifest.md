@@ -254,7 +254,7 @@ Vite `publicDir` is `false`. Only these files are imported.
 
 ### `ui-panel.png`
 
-- Runtime role: title, harbor, pause, settings, credits, help, tutorial, and toast surface
+- Runtime role: loading splash and leftover sheet surfaces that have not moved to the glass menu system. Toasts, harbor, pause, settings, credits, help, and the tutorial pill use CSS glass panels instead.
 - Generated size: 1536 × 1024
 - Prompt: “Use GPT Image 2.0. Create a seamless-looking full-bleed interface panel surface for a restrained side-on 2D lake game. Edge-to-edge deep ink-navy painted paper with subtle coarse screen-print grain, a very thin inset warm-cream keyline, and one tiny safety-orange registration-mark accent in a corner. Minimal editorial design, quiet and practical. No text, no icons, no buttons, no sections, no ornate metal, no wood, no rivets, no bevel, no glowing, no transparency, no checkerboard, no external margin. The artwork must fill the entire rectangular canvas so it can be directly stretched as a dark UI panel.”
 
