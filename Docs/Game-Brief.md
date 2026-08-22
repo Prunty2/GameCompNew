@@ -15,8 +15,6 @@ FSHING is a single-player side-on fishing market game for desktop and mobile bro
 
 A new save starts docked at Brindle Harbor on the lake with Bluegill already discovered. The first run is a four-step **First Assignment** that walks through inspect → track → catch → sell. Each tutorial pill includes a short instruction that changes with the player's current screen. During the catch the title first shows **Let it run**, then switches to **Hold left click** in the first lull, explains that a racing fish slacks the line, and toasts if the player horses a run, never reels a lull, or rests too long. The sale ends that assignment. When the player can afford a dock upgrade, a second tutorial walks through Upgrades.
 
-After eight market sales the game shows a season report, then returns to the same market. Trading does not stop.
-
 ```text
 Market → Track → Sail → Fish → Reel → Sell → Upgrade → Market
 ```
@@ -33,8 +31,6 @@ Market → Track → Sail → Fish → Reel → Sell → Upgrade → Market
 | Controls | Settings | Seven remappable actions, Reset defaults |
 | Credits | Title | Liam, Saxon, Harrison, David |
 | How to play | Harbor Help or pause | Four cards: read the market, track and catch, manage cargo, sell and invest |
-| Season report | Eighth market sale | Discoveries, sales, earnings, market day, Continue trading |
-
 There is no field guide, no title How to play button, no on-water money HUD, and no on-screen movement pads.
 
 On-water chrome is the night moon indicator, the boost gauge after unlock, the context action (dock or drop line), toasts, the sale popup, the colour of the fishing line during a fight, and the tutorial pill until it is finished or skipped. A destination badge on the canvas points at the current market, fishing ground, or sell harbor. Screen-reader status repeats that guidance. After the first assignment, that badge is hidden unless a fish is tracked.

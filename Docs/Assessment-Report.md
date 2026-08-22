@@ -23,7 +23,7 @@ The completed vertical slice contains:
 - cargo, engine, line, and five-tier reel-power upgrades, plus a rechargeable boost and Beach access; Beach middle/right grounds require line tiers 3/4
 - deterministic reel-and-release fish fights with line tension, fish stamina, rarity scaling, and break recovery
 - seeded daily quotes, seven-day history, and full-quote sales
-- a five-step First Assignment, four-card How to play, credits, and an eight-sale season report
+- a five-step First Assignment, four-card How to play, and credits
 - keyboard sailing and hook steering, pointer/touch menus, remappable controls, mute, high contrast, reduced motion, and pause on focus loss
 - deterministic gameplay tests, browser interaction tests, and version 12 validated saves
 
@@ -37,7 +37,7 @@ Give the player a short, readable trading loop: read a market, catch a real spec
 
 ### Player outcomes
 
-By the end of a season of eight sales, a player should be able to:
+After completing several market trips, a player should be able to:
 
 1. tell the three lake habitats apart and name at least one resident of each
 2. use the seven-day graph to decide whether to sell today or wait
@@ -256,7 +256,7 @@ Unit/model tests cover:
 - map scale, movement, facing, braking, speed, bounds, and determinism
 - fishing targets, catch radius, reel progress, tension breaks, fish stamina, line strength, cargo capacity, and depth gates
 - market quotes, harbor demand, full-quote payouts, and Beach premiums
-- First Assignment, cargo release/restore, Beach travel, boost heat, season completion
+- First Assignment, cargo release/restore, Beach travel, and boost heat
 - night fade, destination-badge layout, fishing presentation and reeling
 - save corruption, fantasy-species migration, clamping, and round-trip persistence
 
@@ -321,7 +321,6 @@ Solution: per-harbor demand and a 6% daily cap keep the two quotes distinct whil
 
 ### Limitations
 
-- Season report copy still says "Research season complete" from an earlier STEM framing.
 - Help card 1 says the player can compare both harbors on one card; the detail view shows only the docked harbor. The other quote is seen by docking there, or inferred from the sell badge.
 - Fish within the same rarity share a fight profile, so species-specific fight personalities remain limited.
 - Time, cargo, and world are not saved, so a refresh is always morning at Brindle.
@@ -332,8 +331,7 @@ Solution: per-harbor demand and a 6% daily cap keep the two quotes distinct whil
 1. Run the documented playtest and fix the two most frequent issues.
 2. Persist world, cargo, and clock, or tell the player that they reset.
 3. Show both harbor quotes on the detail card so help text matches the UI.
-4. Retitle the season report to match the market loop.
-5. Decide whether leftover survey helpers should be deleted or re-exposed.
+4. Decide whether leftover survey helpers should be deleted or re-exposed.
 
 ## 10. Rubric evidence map
 

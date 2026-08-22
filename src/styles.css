@@ -3936,8 +3936,7 @@ kbd {
 }
 
 .science-heading h2,
-.guide-heading h2,
-.result-panel h2 {
+.guide-heading h2 {
   margin: 5px 0 0;
   font-family: var(--display-face);
   font-size: clamp(2rem, 5vh, 3.5rem);
@@ -3971,8 +3970,7 @@ kbd {
   background: var(--menu-ink-raised);
 }
 
-.reading-grid small,
-.report-grid small {
+.reading-grid small {
   color: var(--menu-fog);
   font-size: 0.56rem;
   font-weight: 900;
@@ -3985,8 +3983,7 @@ kbd {
 }
 
 .evidence-clue,
-.science-prompt,
-.reflection-prompt {
+.science-prompt {
   color: #c4d1cb;
   font-size: 0.8rem;
   line-height: 1.55;
@@ -4092,15 +4089,9 @@ kbd {
   line-height: 1.45;
 }
 
-.science-panel > .primary-button,
-.result-panel > .primary-button {
+.science-panel > .primary-button {
   width: 100%;
   margin-top: 12px;
-}
-
-.result-panel {
-  max-width: 650px;
-  text-align: center;
 }
 
 .guide-overlay {
@@ -4269,32 +4260,6 @@ kbd {
   min-width: 180px;
 }
 
-.report-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-  margin: 22px 0;
-}
-
-.report-grid > div {
-  display: grid;
-  gap: 3px;
-  padding: 14px;
-  border: 1px solid rgb(247 241 227 / 18%);
-  background: var(--menu-ink-raised);
-  text-align: left;
-}
-
-.report-grid strong {
-  color: var(--menu-signal);
-  font-size: 1.25rem;
-}
-
-.report-grid span {
-  color: var(--menu-fog);
-  font-size: 0.65rem;
-}
-
 @media (max-width: 820px) {
   .title-secondary-actions,
   .reading-grid,
@@ -4328,8 +4293,7 @@ kbd {
   .title-secondary-actions,
   .reading-grid,
   .science-choices,
-  .field-grid,
-  .report-grid {
+  .field-grid {
     grid-template-columns: 1fr;
   }
 
