@@ -25,6 +25,7 @@ import harborPierUrl from "../assets/harbor-pier.png";
 import lakeChartUrl from "../assets/lake-chart.png";
 import lakeChartNightUrl from "../assets/lake-chart-night.png";
 import polarizedLensUrl from "../assets/polarized-lens.png";
+import expandedCargoBoatUrl from "../assets/player-boat-expanded-cargo.png";
 import playerBoatUrl from "../assets/player-boat.png";
 import surfaceFishingCuesUrl from "../assets/surface-fishing-cues.png";
 import worldAtlasUrl from "../assets/world-atlas.png";
@@ -40,6 +41,7 @@ import {
   type WorldPoint,
 } from "./balance";
 import { boatSteamPuffs } from "./boatSteam";
+import { usesExpandedCargoBoat } from "./boatPresentation";
 import {
   createSideScrollCamera,
   dampMotionValue,
@@ -117,6 +119,7 @@ interface LoadedArt {
   beachPier: HTMLImageElement;
   pier: HTMLImageElement;
   boat: HTMLCanvasElement;
+  expandedCargoBoat: HTMLCanvasElement;
   fish: Record<FishSheetId, HTMLCanvasElement>;
   fishOutlines: Record<FishRarity, Record<FishSheetId, HTMLCanvasElement>>;
   fishingEnvironments: Record<SpotId, HTMLImageElement>;
@@ -243,6 +246,7 @@ export class CanvasRenderer {
       loadImage(beachHarborPierUrl),
       loadImage(harborPierUrl),
       loadImage(playerBoatUrl),
+      loadImage(expandedCargoBoatUrl),
       loadImage(sunwardFishAtlasUrl),
       loadImage(whiteSuckerFishAtlasUrl),
       loadImage(longnoseGarFishAtlasUrl),
@@ -274,6 +278,7 @@ export class CanvasRenderer {
       beachPier,
       pier,
       boat,
+      expandedCargoBoat,
       sunwardFish,
       whiteSuckerFish,
       longnoseGarFish,
@@ -332,6 +337,7 @@ export class CanvasRenderer {
         beachPier,
         pier,
         boat: keyMagenta(boat, true),
+        expandedCargoBoat: keyMagenta(expandedCargoBoat, true),
         fish: keyedFish,
         fishOutlines: {
           common: tintedFish(FISHING_RARITY_COLOURS.common),
@@ -1238,11 +1244,14 @@ export class CanvasRenderer {
     if (!art) return;
     const { context } = this;
     const x = worldToScreenX(simulation.boat.x, camera, width);
+    const expandedCargo = usesExpandedCargoBoat(simulation.progress.upgrades.cargo);
+    const boatArt = expandedCargo ? art.expandedCargoBoat : art.boat;
+    this.canvas.dataset.surfaceBoatVariant = expandedCargo ? "expanded-cargo" : "standard";
     const boatScale = 1 + simulation.progress.upgrades.cargo * 0.055;
     const cameraScale = BALANCE.cameraViewWidth / camera.viewWidth;
     const boatWidth = clamp(this.canvas.clientHeight * 0.421 * boatScale, 172, 412) * cameraScale;
     this.canvas.dataset.surfaceBoatWidth = boatWidth.toFixed(2);
-    const boatHeight = boatWidth * (art.boat.height / art.boat.width);
+    const boatHeight = boatWidth * (boatArt.height / boatArt.width);
     const speedRatio = Math.min(1, Math.abs(simulation.boat.speed) / BALANCE.maxSurfaceSpeed);
     const steamSpeedRatio = Math.min(1, Math.abs(this.surfaceSteamVelocity) / BALANCE.maxSurfaceSpeed);
     const bob = settings.reducedMotion ? 0 : Math.sin(simulation.elapsed * (2 + speedRatio)) * (1.1 + speedRatio * 0.8);
@@ -1282,7 +1291,7 @@ export class CanvasRenderer {
     context.scale(simulation.boat.facing, 1);
     context.rotate(tilt);
     context.filter = boatFilter;
-    context.drawImage(art.boat, -boatWidth / 2, -boatHeight * 0.86, boatWidth, boatHeight);
+    context.drawImage(boatArt, -boatWidth / 2, -boatHeight * 0.86, boatWidth, boatHeight);
     context.restore();
 
     drawWaterContact(context, surfaceLayer, {

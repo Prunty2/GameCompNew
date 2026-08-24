@@ -535,6 +535,29 @@ test("Reel power purchases all five faster-reeling tiers", async ({ page }) => {
   await expect(page.locator(".shell-balance strong")).toHaveText("125");
 });
 
+test("Cargo tier four equips the expanded-cargo boat sprite", async ({ page }) => {
+  await page.goto("/?e2e=1");
+  await page.evaluate(() => {
+    window.localStorage.setItem("gamecomp-new.save", JSON.stringify({
+      version: 12,
+      progress: {
+        upgrades: { cargo: 4 },
+        marketTutorialStep: "done",
+        upgradeTutorialStep: "done",
+      },
+      settings: {},
+    }));
+  });
+  await page.reload();
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.locator('[data-action="undock"]').click();
+
+  await expect(page.locator("#game-canvas")).toHaveAttribute(
+    "data-surface-boat-variant",
+    "expanded-cargo",
+  );
+});
+
 test("Beach fishing requires line tier 3 in the middle and tier 4 at the far right", async ({ page }) => {
   await page.goto("/?e2e=1");
   await page.evaluate(() => {

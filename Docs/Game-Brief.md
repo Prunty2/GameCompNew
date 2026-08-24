@@ -189,6 +189,8 @@ Costs are `base + currentTier × 55` shells.
 
 Cargo, Engine, Line depth, and Reel power form a compact vertical stack of full-width equipment rows. Beach and Engine boost remain two compressed feature cards side by side beneath them. The full upgrade menu fits without an internal scrollbar at supported desktop and mobile viewports. Reel power uses a CSS-drawn spool-and-handle pictogram that matches the existing harbor equipment icon treatment without adding another runtime asset.
 
+The boat gains a second visible cargo crate on its foredeck at cargo tier 4 and keeps that expanded-cargo sprite through tier 7.
+
 Boat class names (Skiff through Lakebreaker) exist in balance data and are not shown in the harbor UI. Repair is not sold. The hull starts at 18 damage; reaching 100 damage would rescue to the nearest harbor, charge up to 20 shells, and dump cargo, but nothing in the live loop applies collision damage.
 
 Cargo can be released from an occupied slot. An undo toast restores that catch for a few seconds.
