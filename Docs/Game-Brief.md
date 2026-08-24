@@ -141,8 +141,7 @@ Simulation step is `1/120` s. Gameplay RNG is seeded. The boat travels only on t
 | Water drag when idle | 0.62 | per second |
 | Brake while reversing | 1.15× thrust (1.25× during boost) | multiplier |
 | Base max speed | 0.05 | world units / s |
-| Engine speed per tier | +11% | tiers 1–5 |
-| Engine tier 6 | 1.95× | hard cap |
+| Engine speed per tier | +15% | tiers 1–6; 1.90× at tier 6 |
 | Boost speed | 1.35× | while active |
 | Boost thrust | 1.75× | while active |
 | Boost heat | 8 s to overheat, 10 s to cool, recover at 25% | seconds |
@@ -152,7 +151,8 @@ Simulation step is `1/120` s. Gameplay RNG is seeded. The boat travels only on t
 | Landing / exit duration | 1.15 | seconds |
 | Critical line tension | 90% | tension threshold |
 | Line strength per tier | +12% | tension resistance |
-| Reel speed per tier | +12% | progress while actively reeling; five-tier cap |
+| Reel stress capacity per tier | +12.5% | tension resistance; five-tier cap |
+| Reel speed per tier | +17% | progress while actively reeling; five-tier cap |
 | Hook vertical speed per reel tier | +5% | hidden navigation bonus; five-tier cap |
 | Hook-up opening run | 0.65 | seconds of immediate escape before the first lull |
 | Dive duration | 0.85 | seconds |
@@ -164,7 +164,7 @@ Hook depth is `min(0.94, 0.3 + lineTier × 0.125)`. Fish whose current position 
 
 Hooking a fish begins a deterministic line fight built from fish behaviour, not a generic hold-to-fill meter. Holding the primary mouse button directly on the fishing canvas reels; touch hold and the remappable Reel key remain equivalent accessibility inputs. Every hook-up opens with a smoothly ramped 0.65-second escape run, followed by the first calm reeling window, then cycles through calm lulls, runs, and short thrashes. Reeling during a lull gains ground at modest tension and tires the fish. Reeling against a run loads the line fast. Releasing during a run lets the fish take line, slip farther from the boat, and drop tension. Waiting through a lull barely slacks the line and does not tire the fish. Tired fish stop running and become easier to land. There is no on-water fight HUD. Line tension is shown by the hook line itself: cream when safe, amber as it tightens, red at the 90% critical threshold, and slightly thicker as strain rises. The hooked fish follows a continuous velocity-limited path; it accelerates, turns, rolls, rises, or dives instead of receiving discrete random displacement impulses. Reduced motion holds the fight offset still. Non-colour feedback remains: the tutorial title, toasts, sound, vibration, live-region copy, and the canvas `aria-label`. The hooked fish is drawn over the lower hook so only the eye and line stay visible. There is no separate on-screen Reel button.
 
-Reel power has five purchasable tiers. Each tier multiplies reel progress by another 12%, reaching 1.60× at tier 5 without changing fish stamina, line tension, run timing, or release physics.
+Reel power has five purchasable tiers. Each tier adds 12.5% stress capacity and 17% reel speed, reaching 1.625× stress capacity and 1.85× speed at tier 5 without changing fish stamina, run timing, or release physics.
 
 During a fight, every non-hooked fish keeps swimming and animating as a clearly visible dark silhouette at 68% opacity. Tracked-fish outlines, chevrons, tutorial hook arrows, and the large species portrait are hidden until the fight ends so the hooked fish remains the sole visual focus. Tension can only rise while the hooked fish is actively running or thrashing; calm reeling cools the line slightly. Reaching 90% tension breaks the line immediately. The fish visibly swims free from the hook and returns to its habitat depth using its normal species movement speed before ordinary schooling resumes. The bare line retracts quickly with no hook sprite on its end, and a matching top-centre danger pill says **The line snapped!** beside a red X. The player stays at the same fishing ground for an immediate retry; cargo and money are unchanged.
 
@@ -176,14 +176,14 @@ Each species has a deterministic swim gait. Free-swimming targets ease toward th
 
 ## Upgrades
 
-Costs are `base + currentTier × 55` shells.
+Standard upgrade costs are `base + currentTier × 55` shells. Engine upgrade prices receive a 20% discount from that standard curve and are rounded to the nearest 5 shells: 55, 100, 145, 190, 230, and 275.
 
 | Upgrade | Base | Cap | Player-facing effect |
 | --- | --- | --- | --- |
 | Cargo | 60 | 7 | +1 slot per tier. Start 3, max 10 |
-| Engine | 70 | 6 | Faster travel between fishing grounds and harbors |
+| Engine | 55 | 6 | +15% travel speed per tier; 1.90× at tier 6 |
 | Fishing line | 55 | 6 | Deeper hook limit and +12% fight strength per tier. Lake: middle tier 1, far right tier 3. Beach: middle tier 3, far right tier 4 |
-| Reel power | 65 | 5 | +12% reel speed per tier; 1.60× at tier 5 |
+| Reel power | 65 | 5 | +12.5% stress capacity and +17% reel speed per tier; 1.625× capacity and 1.85× speed at tier 5 |
 | Engine boost | 250 | one-time | Hold Boost while moving. Overheats, then cools |
 | Beach | 300 | one-time | Unlock travel to the coastal map |
 

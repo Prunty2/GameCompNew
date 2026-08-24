@@ -116,10 +116,10 @@ export const BALANCE = {
   boostRecoveryThreshold: 0.25,
   maxUpgradeTier: 6,
   maxReelTier: 5,
-  reelSpeedPerTier: 0.12,
+  reelStressCapacityPerTier: 0.125,
+  reelSpeedPerTier: 0.17,
   hookVerticalSpeedPerReelTier: 0.05,
-  engineSpeedPerTier: 0.11,
-  maxEngineSpeedMultiplier: 1.95,
+  engineSpeedPerTier: 0.15,
   maxCargoTier: 7,
   baseCargoSlots: 3,
   maxCargoSlots: 10,
@@ -316,13 +316,17 @@ export function upgradeTierCap(upgrade: UpgradeId): number {
 
 export function engineSpeedMultiplier(tier: number): number {
   const clampedTier = Math.max(0, Math.min(BALANCE.maxUpgradeTier, Math.floor(tier)));
-  if (clampedTier === BALANCE.maxUpgradeTier) return BALANCE.maxEngineSpeedMultiplier;
   return 1 + clampedTier * BALANCE.engineSpeedPerTier;
 }
 
 export function reelSpeedMultiplier(tier: number): number {
   const clampedTier = Math.max(0, Math.min(BALANCE.maxReelTier, Math.floor(tier)));
   return 1 + clampedTier * BALANCE.reelSpeedPerTier;
+}
+
+export function reelStressCapacityMultiplier(tier: number): number {
+  const clampedTier = Math.max(0, Math.min(BALANCE.maxReelTier, Math.floor(tier)));
+  return 1 + clampedTier * BALANCE.reelStressCapacityPerTier;
 }
 
 export function hookVerticalSpeedMultiplier(reelTier: number): number {

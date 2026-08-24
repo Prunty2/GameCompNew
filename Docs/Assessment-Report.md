@@ -108,9 +108,9 @@ Beach reuses the same spot names and world X positions. Reloading always restore
 | Purchase | Effect |
 | --- | --- |
 | Cargo (7 tiers, 3→10 slots) | Carry more before docking |
-| Engine (6 tiers) | Faster crossings between fishing grounds and harbors |
+| Engine (6 tiers) | Travel 15% faster per tier; upgrade prices are 20% lower than the standard curve and rounded to the nearest 5 shells |
 | Line (6 tiers) | Reach deeper bands; Beach middle/right require tiers 3/4 |
-| Reel power (5 tiers) | Reel 12% faster per tier, up to 1.60× speed |
+| Reel power (5 tiers) | Gain 12.5% reel stress capacity and 17% reel speed per tier, up to 1.625× capacity and 1.85× speed |
 | Engine boost (250 shells) | Hold Boost for a short overclock that overheats |
 | Beach (300 shells) | Travel to the coastal map |
 
