@@ -806,7 +806,8 @@ export function isFishingTargetReachable(simulation: Simulation, target: Pick<Fi
 }
 
 export function upgradeCost(upgrade: UpgradeId, tier: number): number {
-  return BALANCE.upgradeCosts[upgrade] + Math.max(0, tier) * 55;
+  const standardCost = BALANCE.upgradeCosts[upgrade] + Math.max(0, tier) * 55;
+  return upgrade === "engine" ? Math.round((standardCost * 0.8) / 5) * 5 : standardCost;
 }
 
 export function repairCost(simulation: Simulation): number {

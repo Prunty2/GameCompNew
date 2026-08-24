@@ -10,6 +10,7 @@ import {
   harborById,
   hookVerticalSpeedMultiplier,
   reelSpeedMultiplier,
+  reelStressCapacityMultiplier,
   regionSurfaceTintAt,
   spotById,
   type FishSpecies,
@@ -53,6 +54,7 @@ import {
   undock,
   unlockBoostForTesting,
   updateSimulation,
+  upgradeCost,
   type InputState,
 } from "../game/simulation";
 import { marketAvailability, marketQuote, strongerHarborFor } from "../game/market";
@@ -304,9 +306,10 @@ describe("FSHING side-on simulation", () => {
     expect(simulation.boat.speed).toBeCloseTo(0.04 - brakingReduction);
   });
 
-  test("gives only the maximum engine tier a stronger speed increase", () => {
-    expect(engineSpeedMultiplier(BALANCE.maxUpgradeTier - 1)).toBeCloseTo(1.55);
-    expect(engineSpeedMultiplier(BALANCE.maxUpgradeTier)).toBeCloseTo(1.95);
+  test("increases engine speed by fifteen percent at every tier", () => {
+    expect(engineSpeedMultiplier(BALANCE.maxUpgradeTier - 1)).toBeCloseTo(1.75);
+    expect(engineSpeedMultiplier(BALANCE.maxUpgradeTier)).toBeCloseTo(1.9);
+    expect(engineSpeedMultiplier(99)).toBeCloseTo(1.9);
 
     const simulation = createSimulation();
     simulation.progress.upgrades.engine = BALANCE.maxUpgradeTier;
@@ -315,19 +318,30 @@ describe("FSHING side-on simulation", () => {
       updateSimulation(simulation, { ...idle, travel: 1 }, 1 / 120);
     }
     expect(simulation.boat.speed).toBeCloseTo(
-      BALANCE.maxSurfaceSpeed * BALANCE.maxEngineSpeedMultiplier,
+      BALANCE.maxSurfaceSpeed * engineSpeedMultiplier(BALANCE.maxUpgradeTier),
     );
   });
 
-  test("supports five reel-power upgrades with a capped sixty-percent speed increase", () => {
+  test("discounts each engine upgrade by twenty percent and rounds to five shells", () => {
+    expect(Array.from(
+      { length: BALANCE.maxUpgradeTier },
+      (_, tier) => upgradeCost("engine", tier),
+    )).toEqual([55, 100, 145, 190, 230, 275]);
+    expect(upgradeCost("cargo", 1)).toBe(115);
+  });
+
+  test("supports five reel-power upgrades with capped speed and stress increases", () => {
     const simulation = createSimulation(1, { money: 10_000 });
     expect(reelSpeedMultiplier(0)).toBe(1);
+    expect(reelStressCapacityMultiplier(0)).toBe(1);
     for (let tier = 0; tier < BALANCE.maxReelTier; tier += 1) {
       expect(buyUpgrade(simulation, "reel")).toBe(true);
     }
     expect(simulation.progress.upgrades.reel).toBe(5);
-    expect(reelSpeedMultiplier(simulation.progress.upgrades.reel)).toBeCloseTo(1.6);
-    expect(reelSpeedMultiplier(99)).toBeCloseTo(1.6);
+    expect(reelSpeedMultiplier(simulation.progress.upgrades.reel)).toBeCloseTo(1.85);
+    expect(reelSpeedMultiplier(99)).toBeCloseTo(1.85);
+    expect(reelStressCapacityMultiplier(simulation.progress.upgrades.reel)).toBeCloseTo(1.625);
+    expect(reelStressCapacityMultiplier(99)).toBeCloseTo(1.625);
     expect(hookVerticalSpeedMultiplier(simulation.progress.upgrades.reel)).toBeCloseTo(1.25);
     expect(hookVerticalSpeedMultiplier(99)).toBeCloseTo(1.25);
     expect(buyUpgrade(simulation, "reel")).toBe(false);

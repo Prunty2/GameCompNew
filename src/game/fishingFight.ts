@@ -3,6 +3,7 @@ import {
   FISH,
   FISHING_FIGHT_PROFILES,
   reelSpeedMultiplier,
+  reelStressCapacityMultiplier,
   type FishSpecies,
 } from "./balance";
 import {
@@ -153,6 +154,7 @@ export function stepFishingFight(
   const stamina = clamp(meters.stamina, 0, 1);
   const pose = fishingFightBehaviour(species, fightAge, stamina);
   const lineStrength = 1 + Math.max(0, lineTier) * BALANCE.fishingLineStrengthPerTier;
+  const reelStressCapacity = reelStressCapacityMultiplier(reelTier);
   const run = pose.kind === "run" ? pose.intensity : 0;
   const thrash = pose.kind === "thrash" ? pose.intensity : 0;
   const motion = stepFightMotion(
@@ -179,7 +181,7 @@ export function stepFishingFight(
         ? rarityProfile.thrashTensionPerSecond * speciesProfile.thrashPower * thrash
         : 0;
     progress += reelRate * reelSpeedMultiplier(reelTier) * safeDt;
-    tension += tensionRate / lineStrength * safeDt;
+    tension += tensionRate / (lineStrength * reelStressCapacity) * safeDt;
     if (pose.kind === "calm") {
       tension -= rarityProfile.calmSlackPerSecond * 0.18 * safeDt;
     }

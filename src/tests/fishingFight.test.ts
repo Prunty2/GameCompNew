@@ -180,16 +180,23 @@ describe("fishing fight", () => {
     }
   });
 
-  test("five reel-power tiers increase landing speed without adding tension", () => {
+  test("five reel-power tiers increase landing speed and stress capacity", () => {
     const calmAge = samplePose("lakeSturgeon").findIndex((pose) => pose.kind === "calm") * 0.1;
+    const runAge = samplePose("lakeSturgeon").findIndex((pose) => pose.kind === "run") * 0.1;
     const baseStep = stepFishingFight("lakeSturgeon", freshFight, true, calmAge, 3, 0.1, 1, 0);
     const maximumStep = stepFishingFight("lakeSturgeon", freshFight, true, calmAge, 3, 0.1, 1, 5);
+    const baseRunStep = stepFishingFight("lakeSturgeon", freshFight, true, runAge, 3, 0.1, 1, 0);
+    const maximumRunStep = stepFishingFight("lakeSturgeon", freshFight, true, runAge, 3, 0.1, 1, 5);
     const base = playFight("lakeSturgeon", 0);
     const maximumReel = playFight("lakeSturgeon", 5);
-    expect(maximumStep.progress / baseStep.progress).toBeCloseTo(1.6);
+    expect(maximumStep.progress / baseStep.progress).toBeCloseTo(1.85);
     expect(maximumStep.tension).toBeCloseTo(baseStep.tension);
+    expect(
+      (baseRunStep.tension - freshFight.tension)
+        / (maximumRunStep.tension - freshFight.tension),
+    ).toBeCloseTo(1.625);
     expect(maximumReel.seconds).toBeLessThan(base.seconds * 0.8);
-    expect(maximumReel.maximumTension).toBeCloseTo(base.maximumTension);
+    expect(maximumReel.maximumTension).toBeLessThanOrEqual(base.maximumTension);
     expect(maximumReel.broken).toBe(false);
   });
 

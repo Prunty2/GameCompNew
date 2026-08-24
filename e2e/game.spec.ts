@@ -498,11 +498,16 @@ test("Lake upgrades show its middle and far-right fishing-line tiers", async ({ 
 
   await expect(page.getByRole("heading", { name: "Outer permit" })).toHaveCount(0);
   const lineCard = page.locator(".service-card").filter({ hasText: "Fishing line" });
+  const engineCard = page.locator(".service-card").filter({ hasText: "Engine" }).first();
   await expect(lineCard).toContainText("Middle tier 1 · right tier 3");
+  await expect(engineCard).toContainText("+15% speed");
+  await expect(engineCard.locator('[data-action="buy-upgrade"]')).toHaveAccessibleName(
+    "Upgrade Engine for 55 shells",
+  );
   await expect(page.locator(".service-grid .service-card")).toHaveCount(4);
 });
 
-test("Reel power purchases all five faster-reeling tiers", async ({ page }) => {
+test("Reel power purchases all five faster and stronger tiers", async ({ page }) => {
   await page.goto("/?e2e=1");
   await page.evaluate(() => {
     window.localStorage.setItem("gamecomp-new.save", JSON.stringify({
@@ -522,7 +527,7 @@ test("Reel power purchases all five faster-reeling tiers", async ({ page }) => {
 
   const reelCard = page.locator(".service-card").filter({ hasText: "Reel power" });
   const meter = reelCard.locator(".upgrade-meter");
-  await expect(reelCard).toContainText("+12% reel speed");
+  await expect(reelCard).toContainText("Increases reel stress capacity by 12.5% and reel speed by 17%");
   await expect(meter).toHaveAttribute("aria-label", "Reel power tier 0 of 5");
   await expect(meter.locator("i")).toHaveCount(5);
   for (let tier = 1; tier <= 5; tier += 1) {
