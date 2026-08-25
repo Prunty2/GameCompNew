@@ -27,7 +27,8 @@ Market → Track → Sail → Fish → Reel → Sell → Upgrade → Market
 | Harbor | Play from a docked start, or docking | Market / Cargo / Upgrades tabs, shell balance, Help, Return to Lake or Beach |
 | Market detail | Selecting a discovered listing | Species art, current-harbor price, Track, Sell, 7-day graph |
 | Pause | Escape or Pause on the water | Resume, Settings, How to play, Title screen |
-| Settings | Title or pause | General and Controls tabs; Audio, Accessibility, and Save data categories |
+| Settings | Title or pause | General, Audio, and Controls tabs; accessibility, save, and sound preferences |
+| Settings · Audio | Audio tab | Mute, volume, and a saved music preference reserved for soundtrack playback |
 | Settings · Controls | Controls tab | Seven remappable actions shown directly, Reset defaults |
 | Credits | Title | Liam, Saxon, Harrison, David |
 | How to play | Harbor Help or pause | Four cards: read the market, track and catch, manage cargo, sell and invest |
@@ -232,7 +233,7 @@ Development shortcuts: `B` grants a temporary boost. In `npm run dev`, `G` jumps
 
 ## Accessibility
 
-- Mute and volume (synthesized audio only; no bundled music)
+- Mute and volume, plus a saved music preference reserved for soundtrack playback
 - High contrast: stronger shoals and outlines
 - Reduced motion: skips decorative pulses, menu/scene motion, boost camera pull, and fish body flex. Gameplay movement remains
 - Pause when the window blurs or the tab hides
@@ -246,9 +247,9 @@ The in-fishing “W A S D MOVE HOOK” cue presents all four movement keys in on
 
 ## Persistence
 
-Save key `gamecomp-new.save`. Schema version **12**. Storage is CrazyGames `sdk.data` when the SDK initializes, otherwise `localStorage`. Malformed JSON becomes a new save.
+Save key `gamecomp-new.save`. Schema version **13**. Storage is CrazyGames `sdk.data` when the SDK initializes, otherwise `localStorage`. Malformed JSON becomes a new save.
 
-Saved: money, upgrade tiers, beach/boost unlocks, discovered species, market day/sales/earnings/target, first-assignment and upgrade tutorial steps, season-complete flag, leftover learning counters, and settings (mute, volume, contrast, reduced motion, bindings). Version 12 adds a validated Reel power tier defaulting to zero, ignores the retired `outerUnlocked` field from older saves, and preserves existing line tiers against the current world's spot requirements.
+Saved: money, upgrade tiers, beach/boost unlocks, discovered species, market day/sales/earnings/target, first-assignment and upgrade tutorial steps, season-complete flag, leftover learning counters, and settings (mute, volume, music preference, contrast, reduced motion, bindings). Version 13 adds the validated music preference, defaulting on for older saves. Version 12 added a validated Reel power tier defaulting to zero, ignored the retired `outerUnlocked` field from older saves, and preserved existing line tiers against the current world's spot requirements.
 
 Not saved: world, cargo, elapsed time, boat pose, damage, boost heat, docked harbor.
 
@@ -286,7 +287,7 @@ CrazyGames HTML5 SDK v3 is loaded from the page. Local play works if the script 
 | `src/game/objectiveIndicator.ts` | Destination badge layout |
 | `src/game/quest.ts` | First-assignment and upgrade tutorial presentation |
 | `src/game/stem.ts` | Habitat readings and leftover survey/route helpers |
-| `src/services/saveGame.ts` | Version 12 validation and migration |
+| `src/services/saveGame.ts` | Version 13 validation and migration |
 | `src/services/platformService.ts` | CrazyGames boundary |
 | `src/services/feedbackService.ts` | Synthesized audio and optional vibration |
 

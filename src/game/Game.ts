@@ -160,7 +160,10 @@ type OverlayScreen =
   | null;
 
 type HarborSection = "market" | "cargo" | "upgrades";
-type SettingsTab = "general" | "controls";
+type SettingsTab = "general" | "audio" | "controls";
+type SettingsTabDirection = "forward" | "backward";
+
+const SETTINGS_TABS: SettingsTab[] = ["general", "audio", "controls"];
 
 const HARBOR_SECTION_ICON: Record<HarborSection, string> = {
   market: "objective",
@@ -929,30 +932,37 @@ export class Game {
   }
 
   private settingsScreen(): string {
-    const settings = this.save.settings;
-    const generalSelected = this.settingsTab === "general";
     const entryClass = [
       this.overlayEntering ? " is-entering" : "",
       this.overlayEntering && this.overlaySource === "title" ? " is-title-entry" : "",
     ].join("");
-    const tabContent = generalSelected ? `
-      <div class="settings-tabpanel settings-general" id="settings-general-panel" role="tabpanel" aria-labelledby="settings-tab-general">
-        <section class="settings-category" aria-labelledby="settings-audio-heading">
-          <div class="settings-category-heading">
-            <h3 id="settings-audio-heading">Audio</h3>
-          </div>
-          <div class="setting-group">
-            <label class="setting-option setting-toggle">
-              <span class="setting-copy"><strong>Mute</strong><small>Silence all game audio.</small></span>
-              <input class="setting-input" type="checkbox" data-setting="muted" ${settings.muted ? "checked" : ""}>
-              <span class="setting-switch" aria-hidden="true"><span></span></span>
-            </label>
-            <label class="setting-option setting-volume">
-              <span class="setting-copy"><strong>Volume</strong><small>Overall game volume.</small></span>
-              <input type="range" min="0" max="1" step="0.05" value="${settings.volume}" data-setting="volume" aria-label="Volume">
-            </label>
-          </div>
-        </section>
+    const tabs = SETTINGS_TABS.map((tab) => {
+      const selected = this.settingsTab === tab;
+      return `<button class="settings-tab${selected ? " is-active" : ""}" id="settings-tab-${tab}" type="button" role="tab" data-action="settings-tab" data-settings-tab="${tab}" aria-selected="${selected}" aria-controls="settings-${tab}-panel">${capitalise(tab)}</button>`;
+    }).join("");
+    return `
+      <section class="screen-overlay settings-overlay${entryClass}" role="dialog" aria-labelledby="settings-title" tabindex="-1">
+        <div class="settings-panel settings-menu">
+          <img class="wordmark settings-wordmark" src="${wordmarkUrl}" alt="FSHING" />
+          <header class="settings-heading">
+            <h2 id="settings-title">Settings</h2>
+          </header>
+          <nav class="settings-tabs" role="tablist" aria-label="Settings sections">${tabs}</nav>
+          <div class="settings-tab-stage">${this.settingsTabContent()}</div>
+          <button class="primary-button settings-done" type="button" data-action="back">
+            <strong>Done</strong><span class="menu-arrow" aria-hidden="true">→</span>
+          </button>
+        </div>
+      </section>`;
+  }
+
+  private settingsTabContent(direction?: SettingsTabDirection): string {
+    const animationClass = direction ? ` is-switching is-${direction}` : "";
+    if (this.settingsTab === "audio") return this.audioSettingsTab(animationClass);
+    if (this.settingsTab === "controls") return this.controlsSettingsTab(animationClass);
+    const settings = this.save.settings;
+    return `
+      <div class="settings-tabpanel settings-general${animationClass}" id="settings-general-panel" role="tabpanel" aria-labelledby="settings-tab-general">
         <section class="settings-category" aria-labelledby="settings-accessibility-heading">
           <div class="settings-category-heading">
             <h3 id="settings-accessibility-heading">Accessibility</h3>
@@ -976,24 +986,35 @@ export class Game {
           </div>
           <div class="setting-group is-single">${this.resetSaveSettingMarkup()}</div>
         </section>
-      </div>` : this.controlsSettingsTab();
+      </div>`;
+  }
+
+  private audioSettingsTab(animationClass: string): string {
+    const settings = this.save.settings;
     return `
-      <section class="screen-overlay settings-overlay${entryClass}" role="dialog" aria-labelledby="settings-title" tabindex="-1">
-        <div class="settings-panel settings-menu">
-          <img class="wordmark settings-wordmark" src="${wordmarkUrl}" alt="FSHING" />
-          <header class="settings-heading">
-            <h2 id="settings-title">Settings</h2>
-          </header>
-          <nav class="settings-tabs" role="tablist" aria-label="Settings sections">
-            <button class="settings-tab${generalSelected ? " is-active" : ""}" id="settings-tab-general" type="button" role="tab" data-action="settings-tab" data-settings-tab="general" aria-selected="${generalSelected}" aria-controls="settings-general-panel">General</button>
-            <button class="settings-tab${generalSelected ? "" : " is-active"}" id="settings-tab-controls" type="button" role="tab" data-action="settings-tab" data-settings-tab="controls" aria-selected="${!generalSelected}" aria-controls="settings-controls-panel">Controls</button>
-          </nav>
-          ${tabContent}
-          <button class="primary-button settings-done" type="button" data-action="back">
-            <strong>Done</strong><span class="menu-arrow" aria-hidden="true">→</span>
-          </button>
-        </div>
-      </section>`;
+      <div class="settings-tabpanel settings-audio${animationClass}" id="settings-audio-panel" role="tabpanel" aria-labelledby="settings-tab-audio">
+        <section class="settings-category" aria-labelledby="settings-audio-heading">
+          <div class="settings-category-heading">
+            <h3 id="settings-audio-heading">Audio output</h3>
+          </div>
+          <div class="setting-group">
+            <label class="setting-option setting-toggle">
+              <span class="setting-copy"><strong>Mute</strong><small>Silence all game audio.</small></span>
+              <input class="setting-input" type="checkbox" data-setting="muted" ${settings.muted ? "checked" : ""}>
+              <span class="setting-switch" aria-hidden="true"><span></span></span>
+            </label>
+            <label class="setting-option setting-volume">
+              <span class="setting-copy"><strong>Volume</strong><small>Overall game volume.</small></span>
+              <input type="range" min="0" max="1" step="0.05" value="${settings.volume}" data-setting="volume" aria-label="Volume">
+            </label>
+            <label class="setting-option setting-toggle setting-music">
+              <span class="setting-copy"><strong>Music</strong><small>Play soundtrack music when available.</small></span>
+              <input class="setting-input" type="checkbox" data-setting="musicEnabled" ${settings.musicEnabled ? "checked" : ""}>
+              <span class="setting-switch" aria-hidden="true"><span></span></span>
+            </label>
+          </div>
+        </section>
+      </div>`;
   }
 
   private creditsScreen(): string {
@@ -1050,7 +1071,7 @@ export class Game {
       </section>`;
   }
 
-  private controlsSettingsTab(): string {
+  private controlsSettingsTab(animationClass = ""): string {
     const rows = CONTROL_ACTIONS.map((action) => {
       const copy = CONTROL_LABELS[action];
       return `
@@ -1060,7 +1081,7 @@ export class Game {
         </div>`;
     }).join("");
     return `
-      <div class="settings-tabpanel settings-controls" id="settings-controls-panel" role="tabpanel" aria-labelledby="settings-tab-controls">
+      <div class="settings-tabpanel settings-controls${animationClass}" id="settings-controls-panel" role="tabpanel" aria-labelledby="settings-tab-controls">
         <section class="settings-category" aria-labelledby="settings-bindings-heading">
           <div class="settings-category-heading has-action">
             <div>
@@ -1072,6 +1093,24 @@ export class Game {
           <div class="binding-list">${rows}</div>
         </section>
       </div>`;
+  }
+
+  private selectSettingsTab(nextTab: SettingsTab): void {
+    const currentIndex = SETTINGS_TABS.indexOf(this.settingsTab);
+    const nextIndex = SETTINGS_TABS.indexOf(nextTab);
+    const direction: SettingsTabDirection = nextIndex > currentIndex ? "forward" : "backward";
+    this.settingsTab = nextTab;
+    this.resetConfirming = false;
+    for (const tab of this.uiRoot.querySelectorAll<HTMLButtonElement>("[data-settings-tab]")) {
+      const selected = tab.dataset.settingsTab === nextTab;
+      tab.classList.toggle("is-active", selected);
+      tab.setAttribute("aria-selected", String(selected));
+    }
+    const stage = this.uiRoot.querySelector<HTMLElement>(".settings-tab-stage");
+    if (stage) stage.innerHTML = this.settingsTabContent(direction);
+    requestAnimationFrame(() => {
+      this.uiRoot.querySelector<HTMLButtonElement>(`[data-settings-tab="${nextTab}"]`)?.focus({ preventScroll: true });
+    });
   }
 
   private helpScreen(): string {
@@ -1476,13 +1515,8 @@ export class Game {
       case "open-credits": this.overlayReturn = this.overlay; this.setOverlay("credits"); break;
       case "settings-tab": {
         const tab = target.dataset.settingsTab as SettingsTab | undefined;
-        if (!tab || !(tab === "general" || tab === "controls") || tab === this.settingsTab) break;
-        this.settingsTab = tab;
-        this.resetConfirming = false;
-        this.renderOverlay();
-        requestAnimationFrame(() => {
-          this.uiRoot.querySelector<HTMLButtonElement>(`[data-settings-tab="${tab}"]`)?.focus({ preventScroll: true });
-        });
+        if (!tab || !SETTINGS_TABS.includes(tab) || tab === this.settingsTab) break;
+        this.selectSettingsTab(tab);
         break;
       }
       case "reset-controls":
@@ -1697,6 +1731,7 @@ export class Game {
     const setting = input.dataset.setting;
     if (setting === "volume") this.save.settings.volume = Number(input.value);
     if (setting === "muted") this.save.settings.muted = input.checked;
+    if (setting === "musicEnabled") this.save.settings.musicEnabled = input.checked;
     if (setting === "highContrast") this.save.settings.highContrast = input.checked;
     if (setting === "reducedMotion") this.save.settings.reducedMotion = input.checked;
     this.applySettings();

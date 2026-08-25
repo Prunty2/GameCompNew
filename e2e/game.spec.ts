@@ -1267,6 +1267,7 @@ test("settings, keyboard pause, and local SDK fallback remain usable", async ({ 
   await page.getByRole("button", { name: "Settings" }).click();
   await expect(page.locator(".settings-panel")).toBeVisible();
   await expect(page.getByRole("tab", { name: "General" })).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByRole("tab", { name: "Audio" })).toHaveAttribute("aria-selected", "false");
   await expect(page.getByRole("tab", { name: "Controls" })).toHaveAttribute("aria-selected", "false");
   await expect(page.locator(".settings-overlay")).toHaveClass(/is-title-entry/);
   await expect(page.locator(".settings-overlay")).toHaveCSS("animation-name", "settings-backdrop-in");
@@ -1274,13 +1275,39 @@ test("settings, keyboard pause, and local SDK fallback remain usable", async ({ 
   expect(settingsLakeFrame).toBe(titleLakeFrame);
   await expect(page.locator(".settings-wordmark")).toBeVisible();
   await expectHorizontallyCentered(page, ".settings-panel");
-  await expect(page.getByRole("heading", { name: "Audio" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Accessibility" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Save data" })).toBeVisible();
-  await expect(page.locator(".setting-option")).toHaveCount(5);
+  await expect(page.locator(".setting-option")).toHaveCount(3);
   await expect(page.getByRole("button", { name: "Reset save" })).toBeVisible();
   await expect(page.locator(".settings-done")).toHaveCSS("border-radius", "14px");
+  await expect(page.getByRole("tab", { name: "General" })).toHaveCSS("border-radius", "999px");
   await expect(page.locator(".settings-overlay")).toHaveCSS("backdrop-filter", "blur(8px) saturate(0.78)");
+
+  const anchoredSettingsElements = async (): Promise<{
+    done: { x: number; y: number };
+    logo: { x: number; y: number };
+  }> => {
+    const logo = (await page.locator(".settings-wordmark").boundingBox())!;
+    const done = (await page.locator(".settings-done").boundingBox())!;
+    return { logo: { x: logo.x, y: logo.y }, done: { x: done.x, y: done.y } };
+  };
+  const generalAnchors = await anchoredSettingsElements();
+
+  await page.getByRole("tab", { name: "Audio" }).click();
+  await expect(page.getByRole("tab", { name: "Audio" })).toHaveAttribute("aria-selected", "true");
+  await expect(page.locator(".settings-audio")).toHaveCSS("animation-name", "settings-tab-forward-in");
+  await expect(page.getByRole("heading", { name: "Audio output" })).toBeVisible();
+  await expect(page.locator(".settings-audio .setting-option")).toHaveCount(3);
+  const musicToggle = page.locator('[data-setting="musicEnabled"]');
+  await expect(musicToggle).toBeChecked();
+  await page.getByText("Music", { exact: true }).click();
+  await expect(musicToggle).not.toBeChecked();
+  const audioAnchors = await anchoredSettingsElements();
+  expect(audioAnchors).toEqual(generalAnchors);
+
+  await page.getByRole("tab", { name: "General" }).click();
+  await expect(page.locator(".settings-general")).toHaveCSS("animation-name", "settings-tab-backward-in");
+  expect(await anchoredSettingsElements()).toEqual(generalAnchors);
   await page.getByText("High contrast").click();
   await page.getByText("Reduced motion").click();
   await page.getByRole("tab", { name: "Controls" }).click();
@@ -1288,6 +1315,7 @@ test("settings, keyboard pause, and local SDK fallback remain usable", async ({ 
   await expect(page.getByRole("heading", { name: "Key bindings" })).toBeVisible();
   await expectHorizontallyCentered(page, ".settings-panel");
   await expect(page.locator(".settings-wordmark")).toBeVisible();
+  expect(await anchoredSettingsElements()).toEqual(generalAnchors);
   await expect(page.locator(".binding-row")).toHaveCount(7);
   await expect(page.getByRole("button", { name: "Rebind Boost" })).toHaveText("Left Shift");
   await expect(page.locator(".binding-row").first()).toHaveCSS("border-radius", "12px");
