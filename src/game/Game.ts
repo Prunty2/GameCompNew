@@ -888,7 +888,7 @@ export class Game {
         ${destinationAction}
         <article class="departure-card is-coming-soon" data-destination="oil-rig" aria-label="Oil Rig. Coming soon. Unavailable." aria-disabled="true">
           <span class="departure-art"><img src="${destinationOilRigUrl}" alt="" aria-hidden="true" /></span>
-          <span class="departure-copy"><strong>Oil Rig</strong><small>Offshore waters</small></span>
+          <span class="departure-copy"><strong>Oil Rig</strong></span>
           <span class="departure-fare is-soon"><b>COMING</b><small>SOON</small></span>
         </article>
       </div>
