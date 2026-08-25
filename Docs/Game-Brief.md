@@ -27,8 +27,8 @@ Market → Track → Sail → Fish → Reel → Sell → Upgrade → Market
 | Harbor | Play from a docked start, or docking | Market / Cargo / Upgrades tabs, shell balance, Help, Return to Lake or Beach |
 | Market detail | Selecting a discovered listing | Species art, current-harbor price, Track, Sell, 7-day graph |
 | Pause | Escape or Pause on the water | Resume, Settings, How to play, Title screen |
-| Settings | Title or pause | Mute, volume, high contrast, reduced motion, Controls, Reset save |
-| Controls | Settings | Seven remappable actions, Reset defaults |
+| Settings | Title or pause | General and Controls tabs; Audio, Accessibility, and Save data categories |
+| Settings · Controls | Controls tab | Seven remappable actions shown directly, Reset defaults |
 | Credits | Title | Liam, Saxon, Harrison, David |
 | How to play | Harbor Help or pause | Four cards: read the market, track and catch, manage cargo, sell and invest |
 There is no field guide, no title How to play button, no on-water money HUD, and no on-screen movement pads.

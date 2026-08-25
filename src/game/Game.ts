@@ -156,11 +156,11 @@ type OverlayScreen =
   | "pause"
   | "settings"
   | "credits"
-  | "controls"
   | "help"
   | null;
 
 type HarborSection = "market" | "cargo" | "upgrades";
+type SettingsTab = "general" | "controls";
 
 const HARBOR_SECTION_ICON: Record<HarborSection, string> = {
   market: "objective",
@@ -205,6 +205,7 @@ export class Game {
   private overlaySource: OverlayScreen = null;
   private overlayReturn: OverlayScreen = "pause";
   private harborSection: HarborSection = "market";
+  private settingsTab: SettingsTab = "general";
   private selectedMarketSpecies: FishSpecies = "bluegill";
   private marketDetailOpen = false;
   private helpStep = 0;
@@ -338,7 +339,7 @@ export class Game {
     this.renderer.render(renderSimulation, {
       ...this.save.settings,
       cinematic: this.overlay === "title"
-        || (this.overlay === "settings" || this.overlay === "controls" || this.overlay === "credits") && this.overlayReturn === "title",
+        || (this.overlay === "settings" || this.overlay === "credits") && this.overlayReturn === "title",
     });
     this.syncContextActionAnchor();
     if (time - this.lastUiRefresh >= UI_REFRESH_INTERVAL) {
@@ -770,9 +771,6 @@ export class Game {
       case "credits":
         host.innerHTML = this.creditsScreen();
         break;
-      case "controls":
-        host.innerHTML = this.controlsScreen();
-        break;
       case "help":
         host.innerHTML = this.helpScreen();
         break;
@@ -932,18 +930,18 @@ export class Game {
 
   private settingsScreen(): string {
     const settings = this.save.settings;
+    const generalSelected = this.settingsTab === "general";
     const entryClass = [
       this.overlayEntering ? " is-entering" : "",
       this.overlayEntering && this.overlaySource === "title" ? " is-title-entry" : "",
     ].join("");
-    return `
-      <section class="screen-overlay settings-overlay${entryClass}" role="dialog" aria-labelledby="settings-title" tabindex="-1">
-        <div class="settings-panel settings-menu">
-          <img class="wordmark settings-wordmark" src="${wordmarkUrl}" alt="FSHING" />
-          <header class="settings-heading">
-            <h2 id="settings-title">Settings</h2>
-          </header>
-          <div class="settings-list">
+    const tabContent = generalSelected ? `
+      <div class="settings-tabpanel settings-general" id="settings-general-panel" role="tabpanel" aria-labelledby="settings-tab-general">
+        <section class="settings-category" aria-labelledby="settings-audio-heading">
+          <div class="settings-category-heading">
+            <h3 id="settings-audio-heading">Audio</h3>
+          </div>
+          <div class="setting-group">
             <label class="setting-option setting-toggle">
               <span class="setting-copy"><strong>Mute</strong><small>Silence all game audio.</small></span>
               <input class="setting-input" type="checkbox" data-setting="muted" ${settings.muted ? "checked" : ""}>
@@ -951,8 +949,15 @@ export class Game {
             </label>
             <label class="setting-option setting-volume">
               <span class="setting-copy"><strong>Volume</strong><small>Overall game volume.</small></span>
-              <input type="range" min="0" max="1" step="0.05" value="${settings.volume}" data-setting="volume">
+              <input type="range" min="0" max="1" step="0.05" value="${settings.volume}" data-setting="volume" aria-label="Volume">
             </label>
+          </div>
+        </section>
+        <section class="settings-category" aria-labelledby="settings-accessibility-heading">
+          <div class="settings-category-heading">
+            <h3 id="settings-accessibility-heading">Accessibility</h3>
+          </div>
+          <div class="setting-group">
             <label class="setting-option setting-toggle">
               <span class="setting-copy"><strong>High contrast</strong><small>Brighter shoals and stronger outlines.</small></span>
               <input class="setting-input" type="checkbox" data-setting="highContrast" ${settings.highContrast ? "checked" : ""}>
@@ -963,12 +968,27 @@ export class Game {
               <input class="setting-input" type="checkbox" data-setting="reducedMotion" ${settings.reducedMotion ? "checked" : ""}>
               <span class="setting-switch" aria-hidden="true"><span></span></span>
             </label>
-            <button class="setting-option settings-link" type="button" data-action="open-controls">
-              <span class="setting-copy"><strong>Controls</strong><small>Review or rebind every action.</small></span>
-              <span class="menu-arrow" aria-hidden="true">→</span>
-            </button>
-            ${this.resetSaveSettingMarkup()}
           </div>
+        </section>
+        <section class="settings-category" aria-labelledby="settings-save-heading">
+          <div class="settings-category-heading">
+            <h3 id="settings-save-heading">Save data</h3>
+          </div>
+          <div class="setting-group is-single">${this.resetSaveSettingMarkup()}</div>
+        </section>
+      </div>` : this.controlsSettingsTab();
+    return `
+      <section class="screen-overlay settings-overlay${entryClass}" role="dialog" aria-labelledby="settings-title" tabindex="-1">
+        <div class="settings-panel settings-menu">
+          <img class="wordmark settings-wordmark" src="${wordmarkUrl}" alt="FSHING" />
+          <header class="settings-heading">
+            <h2 id="settings-title">Settings</h2>
+          </header>
+          <nav class="settings-tabs" role="tablist" aria-label="Settings sections">
+            <button class="settings-tab${generalSelected ? " is-active" : ""}" id="settings-tab-general" type="button" role="tab" data-action="settings-tab" data-settings-tab="general" aria-selected="${generalSelected}" aria-controls="settings-general-panel">General</button>
+            <button class="settings-tab${generalSelected ? "" : " is-active"}" id="settings-tab-controls" type="button" role="tab" data-action="settings-tab" data-settings-tab="controls" aria-selected="${!generalSelected}" aria-controls="settings-controls-panel">Controls</button>
+          </nav>
+          ${tabContent}
           <button class="primary-button settings-done" type="button" data-action="back">
             <strong>Done</strong><span class="menu-arrow" aria-hidden="true">→</span>
           </button>
@@ -1030,7 +1050,7 @@ export class Game {
       </section>`;
   }
 
-  private controlsScreen(): string {
+  private controlsSettingsTab(): string {
     const rows = CONTROL_ACTIONS.map((action) => {
       const copy = CONTROL_LABELS[action];
       return `
@@ -1040,20 +1060,18 @@ export class Game {
         </div>`;
     }).join("");
     return `
-      <section class="screen-overlay controls-overlay" role="dialog" aria-labelledby="controls-title">
-        <div class="controls-panel controls-menu">
-          <img class="wordmark controls-wordmark" src="${wordmarkUrl}" alt="FSHING" />
-          <header class="controls-heading">
-            <h2 id="controls-title">Controls</h2>
-            <p class="binding-help">Choose an action, then press its new key. Occupied keys swap actions.</p>
-          </header>
-          <div class="binding-list">${rows}</div>
-          <div class="controls-actions">
-            <button class="text-button" type="button" data-action="reset-controls">Reset defaults</button>
-            <button class="primary-button controls-done" type="button" data-action="close-controls">Done</button>
+      <div class="settings-tabpanel settings-controls" id="settings-controls-panel" role="tabpanel" aria-labelledby="settings-tab-controls">
+        <section class="settings-category" aria-labelledby="settings-bindings-heading">
+          <div class="settings-category-heading has-action">
+            <div>
+              <h3 id="settings-bindings-heading">Key bindings</h3>
+              <p>Choose an action, then press its new key. Occupied keys swap actions.</p>
+            </div>
+            <button class="settings-reset-controls" type="button" data-action="reset-controls">Reset defaults</button>
           </div>
-        </div>
-      </section>`;
+          <div class="binding-list">${rows}</div>
+        </section>
+      </div>`;
   }
 
   private helpScreen(): string {
@@ -1450,10 +1468,23 @@ export class Game {
         break;
       case "interact": this.handleInteract(); break;
       case "resume": this.setOverlay(null); break;
-      case "open-settings": this.overlayReturn = this.overlay; this.setOverlay("settings"); break;
+      case "open-settings":
+        this.overlayReturn = this.overlay;
+        this.settingsTab = "general";
+        this.setOverlay("settings");
+        break;
       case "open-credits": this.overlayReturn = this.overlay; this.setOverlay("credits"); break;
-      case "open-controls": this.setOverlay("controls"); break;
-      case "close-controls": this.setOverlay("settings"); break;
+      case "settings-tab": {
+        const tab = target.dataset.settingsTab as SettingsTab | undefined;
+        if (!tab || !(tab === "general" || tab === "controls") || tab === this.settingsTab) break;
+        this.settingsTab = tab;
+        this.resetConfirming = false;
+        this.renderOverlay();
+        requestAnimationFrame(() => {
+          this.uiRoot.querySelector<HTMLButtonElement>(`[data-settings-tab="${tab}"]`)?.focus({ preventScroll: true });
+        });
+        break;
+      }
       case "reset-controls":
         this.save.settings.controls = { ...DEFAULT_CONTROL_BINDINGS };
         this.input.setControlBindings(this.save.settings.controls);

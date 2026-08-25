@@ -5327,6 +5327,287 @@ kbd {
   }
 }
 
+/* Settings categories and rebinding share one tabbed menu. */
+.settings-panel.settings-menu {
+  width: min(700px, 94vw);
+  justify-content: flex-start;
+}
+
+.settings-panel.settings-menu .settings-heading {
+  margin-bottom: 12px;
+}
+
+.settings-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px;
+  margin-bottom: 14px;
+  padding: 4px;
+  border: 1px solid rgb(247 241 227 / 34%);
+  border-radius: 13px;
+  background: rgb(4 22 30 / 70%);
+  box-shadow: 0 10px 24px rgb(2 15 21 / 16%);
+  backdrop-filter: blur(5px);
+}
+
+.settings-tab {
+  min-height: 42px;
+  padding: 8px 18px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--menu-fog);
+  cursor: pointer;
+  font-family: var(--display-face);
+  font-size: 0.9rem;
+  font-weight: 850;
+  letter-spacing: 0.025em;
+  transition:
+    background 160ms ease,
+    color 160ms ease,
+    transform 120ms ease;
+}
+
+.settings-tab:hover,
+.settings-tab:focus-visible {
+  color: var(--menu-paper);
+}
+
+.settings-tab.is-active {
+  background: var(--menu-signal);
+  color: var(--menu-ink);
+  box-shadow: inset 0 -3px 0 var(--menu-signal-dark);
+}
+
+.settings-tab:active {
+  transform: translateY(1px);
+}
+
+.settings-tabpanel {
+  min-width: 0;
+}
+
+.settings-category + .settings-category {
+  margin-top: 12px;
+}
+
+.settings-category-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 2px 7px;
+}
+
+.settings-category-heading::after {
+  height: 1px;
+  flex: 1;
+  background: rgb(247 241 227 / 26%);
+  content: "";
+}
+
+.settings-category-heading.has-action::after {
+  display: none;
+}
+
+.settings-category-heading.has-action {
+  justify-content: space-between;
+}
+
+.settings-category-heading h3 {
+  margin: 0;
+  color: var(--menu-paper);
+  font-family: var(--display-face);
+  font-size: 0.78rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-shadow: 0 2px 8px rgb(1 10 18 / 60%);
+  text-transform: uppercase;
+}
+
+.settings-category-heading p {
+  margin: 4px 0 0;
+  color: var(--menu-fog);
+  font-size: 0.61rem;
+  line-height: 1.3;
+}
+
+.setting-group,
+.settings-controls .binding-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.setting-group.is-single {
+  grid-template-columns: 1fr;
+}
+
+.settings-panel.settings-menu .setting-group .setting-option,
+.settings-panel.settings-menu .settings-controls .binding-row {
+  min-height: 60px;
+}
+
+.settings-panel.settings-menu .setting-reset {
+  grid-column: auto;
+}
+
+.settings-controls .binding-list {
+  border: 0;
+}
+
+.settings-panel.settings-menu .settings-controls .binding-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 11px 8px 17px;
+  border: 1px solid rgb(247 241 227 / 48%);
+  border-radius: 12px;
+  background: rgb(7 31 40 / 72%);
+  box-shadow: 0 10px 24px rgb(2 15 21 / 18%);
+  backdrop-filter: blur(5px);
+}
+
+.settings-panel.settings-menu .settings-controls .binding-row > span {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+  text-align: left;
+}
+
+.settings-panel.settings-menu .settings-controls .binding-row strong {
+  font-family: var(--display-face);
+  font-size: 0.86rem;
+  font-weight: 850;
+  letter-spacing: 0.015em;
+  line-height: 1;
+}
+
+.settings-panel.settings-menu .settings-controls .binding-row small {
+  overflow: hidden;
+  color: var(--menu-fog);
+  font-size: 0.57rem;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settings-panel.settings-menu .settings-controls .binding-button {
+  min-width: 68px;
+  min-height: 38px;
+  padding: 7px 11px;
+  border: 1px solid var(--menu-signal);
+  border-radius: 9px;
+  background: rgb(7 31 40 / 72%);
+  color: var(--menu-signal);
+  font-size: 0.75rem;
+  transition:
+    background 160ms ease,
+    color 160ms ease,
+    transform 120ms ease;
+}
+
+.settings-panel.settings-menu .settings-controls .binding-button:hover,
+.settings-panel.settings-menu .settings-controls .binding-button:focus-visible,
+.settings-panel.settings-menu .settings-controls .binding-button.is-listening {
+  border-color: var(--menu-signal);
+  background: var(--menu-signal);
+  color: var(--menu-ink);
+  transform: translateY(-1px);
+}
+
+.settings-panel.settings-menu .settings-controls .binding-button.is-listening {
+  min-width: 108px;
+}
+
+.settings-reset-controls {
+  min-height: 32px;
+  flex: 0 0 auto;
+  padding: 5px 12px;
+  border: 1px solid rgb(247 241 227 / 42%);
+  border-radius: 9px;
+  background: rgb(7 31 40 / 72%);
+  color: var(--menu-paper);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.settings-reset-controls:hover,
+.settings-reset-controls:focus-visible {
+  border-color: var(--menu-signal);
+  color: var(--menu-signal);
+}
+
+.high-contrast .settings-tabs,
+.high-contrast .settings-panel.settings-menu .settings-controls .binding-row,
+.high-contrast .settings-reset-controls {
+  border-color: #fff;
+}
+
+@media (max-height: 720px) and (min-width: 601px) {
+  .settings-panel.settings-menu {
+    width: min(680px, 94vw);
+  }
+
+  .settings-wordmark {
+    width: min(205px, 38vw);
+    margin-block: -66px -32px;
+  }
+
+  .settings-panel.settings-menu .settings-heading {
+    margin-bottom: 8px;
+  }
+
+  .settings-tabs {
+    margin-bottom: 9px;
+  }
+
+  .settings-tab {
+    min-height: 36px;
+    padding-block: 5px;
+  }
+
+  .settings-category + .settings-category {
+    margin-top: 8px;
+  }
+
+  .settings-panel.settings-menu .setting-group .setting-option,
+  .settings-panel.settings-menu .settings-controls .binding-row {
+    min-height: 49px;
+    padding-block: 5px;
+  }
+
+  .settings-panel.settings-menu .setting-copy small,
+  .settings-panel.settings-menu .settings-controls .binding-row small {
+    display: none;
+  }
+
+  .settings-panel.settings-menu .settings-done {
+    min-height: 46px;
+  }
+}
+
+@media (max-width: 600px) {
+  .settings-panel.settings-menu {
+    width: min(390px, 92vw);
+    margin: auto;
+  }
+
+  .setting-group,
+  .settings-controls .binding-list {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-tabs {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+}
+
 /* The first-voyage harbor uses the same panel-free menu language as title, pause, and settings. */
 @keyframes first-voyage-menu-in {
   from {
