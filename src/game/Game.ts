@@ -998,19 +998,18 @@ export class Game {
             <h3 id="settings-audio-heading">Audio output</h3>
           </div>
           <div class="setting-group">
-            <label class="setting-option setting-toggle">
+            <label class="setting-option setting-toggle setting-mute">
               <span class="setting-copy"><strong>Mute</strong><small>Silence all game audio.</small></span>
               <input class="setting-input" type="checkbox" data-setting="muted" ${settings.muted ? "checked" : ""}>
               <span class="setting-switch" aria-hidden="true"><span></span></span>
             </label>
             <label class="setting-option setting-volume">
-              <span class="setting-copy"><strong>Volume</strong><small>Overall game volume.</small></span>
-              <input type="range" min="0" max="1" step="0.05" value="${settings.volume}" data-setting="volume" aria-label="Volume">
+              <span class="setting-copy"><strong>Music</strong><small>Soundtrack volume.</small></span>
+              <input type="range" min="0" max="1" step="0.05" value="${settings.musicVolume}" data-setting="musicVolume" aria-label="Music volume">
             </label>
-            <label class="setting-option setting-toggle setting-music">
-              <span class="setting-copy"><strong>Music</strong><small>Play soundtrack music when available.</small></span>
-              <input class="setting-input" type="checkbox" data-setting="musicEnabled" ${settings.musicEnabled ? "checked" : ""}>
-              <span class="setting-switch" aria-hidden="true"><span></span></span>
+            <label class="setting-option setting-volume">
+              <span class="setting-copy"><strong>Sound effects</strong><small>Interface and gameplay sound volume.</small></span>
+              <input type="range" min="0" max="1" step="0.05" value="${settings.volume}" data-setting="volume" aria-label="Sound effects volume">
             </label>
           </div>
         </section>
@@ -1730,8 +1729,8 @@ export class Game {
     if (!input) return;
     const setting = input.dataset.setting;
     if (setting === "volume") this.save.settings.volume = Number(input.value);
+    if (setting === "musicVolume") this.save.settings.musicVolume = Number(input.value);
     if (setting === "muted") this.save.settings.muted = input.checked;
-    if (setting === "musicEnabled") this.save.settings.musicEnabled = input.checked;
     if (setting === "highContrast") this.save.settings.highContrast = input.checked;
     if (setting === "reducedMotion") this.save.settings.reducedMotion = input.checked;
     this.applySettings();

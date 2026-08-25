@@ -5483,7 +5483,7 @@ kbd {
   grid-template-columns: 1fr;
 }
 
-.settings-audio .setting-music {
+.settings-audio .setting-mute {
   grid-column: 1 / -1;
 }
 

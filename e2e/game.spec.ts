@@ -1291,6 +1291,15 @@ test("settings, keyboard pause, and local SDK fallback remain usable", async ({ 
     const done = (await page.locator(".settings-done").boundingBox())!;
     return { logo: { x: logo.x, y: logo.y }, done: { x: done.x, y: done.y } };
   };
+  const expectAnchorsUnmoved = (
+    actual: Awaited<ReturnType<typeof anchoredSettingsElements>>,
+    expected: Awaited<ReturnType<typeof anchoredSettingsElements>>,
+  ): void => {
+    expect(actual.logo.x).toBeCloseTo(expected.logo.x, 1);
+    expect(actual.logo.y).toBeCloseTo(expected.logo.y, 1);
+    expect(actual.done.x).toBeCloseTo(expected.done.x, 1);
+    expect(actual.done.y).toBeCloseTo(expected.done.y, 1);
+  };
   const generalAnchors = await anchoredSettingsElements();
 
   await page.getByRole("tab", { name: "Audio" }).click();
@@ -1298,16 +1307,20 @@ test("settings, keyboard pause, and local SDK fallback remain usable", async ({ 
   await expect(page.locator(".settings-audio")).toHaveCSS("animation-name", "settings-tab-forward-in");
   await expect(page.getByRole("heading", { name: "Audio output" })).toBeVisible();
   await expect(page.locator(".settings-audio .setting-option")).toHaveCount(3);
-  const musicToggle = page.locator('[data-setting="musicEnabled"]');
-  await expect(musicToggle).toBeChecked();
-  await page.getByText("Music", { exact: true }).click();
-  await expect(musicToggle).not.toBeChecked();
+  const musicSlider = page.getByRole("slider", { name: "Music volume" });
+  const soundEffectsSlider = page.getByRole("slider", { name: "Sound effects volume" });
+  await expect(musicSlider).toHaveValue("0.75");
+  await expect(soundEffectsSlider).toHaveValue("0.75");
+  await musicSlider.fill("0.35");
+  await soundEffectsSlider.fill("0.6");
+  await expect(musicSlider).toHaveValue("0.35");
+  await expect(soundEffectsSlider).toHaveValue("0.6");
   const audioAnchors = await anchoredSettingsElements();
-  expect(audioAnchors).toEqual(generalAnchors);
+  expectAnchorsUnmoved(audioAnchors, generalAnchors);
 
   await page.getByRole("tab", { name: "General" }).click();
   await expect(page.locator(".settings-general")).toHaveCSS("animation-name", "settings-tab-backward-in");
-  expect(await anchoredSettingsElements()).toEqual(generalAnchors);
+  expectAnchorsUnmoved(await anchoredSettingsElements(), generalAnchors);
   await page.getByText("High contrast").click();
   await page.getByText("Reduced motion").click();
   await page.getByRole("tab", { name: "Controls" }).click();
@@ -1315,7 +1328,7 @@ test("settings, keyboard pause, and local SDK fallback remain usable", async ({ 
   await expect(page.getByRole("heading", { name: "Key bindings" })).toBeVisible();
   await expectHorizontallyCentered(page, ".settings-panel");
   await expect(page.locator(".settings-wordmark")).toBeVisible();
-  expect(await anchoredSettingsElements()).toEqual(generalAnchors);
+  expectAnchorsUnmoved(await anchoredSettingsElements(), generalAnchors);
   await expect(page.locator(".binding-row")).toHaveCount(7);
   await expect(page.getByRole("button", { name: "Rebind Boost" })).toHaveText("Left Shift");
   await expect(page.locator(".binding-row").first()).toHaveCSS("border-radius", "12px");

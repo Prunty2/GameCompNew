@@ -25,7 +25,7 @@ The completed vertical slice contains:
 - seeded daily quotes, seven-day history, and full-quote sales
 - a five-step First Assignment, four-card How to play, and credits
 - keyboard sailing and hook steering, pointer/touch menus, remappable controls, mute, high contrast, reduced motion, and pause on focus loss
-- deterministic gameplay tests, browser interaction tests, and version 13 validated saves
+- deterministic gameplay tests, browser interaction tests, and version 14 validated saves
 
 Product numbers and acceptance checks live in `Docs/Game-Brief.md`.
 
@@ -135,7 +135,7 @@ market.ts                quotes, history, sale payouts
 marketView.ts            market HTML
 renderer.ts              Canvas drawing only
 input.ts / controls.ts   browser input → game intent
-saveGame.ts              version 13 validation and migration
+saveGame.ts              version 14 validation and migration
 platformService.ts       only CrazyGames SDK boundary
 feedbackService.ts       synthesized audio and haptics
 ```
@@ -162,7 +162,7 @@ Gameplay uses a fixed `1/120`-second step. Target positions and speeds come from
 
 ### Save validation
 
-Save version 13 treats stored data as untrusted. Money, upgrade tiers, volume, and counters are clamped. The saved music preference defaults on for older saves but is reserved for future playback wiring. Reel power defaults to zero for older saves and is capped at five. Species ids are filtered against the real list; retired fantasy ids migrate one-to-one. Duplicate discoveries are removed. The retired Outer permit field is ignored, while saved line tiers are preserved and now solely determine Outer Gloam access. Beach access defaults off. Malformed JSON becomes a valid new save. World, cargo, and clock are not persisted.
+Save version 14 treats stored data as untrusted. Money, upgrade tiers, music volume, sound-effects volume, and counters are clamped. A disabled version 13 music preference migrates to zero music volume. Reel power defaults to zero for older saves and is capped at five. Species ids are filtered against the real list; retired fantasy ids migrate one-to-one. Duplicate discoveries are removed. The retired Outer permit field is ignored, while saved line tiers are preserved and now solely determine Outer Gloam access. Beach access defaults off. Malformed JSON becomes a valid new save. World, cargo, and clock are not persisted.
 
 ## 6. Interface and accessibility design
 
@@ -188,7 +188,7 @@ Deep teal structure, sea-glass water, warm ivory copy, muted amber for actions. 
 - No on-screen movement pads
 - Pause on focus loss or a hidden tab
 - High contrast and reduced motion
-- Mute and volume
+- Mute plus separate music and sound-effects volume
 - Local fallback when the CrazyGames SDK is blocked
 
 ## 7. Assets and design plans
@@ -209,7 +209,7 @@ No audio file is bundled. `FeedbackService` synthesises tones and optional vibra
 | Collision / deny | Damage or a blocked action | Toast and disabled copy |
 | Dock | Arrival | Harbor overlay |
 
-Mute and volume drive master gain. Vibration is never required to understand state.
+Mute and sound-effects volume drive generated feedback gain. Music volume is saved for soundtrack playback. Vibration is never required to understand state.
 
 ### Implemented visual evidence
 

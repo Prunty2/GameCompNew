@@ -11,7 +11,7 @@ The playable game includes:
 - Line-tier-gated Outer Gloam water and a paid Beach location
 - A five-step First Assignment, four-card How to play, and credits
 - Keyboard sailing and hook steering, keyboard/pointer/touch reeling, and pause on focus loss
-- Mute, volume, a saved music preference, high contrast, reduced motion, and remappable controls
+- Mute, separate music and sound-effects volume, high contrast, reduced motion, and remappable controls
 - Version 13 validated persistence and a local-safe CrazyGames SDK v3 adapter
 - Generated runtime art documented in [`Docs/Asset-Manifest.md`](Docs/Asset-Manifest.md)
 

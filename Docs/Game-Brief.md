@@ -28,7 +28,7 @@ Market → Track → Sail → Fish → Reel → Sell → Upgrade → Market
 | Market detail | Selecting a discovered listing | Species art, current-harbor price, Track, Sell, 7-day graph |
 | Pause | Escape or Pause on the water | Resume, Settings, How to play, Title screen |
 | Settings | Title or pause | General, Audio, and Controls tabs; accessibility, save, and sound preferences |
-| Settings · Audio | Audio tab | Mute, volume, and a saved music preference reserved for soundtrack playback |
+| Settings · Audio | Audio tab | Mute plus separate music and sound-effects volume sliders |
 | Settings · Controls | Controls tab | Seven remappable actions shown directly, Reset defaults |
 | Credits | Title | Liam, Saxon, Harrison, David |
 | How to play | Harbor Help or pause | Four cards: read the market, track and catch, manage cargo, sell and invest |
@@ -233,7 +233,7 @@ Development shortcuts: `B` grants a temporary boost. In `npm run dev`, `G` jumps
 
 ## Accessibility
 
-- Mute and volume, plus a saved music preference reserved for soundtrack playback
+- Mute plus separate saved music and sound-effects volume sliders
 - High contrast: stronger shoals and outlines
 - Reduced motion: skips decorative pulses, menu/scene motion, boost camera pull, and fish body flex. Gameplay movement remains
 - Pause when the window blurs or the tab hides
@@ -249,7 +249,7 @@ The in-fishing “W A S D MOVE HOOK” cue presents all four movement keys in on
 
 Save key `gamecomp-new.save`. Schema version **13**. Storage is CrazyGames `sdk.data` when the SDK initializes, otherwise `localStorage`. Malformed JSON becomes a new save.
 
-Saved: money, upgrade tiers, beach/boost unlocks, discovered species, market day/sales/earnings/target, first-assignment and upgrade tutorial steps, season-complete flag, leftover learning counters, and settings (mute, volume, music preference, contrast, reduced motion, bindings). Version 13 adds the validated music preference, defaulting on for older saves. Version 12 added a validated Reel power tier defaulting to zero, ignored the retired `outerUnlocked` field from older saves, and preserved existing line tiers against the current world's spot requirements.
+Saved: money, upgrade tiers, beach/boost unlocks, discovered species, market day/sales/earnings/target, first-assignment and upgrade tutorial steps, season-complete flag, leftover learning counters, and settings (mute, music volume, sound-effects volume, contrast, reduced motion, bindings). Version 14 replaces the music toggle with a validated volume level; disabled music from version 13 migrates to zero. Version 12 added a validated Reel power tier defaulting to zero, ignored the retired `outerUnlocked` field from older saves, and preserved existing line tiers against the current world's spot requirements.
 
 Not saved: world, cargo, elapsed time, boat pose, damage, boost heat, docked harbor.
 
