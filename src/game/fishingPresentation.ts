@@ -50,6 +50,7 @@ const LINE_COLOUR_HIGH_CONTRAST_WARN = "#ffe08a";
 const LINE_COLOUR_HIGH_CONTRAST_CRITICAL = "#ff6240";
 
 export const FISHING_DIVE_DURATION = 0.85;
+export const FISHING_HOOK_ATTACHMENT_DURATION = 0.24;
 
 export const FISHING_RARITY_COLOURS: Record<FishRarity, string> = {
   common: "#f4e6c5",
@@ -72,6 +73,11 @@ export function fishingDiveProgress(elapsed: number, startedAt: number, reducedM
   if (reducedMotion) return 1;
   const linear = clamp((elapsed - startedAt) / FISHING_DIVE_DURATION, 0, 1);
   return 1 - (1 - linear) ** 3;
+}
+
+export function fishingHookAttachmentProgress(elapsed: number, hookedAt: number): number {
+  const linear = clamp((elapsed - hookedAt) / FISHING_HOOK_ATTACHMENT_DURATION, 0, 1);
+  return linear * linear * (3 - 2 * linear);
 }
 
 export function fishingReelCameraProgress(

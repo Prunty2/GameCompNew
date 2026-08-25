@@ -353,6 +353,29 @@ test("hooked fish require active reel and release tension control", async ({ pag
   expect(maximumFrameStep).toBeLessThan(0.015);
 });
 
+test("the hook eases into the fish across rendered frames", async ({ page }) => {
+  await page.goto("/?e2e=1");
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.evaluate(() => window.__FSHING_TEST__?.previewFishing("sunwardShoal", "bluegill"));
+
+  const canvas = page.locator("#game-canvas");
+  const attachmentSamples = await canvas.evaluate(async (element) => {
+    window.__FSHING_TEST__?.hookSpecies("bluegill");
+    const samples: number[] = [];
+    for (let index = 0; index < 24; index += 1) {
+      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+      samples.push(Number((element as HTMLCanvasElement).dataset.fishingHookAttachmentProgress));
+    }
+    return samples;
+  });
+
+  expect(attachmentSamples.some((progress) => progress > 0 && progress < 1)).toBe(true);
+  expect(attachmentSamples.at(-1)).toBe(1);
+  for (let index = 1; index < attachmentSamples.length; index += 1) {
+    expect(attachmentSamples[index]).toBeGreaterThanOrEqual(attachmentSamples[index - 1]!);
+  }
+});
+
 test("a snapped line lets the fish escape before retracting without a hook", async ({ page }) => {
   await page.goto("/?e2e=1");
   await page.getByRole("button", { name: "Play", exact: true }).click();
