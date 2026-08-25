@@ -24,7 +24,7 @@ export class FeedbackService {
   private engineGain: GainNode | null = null;
   private engineFilter: BiquadFilterNode | null = null;
   private music: HTMLAudioElement | null = null;
-  private menuActive = true;
+  private mainMenuActive = false;
 
   constructor(private settings: FeedbackSettings) {
     this.ensureMusic();
@@ -41,8 +41,8 @@ export class FeedbackService {
     this.syncMusic();
   }
 
-  setMenuActive(active: boolean): void {
-    this.menuActive = active;
+  setMainMenuActive(active: boolean): void {
+    this.mainMenuActive = active;
     this.syncMusic();
   }
 
@@ -127,7 +127,7 @@ export class FeedbackService {
   }
 
   private syncMusic(): void {
-    syncGameMusic(this.ensureMusic(), this.settings, document.hidden, this.menuActive);
+    syncGameMusic(this.ensureMusic(), this.settings, document.hidden, this.mainMenuActive);
   }
 
   private ensureContext(): AudioContext | null {

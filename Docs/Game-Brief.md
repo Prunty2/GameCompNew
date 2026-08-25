@@ -233,7 +233,7 @@ Development shortcuts: `B` grants a temporary boost. In `npm run dev`, `G` jumps
 
 ## Accessibility
 
-- Mute plus separate saved music and sound-effects volume sliders controlling the title music and synthesized cues
+- Mute plus separate saved music and sound-effects volume sliders controlling the title music and synthesized cues. Music plays only in the main-menu flow (the title plus Settings or Credits opened from it), never in the harbor, on the water, while paused, or in Settings opened from pause.
 - High contrast: stronger shoals and outlines
 - Reduced motion: skips decorative pulses, menu/scene motion, boost camera pull, and fish body flex. Gameplay movement remains
 - Pause when the window blurs or the tab hides
