@@ -38,7 +38,7 @@ Vite `publicDir` is `false`. Only these files are imported.
 | `fish-atlas.png` | Hook cell only |
 | `world-atlas.png` | Night wake cell only |
 
-**UI (`src/game/Game.ts`, `src/styles.css`, `index.html`)**
+**UI (`src/game/Game.ts`, `src/styles.css`, `src/harbor.css`, `index.html`)**
 
 | File | Role |
 | --- | --- |
@@ -46,8 +46,10 @@ Vite `publicDir` is `false`. Only these files are imported.
 | `fshing-logo.png` | Favicon and apple-touch icon |
 | `fish-atlas-ui.png` | Lake market species icons |
 | `fish-beach-atlas-ui.png` | Beach market species icons |
-| `upgrade-beach.png` | Large Beach unlock/travel card icon |
+| `upgrade-beach.png` | Beach destination pictogram on the dockside Departures board |
 | `upgrade-engine-boost.png` | Large Engine boost unlock card icon |
+| `destination-lake.png` / `destination-oil-rig.png` | Lake return and unavailable Oil Rig pictograms on the dockside Departures board |
+| `departures-wood.jpg` | Stretchable timber surface for the dockside Departures board |
 | `dock-brindle-day.jpg` / `dock-brindle-night.jpg` | Brindle harbor backdrops |
 | `dock-gloam-day.jpg` / `dock-gloam-night.jpg` | Gloam harbor backdrops |
 | `ui-panel.png` / `ui-button.png` / `ui-icons.png` | Panel, primary button, 13 pictograms |
@@ -352,6 +354,16 @@ Vite `publicDir` is `false`. Only these files are imported.
 - Beach prompt: “Replace the supplied Beach image with a simpler production UI pictogram. Match the supplied UI atlas closely: bold flat warm-cream silhouette, sparse safety-orange accents, extremely limited thin dark-navy interior lines, almost no texture, crisp screen-printed shapes, generous negative space, and readability at 48–64 px. Create exactly one compact lighthouse above two simple wave bands, with a small orange lantern window and short orange sun-disc accent. No teal, vegetation, rocks, sand landscape, foam droplets, detailed masonry, realistic lighting, text, tile, border, shadow, gradient, or 3D rendering. Center the icon with equal transparent padding on a genuine alpha background.”
 - Engine boost prompt: “Replace the supplied Engine boost image with a simpler production UI pictogram. Match the supplied UI atlas closely, especially its engine cell: bold flat warm-cream silhouette, one sparse safety-orange accent, extremely limited thin dark-navy interior lines, almost no texture, crisp screen-printed shapes, generous negative space, and readability at 48–64 px. Create exactly one compact marine engine: a simple cream outboard-engine housing, a small three-blade cream propeller, one bold orange lightning bolt, and exactly two short cream speed lines trailing left. No teal, complex turbine, gauge, realistic machinery, text, tile, border, shadow, gradient, or 3D rendering. Center the icon with equal transparent padding on a genuine alpha background.”
 - Processing: Both outputs were reduced to transparent 512 × 512 runtime PNGs with their authored padding preserved. The Beach output received a second image-edit pass to replace a baked checkerboard with genuine alpha; the artwork was otherwise preserved.
+
+### Dockside Departures board
+
+- Runtime files: `departures-wood.jpg`, `destination-lake.png`, and `destination-oil-rig.png`
+- Runtime role: weathered timber surface and destination pictograms for the harbor-side Departures prototype. Lake and Beach are live routes according to the current world; Oil Rig is a visibly unavailable concept route with no gameplay or interaction.
+- Generated on: 25 August 2026 with OpenAI's built-in image-generation tool
+- Authoring sources: matching files under `output/imagegen/`; the two transparent pictograms were reduced to 512 × 512 and the wood surface was converted to a quality-82 JPEG.
+- Wood prompt: “Use case: stylized-concept. Asset type: stretchable full-bleed game UI panel surface for the FSHING browser game. Primary request: a weathered wooden dockside departures-board surface. Scene/backdrop: exactly four broad horizontal timber planks filling the entire rectangular canvas edge to edge, joined tightly with narrow dark seams. Style/medium: restrained editorial gouache and screen-print illustration; mature, handcrafted, softly worn, subtle aged-paper grain. Color palette: medium honey-tan and driftwood brown, deep ink-navy shadow in seams, sparse muted ochre warmth; subdued contrast so cream interface text stays readable. Materials/textures: visible but simplified wood grain, slightly rubbed edges, a few small dark nail heads near the outer corners only. Composition/framing: flat straight-on orthographic surface, evenly lit, seamless-looking full bleed with no external margin. Constraints: no text, lettering, numbers, signs, cards, tickets, icons, ropes, fish, boats, people, border frame, detached shadow, perspective angle, scenery, transparent areas, logos, watermark, glossy 3D, photorealism, orange saturation, or ornate carving.”
+- Lake prompt: “Use case: stylized-concept. Asset type: production game UI destination pictogram for the FSHING browser game. Image 1 is the existing Beach pictogram and authoritative style, palette, transparency, padding, visual weight, and small-size readability reference. Create exactly one compact freshwater Lake harbor pictogram for the return destination: one simple working timber boathouse with a small warm window, a short pier, two restrained reed silhouettes, and exactly two wave bands beneath it. Bold flat warm-cream screen-printed silhouette, sparse safety-orange accents on the window and a small setting sun disc, extremely limited thin deep ink-navy interior lines, almost no texture, mature and practical. Centered 1:1 icon with equal generous transparent padding and comparable visual weight to Image 1; readable at 48 to 72 pixels. Genuine transparent alpha background; no lighthouse, text, tile, border, badge, shadow, gradient, people, boats, fish, oil rig, photorealism, glossy 3D, cartoon face, or watermark.”
+- Oil Rig prompt: “Use case: stylized-concept. Asset type: production game UI destination pictogram for the FSHING browser game. Image 1 is the existing Beach pictogram and authoritative style, palette, transparency, padding, visual weight, and small-size readability reference. Create exactly one compact offshore oil rig pictogram for a future locked destination: a recognizable fixed offshore oil platform in strict front-facing to slight three-quarter silhouette, with a sturdy deck, four simple support legs, one compact derrick tower, and two restrained wave bands beneath it. Bold flat warm-cream screen-printed silhouette, sparse safety-orange accents on one small beacon and one structural panel, extremely limited thin deep ink-navy interior lines, almost no texture, mature and practical. Centered 1:1 icon with equal generous transparent padding and comparable visual weight to Image 1; readable at 48 to 72 pixels. Genuine transparent alpha background; no text, tile, border, badge, shadow, gradient, smoke, flames, people, boats, extra cranes, photorealism, glossy 3D, cartoon face, or watermark.”
 
 ### `padlock-icon.png`
 

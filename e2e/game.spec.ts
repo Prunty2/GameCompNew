@@ -507,8 +507,8 @@ test("upgrade tutorial walks through Upgrades after the player can afford one", 
   await expect(tutorial.locator(".market-tutorial-step")).toHaveText("2");
   await expect(page.locator('[data-upgrade="lamp"]')).toHaveCount(0);
   const featureCards = page.locator(".upgrade-feature-card");
-  await expect(featureCards).toHaveCount(2);
-  await expect(featureCards.locator(".upgrade-feature-icon")).toHaveCount(2);
+  await expect(featureCards).toHaveCount(1);
+  await expect(featureCards.locator(".upgrade-feature-icon")).toHaveCount(1);
   const regularLayout = await page.locator(".service-grid .service-card").evaluateAll((cards) => cards.map((card) => {
     const box = card.getBoundingClientRect();
     const meter = card.querySelector<HTMLElement>(".upgrade-meter")?.getBoundingClientRect();
@@ -524,13 +524,11 @@ test("upgrade tutorial walks through Upgrades after the player can afford one", 
     const box = card.getBoundingClientRect();
     return { x: box.x, y: box.y, height: box.height };
   }));
-  expect(Math.abs(featureLayout[0]!.y - featureLayout[1]!.y)).toBeLessThan(2);
-  expect(featureLayout[1]!.x).toBeGreaterThan(featureLayout[0]!.x);
   expect(featureLayout[0]!.y - regularLayout[3]!.y - regularLayout[3]!.height).toBeGreaterThanOrEqual(8);
   const regularCardHeight = await page.locator(".service-grid .service-card").first().evaluate(
     (card) => card.getBoundingClientRect().height,
   );
-  expect(featureLayout[0]!.height).toBeGreaterThan(regularCardHeight + 40);
+  expect(featureLayout[0]!.height).toBeGreaterThan(regularCardHeight + 20);
   const desktopOverflow = await page.locator(".upgrades").evaluate((element) => ({
     clientHeight: element.clientHeight,
     scrollHeight: element.scrollHeight,
@@ -542,9 +540,7 @@ test("upgrade tutorial walks through Upgrades after the player can afford one", 
     const box = card.getBoundingClientRect();
     return { x: box.x, y: box.y, height: box.height };
   }));
-  expect(Math.abs(mobileFeatureLayout[0]!.y - mobileFeatureLayout[1]!.y)).toBeLessThan(2);
-  expect(mobileFeatureLayout[1]!.x).toBeGreaterThan(mobileFeatureLayout[0]!.x);
-  expect(mobileFeatureLayout[0]!.height).toBeGreaterThanOrEqual(160);
+  expect(mobileFeatureLayout[0]!.height).toBeGreaterThanOrEqual(88);
   const mobileRegularLayout = await page.locator(".service-grid .service-card").evaluateAll((cards) => cards.map((card) => {
     const box = card.getBoundingClientRect();
     const meter = card.querySelector<HTMLElement>(".upgrade-meter")?.getBoundingClientRect();
@@ -658,6 +654,45 @@ test("Cargo tier four equips the expanded-cargo boat sprite", async ({ page }) =
   );
 });
 
+test("dockside Departures unlocks Beach and keeps Oil Rig unavailable", async ({ page }) => {
+  await page.goto("/?e2e=1");
+  await page.evaluate(() => {
+    window.localStorage.setItem("gamecomp-new.save", JSON.stringify({
+      version: 14,
+      progress: {
+        money: 300,
+        upgrades: {},
+        marketTutorialStep: "done",
+        upgradeTutorialStep: "done",
+      },
+      settings: {},
+    }));
+  });
+  await page.reload();
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+
+  const departures = page.getByRole("complementary", { name: "Departures" });
+  const oilRig = departures.locator('[data-destination="oil-rig"]');
+  await expect(departures).toBeVisible();
+  await expect(oilRig).toContainText("Oil Rig");
+  await expect(oilRig).toContainText("COMING");
+  await expect(oilRig).toHaveAttribute("aria-disabled", "true");
+  await expect(oilRig.locator("button, [data-action]")).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Upgrades", exact: true }).click();
+  await expect(page.locator(".upgrades")).not.toContainText("Beach");
+  await page.getByRole("button", { name: "Unlock Beach for 300 shells" }).click();
+  await expect(page.getByRole("button", { name: "Travel to Beach" })).toBeVisible();
+  await expect(page.locator(".shell-balance strong")).toHaveText("0");
+
+  await page.getByRole("button", { name: "Travel to Beach" }).click();
+  await expect(page.locator("#game-canvas")).toHaveAttribute("data-world", "beach");
+  await page.evaluate(() => window.__FSHING_TEST__?.sailToHarbor("brindle"));
+  await page.getByRole("button", { name: "Dock · Brindle Harbor" }).click();
+  await page.getByRole("button", { name: "Travel to Lake" }).click();
+  await expect(page.locator("#game-canvas")).toHaveAttribute("data-world", "lake");
+});
+
 test("Beach fishing requires line tier 3 in the middle and tier 4 at the far right", async ({ page }) => {
   await page.goto("/?e2e=1");
   await page.evaluate(() => {
@@ -675,7 +710,6 @@ test("Beach fishing requires line tier 3 in the middle and tier 4 at the far rig
   });
   await page.reload();
   await page.getByRole("button", { name: "Play", exact: true }).click();
-  await page.getByRole("button", { name: "Upgrades", exact: true }).click();
   await page.getByRole("button", { name: "Travel to Beach" }).click();
 
   await page.evaluate(() => window.__FSHING_TEST__?.sailToSpot("mosswaterPool"));
@@ -861,7 +895,6 @@ test("Beach market lists, prices, and tracks coastal fish with coastal artwork",
   });
   await page.reload();
   await page.getByRole("button", { name: "Play", exact: true }).click();
-  await page.getByRole("button", { name: "Upgrades", exact: true }).click();
   await page.getByRole("button", { name: "Travel to Beach" }).click();
   await expect(page.locator("#game-canvas")).toHaveAttribute("data-world", "beach");
 
@@ -1444,7 +1477,7 @@ test("settings, keyboard pause, and local SDK fallback remain usable", async ({ 
   await expect(reducedMotionPlayButton).toHaveCSS("animation-name", "none");
   await reducedMotionPlayButton.click();
   await expect(page.locator("#scene-transition")).not.toHaveClass(/is-(covering|revealing)/);
-  await expectHorizontallyCentered(page, ".harbor-panel");
+  await expectHorizontallyCentered(page, ".harbor-dock-layout");
   await page.locator('[data-action="undock"]').click();
   await page.keyboard.press("o");
   await expect(page.getByRole("heading", { name: "Paused" })).toBeVisible();

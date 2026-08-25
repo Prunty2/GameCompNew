@@ -11,7 +11,7 @@ FSHING is a single-player side-on fishing market game for desktop and mobile bro
 3. Sail to that species' fishing ground. Slow down until the hook cue appears, then drop the line.
 4. Steer the hook onto a reachable fish. Hold left click on the water (or touch / the Reel key) while the fish is calm to pull it closer. When it races away, release so it can take line — that is what drops tension. Reeling against a run turns the line red. Landed catches are stored in cargo until sold or released.
 5. Dock at the harbor that currently pays more and sell every catch of that species for the displayed quote.
-6. Spend shells on cargo, engine, line, boost, or Beach access. Line upgrades unlock the middle and far-right grounds at world-specific tiers.
+6. Spend shells on cargo, engine, line, or boost, and unlock Beach from the dockside **Departures** board. Line upgrades unlock the middle and far-right grounds at world-specific tiers.
 
 A new save starts docked at Brindle Harbor on the lake with Bluegill already discovered. The first run is a four-step **First Assignment** that walks through inspect → track → catch → sell. Each tutorial pill includes a short instruction that changes with the player's current screen. During the catch the title first shows **Let it run**, then switches to **Hold left click** in the first lull, explains that a racing fish slacks the line, and toasts if the player horses a run, never reels a lull, or rests too long. The sale ends that assignment. When the player can afford a dock upgrade, a second tutorial walks through Upgrades.
 
@@ -24,7 +24,7 @@ Market → Track → Sail → Fish → Reel → Sell → Upgrade → Market
 | Screen | How it opens | What it contains |
 | --- | --- | --- |
 | Title | Launch, or Title screen from pause | Wordmark, Play, Settings, Credits, `v0.8.0 (PR #115)` |
-| Harbor | Play from a docked start, or docking | Market / Cargo / Upgrades tabs, shell balance, Help, Return to Lake or Beach |
+| Harbor | Play from a docked start, or docking | Market / Cargo / Upgrades tabs, shell balance, Help, Return to the current world, and a wooden Departures board for world travel |
 | Market detail | Selecting a discovered listing | Species art, current-harbor price, Track, Sell, 7-day graph |
 | Pause | Escape or Pause on the water | Resume, Settings, How to play, Title screen |
 | Settings | Title or pause | General, Audio, and Controls tabs; accessibility, save, and sound preferences |
@@ -50,7 +50,7 @@ Side-on freshwater chart with Brindle Harbor at the left and Gloam Ferry at the 
 
 ### Beach
 
-Paid unlock (300 shells) from Upgrades. Travel is immediate and undocks the boat. The Beach reuses lake spot names and layout, and swaps panorama, pier, underwater paintings, fish, and market art.
+Paid unlock (300 shells) from the dockside Departures board. Travel is immediate and undocks the boat. When docked at Beach, the live departure changes to Lake. The board also previews an unavailable Oil Rig route as **Coming soon**; it has no gameplay, price, state, or interaction. The Beach reuses lake spot names and layout, and swaps panorama, pier, underwater paintings, fish, and market art.
 
 | Spot id | Display name | x | Lake line | Beach line | Lake residents | Beach residents |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -186,9 +186,9 @@ Standard upgrade costs are `base + currentTier × 55` shells. Engine upgrade pri
 | Fishing line | 55 | 6 | Deeper hook limit and +12% fight strength per tier. Lake: middle tier 1, far right tier 3. Beach: middle tier 3, far right tier 4 |
 | Reel power | 65 | 5 | +12.5% stress capacity and +17% reel speed per tier; 1.625× capacity and 1.85× speed at tier 5 |
 | Engine boost | 250 | one-time | Hold Boost while moving. Overheats, then cools |
-| Beach | 300 | one-time | Unlock travel to the coastal map |
+| Beach | 300 | one-time | Unlock travel to the coastal map from the Departures board |
 
-Cargo, Engine, Line depth, and Reel power form a compact vertical stack of full-width equipment rows. Beach and Engine boost remain two compressed feature cards side by side beneath them. The full upgrade menu fits without an internal scrollbar at supported desktop and mobile viewports. Reel power uses a CSS-drawn spool-and-handle pictogram that matches the existing harbor equipment icon treatment without adding another runtime asset.
+Cargo, Engine, Line depth, and Reel power form a compact vertical stack of full-width equipment rows. Engine boost remains a compressed feature card beneath them; Beach access and travel live on the separate wooden Departures board. The full upgrade menu fits without an internal scrollbar at supported desktop and mobile viewports. Reel power uses a CSS-drawn spool-and-handle pictogram that matches the existing harbor equipment icon treatment without adding another runtime asset.
 
 The boat gains a second visible cargo crate on its foredeck at cargo tier 4 and keeps that expanded-cargo sprite through tier 7.
 
@@ -317,7 +317,7 @@ A build matches this brief when:
 - Market lists twelve Lake species or eleven Beach species, with undiscovered cards locked
 - Quotes differ by harbor and day, and every catch sells for the displayed quote
 - Line tier gates the Lake middle/right spots at tiers 1/3 and the Beach middle/right spots at tiers 3/4
-- Beach unlock swaps coastal fish and art, then travel returns to the lake
+- The Departures board unlocks Beach for 300 shells, travels between Beach and Lake, and leaves Oil Rig visibly unavailable
 - Keyboard sailing, hook steering, pause, mute, high contrast, and reduced motion work
 - Reloading keeps money, unlocks, discoveries, tutorial completion, and settings
 - Local play still works with the CrazyGames SDK blocked

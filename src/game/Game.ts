@@ -3,6 +3,8 @@ import brindleDockNightUrl from "../assets/dock-brindle-night.jpg";
 import beachChartUrl from "../assets/beach-chart.png";
 import beachChartNightUrl from "../assets/beach-chart-night.png";
 import binIconUrl from "../assets/bin-icon.png";
+import destinationLakeUrl from "../assets/destination-lake.png";
+import destinationOilRigUrl from "../assets/destination-oil-rig.png";
 import gloamDockDayUrl from "../assets/dock-gloam-day.jpg";
 import gloamDockNightUrl from "../assets/dock-gloam-night.jpg";
 import fishAtlasUiUrl from "../assets/fish-atlas-ui.png";
@@ -566,7 +568,7 @@ export class Game {
       case "beach-unlocked":
         this.feedback.cue("upgrade");
         this.pulseFeedback("upgrade");
-        this.showToast("Beach unlocked. Travel there from Upgrades.");
+        this.showToast("Beach unlocked. Choose it on the Departures board.");
         break;
       case "boost-unlocked":
         this.feedback.cue("upgrade");
@@ -843,19 +845,54 @@ export class Game {
         )
       : activeSection === "cargo"
         ? `<aside class="cargo-section" aria-labelledby="cargo-heading"><div class="cargo-inventory-heading"><h3 id="cargo-heading">Fish inventory</h3><span>${this.simulation.cargo.length} carried · ${availableCargoSlots} unlocked</span></div><div class="cargo-slot-grid" aria-label="Cargo inventory">${cargoMarkup}</div></aside>`
-        : `<section class="upgrades" aria-label="Upgrades"><div class="service-grid">${this.upgradeCard("cargo", "Cargo", "+1 cargo slot")}${this.upgradeCard("engine", "Engine", "+15% speed")}${this.upgradeCard("line", "Fishing line", this.simulation.world === "beach" ? "Middle tier 3 · right tier 4" : "Middle tier 1 · right tier 3")}${this.upgradeCard("reel", "Reel power", "Increases reel stress capacity by 12.5% and reel speed by 17%")}</div><div class="upgrade-feature-grid">${this.boostCard()}${this.beachCard()}</div></section>`;
+        : `<section class="upgrades" aria-label="Upgrades"><div class="service-grid">${this.upgradeCard("cargo", "Cargo", "+1 cargo slot")}${this.upgradeCard("engine", "Engine", "+15% speed")}${this.upgradeCard("line", "Fishing line", this.simulation.world === "beach" ? "Middle tier 3 · right tier 4" : "Middle tier 1 · right tier 3")}${this.upgradeCard("reel", "Reel power", "Increases reel stress capacity by 12.5% and reel speed by 17%")}</div><div class="upgrade-feature-grid is-single-feature">${this.boostCard()}</div></section>`;
     const tabs = `<nav class="harbor-tabs has-3-tabs" aria-label="Harbor sections" style="--harbor-tab-count: 3">${availableSections.map((section) => `<button class="harbor-tab ${activeSection === section ? "is-active" : ""}" type="button" data-action="harbor-section" data-harbor-section="${section}" aria-label="${capitalise(section)}" aria-pressed="${activeSection === section}"><span class="ui-icon icon-${HARBOR_SECTION_ICON[section]}" aria-hidden="true"></span><span>${capitalise(section)}</span></button>`).join("")}</nav>`;
     const mainFooterAction = activeSection === "market" && this.marketDetailOpen
       ? `<button class="leave-button market-footer-back" type="button" data-action="close-market-fish-detail" aria-label="Back to market"><span class="harbor-back-arrow" aria-hidden="true">←</span><strong>Back to market</strong></button>`
       : `<button class="leave-button" type="button" data-action="undock" aria-label="Back to ${this.simulation.world}"><span class="ui-icon icon-hull" aria-hidden="true"></span><strong>Return to ${capitalise(this.simulation.world)}</strong></button>`;
     return `<section class="screen-overlay harbor-screen is-first-voyage is-expanded-harbor is-harbor-${activeSection} is-dock-${harborId}" ${this.dockBackdropAttributes(harborId)} role="dialog" aria-labelledby="harbor-title">
-      <div class="art-panel harbor-panel side-sheet market-harbor-panel">
-        <header class="panel-heading harbor-header"><div class="harbor-title-block"><img class="wordmark harbor-wordmark" src="${wordmarkUrl}" alt="FSHING" /><span class="harbor-title-divider" aria-hidden="true"></span><div><h2 id="harbor-title">${harbor.name}</h2></div></div><span class="shell-balance" aria-label="${this.simulation.progress.money} shells"><span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${this.simulation.progress.money}</strong></span></header>
-        ${tabs}
-        <div class="harbor-content is-${activeSection}">${content}</div>
-        <footer class="panel-actions"><div><button class="text-button harbor-utility-button" type="button" data-action="open-help" aria-label="How to play"><span class="ui-icon icon-objective" aria-hidden="true"></span><strong>Help</strong></button></div>${mainFooterAction}</footer>
+      <div class="harbor-dock-layout">
+        <div class="art-panel harbor-panel side-sheet market-harbor-panel">
+          <header class="panel-heading harbor-header"><div class="harbor-title-block"><img class="wordmark harbor-wordmark" src="${wordmarkUrl}" alt="FSHING" /><span class="harbor-title-divider" aria-hidden="true"></span><div><h2 id="harbor-title">${harbor.name}</h2></div></div><span class="shell-balance" aria-label="${this.simulation.progress.money} shells"><span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${this.simulation.progress.money}</strong></span></header>
+          ${tabs}
+          <div class="harbor-content is-${activeSection}">${content}</div>
+          <footer class="panel-actions"><div><button class="text-button harbor-utility-button" type="button" data-action="open-help" aria-label="How to play"><span class="ui-icon icon-objective" aria-hidden="true"></span><strong>Help</strong></button></div>${mainFooterAction}</footer>
+        </div>
+        ${this.departuresBoard()}
       </div>
     </section>`;
+  }
+
+  private departuresBoard(): string {
+    const destination: WorldId = this.simulation.world === "beach" ? "lake" : "beach";
+    const destinationName = capitalise(destination);
+    const destinationIcon = destination === "beach" ? upgradeBeachUrl : destinationLakeUrl;
+    const destinationDetail = destination === "beach"
+      ? "Surf club · pier · lighthouse"
+      : "Working harbors · freshwater grounds";
+    const beachLocked = destination === "beach" && !this.simulation.progress.beachUnlocked;
+    const destinationAction = beachLocked
+      ? `<button class="departure-card is-locked" type="button" data-action="buy-beach" data-destination="beach" aria-label="Unlock Beach for ${BALANCE.beachAccessCost} shells" ${this.simulation.progress.money < BALANCE.beachAccessCost ? "disabled" : ""}>
+          <span class="departure-art"><img src="${destinationIcon}" alt="" aria-hidden="true" /></span>
+          <span class="departure-copy"><strong>${destinationName}</strong><small>${destinationDetail}</small></span>
+          <span class="departure-fare"><span class="ui-icon icon-shells" aria-hidden="true"></span><b>${BALANCE.beachAccessCost}</b></span>
+        </button>`
+      : `<button class="departure-card" type="button" data-action="travel-world" data-world="${destination}" data-destination="${destination}" aria-label="Travel to ${destinationName}">
+          <span class="departure-art"><img src="${destinationIcon}" alt="" aria-hidden="true" /></span>
+          <span class="departure-copy"><strong>${destinationName}</strong><small>${destinationDetail}</small></span>
+          <span class="departure-fare is-route"><b>SAIL</b><span aria-hidden="true">→</span></span>
+        </button>`;
+    return `<aside class="departures-board" aria-labelledby="departures-title">
+      <header class="departures-heading"><span>Dockside routes</span><h3 id="departures-title">Departures</h3></header>
+      <div class="departures-list">
+        ${destinationAction}
+        <article class="departure-card is-coming-soon" data-destination="oil-rig" aria-label="Oil Rig. Coming soon. Unavailable." aria-disabled="true">
+          <span class="departure-art"><img src="${destinationOilRigUrl}" alt="" aria-hidden="true" /></span>
+          <span class="departure-copy"><strong>Oil Rig</strong><small>Offshore waters</small></span>
+          <span class="departure-fare is-soon"><b>COMING</b><small>SOON</small></span>
+        </article>
+      </div>
+    </aside>`;
   }
 
   private dockBackdropAttributes(harborId: HarborId): string {
@@ -873,16 +910,6 @@ export class Game {
     const maximum = tier >= tierCap;
     const cost = upgradeCost(upgrade, tier);
     return `<article class="service-card"><span class="ui-icon icon-${upgrade}" aria-hidden="true"></span><div class="service-copy"><h4>${title}</h4><p>${maximum ? "Maximum tier" : detail}</p></div>${this.upgradeMeter(title, tier, tierCap)}<button class="service-purchase" type="button" data-action="buy-upgrade" data-upgrade="${upgrade}" aria-label="${maximum ? `${title} at maximum tier` : `Upgrade ${title} for ${cost} shells`}" ${maximum || this.simulation.progress.money < cost ? "disabled" : ""}>${maximum ? "<strong>MAX</strong>" : `<span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${cost}</strong>`}</button></article>`;
-  }
-
-  private beachCard(): string {
-    const unlocked = this.simulation.progress.beachUnlocked;
-    const destination: WorldId = this.simulation.world === "beach" ? "lake" : "beach";
-    const destinationName = capitalise(destination);
-    if (unlocked) {
-      return `<article class="service-card upgrade-feature-card"><img class="upgrade-feature-icon" src="${upgradeBeachUrl}" alt="" aria-hidden="true" /><div class="service-copy"><h4>Beach</h4><p>Surf club · pier · lighthouse</p></div><span class="service-owned" aria-label="Beach location unlocked">UNLOCKED</span><button class="service-purchase" type="button" data-action="travel-world" data-world="${destination}" aria-label="Travel to ${destinationName}"><strong>${destination === "beach" ? "VISIT" : "RETURN"}</strong></button></article>`;
-    }
-    return `<article class="service-card upgrade-feature-card"><img class="upgrade-feature-icon" src="${upgradeBeachUrl}" alt="" aria-hidden="true" /><div class="service-copy"><h4>Beach</h4><p>Unlock the seaside town</p></div><span class="service-owned" aria-label="One-time location unlock">LOCATION</span><button class="service-purchase" type="button" data-action="buy-beach" aria-label="Unlock Beach for ${BALANCE.beachAccessCost} shells" ${this.simulation.progress.money < BALANCE.beachAccessCost ? "disabled" : ""}><span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${BALANCE.beachAccessCost}</strong></button></article>`;
   }
 
   private boostCard(): string {
