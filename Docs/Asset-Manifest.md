@@ -4,13 +4,19 @@ This file is the generation and runtime record for art used by the current build
 
 The initial authored visual set was generated with GPT Image 2.0 on 24 July 2026. The original fantasy-fish atlas was generated with OpenAI's built-in image-generation tool on 31 July 2026 and was superseded by the real-species sheets on 14 August 2026. The surface-school cue atlas and polarized-water lens were generated with the built-in GPT Image tool on 5 August 2026. The tugboat steam atlas was generated with the built-in GPT Image tool on 6 August 2026. The square FSHING logo was generated with the built-in image-generation tool on 14 August 2026. No bitmap, SVG, icon, texture, panel, button, logo, scenery plate, or game sprite was created with drawing code.
 
-Authoring originals are preserved outside the production bundle. Runtime copies live in `src/assets/` and are explicitly imported by TypeScript, CSS, or `index.html`. HTML and CSS arrange and label the generated interface surfaces. Canvas draws the simulation, camera, line, wake, water movement, visibility, and accessibility indicators; it does not manufacture replacement UI art.
+Authoring originals are preserved outside the production bundle. Runtime copies live in `src/assets/` and `src/audio/` and are explicitly imported by TypeScript, CSS, or `index.html`. HTML and CSS arrange and label the generated interface surfaces. Canvas draws the simulation, camera, line, wake, water movement, visibility, and accessibility indicators; it does not manufacture replacement UI art.
 
 The boat, harbor pier, fish atlas, and world atlas were requested on a uniform `#FF00FF` matte. The renderer removes the atlas and boat mattes in memory; the harbor pier matte is removed during authoring so its long shoreline edge can be tightly cropped without changing the generated subject.
 
 ## Current runtime set
 
 Vite `publicDir` is `false`. Only these files are imported.
+
+**Audio (`src/services/gameMusic.ts`)**
+
+| File | Role |
+| --- | --- |
+| `src/audio/Game Music.mp3` | Looping title-screen music |
 
 **Canvas (`src/game/renderer.ts`)**
 
@@ -375,9 +381,19 @@ Vite `publicDir` is `false`. Only these files are imported.
 - Prompt: “Use case: stylized-concept. Asset type: tiny game UI bin icon for a cargo release control in the FSHING browser game. Create one original, minimal waste-bin pictogram that remains clean and unmistakable at 20 to 24 pixels. Use a front-facing tapered bin body drawn as a sparse warm-cream outline, with a short detached lid, a tiny safety-orange handle accent, and three simple vertical cream slots. Do not use a large filled cream area or heavy outer navy keyline. Keep the screen-printed treatment crisp, geometric, and minimally textured. Exactly one compact centered icon occupying about 58 percent of the canvas on a perfectly flat solid #00FF00 chroma-key background. No text, label, fish, recycling arrows, circle, tile, medallion, frame, border, extra object, reflection, shadow, watermark, checkerboard, photorealism, bevel, or glossy rendering.”
 - Processing: The border-sampled green matte was removed with a soft alpha ramp and despill. The result was center-cropped to tighten excess padding, then reduced to 256 × 256. The full generated source is retained as `output/imagegen/bin-icon-source.png`.
 
+## Audio assets
+
+### `Game Music.mp3`
+
+- Runtime path: `src/audio/Game Music.mp3`
+- Runtime role: looping music on the title screen only
+- Format: MP3, 44.1 kHz stereo, 320 kb/s, duration 3:14
+- Playback: `src/services/gameMusic.ts` creates a hidden looping `HTMLAudioElement` mixed very quietly (`GAME_MUSIC_GAIN` 0.06). `FeedbackService` starts it after the first pointer or key gesture while the title menu is open, follows saved mute and the live Music volume slider, and pauses it during play, while muted, silent, or hidden. The Sound effects slider independently controls synthesized cues.
+- Browser autoplay policy: the file is preloaded at boot but does not play until a user gesture unlocks audio.
+
 ## Procedural audio assets
 
-FSHING bundles no external audio files. `src/services/feedbackService.ts` creates the implemented sound and haptic feedback at runtime:
+`src/services/feedbackService.ts` creates the implemented sound and haptic feedback at runtime:
 
 | Cue | Source/implementation | Runtime role | Accessible equivalent |
 | --- | --- | --- | --- |
@@ -392,11 +408,11 @@ FSHING bundles no external audio files. `src/services/feedbackService.ts` create
 | Upgrade | Two rising tones | Confirm permanent progression | New tier/class text |
 | Haptics | Optional `navigator.vibrate` patterns per cue | Reinforce action category | Never required to understand state |
 
-The saved mute and volume controls apply to the master gain. Sounds are original parameterised synthesis, not recordings or adaptations of another game.
+The saved mute and volume controls apply to the synthesized master gain and to the looping music element. Cue sounds are original parameterised synthesis, not recordings or adaptations of another game.
 
 ## Runtime constraints
 
-- Production code imports only the files in `src/assets/`.
+- Production code imports only the files in `src/assets/` and `src/audio/`.
 - `output/imagegen/` is retained as the human-reviewable authoring record and is not included by Vite unless explicitly imported.
 - CSS uses the generated panel, button, and icon atlas directly. It supplies layout, responsive behavior, text, focus, disabled, high-contrast, and reduced-motion states.
 - Canvas rendering may transform, crop, flip, key, and scale generated game sprites and may draw transient simulation effects. It does not synthesize authored interface imagery.

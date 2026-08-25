@@ -392,6 +392,7 @@ export class Game {
       </div>`;
 
     this.uiRoot.addEventListener("click", this.onClick);
+    this.uiRoot.addEventListener("input", this.onSettingInput);
     this.uiRoot.addEventListener("change", this.onChange);
     window.addEventListener("blur", this.onFocusLost);
     document.addEventListener("visibilitychange", this.onVisibilityChanged);
@@ -1252,6 +1253,7 @@ export class Game {
     if (!wasPlaying && willPlay) this.platform.gameplayStart();
     this.renderOverlay();
     this.overlayEntering = false;
+    this.syncMenuMusic();
     this.refreshHud();
     if (next !== null) {
       requestAnimationFrame(() => {
@@ -1293,11 +1295,13 @@ export class Game {
     this.replaceResetSaveSetting();
     this.refreshHud();
     this.refreshQuestGuide();
+    this.syncMenuMusic();
     this.showToast("Save reset. Play to start the first assignment.");
   }
 
   private beginVoyage(): void {
     this.started = true;
+    this.syncMenuMusic();
     this.harborSection = "market";
     this.marketDetailOpen = false;
     if (this.simulation.dockedAt) this.setOverlay("harbor", true);
@@ -1350,6 +1354,11 @@ export class Game {
     document.body.classList.toggle("high-contrast", this.save.settings.highContrast);
     document.body.classList.toggle("reduced-motion", this.save.settings.reducedMotion);
     this.feedback.updateSettings(this.save.settings);
+    this.syncMenuMusic();
+  }
+
+  private syncMenuMusic(): void {
+    this.feedback.setMenuActive(!this.started);
   }
 
   private pulseFeedback(cue: FeedbackCue): void {
@@ -1723,6 +1732,16 @@ export class Game {
     else beginFishingExit(this.simulation);
     this.refreshHud();
   }
+
+  private readonly onSettingInput = (event: Event): void => {
+    const input = (event.target as HTMLElement).closest<HTMLInputElement>(
+      "[data-setting='volume'], [data-setting='musicVolume']",
+    );
+    if (!input) return;
+    if (input.dataset.setting === "volume") this.save.settings.volume = Number(input.value);
+    if (input.dataset.setting === "musicVolume") this.save.settings.musicVolume = Number(input.value);
+    this.applySettings();
+  };
 
   private readonly onChange = (event: Event): void => {
     const input = (event.target as HTMLElement).closest<HTMLInputElement>("[data-setting]");

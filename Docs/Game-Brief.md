@@ -233,7 +233,7 @@ Development shortcuts: `B` grants a temporary boost. In `npm run dev`, `G` jumps
 
 ## Accessibility
 
-- Mute plus separate saved music and sound-effects volume sliders
+- Mute plus separate saved music and sound-effects volume sliders controlling the title music and synthesized cues
 - High contrast: stronger shoals and outlines
 - Reduced motion: skips decorative pulses, menu/scene motion, boost camera pull, and fish body flex. Gameplay movement remains
 - Pause when the window blurs or the tab hides
@@ -247,7 +247,7 @@ The in-fishing “W A S D MOVE HOOK” cue presents all four movement keys in on
 
 ## Persistence
 
-Save key `gamecomp-new.save`. Schema version **13**. Storage is CrazyGames `sdk.data` when the SDK initializes, otherwise `localStorage`. Malformed JSON becomes a new save.
+Save key `gamecomp-new.save`. Schema version **14**. Storage is CrazyGames `sdk.data` when the SDK initializes, otherwise `localStorage`. Malformed JSON becomes a new save.
 
 Saved: money, upgrade tiers, beach/boost unlocks, discovered species, market day/sales/earnings/target, first-assignment and upgrade tutorial steps, season-complete flag, leftover learning counters, and settings (mute, music volume, sound-effects volume, contrast, reduced motion, bindings). Version 14 replaces the music toggle with a validated volume level; disabled music from version 13 migrates to zero. Version 12 added a validated Reel power tier defaulting to zero, ignored the retired `outerUnlocked` field from older saves, and preserved existing line tiers against the current world's spot requirements.
 
@@ -287,9 +287,10 @@ CrazyGames HTML5 SDK v3 is loaded from the page. Local play works if the script 
 | `src/game/objectiveIndicator.ts` | Destination badge layout |
 | `src/game/quest.ts` | First-assignment and upgrade tutorial presentation |
 | `src/game/stem.ts` | Habitat readings and leftover survey/route helpers |
-| `src/services/saveGame.ts` | Version 13 validation and migration |
+| `src/services/saveGame.ts` | Version 14 validation and migration |
 | `src/services/platformService.ts` | CrazyGames boundary |
-| `src/services/feedbackService.ts` | Synthesized audio and optional vibration |
+| `src/services/feedbackService.ts` | Title-screen music, synthesized cues, and optional vibration |
+| `src/services/gameMusic.ts` | Title-menu music element, mute/music-volume, and tab-hidden pause |
 
 Balance numbers live in `src/game/balance.ts`. Runtime art is listed in [`Asset-Manifest.md`](Asset-Manifest.md).
 
