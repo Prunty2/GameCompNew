@@ -696,6 +696,7 @@ test("Cargo tier four equips the expanded-cargo boat sprite", async ({ page }) =
 });
 
 test("dockside Departures unlocks Beach and keeps Oil Rig unavailable", async ({ page }) => {
+  await page.setViewportSize({ width: 1800, height: 900 });
   await page.goto("/?e2e=1");
   await page.evaluate(() => {
     window.localStorage.setItem("gamecomp-new.save", JSON.stringify({
@@ -715,6 +716,20 @@ test("dockside Departures unlocks Beach and keeps Oil Rig unavailable", async ({
   const departures = page.getByRole("complementary", { name: "Departures" });
   const oilRig = departures.locator('[data-destination="oil-rig"]');
   await expect(departures).toBeVisible();
+  const dockLayout = await page.locator(".harbor-panel, .departures-board").evaluateAll((elements) => elements.map((element) => {
+    const box = element.getBoundingClientRect();
+    return { x: box.x, width: box.width };
+  }));
+  expect(dockLayout[0]!.width).toBeCloseTo(900, 0);
+  expect(dockLayout[0]!.x + dockLayout[0]!.width / 2).toBeCloseTo(900, 0);
+  expect(dockLayout[1]!.x).toBeGreaterThan(dockLayout[0]!.x + dockLayout[0]!.width);
+  await expect(departures).toHaveCSS("border-radius", "20px");
+  await expect(departures.locator(".departure-copy strong").first()).toHaveCSS("font-family", /Trebuchet MS/);
+  await expect(departures.locator(".departure-card").first()).toHaveCSS("border-radius", "14px");
+  const nestedBorderContent = await departures.locator(".departure-card").first().evaluate(
+    (element) => getComputedStyle(element, "::after").content,
+  );
+  expect(nestedBorderContent).toBe("none");
   await expect(oilRig).toContainText("Oil Rig");
   await expect(oilRig).toContainText("COMING");
   await expect(oilRig).toHaveAttribute("aria-disabled", "true");
@@ -1518,7 +1533,7 @@ test("settings, keyboard pause, and local SDK fallback remain usable", async ({ 
   await expect(reducedMotionPlayButton).toHaveCSS("animation-name", "none");
   await reducedMotionPlayButton.click();
   await expect(page.locator("#scene-transition")).not.toHaveClass(/is-(covering|revealing)/);
-  await expectHorizontallyCentered(page, ".harbor-dock-layout");
+  await expectHorizontallyCentered(page, ".harbor-panel");
   await page.locator('[data-action="undock"]').click();
   await page.keyboard.press("o");
   await expect(page.getByRole("heading", { name: "Paused" })).toBeVisible();
