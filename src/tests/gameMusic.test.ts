@@ -3,14 +3,13 @@ import { GAME_MUSIC_GAIN, musicOutputVolume, musicShouldPlay, syncGameMusic } fr
 
 describe("game music playback rules", () => {
   it("plays when audible settings are active and the tab is visible", () => {
-    expect(musicShouldPlay({ muted: false, musicVolume: 0.75 }, false)).toBe(true);
     expect(musicShouldPlay({ muted: false, musicVolume: 0.75 }, false, true)).toBe(true);
   });
 
   it("does not play while muted, silent, hidden, or away from the menu", () => {
-    expect(musicShouldPlay({ muted: true, musicVolume: 0.75 }, false)).toBe(false);
-    expect(musicShouldPlay({ muted: false, musicVolume: 0 }, false)).toBe(false);
-    expect(musicShouldPlay({ muted: false, musicVolume: 0.75 }, true)).toBe(false);
+    expect(musicShouldPlay({ muted: true, musicVolume: 0.75 }, false, true)).toBe(false);
+    expect(musicShouldPlay({ muted: false, musicVolume: 0 }, false, true)).toBe(false);
+    expect(musicShouldPlay({ muted: false, musicVolume: 0.75 }, true, true)).toBe(false);
     expect(musicShouldPlay({ muted: false, musicVolume: 0.75 }, false, false)).toBe(false);
   });
 
