@@ -1385,7 +1385,11 @@ export class Game {
   }
 
   private syncMenuMusic(): void {
-    this.feedback.setMenuActive(!this.started);
+    const mainMenuActive = !this.started && (
+      this.overlay === "title"
+      || (this.overlay === "settings" || this.overlay === "credits") && this.overlayReturn === "title"
+    );
+    this.feedback.setMainMenuActive(mainMenuActive);
   }
 
   private pulseFeedback(cue: FeedbackCue): void {

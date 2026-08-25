@@ -8,8 +8,8 @@ export interface MusicSettings {
   musicVolume: number;
 }
 
-export function musicShouldPlay(settings: MusicSettings, hidden: boolean, menuActive = true): boolean {
-  return menuActive && !hidden && !settings.muted && settings.musicVolume > 0;
+export function musicShouldPlay(settings: MusicSettings, hidden: boolean, mainMenuActive: boolean): boolean {
+  return mainMenuActive && !hidden && !settings.muted && settings.musicVolume > 0;
 }
 
 export function musicOutputVolume(settings: MusicSettings): number {
@@ -39,17 +39,17 @@ export function syncGameMusic(
   music: GameMusicElement,
   settings: MusicSettings,
   hidden: boolean,
-  menuActive = true,
+  mainMenuActive: boolean,
 ): void {
-  const shouldPlay = musicShouldPlay(settings, hidden, menuActive);
-  music.muted = settings.muted || hidden || !menuActive;
-  music.volume = menuActive ? musicOutputVolume(settings) : 0;
+  const shouldPlay = musicShouldPlay(settings, hidden, mainMenuActive);
+  music.muted = settings.muted || hidden || !mainMenuActive;
+  music.volume = mainMenuActive ? musicOutputVolume(settings) : 0;
   if (shouldPlay) {
     if (music.paused) void music.play().catch(() => undefined);
     return;
   }
   if (!music.paused) music.pause();
-  if (!menuActive) music.currentTime = 0;
+  if (!mainMenuActive) music.currentTime = 0;
 }
 
 function clamp(value: number, minimum: number, maximum: number): number {
