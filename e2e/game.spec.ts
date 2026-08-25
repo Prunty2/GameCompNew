@@ -726,6 +726,8 @@ test("dockside Departures unlocks Beach and keeps Oil Rig unavailable", async ({
   await expect(departures).toHaveCSS("border-radius", "20px");
   await expect(departures.locator(".departure-copy strong").first()).toHaveCSS("font-family", /Trebuchet MS/);
   await expect(departures.locator(".departure-card").first()).toHaveCSS("border-radius", "14px");
+  await expect(departures.locator('[data-destination="beach"] .departure-copy strong')).toHaveCSS("font-size", "21.6px");
+  await expect(departures).not.toContainText("Surf club");
   const nestedBorderContent = await departures.locator(".departure-card").first().evaluate(
     (element) => getComputedStyle(element, "::after").content,
   );

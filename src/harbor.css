@@ -2118,6 +2118,10 @@ button.departure-card:active:not(:disabled) {
   line-height: 1.05;
 }
 
+.departures-board .departure-card[data-destination="beach"] .departure-copy strong {
+  font-size: 1.35rem;
+}
+
 .departure-copy small {
   color: var(--menu-fog);
   font-size: 0.61rem;
