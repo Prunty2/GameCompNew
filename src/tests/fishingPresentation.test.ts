@@ -10,6 +10,7 @@ import {
   fishingFocusPresentation,
   fishingHighlightSpecies,
   fishingLineAppearance,
+  fishingLineCurve,
   fishingPointToScreen,
   fishingReelCameraProgress,
   fishingViewLayout,
@@ -116,5 +117,37 @@ describe("fishing presentation", () => {
     const contrastCritical = fishingLineAppearance(0.94, true);
     expect(contrastSafe.colour).toBe("#ffffff");
     expect(contrastCritical.colour).not.toBe(contrastSafe.colour);
+  });
+
+  test("lets a slack line sag and drift before straightening under tension", () => {
+    const start = { x: 500, y: 200 };
+    const end = { x: 720, y: 700 };
+    const slack = fishingLineCurve(start, end, 0.12, 4, false);
+    const loaded = fishingLineCurve(start, end, 0.6, 4, false);
+    const taut = fishingLineCurve(start, end, 0.9, 4, false);
+    const midpointIndex = Math.floor(slack.points.length / 2);
+    const straightMidpointY = (start.y + end.y) * 0.5;
+
+    expect(slack.points[0]).toEqual(start);
+    expect(slack.points.at(-1)).toEqual(end);
+    expect(slack.points[midpointIndex]!.y).toBeGreaterThan(straightMidpointY + 60);
+    expect(loaded.points[midpointIndex]!.y).toBeGreaterThan(straightMidpointY);
+    expect(loaded.points[midpointIndex]!.y).toBeLessThan(slack.points[midpointIndex]!.y);
+    expect(taut.points[midpointIndex]).toEqual({ x: 610, y: 450 });
+    expect(slack.slack).toBeGreaterThan(loaded.slack);
+    expect(loaded.slack).toBeGreaterThan(taut.slack);
+  });
+
+  test("animates only the fluid drift when reduced motion is allowed", () => {
+    const start = { x: 400, y: 180 };
+    const end = { x: 640, y: 680 };
+    const movingFirst = fishingLineCurve(start, end, 0.1, 1, false);
+    const movingLater = fishingLineCurve(start, end, 0.1, 2, false);
+    const reducedFirst = fishingLineCurve(start, end, 0.1, 1, true);
+    const reducedLater = fishingLineCurve(start, end, 0.1, 2, true);
+
+    expect(movingFirst.points).not.toEqual(movingLater.points);
+    expect(reducedFirst.points).toEqual(reducedLater.points);
+    expect(reducedFirst.points[6]!.y).toBeGreaterThan((start.y + end.y) * 0.5);
   });
 });
