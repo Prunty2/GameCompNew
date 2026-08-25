@@ -56,6 +56,7 @@ import {
   fishingFishPose,
   fishingFocusPresentation,
   fishingHighlightSpecies,
+  fishingHookAttachmentProgress,
   fishingLineAppearance,
   fishingLineCurve,
   fishingPointToScreen,
@@ -694,6 +695,9 @@ export class CanvasRenderer {
       schoolOpacity,
       fishing.reeling?.hookedAt ?? null,
     );
+    const hookAttachmentProgress = fishing.reeling
+      ? fishingHookAttachmentProgress(simulation.elapsed, fishing.reeling.hookedAt)
+      : 0;
     const diveProgress = surfacing
       ? fishingReelCameraProgress(entryDiveProgress, surfaceProgress, settings.reducedMotion)
       : entryDiveProgress;
@@ -704,6 +708,7 @@ export class CanvasRenderer {
     this.canvas.dataset.fishingBackgroundPoseElapsed = focus.backgroundPoseElapsed.toFixed(3);
     this.canvas.dataset.fishingSurfaceSpriteOpacity = reelProgress.toFixed(3);
     this.canvas.dataset.fishingSurfaceBlend = surfaceProgress.toFixed(3);
+    this.canvas.dataset.fishingHookAttachmentProgress = hookAttachmentProgress.toFixed(3);
     this.canvas.dataset.fishingSpot = spot.id;
     this.canvas.dataset.fishingFishCount = String(fishing.targets.length);
     const fishScreenDepths = fishing.targets.map((target) => (
@@ -832,6 +837,30 @@ export class CanvasRenderer {
     }
 
     const restingHook = fishingPointToScreen(fishing.hook, width, layout, maximumDepth);
+    const hookedTarget = fishing.reeling ? fishing.targets[fishing.reeling.targetIndex] : null;
+    const hookedTargetPoint = hookedTarget
+      ? fishingPointToScreen(hookedTarget, width, layout, maximumDepth)
+      : restingHook;
+    const hookedTargetPose = hookedTarget
+      ? fishingFishPose(
+          hookedTarget.species,
+          focus.backgroundPoseElapsed,
+          hookedTarget.phase,
+          settings.reducedMotion,
+        )
+      : null;
+    const attachmentTarget = hookedTargetPose
+      ? {
+          x: hookedTargetPoint.x,
+          y: hookedTargetPoint.y + hookedTargetPose.verticalOffsetRatio * layout.underwaterHeight,
+        }
+      : restingHook;
+    const attachedHook = fishing.reeling && fishing.reeling.lostAt === null
+      ? {
+          x: restingHook.x + (attachmentTarget.x - restingHook.x) * hookAttachmentProgress,
+          y: restingHook.y + (attachmentTarget.y - restingHook.y) * hookAttachmentProgress,
+        }
+      : restingHook;
     const fightPull = fishing.reeling
       ? fishing.reeling.landingAt === null
         ? fishing.reeling.progress * 0.72
@@ -839,14 +868,14 @@ export class CanvasRenderer {
       : exitProgress;
     const hook = fishing.reeling || fishing.exitingAt !== null
       ? {
-          x: restingHook.x + (width * 0.5 - restingHook.x) * fightPull,
-          y: restingHook.y + (layout.surfaceY + 10 - restingHook.y) * fightPull,
+          x: attachedHook.x + (width * 0.5 - attachedHook.x) * fightPull,
+          y: attachedHook.y + (layout.surfaceY + 10 - attachedHook.y) * fightPull,
         }
       : restingHook;
     const fightMotionScale = settings.reducedMotion ? 0 : Math.min(width, height);
     if (fishing.reeling && fishing.reeling.landingAt === null) {
-      hook.x += fishing.reeling.motionX * fightMotionScale;
-      hook.y += fishing.reeling.motionY * fightMotionScale;
+      hook.x += fishing.reeling.motionX * fightMotionScale * hookAttachmentProgress;
+      hook.y += fishing.reeling.motionY * fightMotionScale * hookAttachmentProgress;
     }
     const fishOrigin = { ...hook };
     if (loss) {
@@ -855,8 +884,9 @@ export class CanvasRenderer {
     }
     const hookSize = clamp(Math.min(width, height) * 0.076, 46, 68);
     const hooked = fishing.reeling !== null;
-    const hookDrawY = hooked ? hook.y - hookSize * 0.12 : hook.y;
-    const lineEndY = hooked ? hookDrawY - hookSize * 0.16 : hook.y;
+    const hookEmbedProgress = hooked ? hookAttachmentProgress : 0;
+    const hookDrawY = hook.y - hookSize * 0.12 * hookEmbedProgress;
+    const lineEndY = hookDrawY - hookSize * 0.16 * hookEmbedProgress;
     const lineStart = { x: width * 0.5, y: layout.surfaceY - 2 };
     const lineCurve = fishingLineCurve(
       lineStart,
@@ -896,9 +926,19 @@ export class CanvasRenderer {
       const fishOffset = facing * hookSize * 0.22;
       context.save();
       context.globalAlpha = 1;
-      const fishStart = {
+      const attachedFishPosition = {
         x: fishOrigin.x - fishOffset,
         y: fishOrigin.y + hookSize * 0.04,
+      };
+      const attachmentStart = hookedTargetPose
+        ? {
+            x: hookedTargetPoint.x,
+            y: hookedTargetPoint.y + hookedTargetPose.verticalOffsetRatio * layout.underwaterHeight,
+          }
+        : attachedFishPosition;
+      const fishStart = {
+        x: attachmentStart.x + (attachedFishPosition.x - attachmentStart.x) * hookAttachmentProgress,
+        y: attachmentStart.y + (attachedFishPosition.y - attachmentStart.y) * hookAttachmentProgress,
       };
       const escapedTarget = loss ? fishing.targets[fishing.reeling.targetIndex] : null;
       const escapedPose = escapedTarget
@@ -917,11 +957,25 @@ export class CanvasRenderer {
         fishStart.x + (fishDestination.x - fishStart.x) * (loss?.swim ?? 0),
         fishStart.y + (fishDestination.y - fishStart.y) * (loss?.swim ?? 0),
       );
-      context.rotate(wriggle * (fishing.reeling.behaviour === "thrash" ? 0.45 : 0.22));
-      context.scale(1, 1 + Math.abs(wriggle) * 0.05);
+      const fightRotation = wriggle * (fishing.reeling.behaviour === "thrash" ? 0.45 : 0.22);
+      const attachmentRotation = hookedTargetPose?.rotation ?? 0;
+      context.rotate(
+        attachmentRotation + (fightRotation - attachmentRotation) * hookAttachmentProgress,
+      );
+      const attachmentScaleX = hookedTargetPose?.scaleX ?? 1;
+      const attachmentScaleY = hookedTargetPose?.scaleY ?? 1;
+      context.scale(
+        attachmentScaleX + (1 - attachmentScaleX) * hookAttachmentProgress,
+        attachmentScaleY + (1 + Math.abs(wriggle) * 0.05 - attachmentScaleY) * hookAttachmentProgress,
+      );
       this.drawFish(
         fishing.reeling.species,
-        fishingFishPose(fishing.reeling.species, simulation.elapsed, 0, settings.reducedMotion).animationFrame,
+        fishingFishPose(
+          fishing.reeling.species,
+          simulation.elapsed,
+          (hookedTarget?.phase ?? 0) * (1 - hookAttachmentProgress),
+          settings.reducedMotion,
+        ).animationFrame,
         { x: 0, y: 0 },
         facing,
         width,

@@ -3,12 +3,14 @@ import { FISH } from "../game/balance";
 import {
   FISHING_DIVE_DURATION,
   FISHING_ENVIRONMENT_KEYS,
+  FISHING_HOOK_ATTACHMENT_DURATION,
   FISHING_RARITY_COLOURS,
   fishingDepthRequirementLabel,
   fishingDiveProgress,
   fishingFishPose,
   fishingFocusPresentation,
   fishingHighlightSpecies,
+  fishingHookAttachmentProgress,
   fishingLineAppearance,
   fishingLineCurve,
   fishingPointToScreen,
@@ -38,6 +40,13 @@ describe("fishing presentation", () => {
     expect(fishingReelCameraProgress(1, 0.5, false)).toBe(0.5);
     expect(fishingReelCameraProgress(1, 1, false)).toBe(0);
     expect(fishingReelCameraProgress(1, 0, true)).toBe(0);
+  });
+
+  test("eases the hook into the fish over a short attachment window", () => {
+    expect(fishingHookAttachmentProgress(10, 10)).toBe(0);
+    expect(fishingHookAttachmentProgress(10 + FISHING_HOOK_ATTACHMENT_DURATION / 2, 10)).toBeCloseTo(0.5);
+    expect(fishingHookAttachmentProgress(10 + FISHING_HOOK_ATTACHMENT_DURATION, 10)).toBe(1);
+    expect(fishingHookAttachmentProgress(20, 10)).toBe(1);
   });
 
   test("keeps the subdued background school moving during a fight", () => {
