@@ -14,6 +14,7 @@ export type FeedbackCue =
 export interface FeedbackSettings {
   muted: boolean;
   volume: number;
+  musicVolume: number;
 }
 
 export class FeedbackService {

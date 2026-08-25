@@ -28,13 +28,14 @@ describe("versioned save data", () => {
       settings: {
         muted: true,
         volume: 12,
+        musicVolume: -4,
         highContrast: true,
         reducedMotion: "yes",
         controls: { left: "ArrowLeft", right: "ArrowLeft", action: "Tab" },
       },
     }));
     expect(loadSave(storage)).toEqual({
-      version: 12,
+      version: 14,
       progress: {
         money: 999_999,
         upgrades: { cargo: 7, engine: 0, lamp: 1, line: 0, reel: 0 },
@@ -58,6 +59,7 @@ describe("versioned save data", () => {
       settings: {
         muted: true,
         volume: 1,
+        musicVolume: 0,
         highContrast: true,
         reducedMotion: false,
         controls: { ...DEFAULT_CONTROL_BINDINGS, left: "ArrowLeft" },
@@ -70,7 +72,7 @@ describe("versioned save data", () => {
     const migrated = loadSave(storage);
     expect(migrated.progress.money).toBe(0);
     expect(migrated.settings.muted).toBe(true);
-    expect(migrated.version).toBe(12);
+    expect(migrated.version).toBe(14);
   });
 
   test("adds a safe line-depth default to older saves", () => {
@@ -85,7 +87,7 @@ describe("versioned save data", () => {
       settings: defaultSave().settings,
     }));
     const migrated = loadSave(storage);
-    expect(migrated.version).toBe(12);
+    expect(migrated.version).toBe(14);
     expect(migrated.progress.upgrades).toEqual({ cargo: 2, engine: 1, lamp: 2, line: 0, reel: 0 });
     expect("outerUnlocked" in migrated.progress).toBe(false);
     expect(migrated.progress.money).toBe(140);
@@ -121,7 +123,7 @@ describe("versioned save data", () => {
     }));
 
     const migrated = loadSave(storage);
-    expect(migrated.version).toBe(12);
+    expect(migrated.version).toBe(14);
     expect(migrated.settings.controls).toEqual(DEFAULT_CONTROL_BINDINGS);
   });
 
@@ -176,7 +178,28 @@ describe("versioned save data", () => {
     save.progress.discovered = ["bluegill", "whiteSucker"];
     save.progress.upgrades.reel = 5;
     save.settings.reducedMotion = true;
+    save.settings.musicVolume = 0.35;
     saveGame(storage, save);
     expect(loadSave(storage)).toEqual(save);
+  });
+
+  test("migrates the former music toggle to a volume level", () => {
+    const baseline = defaultSave();
+    const storage = memoryStorage(JSON.stringify({
+      version: 12,
+      progress: baseline.progress,
+      settings: {
+        muted: false,
+        volume: 0.4,
+        musicEnabled: false,
+        highContrast: false,
+        reducedMotion: false,
+        controls: baseline.settings.controls,
+      },
+    }));
+
+    const migrated = loadSave(storage);
+    expect(migrated.version).toBe(14);
+    expect(migrated.settings.musicVolume).toBe(0);
   });
 });

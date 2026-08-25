@@ -13,20 +13,21 @@ const SAVE_KEY = "gamecomp-new.save";
 export interface GameSettings {
   muted: boolean;
   volume: number;
+  musicVolume: number;
   highContrast: boolean;
   reducedMotion: boolean;
   controls: ControlBindings;
 }
 
 export interface SaveData {
-  version: 12;
+  version: 14;
   progress: ProgressState;
   settings: GameSettings;
 }
 
 export function defaultSave(): SaveData {
   return {
-    version: 12,
+    version: 14,
     progress: {
       money: 0,
       upgrades: { cargo: 0, engine: 0, lamp: 0, line: 0, reel: 0 },
@@ -50,6 +51,7 @@ export function defaultSave(): SaveData {
     settings: {
       muted: false,
       volume: 0.75,
+      musicVolume: 0.75,
       highContrast: false,
       reducedMotion: false,
       controls: { ...DEFAULT_CONTROL_BINDINGS },
@@ -68,7 +70,7 @@ export function loadSave(storage: SaveStorage): SaveData {
     const learning = objectValue(progress.learning);
     const settings = objectValue(candidate.settings);
     return {
-      version: 12,
+      version: 14,
       progress: {
         money: finiteInteger(progress.money, 0, 999_999),
         upgrades: readUpgrades(upgrades),
@@ -95,6 +97,12 @@ export function loadSave(storage: SaveStorage): SaveData {
       settings: {
         muted: settings.muted === true,
         volume: finiteNumber(settings.volume, 0, 1, 0.75),
+        musicVolume: finiteNumber(
+          settings.musicVolume,
+          0,
+          1,
+          settings.musicEnabled === false ? 0 : 0.75,
+        ),
         highContrast: settings.highContrast === true,
         reducedMotion: settings.reducedMotion === true,
         controls: readControlBindings(settings.controls),

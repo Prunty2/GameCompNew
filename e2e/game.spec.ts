@@ -142,17 +142,25 @@ test("game music loops on the title screen and stops during play", async ({ page
   await expect.poll(() => gameMusicState(page)).toEqual(expect.objectContaining({ loop: true, paused: false, muted: false }));
 });
 
-test("mute and volume settings control game music", async ({ page }) => {
+test("mute and music volume control game music independently of sound effects", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Settings" }).click();
   await expect.poll(() => gameMusicState(page)).toEqual(expect.objectContaining({ loop: true, paused: false, muted: false }));
+  await page.getByRole("tab", { name: "Audio" }).click();
   const defaultVolume = (await gameMusicState(page))!.volume;
   expect(defaultVolume).toBeCloseTo(0.045, 2);
   expect(defaultVolume).toBeLessThan(0.08);
 
-  await page.locator('[data-setting="volume"]').evaluate((element) => {
+  await page.locator('[data-setting="musicVolume"]').evaluate((element) => {
     const input = element as HTMLInputElement;
     input.value = "0.2";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  await expect.poll(async () => (await gameMusicState(page))?.volume).toBeCloseTo(0.012, 3);
+
+  await page.locator('[data-setting="volume"]').evaluate((element) => {
+    const input = element as HTMLInputElement;
+    input.value = "0.1";
     input.dispatchEvent(new Event("input", { bubbles: true }));
   });
   await expect.poll(async () => (await gameMusicState(page))?.volume).toBeCloseTo(0.012, 3);
@@ -1330,26 +1338,73 @@ test("settings, keyboard pause, and local SDK fallback remain usable", async ({ 
   const titleLakeFrame = await page.locator("#game-canvas").evaluate((element) => (element as HTMLCanvasElement).toDataURL());
   await page.getByRole("button", { name: "Settings" }).click();
   await expect(page.locator(".settings-panel")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Controls" })).not.toBeFocused();
+  await expect(page.getByRole("tab", { name: "General" })).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByRole("tab", { name: "Audio" })).toHaveAttribute("aria-selected", "false");
+  await expect(page.getByRole("tab", { name: "Controls" })).toHaveAttribute("aria-selected", "false");
   await expect(page.locator(".settings-overlay")).toHaveClass(/is-title-entry/);
   await expect(page.locator(".settings-overlay")).toHaveCSS("animation-name", "settings-backdrop-in");
   const settingsLakeFrame = await page.locator("#game-canvas").evaluate((element) => (element as HTMLCanvasElement).toDataURL());
   expect(settingsLakeFrame).toBe(titleLakeFrame);
   await expect(page.locator(".settings-wordmark")).toBeVisible();
   await expectHorizontallyCentered(page, ".settings-panel");
-  await expect(page.locator(".setting-option")).toHaveCount(6);
+  await expect(page.getByRole("heading", { name: "Accessibility" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Save data" })).toBeVisible();
+  await expect(page.locator(".setting-option")).toHaveCount(3);
   await expect(page.getByRole("button", { name: "Reset save" })).toBeVisible();
   await expect(page.locator(".settings-done")).toHaveCSS("border-radius", "14px");
+  await expect(page.getByRole("tab", { name: "General" })).toHaveCSS("border-radius", "999px");
   await expect(page.locator(".settings-overlay")).toHaveCSS("backdrop-filter", "blur(8px) saturate(0.78)");
+
+  const anchoredSettingsElements = async (): Promise<{
+    done: { x: number; y: number };
+    logo: { x: number; y: number };
+  }> => {
+    const logo = (await page.locator(".settings-wordmark").boundingBox())!;
+    const done = (await page.locator(".settings-done").boundingBox())!;
+    return { logo: { x: logo.x, y: logo.y }, done: { x: done.x, y: done.y } };
+  };
+  const expectAnchorsUnmoved = (
+    actual: Awaited<ReturnType<typeof anchoredSettingsElements>>,
+    expected: Awaited<ReturnType<typeof anchoredSettingsElements>>,
+  ): void => {
+    expect(actual.logo.x).toBeCloseTo(expected.logo.x, 1);
+    expect(actual.logo.y).toBeCloseTo(expected.logo.y, 1);
+    expect(actual.done.x).toBeCloseTo(expected.done.x, 1);
+    expect(actual.done.y).toBeCloseTo(expected.done.y, 1);
+  };
+  const generalAnchors = await anchoredSettingsElements();
+
+  await page.getByRole("tab", { name: "Audio" }).click();
+  await expect(page.getByRole("tab", { name: "Audio" })).toHaveAttribute("aria-selected", "true");
+  await expect(page.locator(".settings-audio")).toHaveCSS("animation-name", "settings-tab-forward-in");
+  await expect(page.getByRole("heading", { name: "Audio output" })).toBeVisible();
+  await expect(page.locator(".settings-audio .setting-option")).toHaveCount(3);
+  const musicSlider = page.getByRole("slider", { name: "Music volume" });
+  const soundEffectsSlider = page.getByRole("slider", { name: "Sound effects volume" });
+  await expect(musicSlider).toHaveValue("0.75");
+  await expect(soundEffectsSlider).toHaveValue("0.75");
+  await musicSlider.fill("0.35");
+  await soundEffectsSlider.fill("0.6");
+  await expect(musicSlider).toHaveValue("0.35");
+  await expect(soundEffectsSlider).toHaveValue("0.6");
+  const audioAnchors = await anchoredSettingsElements();
+  expectAnchorsUnmoved(audioAnchors, generalAnchors);
+
+  await page.getByRole("tab", { name: "General" }).click();
+  await expect(page.locator(".settings-general")).toHaveCSS("animation-name", "settings-tab-backward-in");
+  expectAnchorsUnmoved(await anchoredSettingsElements(), generalAnchors);
   await page.getByText("High contrast").click();
   await page.getByText("Reduced motion").click();
-  await page.getByRole("button", { name: "Controls" }).click();
-  await expectHorizontallyCentered(page, ".controls-panel");
-  await expect(page.locator(".controls-wordmark")).toBeVisible();
+  await page.getByRole("tab", { name: "Controls" }).click();
+  await expect(page.getByRole("tab", { name: "Controls" })).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByRole("heading", { name: "Key bindings" })).toBeVisible();
+  await expectHorizontallyCentered(page, ".settings-panel");
+  await expect(page.locator(".settings-wordmark")).toBeVisible();
+  expectAnchorsUnmoved(await anchoredSettingsElements(), generalAnchors);
   await expect(page.locator(".binding-row")).toHaveCount(7);
   await expect(page.getByRole("button", { name: "Rebind Boost" })).toHaveText("Left Shift");
   await expect(page.locator(".binding-row").first()).toHaveCSS("border-radius", "12px");
-  await expect(page.locator(".controls-overlay")).toHaveCSS("backdrop-filter", "blur(8px) saturate(0.78)");
+  await expect(page.locator(".settings-overlay")).toHaveCSS("backdrop-filter", "blur(8px) saturate(0.78)");
   await expect(page.getByRole("button", { name: "Rebind Hook up" })).toHaveText("W");
   await expect(page.getByRole("button", { name: "Rebind Hook down" })).toHaveText("S");
   await page.getByRole("button", { name: "Rebind Hook up" }).click();
@@ -1360,7 +1415,6 @@ test("settings, keyboard pause, and local SDK fallback remain usable", async ({ 
   await page.getByRole("button", { name: "Rebind Pause" }).click();
   await page.keyboard.press("KeyO");
   await expect(page.getByRole("button", { name: "Rebind Pause" })).toHaveText("O");
-  await page.getByRole("button", { name: "Done" }).click();
   await page.getByRole("button", { name: "Done" }).click();
   const reducedMotionPlayButton = page.getByRole("button", { name: "Play", exact: true });
   await reducedMotionPlayButton.hover();

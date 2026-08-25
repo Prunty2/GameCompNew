@@ -388,7 +388,7 @@ Vite `publicDir` is `false`. Only these files are imported.
 - Runtime path: `src/audio/Game Music.mp3`
 - Runtime role: looping music on the title screen only
 - Format: MP3, 44.1 kHz stereo, 320 kb/s, duration 3:14
-- Playback: `src/services/gameMusic.ts` creates a hidden looping `HTMLAudioElement` mixed very quietly (`GAME_MUSIC_GAIN` 0.06). `FeedbackService` starts it after the first pointer or key gesture while the title menu is open, follows saved mute and the live volume slider, and pauses it during play, while muted, silent, or hidden.
+- Playback: `src/services/gameMusic.ts` creates a hidden looping `HTMLAudioElement` mixed very quietly (`GAME_MUSIC_GAIN` 0.06). `FeedbackService` starts it after the first pointer or key gesture while the title menu is open, follows saved mute and the live Music volume slider, and pauses it during play, while muted, silent, or hidden. The Sound effects slider independently controls synthesized cues.
 - Browser autoplay policy: the file is preloaded at boot but does not play until a user gesture unlocks audio.
 
 ## Procedural audio assets

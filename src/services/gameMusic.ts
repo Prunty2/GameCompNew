@@ -5,15 +5,15 @@ export const GAME_MUSIC_GAIN = 0.06;
 
 export interface MusicSettings {
   muted: boolean;
-  volume: number;
+  musicVolume: number;
 }
 
 export function musicShouldPlay(settings: MusicSettings, hidden: boolean, menuActive = true): boolean {
-  return menuActive && !hidden && !settings.muted && settings.volume > 0;
+  return menuActive && !hidden && !settings.muted && settings.musicVolume > 0;
 }
 
 export function musicOutputVolume(settings: MusicSettings): number {
-  return settings.muted ? 0 : clamp(settings.volume, 0, 1) * GAME_MUSIC_GAIN;
+  return settings.muted ? 0 : clamp(settings.musicVolume, 0, 1) * GAME_MUSIC_GAIN;
 }
 
 export interface GameMusicElement {
