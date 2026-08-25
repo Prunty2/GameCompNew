@@ -36,6 +36,11 @@ export interface FishingLineAppearance {
   width: number;
 }
 
+export interface FishingLineCurve {
+  points: readonly WorldPoint[];
+  slack: number;
+}
+
 const LINE_COLOUR_SAFE = "#f4e2b9";
 const LINE_COLOUR_WARN = "#e8a44d";
 const LINE_COLOUR_CRITICAL = "#e45a3a";
@@ -183,6 +188,38 @@ export function fishingLineAppearance(tension: number, highContrast: boolean): F
     colour,
     width: (highContrast ? 3 : 2) + amount * (highContrast ? 2.2 : 2.6),
   };
+}
+
+export function fishingLineCurve(
+  start: WorldPoint,
+  end: WorldPoint,
+  tension: number,
+  elapsed: number,
+  reducedMotion: boolean,
+): FishingLineCurve {
+  const criticalTension = Math.max(0.01, BALANCE.fishingCriticalTension);
+  const tensionRatio = clamp(tension / criticalTension, 0, 1);
+  const slack = (1 - tensionRatio) ** 1.35;
+  const distance = Math.hypot(end.x - start.x, end.y - start.y);
+  const sag = clamp(distance * 0.16, 10, 96) * slack;
+  const sway = clamp(distance * 0.032, 3, 20) * slack;
+  const phase = reducedMotion ? 0.5 : elapsed * 1.15;
+  const segmentCount = 12;
+  const points = Array.from({ length: segmentCount + 1 }, (_, index): WorldPoint => {
+    const progress = index / segmentCount;
+    const gravityEnvelope = 4 * progress * (1 - progress);
+    const swayEnvelope = Math.sin(Math.PI * progress) ** 2;
+    const current = Math.sin(phase - progress * 2.2) * 0.65
+      + Math.sin(phase * 0.47 + progress * 4.1) * 0.35;
+    return {
+      x: start.x + (end.x - start.x) * progress + sway * swayEnvelope * current,
+      y: start.y + (end.y - start.y) * progress + sag * gravityEnvelope,
+    };
+  });
+
+  points[0] = { ...start };
+  points[points.length - 1] = { ...end };
+  return { points, slack };
 }
 
 function mixHex(from: string, to: string, amount: number): string {

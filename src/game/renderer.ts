@@ -57,6 +57,7 @@ import {
   fishingFocusPresentation,
   fishingHighlightSpecies,
   fishingLineAppearance,
+  fishingLineCurve,
   fishingPointToScreen,
   fishingReelCameraProgress,
   fishingViewLayout,
@@ -728,7 +729,8 @@ export class CanvasRenderer {
       delete this.canvas.dataset.fishingLossSwimProgress;
       delete this.canvas.dataset.fishingLossRetractProgress;
     }
-    const line = fishingLineAppearance(loss ? 0 : fishing.reeling?.tension ?? 0, settings.highContrast);
+    const lineTension = loss ? 0 : fishing.reeling?.tension ?? 0;
+    const line = fishingLineAppearance(lineTension, settings.highContrast);
     this.canvas.dataset.fishingLineColour = line.colour;
     if (fishing.reeling) {
       this.canvas.dataset.fishingReelProgress = fishing.reeling.progress.toFixed(3);
@@ -855,12 +857,28 @@ export class CanvasRenderer {
     const hooked = fishing.reeling !== null;
     const hookDrawY = hooked ? hook.y - hookSize * 0.12 : hook.y;
     const lineEndY = hooked ? hookDrawY - hookSize * 0.16 : hook.y;
+    const lineStart = { x: width * 0.5, y: layout.surfaceY - 2 };
+    const lineCurve = fishingLineCurve(
+      lineStart,
+      { x: hook.x, y: lineEndY },
+      loss ? BALANCE.fishingCriticalTension : lineTension,
+      simulation.elapsed,
+      settings.reducedMotion,
+    );
+    this.canvas.dataset.fishingLineSlack = lineCurve.slack.toFixed(3);
     context.strokeStyle = line.colour;
     context.lineWidth = line.width;
     context.lineCap = "round";
+    context.lineJoin = "round";
     context.beginPath();
-    context.moveTo(width * 0.5, layout.surfaceY - 2);
-    context.lineTo(hook.x, lineEndY);
+    context.moveTo(lineCurve.points[0]!.x, lineCurve.points[0]!.y);
+    for (let index = 1; index < lineCurve.points.length - 1; index += 1) {
+      const point = lineCurve.points[index]!;
+      const next = lineCurve.points[index + 1]!;
+      context.quadraticCurveTo(point.x, point.y, (point.x + next.x) * 0.5, (point.y + next.y) * 0.5);
+    }
+    const lineEnd = lineCurve.points[lineCurve.points.length - 1]!;
+    context.quadraticCurveTo(lineEnd.x, lineEnd.y, lineEnd.x, lineEnd.y);
     context.stroke();
     if (!loss) this.drawTackleCell(1, 1, hook.x, hookDrawY, hookSize, hookSize);
     if (fishing.reeling) {
