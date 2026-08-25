@@ -10,6 +10,20 @@ async function expectHorizontallyCentered(page: import("@playwright/test").Page,
   expect(offset).toBeLessThanOrEqual(1);
 }
 
+async function gameMusicState(page: import("@playwright/test").Page): Promise<{
+  loop: boolean;
+  paused: boolean;
+  muted: boolean;
+  volume: number;
+} | null> {
+  const audio = page.locator("audio[data-game-music]");
+  if (await audio.count() === 0) return null;
+  return audio.evaluate((element) => {
+    const music = element as HTMLAudioElement;
+    return { loop: music.loop, paused: music.paused, muted: music.muted, volume: music.volume };
+  });
+}
+
 test.beforeEach(async ({ page }) => {
   await page.route("https://sdk.crazygames.com/**", (route) => route.abort());
 });
@@ -104,6 +118,56 @@ test("main menu seagulls do not build up while the page is unfocused", async ({ 
 
   await page.evaluate(() => window.dispatchEvent(new Event("focus")));
   await expect(flocks).toHaveCount(1, { timeout: 3_000 });
+});
+
+test("game music loops on the title screen and stops during play", async ({ page }) => {
+  await page.goto("/");
+  await expect.poll(() => gameMusicState(page)).toEqual(expect.objectContaining({ loop: true }));
+
+  await page.getByRole("button", { name: "Settings" }).click();
+  await expect.poll(() => gameMusicState(page)).toEqual(expect.objectContaining({ loop: true, paused: false, muted: false }));
+
+  await page.getByRole("button", { name: "Done" }).click();
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await expect(page.locator('[data-action="undock"]')).toBeVisible();
+  await expect.poll(() => gameMusicState(page)).toEqual(expect.objectContaining({ loop: true, paused: true }));
+
+  await page.locator('[data-action="undock"]').click();
+  await expect(page.locator('[data-action="undock"]')).toHaveCount(0);
+  await expect.poll(() => gameMusicState(page)).toEqual(expect.objectContaining({ loop: true, paused: true }));
+
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "Title screen" }).click();
+  await expect(page.getByRole("button", { name: "Play", exact: true })).toBeVisible();
+  await expect.poll(() => gameMusicState(page)).toEqual(expect.objectContaining({ loop: true, paused: false, muted: false }));
+});
+
+test("mute and volume settings control game music", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Settings" }).click();
+  await expect.poll(() => gameMusicState(page)).toEqual(expect.objectContaining({ loop: true, paused: false, muted: false }));
+  const defaultVolume = (await gameMusicState(page))!.volume;
+  expect(defaultVolume).toBeCloseTo(0.045, 2);
+  expect(defaultVolume).toBeLessThan(0.08);
+
+  await page.locator('[data-setting="volume"]').evaluate((element) => {
+    const input = element as HTMLInputElement;
+    input.value = "0.2";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  await expect.poll(async () => (await gameMusicState(page))?.volume).toBeCloseTo(0.012, 3);
+
+  const mute = page.locator("label.setting-toggle").filter({ hasText: "Mute" });
+  await mute.click();
+  await expect.poll(() => gameMusicState(page)).toEqual(expect.objectContaining({ loop: true, paused: true, muted: true, volume: 0 }));
+
+  await mute.click();
+  await expect.poll(() => gameMusicState(page)).toEqual(expect.objectContaining({
+    loop: true,
+    paused: false,
+    muted: false,
+  }));
+  await expect.poll(async () => (await gameMusicState(page))?.volume).toBeCloseTo(0.012, 3);
 });
 
 test("credits lists the team and returns to the main menu", async ({ page }) => {

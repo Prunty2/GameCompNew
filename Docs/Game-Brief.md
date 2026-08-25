@@ -232,7 +232,7 @@ Development shortcuts: `B` grants a temporary boost. In `npm run dev`, `G` jumps
 
 ## Accessibility
 
-- Mute and volume (synthesized audio only; no bundled music)
+- Mute and volume (quiet looping title-screen music, plus synthesized cues)
 - High contrast: stronger shoals and outlines
 - Reduced motion: skips decorative pulses, menu/scene motion, boost camera pull, and fish body flex. Gameplay movement remains
 - Pause when the window blurs or the tab hides
@@ -288,7 +288,8 @@ CrazyGames HTML5 SDK v3 is loaded from the page. Local play works if the script 
 | `src/game/stem.ts` | Habitat readings and leftover survey/route helpers |
 | `src/services/saveGame.ts` | Version 12 validation and migration |
 | `src/services/platformService.ts` | CrazyGames boundary |
-| `src/services/feedbackService.ts` | Synthesized audio and optional vibration |
+| `src/services/feedbackService.ts` | Title-screen music, synthesized cues, and optional vibration |
+| `src/services/gameMusic.ts` | Title-menu music element, mute/volume, and tab-hidden pause |
 
 Balance numbers live in `src/game/balance.ts`. Runtime art is listed in [`Asset-Manifest.md`](Asset-Manifest.md).
 

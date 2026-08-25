@@ -137,7 +137,8 @@ renderer.ts              Canvas drawing only
 input.ts / controls.ts   browser input → game intent
 saveGame.ts              version 12 validation and migration
 platformService.ts       only CrazyGames SDK boundary
-feedbackService.ts       synthesized audio and haptics
+feedbackService.ts       looping game music, synthesized audio, and haptics
+gameMusic.ts             title-screen music playback
 ```
 
 Fishing presentation, camera, panorama, steam, and the destination badge are separate modules so `renderer.ts` does not own motion rules.
@@ -197,9 +198,9 @@ Art direction is restrained gouache/screen-print scenery, deep teal interfaces, 
 
 Lake and Beach each have a 3×3 base UI atlas and three base 4-frame swim sheets. Five additional species use their own 4-frame swim sheet and transparent UI derivative. The original 2×2 `fish-atlas.png` remains only for the fishing-hook cell. Prompts, sizes, and roles are in `Docs/Asset-Manifest.md`.
 
-### Procedural audio
+### Audio
 
-No audio file is bundled. `FeedbackService` synthesises tones and optional vibration.
+`src/audio/Game Music.mp3` loops quietly on the title screen after the first pointer or key gesture, including Settings and Credits opened from the menu. It stops when a voyage starts and resumes on return to the title screen. Mute, volume, and a hidden tab pause it. `FeedbackService` still synthesises cues and optional vibration.
 
 | Cue | Purpose | Non-audio equivalent |
 | --- | --- | --- |
@@ -209,7 +210,7 @@ No audio file is bundled. `FeedbackService` synthesises tones and optional vibra
 | Collision / deny | Damage or a blocked action | Toast and disabled copy |
 | Dock | Arrival | Harbor overlay |
 
-Mute and volume drive master gain. Vibration is never required to understand state.
+Mute and volume drive synthesized master gain and the looping music element. Vibration is never required to understand state.
 
 ### Implemented visual evidence
 
