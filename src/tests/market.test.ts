@@ -83,14 +83,18 @@ describe("fish market", () => {
     expect(spotForSpecies("longnoseGar").id).toBe("mosswaterPool");
     expect(spotForSpecies("estuaryPerch").id).toBe("mosswaterPool");
     expect(spotForSpecies("mulloway").id).toBe("outerGloam");
+    expect(spotForSpecies("atlanticSpadefish").id).toBe("sunwardShoal");
+    expect(spotForSpecies("atlanticMahiMahi").id).toBe("outerGloam");
     expect(worldForSpecies("bluegill")).toBe("lake");
     expect(worldForSpecies("snapper")).toBe("beach");
+    expect(worldForSpecies("greaterAmberjack")).toBe("oil-rig");
   });
 
   test("prices fish by required depth within each world", () => {
     const byWorld = {
       lake: species.filter((fish) => worldForSpecies(fish) === "lake"),
       beach: species.filter((fish) => worldForSpecies(fish) === "beach"),
+      oilRig: species.filter((fish) => worldForSpecies(fish) === "oil-rig"),
     };
 
     for (const worldSpecies of Object.values(byWorld)) {
@@ -110,6 +114,15 @@ describe("fish market", () => {
         expect(deepMin).toBeGreaterThan(shallowMax);
       }
     }
+  });
+
+  test("sets the Oil Rig whole-fish value range from 90 to 270 shells", () => {
+    const oilRigValues = species
+      .filter((fish) => worldForSpecies(fish) === "oil-rig")
+      .map((fish) => FISH[fish].value);
+    expect(oilRigValues).toHaveLength(6);
+    expect(Math.min(...oilRigValues)).toBe(90);
+    expect(Math.max(...oilRigValues)).toBe(270);
   });
 
   test("gives Beach fish a depth-matched premium over Lake peers", () => {

@@ -1,6 +1,7 @@
 import {
   BEACH_SPOT_RESIDENTS,
   FISH,
+  OIL_RIG_SPOT_RESIDENTS,
   WORLD_SPOT_RESIDENTS,
   type FishSpecies,
   type HarborId,
@@ -27,6 +28,7 @@ export function marketBoardMarkup(
   detailOpen: boolean,
   fishAtlasUrl: string,
   beachFishAtlasUrl: string,
+  oilRigFishAtlasUrl: string,
 ): string {
   const speciesList = Object.values(WORLD_SPOT_RESIDENTS[simulation.world]).flat();
   const discovered = speciesList.filter((species) => (
@@ -36,7 +38,7 @@ export function marketBoardMarkup(
 
   if (detailOpen) {
     return `<section class="market-board is-detail-view" aria-label="Fish market">
-      ${marketDetailMarkup(simulation, harborId, selected, fishAtlasUrl, beachFishAtlasUrl)}
+      ${marketDetailMarkup(simulation, harborId, selected, fishAtlasUrl, beachFishAtlasUrl, oilRigFishAtlasUrl)}
     </section>`;
   }
 
@@ -44,7 +46,7 @@ export function marketBoardMarkup(
     if (!simulation.progress.discovered.includes(species)) {
       return `<div class="market-listing is-locked" role="listitem" aria-label="Undiscovered fish, locked" style="--market-card-index: ${index}">
         <span class="market-locked-fish-wrap" aria-hidden="true">
-          ${fishIcon(species, fishAtlasUrl, beachFishAtlasUrl, "market-listing-fish")}
+          ${fishIcon(species, fishAtlasUrl, beachFishAtlasUrl, oilRigFishAtlasUrl, "market-listing-fish")}
           <span class="market-lock-question">?</span>
         </span>
         <span class="market-listing-copy"><strong>Undiscovered</strong><span class="market-lock-pill">Locked</span></span>
@@ -61,7 +63,7 @@ export function marketBoardMarkup(
       ? `<span class="market-tracking-badge" aria-label="Tracking ${FISH[species].name}">!</span>`
       : "";
     return `<button class="market-listing" type="button" data-action="select-market-fish" data-species="${species}" aria-label="${FISH[species].name}, ${quote.price} shells${cargoLabel}${isTracked ? ", tracked" : ""}" style="--market-card-index: ${index}">
-      <span class="market-listing-fish-wrap">${trackingBadge}${fishIcon(species, fishAtlasUrl, beachFishAtlasUrl, "market-listing-fish")}${cargoBadge}</span>
+      <span class="market-listing-fish-wrap">${trackingBadge}${fishIcon(species, fishAtlasUrl, beachFishAtlasUrl, oilRigFishAtlasUrl, "market-listing-fish")}${cargoBadge}</span>
       <span class="market-listing-copy"><strong>${FISH[species].name}</strong><span class="market-price-pill"><span class="ui-icon icon-shells" aria-hidden="true"></span>${quote.price}</span></span>
     </button>`;
   }).join("");
@@ -94,6 +96,7 @@ function marketDetailMarkup(
   species: FishSpecies,
   fishAtlasUrl: string,
   beachFishAtlasUrl: string,
+  oilRigFishAtlasUrl: string,
 ): string {
   const fish = FISH[species];
   const quote = marketQuote(species, harborId, simulation.progress.marketDay, simulation.seed);
@@ -103,7 +106,7 @@ function marketDetailMarkup(
   return `<article class="market-detail" aria-labelledby="market-detail-title">
     <div class="market-detail-layout">
       <section class="market-fish-summary" aria-label="${fish.name} sale summary">
-        ${fishIcon(species, fishAtlasUrl, beachFishAtlasUrl, "market-detail-fish")}
+        ${fishIcon(species, fishAtlasUrl, beachFishAtlasUrl, oilRigFishAtlasUrl, "market-detail-fish")}
         <div class="market-fish-heading"><h3 id="market-detail-title">${fish.name}</h3></div>
         <div class="market-summary-pills">
           <span class="market-price-pill is-large"><span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${quote.price}</strong><small>each</small></span>
@@ -126,6 +129,7 @@ export function fishIcon(
   species: FishSpecies,
   fishAtlasUrl: string,
   beachFishAtlasUrl: string,
+  oilRigFishAtlasUrl: string,
   className: string,
 ): string {
   if (species === "whiteSucker") {
@@ -145,7 +149,8 @@ export function fishIcon(
   }
   const [column, row] = FISH[species].atlasCell;
   const beachSpecies = Object.values(BEACH_SPOT_RESIDENTS).some((residents) => residents.includes(species));
-  const atlasUrl = beachSpecies ? beachFishAtlasUrl : fishAtlasUrl;
+  const oilRigSpecies = Object.values(OIL_RIG_SPOT_RESIDENTS).some((residents) => residents.includes(species));
+  const atlasUrl = oilRigSpecies ? oilRigFishAtlasUrl : beachSpecies ? beachFishAtlasUrl : fishAtlasUrl;
   return `<span class="market-fish-icon ${className}" role="img" aria-label="${FISH[species].name}" style="--fish-atlas-url: url(&quot;${atlasUrl}&quot;); --fish-atlas-x: ${column * 50}%; --fish-atlas-y: ${row * 50}%; --fish-atlas-size: 300% 300%"></span>`;
 }
 

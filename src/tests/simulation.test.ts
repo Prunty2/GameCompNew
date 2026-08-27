@@ -4,9 +4,11 @@ import {
   BEACH_SPOT_RESIDENTS,
   FISH,
   FISHING_SPOTS,
+  OIL_RIG_SPOT_RESIDENTS,
   SPOT_RESIDENTS,
   boatClassAt,
   engineSpeedMultiplier,
+  fishingSpotsForWorld,
   harborById,
   hookVerticalSpeedMultiplier,
   reelSpeedMultiplier,
@@ -623,6 +625,49 @@ describe("FSHING side-on simulation", () => {
 
     simulation.progress.upgrades.line = 4;
     expect(startFishing(simulation, "outerGloam")).toBe(true);
+  });
+
+  test("travels to Oil Rig and exposes exactly one spill spot and one clean-water spot", () => {
+    const simulation = createSimulation(18);
+    expect(travelToWorld(simulation, "oil-rig")).toBe(true);
+    expect(simulation.world).toBe("oil-rig");
+    expect(fishingSpotsForWorld("oil-rig").map((spot) => spot.id)).toEqual([
+      "sunwardShoal",
+      "outerGloam",
+    ]);
+
+    simulation.progress.upgrades.line = 2;
+    expect(startFishing(simulation, "sunwardShoal")).toBe(false);
+    expect(consumeEvents(simulation)).toContainEqual({ type: "depth-locked", tier: 3 });
+
+    simulation.progress.upgrades.line = 3;
+    expect(startFishing(simulation, "sunwardShoal")).toBe(true);
+    expect(new Set(simulation.fishing?.targets.map((target) => target.species))).toEqual(
+      new Set(OIL_RIG_SPOT_RESIDENTS.sunwardShoal),
+    );
+
+    const bluewaterSimulation = createSimulation(19);
+    expect(travelToWorld(bluewaterSimulation, "oil-rig")).toBe(true);
+    bluewaterSimulation.progress.upgrades.line = 3;
+    expect(startFishing(bluewaterSimulation, "mosswaterPool")).toBe(false);
+    expect(startFishing(bluewaterSimulation, "outerGloam")).toBe(false);
+    expect(consumeEvents(bluewaterSimulation)).toContainEqual({ type: "depth-locked", tier: 4 });
+
+    bluewaterSimulation.progress.upgrades.line = 4;
+    expect(startFishing(bluewaterSimulation, "outerGloam")).toBe(true);
+    expect(new Set(bluewaterSimulation.fishing?.targets.map((target) => target.species))).toEqual(
+      new Set(OIL_RIG_SPOT_RESIDENTS.outerGloam),
+    );
+  });
+
+  test("redirects an unfinished Bluegill assignment back to the Lake from Oil Rig", () => {
+    const simulation = createSimulation(20);
+    expect(travelToWorld(simulation, "oil-rig")).toBe(true);
+    expect(tutorialPrompt(simulation)).toBe("Return to the Lake to continue the Bluegill assignment.");
+    expect(navigationGuidance(simulation)).toMatchObject({
+      kicker: "RETURN TO LAKE",
+      label: "Dogwatch Rig",
+    });
   });
 
   test("fills each fishing site with habitat residents and unlocks depth by line tier", () => {

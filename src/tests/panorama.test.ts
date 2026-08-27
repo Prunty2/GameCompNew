@@ -8,6 +8,7 @@ import {
 import {
   BEACH_AUTHORED_WATERLINE_RATIO,
   calculatePanoramaLayout,
+  OIL_RIG_AUTHORED_WATERLINE_RATIO,
 } from "../game/panorama";
 
 const IMAGE_WIDTH = 1672;
@@ -60,6 +61,26 @@ describe("panorama layout", () => {
     expect(layout.waterline / 1010).toBeCloseTo(0.78);
     expect(layout.sourceY).toBeLessThan(paintedOceanEdge);
     expect(layout.sourceY + layout.sourceHeight).toBeGreaterThan(paintedOceanEdge);
+  });
+
+  test("aligns the Oil Rig crop to its authored service-dock waterline", () => {
+    const camera = createSideScrollCamera({
+      focusX: 0.18,
+      velocityX: 0,
+      viewWidth: 0.3,
+      lookAheadTime: 0.24,
+    });
+    const layout = calculatePanoramaLayout({
+      imageWidth: IMAGE_WIDTH,
+      imageHeight: IMAGE_HEIGHT,
+      camera,
+      viewportWidth: 1920,
+      viewportHeight: 1010,
+      authoredWaterlineRatio: OIL_RIG_AUTHORED_WATERLINE_RATIO,
+    });
+
+    expect(IMAGE_HEIGHT * OIL_RIG_AUTHORED_WATERLINE_RATIO).toBe(593);
+    expect(layout.waterline / 1010).toBeCloseTo(0.78);
   });
 
   test("keeps the crop within the panorama at both lake edges", () => {

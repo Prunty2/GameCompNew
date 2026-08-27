@@ -2,13 +2,19 @@ import boatSteamAtlasUrl from "../assets/boat-steam-atlas.png";
 import beachChartUrl from "../assets/beach-chart.png";
 import beachChartNightUrl from "../assets/beach-chart-night.png";
 import beachHarborPierUrl from "../assets/beach-harbor-pier.png";
+import oilRigChartUrl from "../assets/oil-rig-chart.png";
+import oilRigChartNightUrl from "../assets/oil-rig-chart-night.png";
 import tackleAtlasUrl from "../assets/fish-atlas.png";
 import beachBayFishAtlasUrl from "../assets/fish-beach-bay-swim.png";
 import beachReefFishAtlasUrl from "../assets/fish-beach-reef-swim.png";
 import beachSurfFishAtlasUrl from "../assets/fish-beach-surf-swim.png";
+import oilRigSpillFishAtlasUrl from "../assets/fish-oil-rig-spill-swim.png";
+import oilRigBluewaterFishAtlasUrl from "../assets/fish-oil-rig-bluewater-swim.png";
 import beachBayFishingUrl from "../assets/fishing-beach-bay.jpg";
 import beachReefFishingUrl from "../assets/fishing-beach-reef.jpg";
 import beachSurfFishingUrl from "../assets/fishing-beach-surf.jpg";
+import oilRigSpillFishingUrl from "../assets/fishing-oil-rig-spill.jpg";
+import oilRigBluewaterFishingUrl from "../assets/fishing-oil-rig-bluewater.jpg";
 import gloamFishAtlasUrl from "../assets/fish-gloam-swim.png";
 import mosswaterFishAtlasUrl from "../assets/fish-mosswater-swim.png";
 import sunwardFishAtlasUrl from "../assets/fish-sunward-swim.png";
@@ -32,12 +38,14 @@ import worldAtlasUrl from "../assets/world-atlas.png";
 import {
   BALANCE,
   FISH,
-  FISHING_SPOTS,
   HARBORS,
-  regionSurfaceTintAt,
+  fishingSpotsForWorld,
+  spotNameForWorld,
+  worldSurfaceTintAt,
   type FishRarity,
   type FishSpecies,
   type SpotId,
+  type WorldId,
   type WorldPoint,
 } from "./balance";
 import { boatSteamPuffs } from "./boatSteam";
@@ -81,6 +89,7 @@ import {
   BEACH_AUTHORED_WATERLINE_RATIO,
   calculatePanoramaLayout,
   LAKE_AUTHORED_WATERLINE_RATIO,
+  OIL_RIG_AUTHORED_WATERLINE_RATIO,
 } from "./panorama";
 import {
   questFollowArrows,
@@ -118,6 +127,8 @@ interface LoadedArt {
   lakeNight: HTMLImageElement;
   beach: HTMLImageElement;
   beachNight: HTMLImageElement;
+  oilRig: HTMLImageElement;
+  oilRigNight: HTMLImageElement;
   beachPier: HTMLImageElement;
   pier: HTMLImageElement;
   boat: HTMLCanvasElement;
@@ -126,6 +137,7 @@ interface LoadedArt {
   fishOutlines: Record<FishRarity, Record<FishSheetId, HTMLCanvasElement>>;
   fishingEnvironments: Record<SpotId, HTMLImageElement>;
   beachFishingEnvironments: Record<SpotId, HTMLImageElement>;
+  oilRigFishingEnvironments: Partial<Record<SpotId, HTMLImageElement>>;
   lineLimitFloat: HTMLImageElement;
   fishingCues: HTMLCanvasElement;
   polarizedLens: HTMLImageElement;
@@ -133,7 +145,7 @@ interface LoadedArt {
   world: HTMLCanvasElement;
 }
 
-type FishSheetId = SpotId | "whiteSucker" | "longnoseGar" | "cisco" | "estuaryPerch" | "largetoothFlounder" | "beachSurf" | "beachBay" | "beachReef";
+type FishSheetId = SpotId | "whiteSucker" | "longnoseGar" | "cisco" | "estuaryPerch" | "largetoothFlounder" | "beachSurf" | "beachBay" | "beachReef" | "oilRigSpill" | "oilRigBluewater";
 
 const SURFACE_FISH_CELLS = [
   [0, 0],
@@ -168,6 +180,12 @@ const FISH_SPRITE_CELLS: Record<FishSpecies, { sheet: FishSheetId; row: number }
   snapper: { sheet: "beachReef", row: 0 },
   yellowtailKingfish: { sheet: "beachReef", row: 1 },
   mulloway: { sheet: "beachReef", row: 2 },
+  atlanticSpadefish: { sheet: "oilRigSpill", row: 0 },
+  sheepshead: { sheet: "oilRigSpill", row: 1 },
+  grayTriggerfish: { sheet: "oilRigSpill", row: 2 },
+  cobia: { sheet: "oilRigBluewater", row: 0 },
+  greaterAmberjack: { sheet: "oilRigBluewater", row: 1 },
+  atlanticMahiMahi: { sheet: "oilRigBluewater", row: 2 },
 };
 
 const FISH_SHEET_ROWS: Record<FishSheetId, number> = {
@@ -182,6 +200,8 @@ const FISH_SHEET_ROWS: Record<FishSheetId, number> = {
   beachSurf: 3,
   beachBay: 3,
   beachReef: 3,
+  oilRigSpill: 3,
+  oilRigBluewater: 3,
 };
 
 const FISH_DRAW_SIZE: Record<FishSpecies, number> = {
@@ -208,6 +228,12 @@ const FISH_DRAW_SIZE: Record<FishSpecies, number> = {
   snapper: 1.18,
   yellowtailKingfish: 1.58,
   mulloway: 1.5,
+  atlanticSpadefish: 1.08,
+  sheepshead: 1.12,
+  grayTriggerfish: 1.14,
+  cobia: 1.66,
+  greaterAmberjack: 1.58,
+  atlanticMahiMahi: 1.62,
 };
 
 // Center of the visible hook-and-arc paint inside each 192 × 256 authored atlas cell.
@@ -245,6 +271,8 @@ export class CanvasRenderer {
       loadImage(lakeChartNightUrl),
       loadImage(beachChartUrl),
       loadImage(beachChartNightUrl),
+      loadImage(oilRigChartUrl),
+      loadImage(oilRigChartNightUrl),
       loadImage(beachHarborPierUrl),
       loadImage(harborPierUrl),
       loadImage(playerBoatUrl),
@@ -260,9 +288,13 @@ export class CanvasRenderer {
       loadImage(beachSurfFishAtlasUrl),
       loadImage(beachBayFishAtlasUrl),
       loadImage(beachReefFishAtlasUrl),
+      loadImage(oilRigSpillFishAtlasUrl),
+      loadImage(oilRigBluewaterFishAtlasUrl),
       loadImage(beachSurfFishingUrl),
       loadImage(beachBayFishingUrl),
       loadImage(beachReefFishingUrl),
+      loadImage(oilRigSpillFishingUrl),
+      loadImage(oilRigBluewaterFishingUrl),
       loadImage(sunwardFishingUrl),
       loadImage(mosswaterFishingUrl),
       loadImage(gloamFishingUrl),
@@ -277,6 +309,8 @@ export class CanvasRenderer {
       lakeNight,
       beach,
       beachNight,
+      oilRig,
+      oilRigNight,
       beachPier,
       pier,
       boat,
@@ -292,9 +326,13 @@ export class CanvasRenderer {
       beachSurfFish,
       beachBayFish,
       beachReefFish,
+      oilRigSpillFish,
+      oilRigBluewaterFish,
       beachSurfFishing,
       beachBayFishing,
       beachReefFishing,
+      oilRigSpillFishing,
+      oilRigBluewaterFishing,
       sunwardFishing,
       mosswaterFishing,
       gloamFishing,
@@ -316,6 +354,8 @@ export class CanvasRenderer {
         beachSurf: keyMagenta(beachSurfFish, false, true),
         beachBay: keyMagenta(beachBayFish, false, true),
         beachReef: keyMagenta(beachReefFish, false, true),
+        oilRigSpill: keyMagenta(oilRigSpillFish, false, true),
+        oilRigBluewater: keyMagenta(oilRigBluewaterFish, false, true),
       };
       const tintedFish = (colour: string): Record<FishSheetId, HTMLCanvasElement> => ({
         sunwardShoal: tintAlpha(keyedFish.sunwardShoal, colour),
@@ -329,6 +369,8 @@ export class CanvasRenderer {
         beachSurf: tintAlpha(keyedFish.beachSurf, colour),
         beachBay: tintAlpha(keyedFish.beachBay, colour),
         beachReef: tintAlpha(keyedFish.beachReef, colour),
+        oilRigSpill: tintAlpha(keyedFish.oilRigSpill, colour),
+        oilRigBluewater: tintAlpha(keyedFish.oilRigBluewater, colour),
       });
       this.art = {
         boatSteam,
@@ -336,6 +378,8 @@ export class CanvasRenderer {
         lakeNight,
         beach,
         beachNight,
+        oilRig,
+        oilRigNight,
         beachPier,
         pier,
         boat: keyMagenta(boat, true),
@@ -356,6 +400,10 @@ export class CanvasRenderer {
           sunwardShoal: beachSurfFishing,
           mosswaterPool: beachBayFishing,
           outerGloam: beachReefFishing,
+        },
+        oilRigFishingEnvironments: {
+          sunwardShoal: oilRigSpillFishing,
+          outerGloam: oilRigBluewaterFishing,
         },
         lineLimitFloat,
         fishingCues: keyMagenta(fishingCues, false),
@@ -399,6 +447,7 @@ export class CanvasRenderer {
       delete this.canvas.dataset.fishingSurfaceSpriteOpacity;
       delete this.canvas.dataset.fishingSurfaceBlend;
       delete this.canvas.dataset.fishingSpot;
+      delete this.canvas.dataset.fishingEnvironment;
       delete this.canvas.dataset.fishingFishCount;
       delete this.canvas.dataset.fishingFishVerticalSpan;
       delete this.canvas.dataset.fishingState;
@@ -427,12 +476,7 @@ export class CanvasRenderer {
     this.canvas.dataset.surfaceCameraCenter = camera.center.toFixed(3);
     this.canvas.dataset.surfaceCameraViewWidth = camera.viewWidth.toFixed(3);
     const nightIntensity = nightVisualIntensity(simulation);
-    const dayImage = simulation.world === "beach" ? art.beach : art.lake;
-    const nightImage = simulation.world === "beach" ? art.beachNight : art.lakeNight;
-    const authoredWaterlineRatio =
-      simulation.world === "beach"
-        ? BEACH_AUTHORED_WATERLINE_RATIO
-        : LAKE_AUTHORED_WATERLINE_RATIO;
+    const { dayImage, nightImage, authoredWaterlineRatio } = worldPanorama(art, simulation.world);
     const waterline = this.drawPanorama(
       nightIntensity >= 1 ? nightImage : dayImage,
       camera,
@@ -448,34 +492,36 @@ export class CanvasRenderer {
     }
     context.save();
     context.globalAlpha = settings.highContrast ? 0.08 : 0.07;
-    context.fillStyle = regionSurfaceTintAt(simulation.boat.x);
+    context.fillStyle = worldSurfaceTintAt(simulation.world, simulation.boat.x);
     context.fillRect(0, 0, width, height);
     context.restore();
 
     if (settings.cinematic) return;
     const surfaceLayer = captureSurfaceLayer(this.canvas, this.surfaceLayer);
 
-    for (const harbor of HARBORS) {
-      const x = worldToScreenX(harbor.x, camera, width);
-      if (!isNearScreen(x, width, 540)) continue;
-      this.drawHarborPier(
-        x,
-        waterline,
-        harbor.id === "gloam",
-        simulation.world === "beach",
-        surfaceLayer,
-        width,
-        height,
-        simulation.elapsed,
-        settings,
-        1,
-      );
+    if (simulation.world !== "oil-rig") {
+      for (const harbor of HARBORS) {
+        const x = worldToScreenX(harbor.x, camera, width);
+        if (!isNearScreen(x, width, 540)) continue;
+        this.drawHarborPier(
+          x,
+          waterline,
+          harbor.id === "gloam",
+          simulation.world === "beach",
+          surfaceLayer,
+          width,
+          height,
+          simulation.elapsed,
+          settings,
+          1,
+        );
+      }
     }
 
     this.drawBoat(simulation, camera, width, height, waterline, surfaceLayer, settings, motionDelta);
 
     let activeFishingCue: { cue: SurfaceFishingCue; x: number } | null = null;
-    for (const [spotIndex, spot] of FISHING_SPOTS.entries()) {
+    for (const [spotIndex, spot] of fishingSpotsForWorld(simulation.world).entries()) {
       const x = worldToScreenX(spot.x, camera, width);
       if (!isNearScreen(x, width, 260)) continue;
       const depthLocked = spot.requiredDepthTier[simulation.world] > simulation.progress.upgrades.line;
@@ -491,7 +537,7 @@ export class CanvasRenderer {
         elapsed: simulation.elapsed,
         reducedMotion: settings.reducedMotion,
         highContrast: settings.highContrast,
-        beach: simulation.world === "beach",
+        beach: simulation.world !== "lake",
         opacity: 1,
       });
       if (cue.hookVisibility > 0) {
@@ -669,8 +715,9 @@ export class CanvasRenderer {
     const art = this.art;
     if (!art) return;
     const { context } = this;
-    const spot = FISHING_SPOTS.find((candidate) => candidate.id === fishing.spot);
+    const spot = fishingSpotsForWorld(simulation.world).find((candidate) => candidate.id === fishing.spot);
     if (!spot) return;
+    const spotName = spotNameForWorld(simulation.world, spot.id);
     const targetSpecies = fishingHighlightSpecies(
       simulation.progress.marketTarget,
       simulation.world,
@@ -760,18 +807,26 @@ export class CanvasRenderer {
       "aria-label",
       fishing.reeling
         ? loss
-          ? `Fishing at ${spot.name}. The line snapped. The fish is swimming free while the bare line retracts.`
-          : fishingFightAriaLabel(spot.name, fishing.reeling)
+          ? `Fishing at ${spotName}. The line snapped. The fish is swimming free while the bare line retracts.`
+          : fishingFightAriaLabel(spotName, fishing.reeling)
         : fishing.exitingAt !== null
-          ? `Leaving ${spot.name} and returning to the lake surface.`
+          ? `Leaving ${spotName} and returning to the surface.`
         : targetSpecies
-          ? `Fishing at ${spot.name}. Target ${FISH[targetSpecies].name}, ${FISH[targetSpecies].rarity} rarity.`
-          : `Fishing at ${spot.name}.`,
+          ? `Fishing at ${spotName}. Target ${FISH[targetSpecies].name}, ${FISH[targetSpecies].rarity} rarity.`
+          : `Fishing at ${spotName}.`,
     );
-    const fishingEnvironments = simulation.world === "beach"
-      ? art.beachFishingEnvironments
-      : art.fishingEnvironments;
-    this.drawFishingEnvironment(fishingEnvironments[spot.id], layout, width, height, settings.highContrast);
+    const fishingEnvironment = simulation.world === "beach"
+      ? art.beachFishingEnvironments[spot.id]
+      : simulation.world === "oil-rig"
+        ? art.oilRigFishingEnvironments[spot.id]
+        : art.fishingEnvironments[spot.id];
+    if (!fishingEnvironment) return;
+    this.canvas.dataset.fishingEnvironment = simulation.world === "oil-rig"
+      ? spot.id === "sunwardShoal"
+        ? "oil-rig-spill"
+        : "oil-rig-bluewater"
+      : `${simulation.world}-${spot.id}`;
+    this.drawFishingEnvironment(fishingEnvironment, layout, width, height, settings.highContrast);
     this.drawFishingSurfaceBand(
       simulation,
       settings,
@@ -1036,12 +1091,7 @@ export class CanvasRenderer {
     const motionDelta = this.updateSurfaceMotion(simulation, false, settings.reducedMotion);
     const camera = this.camera(simulation, false, settings.reducedMotion, motionDelta);
     const nightIntensity = nightVisualIntensity(simulation);
-    const dayImage = simulation.world === "beach" ? art.beach : art.lake;
-    const nightImage = simulation.world === "beach" ? art.beachNight : art.lakeNight;
-    const authoredWaterlineRatio =
-      simulation.world === "beach"
-        ? BEACH_AUTHORED_WATERLINE_RATIO
-        : LAKE_AUTHORED_WATERLINE_RATIO;
+    const { dayImage, nightImage, authoredWaterlineRatio } = worldPanorama(art, simulation.world);
     const drawSurfaceImage = (
       image: HTMLImageElement,
       alpha: number,
@@ -1088,7 +1138,7 @@ export class CanvasRenderer {
       context.rect(0, surfaceY, width, height - surfaceY);
       context.clip();
       context.globalAlpha = surfaceBlend * (settings.highContrast ? 0.08 : 0.07);
-      context.fillStyle = regionSurfaceTintAt(simulation.boat.x);
+      context.fillStyle = worldSurfaceTintAt(simulation.world, simulation.boat.x);
       context.fillRect(0, surfaceY, width, height - surfaceY);
       context.restore();
     }
@@ -1100,27 +1150,29 @@ export class CanvasRenderer {
     context.rect(0, 0, width, surfaceY);
     context.clip();
     context.globalAlpha = settings.highContrast ? 0.06 : 0.08;
-    context.fillStyle = regionSurfaceTintAt(simulation.boat.x);
+    context.fillStyle = worldSurfaceTintAt(simulation.world, simulation.boat.x);
     context.fillRect(0, 0, width, surfaceY);
     context.restore();
 
     const surfaceLayer = captureSurfaceLayer(this.canvas, this.surfaceLayer);
     if (surfaceBlend > 0) {
-      for (const harbor of HARBORS) {
-        const x = worldToScreenX(harbor.x, camera, width);
-        if (!isNearScreen(x, width, 540)) continue;
-        this.drawHarborPier(
-          x,
-          surfaceY,
-          harbor.id === "gloam",
-          simulation.world === "beach",
-          surfaceLayer,
-          width,
-          height,
-          simulation.elapsed,
-          settings,
-          surfaceBlend,
-        );
+      if (simulation.world !== "oil-rig") {
+        for (const harbor of HARBORS) {
+          const x = worldToScreenX(harbor.x, camera, width);
+          if (!isNearScreen(x, width, 540)) continue;
+          this.drawHarborPier(
+            x,
+            surfaceY,
+            harbor.id === "gloam",
+            simulation.world === "beach",
+            surfaceLayer,
+            width,
+            height,
+            simulation.elapsed,
+            settings,
+            surfaceBlend,
+          );
+        }
       }
     }
 
@@ -1128,7 +1180,7 @@ export class CanvasRenderer {
 
     let activeFishingCue: { cue: SurfaceFishingCue; x: number } | null = null;
     if (surfaceBlend > 0) {
-      for (const [spotIndex, spot] of FISHING_SPOTS.entries()) {
+      for (const [spotIndex, spot] of fishingSpotsForWorld(simulation.world).entries()) {
         const x = worldToScreenX(spot.x, camera, width);
         if (!isNearScreen(x, width, 260)) continue;
         const depthLocked = spot.requiredDepthTier[simulation.world] > simulation.progress.upgrades.line;
@@ -1144,7 +1196,7 @@ export class CanvasRenderer {
           elapsed: simulation.elapsed,
           reducedMotion: settings.reducedMotion,
           highContrast: settings.highContrast,
-          beach: simulation.world === "beach",
+          beach: simulation.world !== "lake",
           opacity: surfaceBlend,
         });
         if (cue.hookVisibility > 0) activeFishingCue = { cue, x };
@@ -2016,6 +2068,31 @@ export class CanvasRenderer {
     this.canvas.height = height;
     this.context.setTransform(ratio, 0, 0, ratio, 0, 0);
   }
+}
+
+function worldPanorama(
+  art: LoadedArt,
+  world: WorldId,
+): { dayImage: HTMLImageElement; nightImage: HTMLImageElement; authoredWaterlineRatio: number } {
+  if (world === "beach") {
+    return {
+      dayImage: art.beach,
+      nightImage: art.beachNight,
+      authoredWaterlineRatio: BEACH_AUTHORED_WATERLINE_RATIO,
+    };
+  }
+  if (world === "oil-rig") {
+    return {
+      dayImage: art.oilRig,
+      nightImage: art.oilRigNight,
+      authoredWaterlineRatio: OIL_RIG_AUTHORED_WATERLINE_RATIO,
+    };
+  }
+  return {
+    dayImage: art.lake,
+    nightImage: art.lakeNight,
+    authoredWaterlineRatio: LAKE_AUTHORED_WATERLINE_RATIO,
+  };
 }
 
 function loadImage(source: string): Promise<HTMLImageElement> {

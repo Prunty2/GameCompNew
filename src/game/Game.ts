@@ -2,6 +2,8 @@ import brindleDockDayUrl from "../assets/dock-brindle-day.jpg";
 import brindleDockNightUrl from "../assets/dock-brindle-night.jpg";
 import beachChartUrl from "../assets/beach-chart.png";
 import beachChartNightUrl from "../assets/beach-chart-night.png";
+import oilRigChartUrl from "../assets/oil-rig-chart.png";
+import oilRigChartNightUrl from "../assets/oil-rig-chart-night.png";
 import binIconUrl from "../assets/bin-icon.png";
 import destinationLakeUrl from "../assets/destination-lake.png";
 import destinationOilRigUrl from "../assets/destination-oil-rig.png";
@@ -9,6 +11,7 @@ import gloamDockDayUrl from "../assets/dock-gloam-day.jpg";
 import gloamDockNightUrl from "../assets/dock-gloam-night.jpg";
 import fishAtlasUiUrl from "../assets/fish-atlas-ui.png";
 import beachFishAtlasUiUrl from "../assets/fish-beach-atlas-ui.png";
+import oilRigFishAtlasUiUrl from "../assets/fish-oil-rig-atlas-ui.png";
 import wordmarkUrl from "../assets/fshing-wordmark.png";
 import padlockIconUrl from "../assets/padlock-icon.png";
 import uiButtonUrl from "../assets/ui-button.png";
@@ -24,8 +27,10 @@ import {
   FISH,
   engineSpeedMultiplier,
   harborById,
+  harborNameForWorld,
   spotById,
   upgradeTierCap,
+  worldName,
   type FishSpecies,
   type HarborId,
   type SpotId,
@@ -827,7 +832,7 @@ export class Game {
       const item = this.simulation.cargo[index];
       const slotNumber = String(index + 1).padStart(2, "0");
       if (item) {
-        return `<article class="cargo-slot is-occupied" aria-label="Cargo slot ${index + 1}: ${FISH[item.species].name}, ready to sell"><span class="cargo-slot-number">${slotNumber}</span>${fishIcon(item.species, fishAtlasUiUrl, beachFishAtlasUiUrl, "cargo-fish")}<div class="cargo-slot-copy"><strong>${FISH[item.species].name}</strong><small>Ready to sell</small></div><button class="cargo-release" type="button" data-action="release" data-index="${index}" aria-label="Release ${FISH[item.species].name} from cargo"><span class="cargo-release-tooltip" aria-hidden="true">Release</span><span class="cargo-release-art" aria-hidden="true"><img class="cargo-bin-body" src="${binIconUrl}" alt="" /><img class="cargo-bin-lid" src="${binIconUrl}" alt="" /></span></button></article>`;
+        return `<article class="cargo-slot is-occupied" aria-label="Cargo slot ${index + 1}: ${FISH[item.species].name}, ready to sell"><span class="cargo-slot-number">${slotNumber}</span>${fishIcon(item.species, fishAtlasUiUrl, beachFishAtlasUiUrl, oilRigFishAtlasUiUrl, "cargo-fish")}<div class="cargo-slot-copy"><strong>${FISH[item.species].name}</strong><small>Ready to sell</small></div><button class="cargo-release" type="button" data-action="release" data-index="${index}" aria-label="Release ${FISH[item.species].name} from cargo"><span class="cargo-release-tooltip" aria-hidden="true">Release</span><span class="cargo-release-art" aria-hidden="true"><img class="cargo-bin-body" src="${binIconUrl}" alt="" /><img class="cargo-bin-lid" src="${binIconUrl}" alt="" /></span></button></article>`;
       }
       if (index < availableCargoSlots) {
         return `<div class="cargo-slot is-empty" aria-label="Cargo slot ${index + 1}: empty"><span class="cargo-slot-number">${slotNumber}</span><span class="ui-icon icon-cargo" aria-hidden="true"></span><small>Empty</small></div>`;
@@ -842,18 +847,19 @@ export class Game {
           this.marketDetailOpen,
           fishAtlasUiUrl,
           beachFishAtlasUiUrl,
+          oilRigFishAtlasUiUrl,
         )
       : activeSection === "cargo"
         ? `<aside class="cargo-section" aria-labelledby="cargo-heading"><div class="cargo-inventory-heading"><h3 id="cargo-heading">Fish inventory</h3><span>${this.simulation.cargo.length} carried · ${availableCargoSlots} unlocked</span></div><div class="cargo-slot-grid" aria-label="Cargo inventory">${cargoMarkup}</div></aside>`
-        : `<section class="upgrades" aria-label="Upgrades"><div class="service-grid">${this.upgradeCard("cargo", "Cargo", "+1 cargo slot")}${this.upgradeCard("engine", "Engine", "+15% speed")}${this.upgradeCard("line", "Fishing line", this.simulation.world === "beach" ? "Middle tier 3 · right tier 4" : "Middle tier 1 · right tier 3")}${this.upgradeCard("reel", "Reel power", "Increases reel stress capacity by 12.5% and reel speed by 17%")}</div><div class="upgrade-feature-grid is-single-feature">${this.boostCard()}</div></section>`;
+        : `<section class="upgrades" aria-label="Upgrades"><div class="service-grid">${this.upgradeCard("cargo", "Cargo", "+1 cargo slot")}${this.upgradeCard("engine", "Engine", "+15% speed")}${this.upgradeCard("line", "Fishing line", this.simulation.world === "beach" ? "Middle tier 3 · right tier 4" : this.simulation.world === "oil-rig" ? "Spill tier 3 · bluewater tier 4" : "Middle tier 1 · right tier 3")}${this.upgradeCard("reel", "Reel power", "Increases reel stress capacity by 12.5% and reel speed by 17%")}</div><div class="upgrade-feature-grid is-single-feature">${this.boostCard()}</div></section>`;
     const tabs = `<nav class="harbor-tabs has-3-tabs" aria-label="Harbor sections" style="--harbor-tab-count: 3">${availableSections.map((section) => `<button class="harbor-tab ${activeSection === section ? "is-active" : ""}" type="button" data-action="harbor-section" data-harbor-section="${section}" aria-label="${capitalise(section)}" aria-pressed="${activeSection === section}"><span class="ui-icon icon-${HARBOR_SECTION_ICON[section]}" aria-hidden="true"></span><span>${capitalise(section)}</span></button>`).join("")}</nav>`;
     const mainFooterAction = activeSection === "market" && this.marketDetailOpen
       ? `<button class="leave-button market-footer-back" type="button" data-action="close-market-fish-detail" aria-label="Back to market"><span class="harbor-back-arrow" aria-hidden="true">←</span><strong>Back to market</strong></button>`
-      : `<button class="leave-button" type="button" data-action="undock" aria-label="Back to ${this.simulation.world}"><span class="ui-icon icon-hull" aria-hidden="true"></span><strong>Return to ${capitalise(this.simulation.world)}</strong></button>`;
+      : `<button class="leave-button" type="button" data-action="undock" aria-label="Back to ${worldName(this.simulation.world)}"><span class="ui-icon icon-hull" aria-hidden="true"></span><strong>Return to ${worldName(this.simulation.world)}</strong></button>`;
     return `<section class="screen-overlay harbor-screen is-first-voyage is-expanded-harbor is-harbor-${activeSection} is-dock-${harborId}" ${this.dockBackdropAttributes(harborId)} role="dialog" aria-labelledby="harbor-title">
       <div class="harbor-dock-layout">
         <div class="art-panel harbor-panel side-sheet market-harbor-panel">
-          <header class="panel-heading harbor-header"><div class="harbor-title-block"><img class="wordmark harbor-wordmark" src="${wordmarkUrl}" alt="FSHING" /><span class="harbor-title-divider" aria-hidden="true"></span><div><h2 id="harbor-title">${harbor.name}</h2></div></div><span class="shell-balance" aria-label="${this.simulation.progress.money} shells"><span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${this.simulation.progress.money}</strong></span></header>
+          <header class="panel-heading harbor-header"><div class="harbor-title-block"><img class="wordmark harbor-wordmark" src="${wordmarkUrl}" alt="FSHING" /><span class="harbor-title-divider" aria-hidden="true"></span><div><h2 id="harbor-title">${harborNameForWorld(this.simulation.world, harbor.id)}</h2></div></div><span class="shell-balance" aria-label="${this.simulation.progress.money} shells"><span class="ui-icon icon-shells" aria-hidden="true"></span><strong>${this.simulation.progress.money}</strong></span></header>
           ${tabs}
           <div class="harbor-content is-${activeSection}">${content}</div>
           <footer class="panel-actions"><div><button class="text-button harbor-utility-button" type="button" data-action="open-help" aria-label="How to play"><span class="ui-icon icon-objective" aria-hidden="true"></span><strong>Help</strong></button></div>${mainFooterAction}</footer>
@@ -864,33 +870,38 @@ export class Game {
   }
 
   private departuresBoard(): string {
-    const destination: WorldId = this.simulation.world === "beach" ? "lake" : "beach";
-    const destinationName = capitalise(destination);
-    const destinationIcon = destination === "beach" ? upgradeBeachUrl : destinationLakeUrl;
-    const destinationDetail = destination === "lake"
-      ? "Working harbors · freshwater grounds"
-      : null;
-    const beachLocked = destination === "beach" && !this.simulation.progress.beachUnlocked;
-    const destinationAction = beachLocked
-      ? `<button class="departure-card is-locked" type="button" data-action="buy-beach" data-destination="beach" aria-label="Unlock Beach for ${BALANCE.beachAccessCost} shells" ${this.simulation.progress.money < BALANCE.beachAccessCost ? "disabled" : ""}>
+    const destinations = (["lake", "beach", "oil-rig"] as const)
+      .filter((destination) => destination !== this.simulation.world);
+    const destinationActions = destinations.map((destination) => {
+      const destinationName = worldName(destination);
+      const destinationIcon = destination === "beach"
+        ? upgradeBeachUrl
+        : destination === "oil-rig"
+          ? destinationOilRigUrl
+          : destinationLakeUrl;
+      const destinationDetail = destination === "lake"
+        ? "Working harbors · freshwater grounds"
+        : destination === "oil-rig"
+          ? "Spillwater slick · clean bluewater"
+          : null;
+      const beachLocked = destination === "beach" && !this.simulation.progress.beachUnlocked;
+      if (beachLocked) {
+        return `<button class="departure-card is-locked" type="button" data-action="buy-beach" data-destination="beach" aria-label="Unlock Beach for ${BALANCE.beachAccessCost} shells" ${this.simulation.progress.money < BALANCE.beachAccessCost ? "disabled" : ""}>
           <span class="departure-art"><img src="${destinationIcon}" alt="" aria-hidden="true" /></span>
           <span class="departure-copy"><strong>${destinationName}</strong>${destinationDetail ? `<small>${destinationDetail}</small>` : ""}</span>
           <span class="departure-fare"><span class="ui-icon icon-shells" aria-hidden="true"></span><b>${BALANCE.beachAccessCost}</b></span>
-        </button>`
-      : `<button class="departure-card" type="button" data-action="travel-world" data-world="${destination}" data-destination="${destination}" aria-label="Travel to ${destinationName}">
+        </button>`;
+      }
+      return `<button class="departure-card" type="button" data-action="travel-world" data-world="${destination}" data-destination="${destination}" aria-label="Travel to ${destinationName}">
           <span class="departure-art"><img src="${destinationIcon}" alt="" aria-hidden="true" /></span>
           <span class="departure-copy"><strong>${destinationName}</strong>${destinationDetail ? `<small>${destinationDetail}</small>` : ""}</span>
           <span class="departure-fare is-route"><b>SAIL</b><span aria-hidden="true">→</span></span>
         </button>`;
+    }).join("");
     return `<aside class="departures-board" aria-labelledby="departures-title">
       <header class="departures-heading"><span>Dockside routes</span><h3 id="departures-title">Departures</h3></header>
       <div class="departures-list">
-        ${destinationAction}
-        <article class="departure-card is-coming-soon" data-destination="oil-rig" aria-label="Oil Rig. Coming soon. Unavailable." aria-disabled="true">
-          <span class="departure-art"><img src="${destinationOilRigUrl}" alt="" aria-hidden="true" /></span>
-          <span class="departure-copy"><strong>Oil Rig</strong></span>
-          <span class="departure-fare is-soon"><b>COMING</b><small>SOON</small></span>
-        </article>
+        ${destinationActions}
       </div>
     </aside>`;
   }
@@ -900,7 +911,9 @@ export class Game {
     const timeOfDay = nightOpacity >= 0.5 ? "night" : "day";
     const background = this.simulation.world === "beach"
       ? { day: beachChartUrl, night: beachChartNightUrl }
-      : DOCK_BACKGROUND_URL[harborId];
+      : this.simulation.world === "oil-rig"
+        ? { day: oilRigChartUrl, night: oilRigChartNightUrl }
+        : DOCK_BACKGROUND_URL[harborId];
     return `data-dock="${harborId}" data-time-of-day="${timeOfDay}" style="--dock-day-background: url(&quot;${background.day}&quot;); --dock-night-background: url(&quot;${background.night}&quot;); --dock-night-opacity: ${nightOpacity}"`;
   }
 
@@ -1730,7 +1743,7 @@ export class Game {
         const world = target.dataset.world as WorldId | undefined;
         if (world && travelToWorld(this.simulation, world)) {
           this.setOverlay(null, true);
-          this.showToast(world === "beach" ? "Welcome to Beach." : "Returned to the lake.");
+          this.showToast(world === "lake" ? "Returned to the lake." : `Welcome to ${worldName(world)}.`);
         }
         break;
       }

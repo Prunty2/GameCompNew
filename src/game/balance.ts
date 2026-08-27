@@ -21,11 +21,17 @@ export type FishSpecies =
   | "estuaryPerch"
   | "snapper"
   | "yellowtailKingfish"
-  | "mulloway";
+  | "mulloway"
+  | "atlanticSpadefish"
+  | "sheepshead"
+  | "grayTriggerfish"
+  | "cobia"
+  | "greaterAmberjack"
+  | "atlanticMahiMahi";
 export type HarborId = "brindle" | "gloam";
 export type SpotId = "sunwardShoal" | "mosswaterPool" | "outerGloam";
 export type UpgradeId = "cargo" | "engine" | "line" | "reel";
-export type WorldId = "lake" | "beach";
+export type WorldId = "lake" | "beach" | "oil-rig";
 export type RegionId = "brindleCoast" | "mosswaterReach" | "violetGloam";
 export type FishRarity = "common" | "uncommon" | "rare" | "legendary";
 
@@ -189,8 +195,21 @@ export const HARBORS: readonly HarborDefinition[] = [
   { id: "gloam", name: "Gloam Ferry", subtitle: "Last light before the outer water.", x: 0.945, y: SURFACE_Y },
 ];
 
+export const WORLD_NAMES: Record<WorldId, string> = {
+  lake: "Lake",
+  beach: "Beach",
+  "oil-rig": "Oil Rig",
+};
+
+const WORLD_HARBOR_NAMES: Record<WorldId, Record<HarborId, string>> = {
+  lake: { brindle: "Brindle Harbor", gloam: "Gloam Ferry" },
+  beach: { brindle: "Brindle Harbor", gloam: "Gloam Ferry" },
+  "oil-rig": { brindle: "Dogwatch Rig", gloam: "Beacon Mooring" },
+};
+
 // Base whole-fish values: depth tier is the primary driver, rarity/order
-// separates fish that share a depth, and Beach peers sit ~20% above Lake.
+// separates fish that share a depth, Beach peers sit ~20% above Lake, and the
+// Oil Rig roster is deliberately bounded from 90 to 270 shells.
 export const FISH: Record<FishSpecies, FishDefinition> = {
   bluegill: { id: "bluegill", name: "Bluegill", shape: "Deep body · dark ear flap", value: 18, depthTier: 0, atlasCell: [0, 0], hue: 0, scale: 0.86, rarity: "common" },
   yellowPerch: { id: "yellowPerch", name: "Yellow Perch", shape: "Golden flank · dark bars", value: 22, depthTier: 0, atlasCell: [1, 0], hue: 0, scale: 0.82, rarity: "common" },
@@ -215,12 +234,18 @@ export const FISH: Record<FishSpecies, FishDefinition> = {
   snapper: { id: "snapper", name: "Snapper", shape: "Pink flank · blue spots", value: 96, depthTier: 3, atlasCell: [0, 2], hue: 0, scale: 1.04, rarity: "rare" },
   yellowtailKingfish: { id: "yellowtailKingfish", name: "Yellowtail Kingfish", shape: "Yellow stripe · forked yellow tail", value: 120, depthTier: 4, atlasCell: [1, 2], hue: 0, scale: 1.16, rarity: "rare" },
   mulloway: { id: "mulloway", name: "Mulloway", shape: "Bronze-silver flank · pearly spots", value: 156, depthTier: 5, atlasCell: [2, 2], hue: 0, scale: 1.24, rarity: "legendary" },
+  atlanticSpadefish: { id: "atlanticSpadefish", name: "Atlantic Spadefish", shape: "Deep silver body · broad dark bands", value: 90, depthTier: 2, atlasCell: [0, 0], hue: 0, scale: 1.02, rarity: "common" },
+  sheepshead: { id: "sheepshead", name: "Sheepshead", shape: "Silver flank · black bars", value: 115, depthTier: 3, atlasCell: [1, 0], hue: 0, scale: 1.04, rarity: "uncommon" },
+  grayTriggerfish: { id: "grayTriggerfish", name: "Gray Triggerfish", shape: "Rhomboid body · raised trigger spine", value: 145, depthTier: 4, atlasCell: [2, 0], hue: 0, scale: 1.08, rarity: "rare" },
+  cobia: { id: "cobia", name: "Cobia", shape: "Dark long body · pale side stripe", value: 170, depthTier: 4, atlasCell: [0, 1], hue: 0, scale: 1.18, rarity: "rare" },
+  greaterAmberjack: { id: "greaterAmberjack", name: "Greater Amberjack", shape: "Amber flank · forked tail", value: 220, depthTier: 5, atlasCell: [1, 1], hue: 0, scale: 1.2, rarity: "rare" },
+  atlanticMahiMahi: { id: "atlanticMahiMahi", name: "Atlantic Mahi-Mahi", shape: "Blue-green back · gold spotted flank", value: 270, depthTier: 6, atlasCell: [2, 1], hue: 0, scale: 1.22, rarity: "legendary" },
 };
 
 export const FISHING_SPOTS: readonly FishingSpotDefinition[] = [
-  { id: "sunwardShoal", name: "Sunward Shoal", species: "bluegill", requiredDepthTier: { lake: 0, beach: 0 }, region: "brindleCoast", x: 0.18, y: SURFACE_Y },
-  { id: "mosswaterPool", name: "Mosswater Pool", species: "largemouthBass", requiredDepthTier: { lake: 1, beach: 3 }, region: "mosswaterReach", x: 0.5, y: SURFACE_Y },
-  { id: "outerGloam", name: "Outer Gloam", species: "lakeTrout", requiredDepthTier: { lake: 3, beach: 4 }, region: "violetGloam", x: 0.82, y: SURFACE_Y },
+  { id: "sunwardShoal", name: "Sunward Shoal", species: "bluegill", requiredDepthTier: { lake: 0, beach: 0, "oil-rig": 3 }, region: "brindleCoast", x: 0.18, y: SURFACE_Y },
+  { id: "mosswaterPool", name: "Mosswater Pool", species: "largemouthBass", requiredDepthTier: { lake: 1, beach: 3, "oil-rig": 6 }, region: "mosswaterReach", x: 0.5, y: SURFACE_Y },
+  { id: "outerGloam", name: "Outer Gloam", species: "lakeTrout", requiredDepthTier: { lake: 3, beach: 4, "oil-rig": 4 }, region: "violetGloam", x: 0.82, y: SURFACE_Y },
 ];
 
 export const SPOT_RESIDENTS: Record<SpotId, readonly FishSpecies[]> = {
@@ -235,9 +260,21 @@ export const BEACH_SPOT_RESIDENTS: Record<SpotId, readonly FishSpecies[]> = {
   outerGloam: ["snapper", "yellowtailKingfish", "mulloway"],
 };
 
+export const OIL_RIG_SPOT_RESIDENTS: Record<SpotId, readonly FishSpecies[]> = {
+  sunwardShoal: ["atlanticSpadefish", "sheepshead", "grayTriggerfish"],
+  mosswaterPool: [],
+  outerGloam: ["cobia", "greaterAmberjack", "atlanticMahiMahi"],
+};
+
 export const WORLD_SPOT_RESIDENTS: Record<WorldId, Record<SpotId, readonly FishSpecies[]>> = {
   lake: SPOT_RESIDENTS,
   beach: BEACH_SPOT_RESIDENTS,
+  "oil-rig": OIL_RIG_SPOT_RESIDENTS,
+};
+
+const OIL_RIG_SPOT_NAMES: Partial<Record<SpotId, string>> = {
+  sunwardShoal: "Spillwater Slick",
+  outerGloam: "Bluewater Drop",
 };
 
 export function residentsForSpot(world: WorldId, spotId: SpotId): readonly FishSpecies[] {
@@ -245,7 +282,25 @@ export function residentsForSpot(world: WorldId, spotId: SpotId): readonly FishS
 }
 
 export function primarySpeciesForSpot(world: WorldId, spotId: SpotId): FishSpecies {
-  return world === "lake" ? spotById(spotId).species : residentsForSpot(world, spotId)[0]!;
+  const primary = world === "lake" ? spotById(spotId).species : residentsForSpot(world, spotId)[0];
+  if (!primary) throw new Error(`No primary species for ${world}:${spotId}.`);
+  return primary;
+}
+
+export function fishingSpotsForWorld(world: WorldId): readonly FishingSpotDefinition[] {
+  return FISHING_SPOTS.filter((spot) => residentsForSpot(world, spot.id).length > 0);
+}
+
+export function spotNameForWorld(world: WorldId, spotId: SpotId): string {
+  return world === "oil-rig" ? OIL_RIG_SPOT_NAMES[spotId] ?? spotById(spotId).name : spotById(spotId).name;
+}
+
+export function harborNameForWorld(world: WorldId, harborId: HarborId): string {
+  return WORLD_HARBOR_NAMES[world][harborId];
+}
+
+export function worldName(world: WorldId): string {
+  return WORLD_NAMES[world];
 }
 
 export const REGIONS: readonly RegionDefinition[] = [
@@ -293,6 +348,16 @@ export function regionSurfaceTintAt(x: number): string {
     return blendHexColours(current.surfaceTint, next.surfaceTint, amount);
   }
   return regionAt(clampedX).surfaceTint;
+}
+
+export function worldSurfaceTintAt(world: WorldId, x: number): string {
+  if (world !== "oil-rig") return regionSurfaceTintAt(x);
+  const blend = clamp01((x - 0.28) / 0.42);
+  return blendHexColours("#424b43", "#246d84", blend);
+}
+
+function clamp01(value: number): number {
+  return Math.max(0, Math.min(1, value));
 }
 
 function blendHexColours(from: string, to: string, amount: number): string {

@@ -12,15 +12,15 @@
 
 ## 1. Executive summary
 
-FSHING is a side-on fishing market game. The player runs a working boat across a lake that spans several camera widths, later unlocking a second coastal map. At each harbor a live board lists today's quotes. The player tracks a species, sails to its habitat, drops a line, and sells the catch at the stronger market. The two harbors do not pay the same price, so the crossing itself is the trading decision.
+FSHING is a side-on fishing market game. The player runs a working boat across a lake that spans several camera widths, later unlocking a coastal Beach or sailing directly to an offshore Oil Rig. At each harbor a live board lists today's quotes. The player tracks a species, sails to its habitat, drops a line, and sells the catch at the stronger market. The two harbors do not pay the same price, so the crossing itself is the trading decision.
 
 The game teaches by consequence rather than a quiz. A deeper line reaches more valuable fish, while a larger cargo hold makes each trip more productive. Tracking one listing turns the lake into a route between a fishing ground and the stronger market.
 
 The completed vertical slice contains:
 
-- one lake and one unlockable Beach, each with two harbors and three fishing grounds
-- eighteen real species (nine freshwater, nine south-eastern Australian coastal)
-- cargo, engine, line, and five-tier reel-power upgrades, plus a rechargeable boost and Beach access; Beach middle/right grounds require line tiers 3/4
+- a Lake and unlockable Beach with three fishing grounds each, plus an Oil Rig with one spillwater and one clean-bluewater ground
+- twenty-nine real species (twelve freshwater, eleven south-eastern Australian coastal, six offshore)
+- cargo, engine, line, and five-tier reel-power upgrades, plus a rechargeable boost and Beach access; Beach middle/right and Oil Rig spill/bluewater grounds require line tiers 3/4
 - deterministic reel-and-release fish fights with line tension, fish stamina, rarity scaling, and break recovery
 - seeded daily quotes, seven-day history, and full-quote sales
 - a five-step First Assignment, four-card How to play, and credits
@@ -65,7 +65,7 @@ A first run does not assume specialist vocabulary. First Assignment names the Bl
 
 Fishing-collection games typically progress through equipment, a catalogue, and deeper water. FSHING keeps that skeleton and replaces the catalogue-as-pokedex with a two-harbor market: the interesting choice is where and when to sell, not which quest to accept.
 
-The project does not copy another game's protagonist, title treatment, fish names, silhouettes, art, animations, interface, map, prices, or source. Lake species are real North American freshwater fish. Beach species are real south-eastern Australian coastal fish. The original-art record is `Docs/Asset-Manifest.md`.
+The project does not copy another game's protagonist, title treatment, fish names, silhouettes, art, animations, interface, map, prices, or source. Lake species are real North American freshwater fish, Beach species are real south-eastern Australian coastal fish, and Oil Rig species are real platform-associated or offshore fish. The original-art record is `Docs/Asset-Manifest.md`.
 
 ## 4. Gameplay design
 
@@ -103,13 +103,15 @@ flowchart LR
 
 Beach reuses the same spot names and world X positions. Reloading always restores the lake at Brindle; world, cargo, and time of day are not saved.
 
+Oil Rig deliberately exposes only two grounds: **Spillwater Slick** at T3 contains Atlantic Spadefish, Sheepshead, and Gray Triggerfish; **Bluewater Drop** at T4 contains Cobia, Greater Amberjack, and Atlantic Mahi-Mahi. Their base whole-fish values run from exactly 90 to 270 shells. The left/right harbors are renamed Dogwatch Rig and Beacon Mooring in this world.
+
 ### Progression
 
 | Purchase | Effect |
 | --- | --- |
 | Cargo (7 tiers, 3→10 slots) | Carry more before docking |
 | Engine (6 tiers) | Travel 15% faster per tier; upgrade prices are 20% lower than the standard curve and rounded to the nearest 5 shells |
-| Line (6 tiers) | Reach deeper bands; Beach middle/right require tiers 3/4 |
+| Line (6 tiers) | Reach deeper bands; Beach middle/right and Oil Rig spill/bluewater require tiers 3/4 |
 | Reel power (5 tiers) | Gain 12.5% reel stress capacity and 17% reel speed per tier, up to 1.625× capacity and 1.85× speed |
 | Engine boost (250 shells) | Hold Boost for a short overclock that overheats |
 | Beach (300 shells) | Travel to the coastal map |
@@ -196,7 +198,7 @@ Deep teal structure, sea-glass water, warm ivory copy, muted amber for actions. 
 
 Art direction is restrained gouache/screen-print scenery, deep teal interfaces, and high-readability side silhouettes. Runtime files are explicitly imported so authoring files in `output/imagegen/` do not enter `dist/`.
 
-Lake and Beach each have a 3×3 base UI atlas and three base 4-frame swim sheets. Five additional species use their own 4-frame swim sheet and transparent UI derivative. The original 2×2 `fish-atlas.png` remains only for the fishing-hook cell. Prompts, sizes, and roles are in `Docs/Asset-Manifest.md`.
+Lake and Beach each have a 3×3 base UI atlas and three base 4-frame swim sheets. Five additional species use their own 4-frame swim sheet and transparent UI derivative. Oil Rig adds two three-row 4-frame swim sheets, a mechanically derived 3×3 market atlas, day/night panoramas, and two underwater plates. The original 2×2 `fish-atlas.png` remains only for the fishing-hook cell. Prompts, sizes, and roles are in `Docs/Asset-Manifest.md`.
 
 ### Audio
 
@@ -243,10 +245,10 @@ Surface fishing grounds use a faint school, then a polarized lens, then a hook c
 | Larger map | Camera view width 0.30, so the harbor span is about three views |
 | Normal menu | Centred title panel, dominant Play, Settings and Credits |
 | Fishing spots should feel alive | Resident schools, polarized lens on approach, hook only inside the interaction radius |
-| Lots of fish | Twenty-three named real species with distinct swim gaits |
+| Lots of fish | Twenty-nine named real species with distinct swim gaits |
 | Water deeper only with upgrades | Six line tiers and a labelled underwater boundary |
 | Larger boats / more upgrades | Seven cargo tiers, six engine/line tiers, five reel-power tiers, boost, Beach |
-| Different worlds | Lake and Beach palettes, piers, underwater plates, and fish sets |
+| Different worlds | Lake, Beach, and Oil Rig palettes, structures, underwater plates, and fish sets |
 
 Delivery contracts, water surveys, and the field guide were removed from the player-facing loop after the market replaced jobs. The unused delivery-contract route helpers have also been deleted; only survey helpers remain for tests and must not be treated as live UI.
 
@@ -256,8 +258,8 @@ Unit/model tests cover:
 
 - map scale, movement, facing, braking, speed, bounds, and determinism
 - fishing targets, catch radius, reel progress, tension breaks, fish stamina, line strength, cargo capacity, and depth gates
-- market quotes, harbor demand, full-quote payouts, and Beach premiums
-- First Assignment, cargo release/restore, Beach travel, and boost heat
+- market quotes, harbor demand, full-quote payouts, Beach premiums, and Oil Rig's 90–270 base-value bounds
+- First Assignment, cargo release/restore, Beach and Oil Rig travel, and boost heat
 - night fade, destination-badge layout, fishing presentation and reeling
 - save corruption, fantasy-species migration, clamping, and round-trip persistence
 
@@ -265,21 +267,21 @@ Browser tests cover:
 
 - title, credits, settings, remapping, pause, high contrast, reduced motion, SDK fallback
 - First Assignment inspect → track → catch → sell → reload
-- market grid, locked cards, cargo counts, Beach coastal art
+- market grid, locked cards, cargo counts, Beach coastal art, and Oil Rig's six-fish atlas
 - dock day/night plates, waterline transitions, night indicator
-- fishing dive, reel-and-release fights, landing, Escape-to-surface, habitat-specific species
+- fishing dive, reel-and-release fights, landing, Escape-to-surface, habitat-specific species, and distinct spillwater/bluewater Oil Rig scenes
 - four-step How to play
 - absence of mobile movement pads and of the field guide
 
 ### Automated verification record
 
-Local verification on 22 August 2026:
+Local verification on 27 August 2026:
 
 | Check | Result | Evidence |
 | --- | --- | --- |
-| Typecheck and unit/model suite | Pass | Strict TypeScript passed; 144 of 144 Vitest tests passed |
-| Production build | Pass | Vite transformed 78 modules and produced `dist/` |
-| Browser suite and SDK fallback | Pass | 36 of 36 Playwright tests passed; the suite aborts CrazyGames and still completes local play |
+| Typecheck and unit/model suite | Pass | Strict TypeScript passed; 173 of 173 Vitest tests passed |
+| Production build | Pass | Vite transformed 99 modules and produced `dist/` with the Oil Rig runtime assets |
+| Browser suite and SDK fallback | Pass | 44 of 44 Playwright tests passed; the suite aborts CrazyGames and still completes Lake, Beach, and Oil Rig flows |
 
 Typecheck, production build, and the Playwright suite should be run before merge (`npm run check`, `npm run build`, `npm run test:e2e`).
 

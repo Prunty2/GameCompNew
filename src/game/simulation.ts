@@ -17,15 +17,17 @@ import { fishingFightBehaviour, fishingFightCue, RESTING_FIGHT_MOTION, stepFishi
 import {
   BALANCE,
   FISH,
-  FISHING_SPOTS,
   HARBORS,
   SURFACE_Y,
   WORLD_SPOT_RESIDENTS,
   engineSpeedMultiplier,
+  fishingSpotsForWorld,
   hookVerticalSpeedMultiplier,
   harborById,
+  harborNameForWorld,
   residentsForSpot,
   spotById,
+  spotNameForWorld,
   upgradeTierCap,
   type FishSpecies,
   type HarborId,
@@ -194,7 +196,7 @@ export interface InteractionPrompt {
 export interface NavigationGuidance {
   point: WorldPoint;
   label: string;
-  kicker: "MARKET AT" | "FISH AT" | "SELL AT" | "MANAGE CARGO" | "UPGRADE AT";
+  kicker: "MARKET AT" | "FISH AT" | "SELL AT" | "MANAGE CARGO" | "UPGRADE AT" | "RETURN TO LAKE";
   instruction: string;
 }
 
@@ -223,6 +225,12 @@ const FISHING_SPECIES_DEPTH_BANDS: Partial<Record<FishSpecies, { top: number; bo
   estuaryPerch: { top: 0.71, bottom: 0.77 },
   snapper: { top: 0.16, bottom: 0.28 },
   yellowtailKingfish: { top: 0.46, bottom: 0.58 },
+  atlanticSpadefish: { top: 0.14, bottom: 0.24 },
+  sheepshead: { top: 0.41, bottom: 0.53 },
+  grayTriggerfish: { top: 0.67, bottom: 0.76 },
+  atlanticMahiMahi: { top: 0.12, bottom: 0.23 },
+  cobia: { top: 0.42, bottom: 0.55 },
+  greaterAmberjack: { top: 0.66, bottom: 0.77 },
 };
 const SEASON_SALES = 8;
 
@@ -362,23 +370,29 @@ export function getInteractionPrompt(simulation: Simulation): InteractionPrompt 
   const harbor = nearestHorizontal(simulation.boat.x, HARBORS, BALANCE.dockRadius);
   if (harbor) {
     const enabled = Math.abs(simulation.boat.speed) <= BALANCE.interactionMaxSpeed;
+    const harborName = harborNameForWorld(simulation.world, harbor.id);
     return {
       kind: "harbor",
       harbor: harbor.id,
-      label: enabled ? `Dock · ${harbor.name}` : `Brake for ${harbor.name}`,
+      label: enabled ? `Dock · ${harborName}` : `Brake for ${harborName}`,
       enabled,
       reason: enabled ? undefined : "Too fast to dock",
     };
   }
 
-  const spot = nearestHorizontal(simulation.boat.x, FISHING_SPOTS, BALANCE.fishingRadius);
+  const spot = nearestHorizontal(
+    simulation.boat.x,
+    fishingSpotsForWorld(simulation.world),
+    BALANCE.fishingRadius,
+  );
   if (!spot) return null;
+  const spotName = spotNameForWorld(simulation.world, spot.id);
   const requiredDepthTier = spot.requiredDepthTier[simulation.world];
   if (requiredDepthTier > simulation.progress.upgrades.line) {
     return {
       kind: "fishing",
       spot: spot.id,
-      label: `Line tier ${requiredDepthTier} required · ${spot.name}`,
+      label: `Line tier ${requiredDepthTier} required · ${spotName}`,
       enabled: false,
       reason: `Upgrade line depth to tier ${requiredDepthTier}`,
     };
@@ -390,7 +404,7 @@ export function getInteractionPrompt(simulation: Simulation): InteractionPrompt 
   return {
     kind: "fishing",
     spot: spot.id,
-    label: enabled ? `Drop line · ${spot.name}` : `Brake beneath ${spot.name}`,
+    label: enabled ? `Drop line · ${spotName}` : `Brake beneath ${spotName}`,
     enabled,
     reason: enabled ? undefined : "Too fast to fish",
   };
@@ -402,6 +416,8 @@ export function startFishing(
   viewport: FishingViewport = { width: 1280, height: 720 },
 ): boolean {
   const spot = spotById(spotId);
+  const residents = residentsForSpot(simulation.world, spotId);
+  if (residents.length === 0) return false;
   const requiredDepthTier = spot.requiredDepthTier[simulation.world];
   if (requiredDepthTier > simulation.progress.upgrades.line) {
     pushEventOnce(simulation, { type: "depth-locked", tier: requiredDepthTier });
@@ -412,7 +428,6 @@ export function startFishing(
     return false;
   }
 
-  const residents = residentsForSpot(simulation.world, spotId);
   const populationDensity = simulation.world === "lake" && spotId === "mosswaterPool"
     ? MOSSWATER_POPULATION_DENSITY_MULTIPLIER
     : DEFAULT_POPULATION_DENSITY_MULTIPLIER;
@@ -669,7 +684,8 @@ export function isUpgradeTutorialActive(simulation: Simulation): boolean {
 }
 
 export function isLineDepthTutorialExploration(simulation: Simulation): boolean {
-  return simulation.progress.upgradeTutorialStep === "buy"
+  return simulation.world === "lake"
+    && simulation.progress.upgradeTutorialStep === "buy"
     && simulation.progress.upgrades.line > 0;
 }
 
@@ -852,9 +868,19 @@ export function navigationGuidance(simulation: Simulation): NavigationGuidance |
     const harbor = closestHarbor(simulation);
     return {
       point: harbor,
-      label: harbor.name,
+      label: harborNameForWorld(simulation.world, harbor.id),
       kicker: "MANAGE CARGO",
       instruction: harborInstruction(simulation, harbor, "sell or release a catch to make room"),
+    };
+  }
+
+  if (tutorialActive && simulation.world === "oil-rig" && !target) {
+    const harbor = closestHarbor(simulation);
+    return {
+      point: harbor,
+      label: harborNameForWorld(simulation.world, harbor.id),
+      kicker: "RETURN TO LAKE",
+      instruction: harborInstruction(simulation, harbor, "use Departures to return to the Lake"),
     };
   }
 
@@ -877,7 +903,7 @@ export function navigationGuidance(simulation: Simulation): NavigationGuidance |
     const harbor = closestHarbor(simulation);
     return {
       point: harbor,
-      label: harbor.name,
+      label: harborNameForWorld(simulation.world, harbor.id),
       kicker: "UPGRADE AT",
       instruction: harborInstruction(simulation, harbor, "open Upgrades and buy an upgrade"),
     };
@@ -887,7 +913,7 @@ export function navigationGuidance(simulation: Simulation): NavigationGuidance |
     const harbor = closestHarbor(simulation);
     return {
       point: harbor,
-      label: harbor.name,
+      label: harborNameForWorld(simulation.world, harbor.id),
       kicker: "MARKET AT",
       instruction: harborInstruction(simulation, harbor, "choose a fish to track on the market board"),
     };
@@ -900,7 +926,7 @@ export function navigationGuidance(simulation: Simulation): NavigationGuidance |
     const quote = marketQuote(target, harbor.id, simulation.progress.marketDay, simulation.seed);
     return {
       point: harbor,
-      label: harbor.name,
+      label: harborNameForWorld(simulation.world, harbor.id),
       kicker: "SELL AT",
       instruction: harborInstruction(
         simulation,
@@ -911,17 +937,18 @@ export function navigationGuidance(simulation: Simulation): NavigationGuidance |
   }
 
   const spot = spotForSpecies(target);
+  const spotName = spotNameForWorld(simulation.world, spot.id);
   const prompt = getInteractionPrompt(simulation);
   const instruction = prompt?.kind === "fishing" && prompt.spot === spot.id
     ? prompt.enabled
-      ? `Drop the line at ${spot.name} and catch a ${fish.name}.`
+      ? `Drop the line at ${spotName} and catch a ${fish.name}.`
       : prompt.reason === "Too fast to fish"
-        ? `Slow beneath ${spot.name}, then drop the line to catch a ${fish.name}.`
-        : `${prompt.reason ?? "Fishing is unavailable"} at ${spot.name}.`
-    : `Head ${horizontalDirection(simulation.boat.x, spot.x)} to ${spot.name}, then catch a ${fish.name}.`;
+        ? `Slow beneath ${spotName}, then drop the line to catch a ${fish.name}.`
+        : `${prompt.reason ?? "Fishing is unavailable"} at ${spotName}.`
+    : `Head ${horizontalDirection(simulation.boat.x, spot.x)} to ${spotName}, then catch a ${fish.name}.`;
   return {
     point: spot,
-    label: spot.name,
+    label: spotName,
     kicker: "FISH AT",
     instruction,
   };
@@ -929,6 +956,9 @@ export function navigationGuidance(simulation: Simulation): NavigationGuidance |
 
 export function tutorialPrompt(simulation: Simulation): string | null {
   if (simulation.progress.marketTutorialStep === "done" || simulation.progress.marketTutorialStep === "complete") return null;
+  if (simulation.world === "oil-rig" && simulation.mode !== "fishing" && !simulation.progress.marketTarget) {
+    return "Return to the Lake to continue the Bluegill assignment.";
+  }
   if (simulation.mode === "fishing" && simulation.fishing) {
     if (simulation.fishing.reeling) {
       const name = FISH[simulation.fishing.reeling.species].name;
@@ -1178,12 +1208,13 @@ function harborInstruction(
   action: string,
 ): string {
   const prompt = getInteractionPrompt(simulation);
+  const harborName = harborNameForWorld(simulation.world, harbor.id);
   if (prompt?.kind === "harbor" && prompt.harbor === harbor.id) {
     return prompt.enabled
-      ? `Dock at ${harbor.name} and ${action}.`
-      : `Slow down to dock at ${harbor.name}, then ${action}.`;
+      ? `Dock at ${harborName} and ${action}.`
+      : `Slow down to dock at ${harborName}, then ${action}.`;
   }
-  return `Head ${horizontalDirection(simulation.boat.x, harbor.x)} to ${harbor.name} and ${action}.`;
+  return `Head ${horizontalDirection(simulation.boat.x, harbor.x)} to ${harborName} and ${action}.`;
 }
 
 function nearestHorizontal<T extends WorldPoint>(x: number, choices: readonly T[], radius: number): T | null {

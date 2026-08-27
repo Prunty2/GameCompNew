@@ -4,6 +4,7 @@ import {
   HARBORS,
   WORLD_SPOT_RESIDENTS,
   regionById,
+  spotNameForWorld,
   type FishSpecies,
   type HarborId,
   type WorldId,
@@ -102,6 +103,12 @@ const HARBOR_DEMAND: Record<HarborId, Record<FishSpecies, number>> = {
     snapper: 1.08,
     yellowtailKingfish: 0.96,
     mulloway: 1.07,
+    atlanticSpadefish: 0.98,
+    sheepshead: 1.05,
+    grayTriggerfish: 1.07,
+    cobia: 1.03,
+    greaterAmberjack: 0.97,
+    atlanticMahiMahi: 1.08,
   },
   gloam: {
     bluegill: 1.07,
@@ -127,6 +134,12 @@ const HARBOR_DEMAND: Record<HarborId, Record<FishSpecies, number>> = {
     snapper: 0.96,
     yellowtailKingfish: 1.08,
     mulloway: 1.03,
+    atlanticSpadefish: 1.06,
+    sheepshead: 0.98,
+    grayTriggerfish: 1.02,
+    cobia: 1.08,
+    greaterAmberjack: 1.06,
+    atlanticMahiMahi: 0.97,
   },
 };
 
@@ -236,7 +249,9 @@ export function worldForSpecies(species: FishSpecies): WorldId {
 
 export function marketLocationText(species: FishSpecies): string {
   const spot = spotForSpecies(species);
-  return `${spot.name}, ${regionById(spot.region).name}`;
+  const world = worldForSpecies(species);
+  if (world === "oil-rig") return `${spotNameForWorld(world, spot.id)}, Oil Rig`;
+  return `${spotNameForWorld(world, spot.id)}, ${regionById(spot.region).name}`;
 }
 
 export function strongerHarborFor(

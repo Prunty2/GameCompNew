@@ -695,7 +695,7 @@ test("Cargo tier four equips the expanded-cargo boat sprite", async ({ page }) =
   );
 });
 
-test("dockside Departures unlocks Beach and keeps Oil Rig unavailable", async ({ page }) => {
+test("dockside Departures unlocks Beach and sails to the Oil Rig", async ({ page }) => {
   await page.setViewportSize({ width: 1800, height: 900 });
   await page.goto("/?e2e=1");
   await page.evaluate(() => {
@@ -735,9 +735,9 @@ test("dockside Departures unlocks Beach and keeps Oil Rig unavailable", async ({
   );
   expect(nestedBorderContent).toBe("none");
   await expect(oilRig).toContainText("Oil Rig");
-  await expect(oilRig).toContainText("COMING");
-  await expect(oilRig).toHaveAttribute("aria-disabled", "true");
-  await expect(oilRig.locator("button, [data-action]")).toHaveCount(0);
+  await expect(oilRig).toContainText("SAIL");
+  await expect(oilRig).toHaveAttribute("aria-label", "Travel to Oil Rig");
+  await expect(oilRig).not.toHaveAttribute("aria-disabled", "true");
 
   await page.getByRole("button", { name: "Upgrades", exact: true }).click();
   await expect(page.locator(".upgrades")).not.toContainText("Beach");
@@ -751,6 +751,76 @@ test("dockside Departures unlocks Beach and keeps Oil Rig unavailable", async ({
   await page.getByRole("button", { name: "Dock · Brindle Harbor" }).click();
   await page.getByRole("button", { name: "Travel to Lake" }).click();
   await expect(page.locator("#game-canvas")).toHaveAttribute("data-world", "lake");
+
+  await page.evaluate(() => window.__FSHING_TEST__?.sailToHarbor("brindle"));
+  await page.getByRole("button", { name: "Dock · Brindle Harbor" }).click();
+  await page.getByRole("button", { name: "Travel to Oil Rig" }).click();
+  await expect(page.locator("#game-canvas")).toHaveAttribute("data-world", "oil-rig");
+  await page.evaluate(() => window.__FSHING_TEST__?.sailToHarbor("brindle"));
+  await page.getByRole("button", { name: "Dock · Dogwatch Rig" }).click();
+  await expect(page.getByRole("heading", { name: "Dogwatch Rig" })).toBeVisible();
+  await page.getByRole("button", { name: "Travel to Lake" }).click();
+  await expect(page.locator("#game-canvas")).toHaveAttribute("data-world", "lake");
+});
+
+test("Oil Rig has spillwater and bluewater fishing scenes plus a six-fish market", async ({ page }) => {
+  const oilRigSpecies = [
+    "atlanticSpadefish",
+    "sheepshead",
+    "grayTriggerfish",
+    "cobia",
+    "greaterAmberjack",
+    "atlanticMahiMahi",
+  ];
+  await page.goto("/?e2e=1");
+  await page.evaluate((discovered) => {
+    window.localStorage.setItem("gamecomp-new.save", JSON.stringify({
+      version: 14,
+      progress: {
+        money: 1_000,
+        upgrades: { line: 4 },
+        discovered,
+        marketTutorialStep: "done",
+        upgradeTutorialStep: "done",
+      },
+      settings: {},
+    }));
+  }, oilRigSpecies);
+  await page.reload();
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.getByRole("button", { name: "Travel to Oil Rig" }).click();
+
+  await page.evaluate(() => window.__FSHING_TEST__?.sailToSpot("sunwardShoal"));
+  await expect(page.getByRole("button", { name: "Drop line · Spillwater Slick" })).toBeEnabled();
+  await page.evaluate(() => window.__FSHING_TEST__?.previewFishing("sunwardShoal", "atlanticSpadefish"));
+  await expect(page.locator("#game-canvas")).toHaveAttribute("data-fishing-spot", "sunwardShoal");
+  await expect(page.locator("#game-canvas")).toHaveAttribute("data-fishing-environment", "oil-rig-spill");
+
+  await page.reload();
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.getByRole("button", { name: "Travel to Oil Rig" }).click();
+  await page.evaluate(() => window.__FSHING_TEST__?.sailToSpot("outerGloam"));
+  await expect(page.getByRole("button", { name: "Drop line · Bluewater Drop" })).toBeEnabled();
+  await page.evaluate(() => window.__FSHING_TEST__?.previewFishing("outerGloam", "atlanticMahiMahi"));
+  await expect(page.locator("#game-canvas")).toHaveAttribute("data-fishing-spot", "outerGloam");
+  await expect(page.locator("#game-canvas")).toHaveAttribute("data-fishing-environment", "oil-rig-bluewater");
+
+  await page.reload();
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.getByRole("button", { name: "Travel to Oil Rig" }).click();
+  await page.evaluate(() => window.__FSHING_TEST__?.sailToHarbor("brindle"));
+  await page.getByRole("button", { name: "Dock · Dogwatch Rig" }).click();
+  await expect(page.locator(".market-list .market-listing")).toHaveCount(6);
+  for (const species of oilRigSpecies) {
+    await expect(page.locator(`[data-species="${species}"] .market-fish-icon`)).toHaveAttribute(
+      "style",
+      /fish-oil-rig-atlas-ui/,
+    );
+  }
+  await page.getByRole("button", { name: "Upgrades", exact: true }).click();
+  await expect(page.locator(".service-card").filter({ hasText: "Fishing line" })).toContainText(
+    "Spill tier 3 · bluewater tier 4",
+  );
 });
 
 test("Beach fishing requires line tier 3 in the middle and tier 4 at the far right", async ({ page }) => {

@@ -208,6 +208,48 @@ export const FISHING_MOVEMENT_PROFILES: Record<FishSpecies, FishingMovementProfi
     depthAmplitude: 0.012, depthFrequency: 0.31, jukeStrength: 0.1, jukeChance: 0.1,
     bodyFrequency: 3.2, flexAmount: 0.022,
   },
+  atlanticSpadefish: {
+    gait: "pectoral", cruise: 0.48, speedVariance: 0.08, burstStrength: 0.38,
+    burstFrequency: 0.42, burstChance: 0.34, burstSharpness: 4,
+    turnFrequency: 0.3, reverseChance: 0.42, turnEase: 0.22,
+    depthAmplitude: 0.018, depthFrequency: 0.48, jukeStrength: 0.14, jukeChance: 0.14,
+    bodyFrequency: 3, flexAmount: 0.016,
+  },
+  sheepshead: {
+    gait: "pectoral", cruise: 0.44, speedVariance: 0.07, burstStrength: 0.52,
+    burstFrequency: 0.38, burstChance: 0.36, burstSharpness: 5,
+    turnFrequency: 0.25, reverseChance: 0.4, turnEase: 0.21,
+    depthAmplitude: 0.012, depthFrequency: 0.36, jukeStrength: 0.1, jukeChance: 0.1,
+    bodyFrequency: 3.2, flexAmount: 0.018,
+  },
+  grayTriggerfish: {
+    gait: "amiiform", cruise: 0.39, speedVariance: 0.06, burstStrength: 0.58,
+    burstFrequency: 0.36, burstChance: 0.34, burstSharpness: 5,
+    turnFrequency: 0.31, reverseChance: 0.48, turnEase: 0.22,
+    depthAmplitude: 0.02, depthFrequency: 0.44, jukeStrength: 0.16, jukeChance: 0.14,
+    bodyFrequency: 3.4, flexAmount: 0.014,
+  },
+  cobia: {
+    gait: "subcarangiform", cruise: 0.82, speedVariance: 0.08, burstStrength: 0.78,
+    burstFrequency: 0.42, burstChance: 0.42, burstSharpness: 5,
+    turnFrequency: 0.17, reverseChance: 0.28, turnEase: 0.15,
+    depthAmplitude: 0.019, depthFrequency: 0.38, jukeStrength: 0.16, jukeChance: 0.12,
+    bodyFrequency: 4.1, flexAmount: 0.028,
+  },
+  greaterAmberjack: {
+    gait: "carangiform", cruise: 1.28, speedVariance: 0.12, burstStrength: 1.62,
+    burstFrequency: 0.76, burstChance: 0.58, burstSharpness: 6,
+    turnFrequency: 0.27, reverseChance: 0.25, turnEase: 0.11,
+    depthAmplitude: 0.022, depthFrequency: 0.58, jukeStrength: 0.38, jukeChance: 0.3,
+    bodyFrequency: 6.4, flexAmount: 0.028,
+  },
+  atlanticMahiMahi: {
+    gait: "carangiform", cruise: 1.46, speedVariance: 0.15, burstStrength: 1.9,
+    burstFrequency: 1, burstChance: 0.66, burstSharpness: 6,
+    turnFrequency: 0.35, reverseChance: 0.28, turnEase: 0.1,
+    depthAmplitude: 0.03, depthFrequency: 0.82, jukeStrength: 0.48, jukeChance: 0.36,
+    bodyFrequency: 7.2, flexAmount: 0.03,
+  },
 };
 
 export function fishingSpeciesMotion(species: FishSpecies, elapsed: number, phase: number): FishingSpeciesMotion {

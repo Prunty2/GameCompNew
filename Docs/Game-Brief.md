@@ -1,8 +1,8 @@
 # FSHING — game brief
 
-This brief is the product source of truth. It describes the playable game in `v0.8.0` (build label `v0.8.0 (PR #115)`), not leftover simulation APIs.
+This brief is the product source of truth. It describes the playable game in `v0.9.0` (build label `v0.9.0 (PR #114)`), not leftover simulation APIs.
 
-FSHING is a single-player side-on fishing market game for desktop and mobile browsers. The player pilots a working boat across a lake, and later an unlockable Beach, then sells catches at two harbors whose prices move each in-game day.
+FSHING is a single-player side-on fishing market game for desktop and mobile browsers. The player pilots a working boat across a lake, an unlockable Beach, and a working offshore Oil Rig route, then sells catches at two harbors whose prices move each in-game day.
 
 ## Core loop
 
@@ -11,7 +11,7 @@ FSHING is a single-player side-on fishing market game for desktop and mobile bro
 3. Sail to that species' fishing ground. Slow down until the hook cue appears, then drop the line.
 4. Steer the hook onto a reachable fish. Hold left click on the water (or touch / the Reel key) while the fish is calm to pull it closer. When it races away, release so it can take line — that is what drops tension. Reeling against a run turns the line red. Landed catches are stored in cargo until sold or released.
 5. Dock at the harbor that currently pays more and sell every catch of that species for the displayed quote.
-6. Spend shells on cargo, engine, line, or boost, and unlock Beach from the dockside **Departures** board. Line upgrades unlock the middle and far-right grounds at world-specific tiers.
+6. Spend shells on cargo, engine, line, or boost, unlock Beach, and sail between Lake, Beach, and Oil Rig from the dockside **Departures** board. Line upgrades unlock grounds at world-specific tiers.
 
 A new save starts docked at Brindle Harbor on the lake with Bluegill already discovered. The first run is a four-step **First Assignment** that walks through inspect → track → catch → sell. Each tutorial pill includes a short instruction that changes with the player's current screen. During the catch the title first shows **Let it run**, then switches to **Hold left click** in the first lull, explains that a racing fish slacks the line, and toasts if the player horses a run, never reels a lull, or rests too long. The sale ends that assignment. When the player can afford a dock upgrade, a second tutorial walks through Upgrades.
 
@@ -23,7 +23,7 @@ Market → Track → Sail → Fish → Reel → Sell → Upgrade → Market
 
 | Screen | How it opens | What it contains |
 | --- | --- | --- |
-| Title | Launch, or Title screen from pause | Wordmark, Play, Settings, Credits, `v0.8.0 (PR #115)` |
+| Title | Launch, or Title screen from pause | Wordmark, Play, Settings, Credits, `v0.9.0 (PR #114)` |
 | Harbor | Play from a docked start, or docking | Market / Cargo / Upgrades tabs, shell balance, Help, Return to the current world, and a wooden Departures board for world travel |
 | Market detail | Selecting a discovered listing | Species art, current-harbor price, Track, Sell, 7-day graph |
 | Pause | Escape or Pause on the water | Resume, Settings, How to play, Title screen |
@@ -42,7 +42,7 @@ The title sky periodically carries a flock of two to five animated seagulls. Eac
 
 ## Worlds
 
-The same two harbors and three fishing-spot IDs exist in both worlds. Reloading always restores the lake, docked at Brindle. World, cargo, boat pose, damage, boost heat, and time of day are not saved.
+All worlds share the two harbor IDs and stable fishing-spot IDs. Lake and Beach expose three grounds; Oil Rig exposes only two. Reloading always restores the lake, docked at Brindle. World, cargo, boat pose, damage, boost heat, and time of day are not saved.
 
 ### Lake
 
@@ -50,7 +50,20 @@ Side-on freshwater chart with Brindle Harbor at the left and Gloam Ferry at the 
 
 ### Beach
 
-Paid unlock (300 shells) from the dockside Departures board. Travel is immediate and undocks the boat. When docked at Beach, the live departure changes to Lake. The board also previews an unavailable Oil Rig route as **Coming soon**; it has no gameplay, price, state, or interaction. The Beach reuses lake spot names and layout, and swaps panorama, pier, underwater paintings, fish, and market art.
+Paid unlock (300 shells) from the dockside Departures board. Travel is immediate and undocks the boat. The Beach reuses lake spot names and layout, and swaps panorama, pier, underwater paintings, fish, and market art.
+
+### Oil Rig
+
+Free live route from every other world's Departures board. The wide authored day/night panorama places the fixed platform at the far-left Dogwatch Rig harbor, with the dog safely standing on the lower service deck beneath the main rig, and Beacon Mooring at the far right. The rig does not use the generated shoreline-pier overlay because its service dock is painted into the panorama.
+
+Oil Rig has exactly two fishing grounds:
+
+| Spot id | Display name | x | Line tier | Water | Residents |
+| --- | --- | ---: | ---: | --- | --- |
+| `sunwardShoal` | Spillwater Slick | 0.18 | 3 | Localized surface oil, fouled pilings, dim green-brown water | Atlantic Spadefish, Sheepshead, Gray Triggerfish |
+| `outerGloam` | Bluewater Drop | 0.82 | 4 | Clear offshore blue water beyond the platform | Cobia, Greater Amberjack, Atlantic Mahi-Mahi |
+
+`mosswaterPool` remains a stable internal ID for save and shared-layout compatibility but is inactive in this world. Spillwater residents occupy stepped depth bands: Atlantic Spadefish `0.14–0.24`, Sheepshead `0.41–0.53`, and Gray Triggerfish `0.67–0.76`. Bluewater residents use Atlantic Mahi-Mahi `0.12–0.23`, Cobia `0.42–0.55`, and Greater Amberjack `0.66–0.77`.
 
 | Spot id | Display name | x | Lake line | Beach line | Lake residents | Beach residents |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -70,14 +83,14 @@ Harbors:
 
 | Id | Name | World x | Undock spawn |
 | --- | --- | --- | --- |
-| `brindle` | Brindle Harbor | 0.055 | x 0.11, facing right |
-| `gloam` | Gloam Ferry | 0.945 | x 0.89, facing left |
+| `brindle` | Brindle Harbor / Dogwatch Rig at Oil Rig | 0.055 | x 0.11, facing right |
+| `gloam` | Gloam Ferry / Beacon Mooring at Oil Rig | 0.945 | x 0.89, facing left |
 
 Dock and fish interaction radius is 0.027 world units. The boat must be at or below 0.026 speed to dock or drop a line.
 
 ## Species and whole-fish values
 
-Depth tier is the primary price driver. Rarity separates fish that share a depth. Beach peers sit about 20% above their lake counterparts.
+Depth tier is the primary price driver. Rarity separates fish that share a depth. Beach peers sit about 20% above their lake counterparts. Oil Rig's deliberately high-risk/high-value roster spans exactly 90–270 shells in base whole-fish value.
 
 | Species | World | Spot | Depth | Rarity | Value |
 | --- | --- | --- | --- | --- | ---: |
@@ -104,6 +117,12 @@ Depth tier is the primary price driver. Rarity separates fish that share a depth
 | Snapper | Beach | Outer Gloam | 3 | rare | 96 |
 | Yellowtail Kingfish | Beach | Outer Gloam | 4 | rare | 120 |
 | Mulloway | Beach | Outer Gloam | 5 | legendary | 156 |
+| Atlantic Spadefish | Oil Rig | Spillwater Slick | 2 | common | 90 |
+| Sheepshead | Oil Rig | Spillwater Slick | 3 | uncommon | 115 |
+| Gray Triggerfish | Oil Rig | Spillwater Slick | 4 | rare | 145 |
+| Cobia | Oil Rig | Bluewater Drop | 4 | rare | 170 |
+| Greater Amberjack | Oil Rig | Bluewater Drop | 5 | rare | 220 |
+| Atlantic Mahi-Mahi | Oil Rig | Bluewater Drop | 6 | legendary | 270 |
 
 Locked market cards stay darkened with a `?` until the species is discovered. Bluegill is always discovered. Catching a species discovers it.
 
@@ -183,7 +202,7 @@ Standard upgrade costs are `base + currentTier × 55` shells. Engine upgrade pri
 | --- | --- | --- | --- |
 | Cargo | 60 | 7 | +1 slot per tier. Start 3, max 10 |
 | Engine | 55 | 6 | +15% travel speed per tier; 1.90× at tier 6 |
-| Fishing line | 55 | 6 | Deeper hook limit and +12% fight strength per tier. Lake: middle tier 1, far right tier 3. Beach: middle tier 3, far right tier 4 |
+| Fishing line | 55 | 6 | Deeper hook limit and +12% fight strength per tier. Lake: middle tier 1, far right tier 3. Beach: middle tier 3, far right tier 4. Oil Rig: spill tier 3, bluewater tier 4 |
 | Reel power | 65 | 5 | +12.5% stress capacity and +17% reel speed per tier; 1.625× capacity and 1.85× speed at tier 5 |
 | Engine boost | 250 | one-time | Hold Boost while moving. Overheats, then cools |
 | Beach | 300 | one-time | Unlock travel to the coastal map from the Departures board |
@@ -314,10 +333,11 @@ A build matches this brief when:
 
 - Title shows Play, Settings, Credits, and `vX.Y.Z (PR #N)`
 - A new save can complete First Assignment: inspect Bluegill, track, catch at Sunward Shoal, sell
-- Market lists twelve Lake species or eleven Beach species, with undiscovered cards locked
+- Market lists twelve Lake, eleven Beach, or six Oil Rig species, with undiscovered cards locked
 - Quotes differ by harbor and day, and every catch sells for the displayed quote
-- Line tier gates the Lake middle/right spots at tiers 1/3 and the Beach middle/right spots at tiers 3/4
-- The Departures board unlocks Beach for 300 shells, travels between Beach and Lake, and leaves Oil Rig visibly unavailable
+- Line tier gates the Lake middle/right spots at tiers 1/3, Beach middle/right spots at tiers 3/4, and Oil Rig spill/bluewater spots at tiers 3/4
+- The Departures board unlocks Beach for 300 shells and travels among Lake, Beach, and Oil Rig
+- Oil Rig shows the dog on its lower service deck, one spillwater ground, one clean-bluewater ground, six unique animated species, and whole-fish values bounded at 90 and 270 shells
 - Keyboard sailing, hook steering, pause, mute, high contrast, and reduced motion work
 - Reloading keeps money, unlocks, discoveries, tutorial completion, and settings
 - Local play still works with the CrazyGames SDK blocked

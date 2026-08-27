@@ -84,9 +84,37 @@ export const BEACH_WATER_READINGS: Record<SpotId, WaterReading> = {
   },
 };
 
+export const OIL_RIG_WATER_READINGS: Record<SpotId, WaterReading> = {
+  sunwardShoal: {
+    depthM: 18,
+    temperatureC: 24,
+    oxygenMgL: 5.8,
+    turbidity: "high",
+    habitat: "oil-darkened surface water beside fouled rig pilings",
+    clue: "Structure-oriented fish remain around the pilings beneath a localized surface slick.",
+  },
+  mosswaterPool: {
+    depthM: 38,
+    temperatureC: 22,
+    oxygenMgL: 6.2,
+    turbidity: "moderate",
+    habitat: "open water between offshore structures",
+    clue: "No fishing ground is charted in this transit corridor.",
+  },
+  outerGloam: {
+    depthM: 74,
+    temperatureC: 20,
+    oxygenMgL: 6.8,
+    turbidity: "low",
+    habitat: "clean bluewater beyond the rig shelf",
+    clue: "Clear deep water supports powerful roaming pelagic predators.",
+  },
+};
+
 const WORLD_WATER_READINGS: Record<WorldId, Record<SpotId, WaterReading>> = {
   lake: WATER_READINGS,
   beach: BEACH_WATER_READINGS,
+  "oil-rig": OIL_RIG_WATER_READINGS,
 };
 
 export const FISH_SCIENCE: Record<FishSpecies, FishScienceProfile> = {
@@ -240,6 +268,42 @@ export const FISH_SCIENCE: Record<FishSpecies, FishScienceProfile> = {
     ecologicalRole: "Large coastal predator of fish, prawns, and squid.",
     evidence: "Its long robust body cruises steadily, reserving stronger tail beats for a surge.",
   },
+  atlanticSpadefish: {
+    temperatureRangeC: [18, 28], minimumOxygenMgL: 5,
+    habitat: "Schools around offshore platforms, pilings, wrecks, and other vertical structure",
+    ecologicalRole: "Structure-associated omnivore that grazes invertebrates and plankton.",
+    evidence: "Its deep compressed body and large fins support controlled turns and station keeping beside pilings.",
+  },
+  sheepshead: {
+    temperatureRangeC: [16, 28], minimumOxygenMgL: 5,
+    habitat: "Pilings, jetties, reefs, and other barnacle-covered hard structure",
+    ecologicalRole: "Crusher of barnacles, crabs, bivalves, and other hard-shelled invertebrates.",
+    evidence: "Its deep body holds close to fouled structure before compact tail-powered runs.",
+  },
+  grayTriggerfish: {
+    temperatureRangeC: [18, 28], minimumOxygenMgL: 5,
+    habitat: "Offshore natural and artificial reefs over hard bottom",
+    ecologicalRole: "Reef omnivore that consumes benthic invertebrates including urchins and bivalves.",
+    evidence: "Opposing dorsal and anal fins let its rigid rhomboid body maneuver precisely around steel structure.",
+  },
+  cobia: {
+    temperatureRangeC: [20, 30], minimumOxygenMgL: 5.5,
+    habitat: "Open coastal water near reefs, buoys, platforms, and large floating objects",
+    ecologicalRole: "Large mobile predator of fish, crabs, and squid.",
+    evidence: "Its long muscular body alternates efficient cruising with sustained powerful runs.",
+  },
+  greaterAmberjack: {
+    temperatureRangeC: [18, 28], minimumOxygenMgL: 6,
+    habitat: "Offshore reefs, wrecks, and platforms in deeper bluewater",
+    ecologicalRole: "Fast reef-edge predator of fish, squid, and crustaceans.",
+    evidence: "Its narrow tail base and deep fork drive strong carangiform dives and long runs.",
+  },
+  atlanticMahiMahi: {
+    temperatureRangeC: [21, 30], minimumOxygenMgL: 6,
+    habitat: "Warm surface bluewater around natural and artificial floating objects",
+    ecologicalRole: "Fast-growing surface predator of schooling fish, squid, and crustaceans.",
+    evidence: "Its long dorsal fin and deeply forked tail support rapid surface sprints and abrupt vertical turns.",
+  },
 };
 
 const SURVEY_CHOICES: Record<FishSpecies, readonly [FishSpecies, FishSpecies, FishSpecies]> = {
@@ -266,6 +330,12 @@ const SURVEY_CHOICES: Record<FishSpecies, readonly [FishSpecies, FishSpecies, Fi
   snapper: ["snapper", "mulloway", "yellowfinBream"],
   yellowtailKingfish: ["yellowtailKingfish", "easternAustralianSalmon", "mulloway"],
   mulloway: ["mulloway", "snapper", "duskyFlathead"],
+  atlanticSpadefish: ["atlanticSpadefish", "sheepshead", "grayTriggerfish"],
+  sheepshead: ["sheepshead", "atlanticSpadefish", "grayTriggerfish"],
+  grayTriggerfish: ["grayTriggerfish", "sheepshead", "atlanticSpadefish"],
+  cobia: ["cobia", "greaterAmberjack", "atlanticMahiMahi"],
+  greaterAmberjack: ["greaterAmberjack", "cobia", "atlanticMahiMahi"],
+  atlanticMahiMahi: ["atlanticMahiMahi", "greaterAmberjack", "cobia"],
 };
 
 export function surveyChoices(spotId: SpotId, researchTarget?: FishSpecies, world: WorldId = "lake"): readonly FishSpecies[] {
@@ -292,5 +362,5 @@ export function evaluateSurvey(
 function surveyTarget(spotId: SpotId, researchTarget: FishSpecies | undefined, world: WorldId): FishSpecies {
   const residents = WORLD_SPOT_RESIDENTS[world][spotId];
   if (researchTarget && residents.includes(researchTarget)) return researchTarget;
-  return world === "lake" ? spotById(spotId).species : residents[0]!;
+  return world === "lake" ? spotById(spotId).species : residents[0] ?? spotById(spotId).species;
 }
