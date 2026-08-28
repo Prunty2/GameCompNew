@@ -823,7 +823,7 @@ test("Oil Rig has spillwater and bluewater fishing scenes plus a six-fish market
   );
 });
 
-test("Oil Rig seats the expanded-cargo boat visibly into the water", async ({ page }) => {
+test("Oil Rig uses the same expanded-cargo boat waterline as Lake", async ({ page }) => {
   await page.setViewportSize({ width: 1912, height: 1015 });
   await page.goto("/?e2e=1");
   await page.evaluate(() => {
@@ -835,12 +835,25 @@ test("Oil Rig seats the expanded-cargo boat visibly into the water", async ({ pa
   });
   await page.reload();
   await page.getByRole("button", { name: "Play", exact: true }).click();
-  await page.getByRole("button", { name: "Travel to Oil Rig" }).click();
+  await page.locator('[data-action="undock"]').click();
 
   const canvas = page.locator("#game-canvas");
+  await expect(canvas).toHaveAttribute("data-world", "lake");
+  await expect(canvas).toHaveAttribute("data-surface-boat-variant", "expanded-cargo");
+  await expect.poll(async () => Number(
+    await canvas.getAttribute("data-surface-boat-immersion"),
+  )).toBeCloseTo(0.1);
+  const lakeImmersion = Number(await canvas.getAttribute("data-surface-boat-immersion"));
+
+  await page.reload();
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.getByRole("button", { name: "Travel to Oil Rig" }).click();
+
   await expect(canvas).toHaveAttribute("data-world", "oil-rig");
   await expect(canvas).toHaveAttribute("data-surface-boat-variant", "expanded-cargo");
-  await expect.poll(async () => Number(await canvas.getAttribute("data-surface-boat-immersion"))).toBeGreaterThanOrEqual(0.26);
+  await expect.poll(async () => Number(
+    await canvas.getAttribute("data-surface-boat-immersion"),
+  )).toBeCloseTo(lakeImmersion);
 });
 
 test("Oil Rig docks frame their own ends of the platform", async ({ page }) => {

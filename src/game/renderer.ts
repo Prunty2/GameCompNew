@@ -244,8 +244,6 @@ const SURFACE_HOOK_OPTICAL_CENTER = {
 } as const;
 const SURFACE_HOOK_SCALE = 1.05;
 const SURFACE_HOOK_RAISE_PX = 12;
-const BOAT_SPRITE_BOTTOM_RATIO = 0.14;
-const BOAT_IMMERSION_RATIO = 0.26;
 // Optical top-center of the exhaust stack in the keyed 1132 × 545 boat crop.
 const BOAT_STACK_ANCHOR_X = -0.133;
 const BOAT_STACK_ANCHOR_Y = -0.71;
@@ -1383,8 +1381,9 @@ export class CanvasRenderer {
     const steamSpeedRatio = Math.min(1, Math.abs(this.surfaceSteamVelocity) / BALANCE.maxSurfaceSpeed);
     const bob = settings.reducedMotion ? 0 : Math.sin(simulation.elapsed * (2 + speedRatio)) * (1.1 + speedRatio * 0.8);
     const tilt = settings.reducedMotion ? 0 : clamp(simulation.boat.speed * 0.16, -0.02, 0.02);
-    const boatY = waterline + bob + boatHeight * (BOAT_IMMERSION_RATIO - BOAT_SPRITE_BOTTOM_RATIO);
-    const boatSpriteBottom = boatY + boatHeight * BOAT_SPRITE_BOTTOM_RATIO;
+    const boatLift = clamp(boatHeight * 0.04, 4, 9);
+    const boatY = waterline + bob - boatLift;
+    const boatSpriteBottom = boatY + boatHeight * 0.14;
     this.canvas.dataset.surfaceWaterlineY = (waterline + bob).toFixed(2);
     this.canvas.dataset.surfaceBoatBottomY = boatSpriteBottom.toFixed(2);
     this.canvas.dataset.surfaceBoatImmersion = ((boatSpriteBottom - (waterline + bob)) / boatHeight).toFixed(3);
