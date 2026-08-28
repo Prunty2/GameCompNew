@@ -283,6 +283,15 @@ function questUiTargetSelector(
   view: QuestViewContext,
   step: Exclude<MarketTutorialStep, "done">,
 ): string | null {
+  if (simulation.world === "oil-rig" && !simulation.progress.marketTarget) {
+    if (view.overlay === "harbor") {
+      return '[data-action="travel-world"][data-world="lake"]';
+    }
+    if (view.overlay === null && simulation.mode === "cruising") {
+      const prompt = getInteractionPrompt(simulation);
+      return prompt?.kind === "harbor" ? "#context-action" : null;
+    }
+  }
   if (view.overlay === "harbor") {
     if (view.harborSection !== "market" && step !== "complete") {
       return '[data-action="harbor-section"][data-harbor-section="market"]';
@@ -408,6 +417,16 @@ function assignmentCopy(
   step: Exclude<MarketTutorialStep, "done">,
 ): { index: number; title: string; instruction: string } {
   const copy = QUEST_COPY[step];
+  if (simulation.world === "oil-rig" && !simulation.progress.marketTarget) {
+    const guidance = navigationGuidance(simulation);
+    return {
+      index: copy.index,
+      title: "Return to Lake",
+      instruction: simulation.dockedAt
+        ? "Use Departures to return to the Lake and continue the Bluegill assignment."
+        : guidance?.instruction ?? "Dock at the rig, then use Departures to return to the Lake.",
+    };
+  }
   if (step !== "catch") {
     return { ...copy, instruction: questInstruction(simulation, step) };
   }

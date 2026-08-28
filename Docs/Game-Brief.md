@@ -38,6 +38,8 @@ On-water chrome is the night moon indicator, the boost gauge after unlock, the c
 
 Scene changes between title, harbor, and the water use a waterline cover/reveal.
 
+The shared surface boat is optically seated with 18% of its rendered hull below the active panorama waterline. Bobbing is applied around that seated position so the hull never appears to hover above a calm horizon.
+
 The title sky periodically carries a flock of two to five animated seagulls. Each flock may cross in either direction, while individual birds vary their size, launch delay, flap phase, speed, and curved vertical drift so the formation stays loose and natural. Decorative flights are omitted when reduced motion is enabled, and are cleared and rescheduled when the page loses and regains focus so background tabs cannot accumulate flocks.
 
 ## Worlds
@@ -55,6 +57,8 @@ Paid unlock (300 shells) from the dockside Departures board. Travel is immediate
 ### Oil Rig
 
 Free live route from every other world's Departures board. The wide authored day/night panorama places the fixed platform at the far-left Dogwatch Rig harbor, with the dog safely standing on the lower service deck beneath the main rig, and Beacon Mooring at the far right. The rig does not use the generated shoreline-pier overlay because its service dock is painted into the panorama.
+
+Dogwatch and Beacon dock screens reuse the Oil Rig chart but focus its left and right ends respectively. Surface fishing cues remain subdued over the spill and brighten in the clean bluewater, matching the two underwater scenes. If the unfinished Bluegill tutorial reaches Oil Rig without a tracked target, its card and route marker lead the player to a rig dock and the Lake departure instead of pointing at an unavailable Bluegill listing.
 
 Oil Rig has exactly two fishing grounds:
 

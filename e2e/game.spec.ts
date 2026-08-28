@@ -823,6 +823,53 @@ test("Oil Rig has spillwater and bluewater fishing scenes plus a six-fish market
   );
 });
 
+test("Oil Rig seats the player boat visibly into the water", async ({ page }) => {
+  await page.goto("/?e2e=1");
+  await page.evaluate(() => {
+    window.localStorage.setItem("gamecomp-new.save", JSON.stringify({
+      version: 14,
+      progress: {},
+      settings: { reducedMotion: true },
+    }));
+  });
+  await page.reload();
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.getByRole("button", { name: "Travel to Oil Rig" }).click();
+
+  const canvas = page.locator("#game-canvas");
+  await expect(canvas).toHaveAttribute("data-world", "oil-rig");
+  await expect.poll(async () => Number(await canvas.getAttribute("data-surface-boat-immersion"))).toBeGreaterThanOrEqual(0.16);
+});
+
+test("Oil Rig docks frame their own ends of the platform", async ({ page }) => {
+  await page.goto("/?e2e=1");
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.getByRole("button", { name: "Travel to Oil Rig" }).click();
+
+  const backdrop = page.locator(".harbor-screen");
+  const backgroundFocus = async (): Promise<{ day: string; night: string }> => backdrop.evaluate((element) => ({
+    day: getComputedStyle(element).backgroundPosition,
+    night: getComputedStyle(element, "::before").backgroundPosition,
+  }));
+
+  await page.evaluate(() => window.__FSHING_TEST__?.sailToHarbor("brindle"));
+  await page.getByRole("button", { name: "Dock · Dogwatch Rig" }).click();
+  await expect(backdrop).toHaveAttribute("data-world", "oil-rig");
+  await expect(backdrop).toHaveCSS("background-size", "auto, auto 125%");
+  expect(await backgroundFocus()).toEqual({
+    day: "50% 50%, 22% 50%",
+    night: "50% 50%, 22% 50%",
+  });
+
+  await page.locator('[data-action="undock"]').click();
+  await page.evaluate(() => window.__FSHING_TEST__?.sailToHarbor("gloam"));
+  await page.getByRole("button", { name: "Dock · Beacon Mooring" }).click();
+  expect(await backgroundFocus()).toEqual({
+    day: "50% 50%, 88% 50%",
+    night: "50% 50%, 88% 50%",
+  });
+});
+
 test("Beach fishing requires line tier 3 in the middle and tier 4 at the far right", async ({ page }) => {
   await page.goto("/?e2e=1");
   await page.evaluate(() => {

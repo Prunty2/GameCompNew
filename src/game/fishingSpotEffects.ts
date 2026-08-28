@@ -18,6 +18,8 @@ export interface SurfaceFishingLocationVisibility {
   lensVisibility: number;
 }
 
+export type SurfaceWaterClarity = "lake" | "clear" | "spill";
+
 const VISIBLE_FISH = 12;
 const HOOK_FADE_RADIUS_MULTIPLIER = 5;
 const HOOK_PROMINENT_VISIBILITY_RADIUS_MULTIPLIER = 4;
@@ -88,12 +90,18 @@ function hookCueVisibility(
 
 export function surfaceFishingLocationVisibility(
   cue: SurfaceFishingCue,
-  beach: boolean,
+  waterClarity: SurfaceWaterClarity,
 ): SurfaceFishingLocationVisibility {
-  if (!beach) {
+  if (waterClarity === "lake") {
     return {
       fishVisibility: cue.fishVisibility,
       lensVisibility: cue.lensVisibility,
+    };
+  }
+  if (waterClarity === "spill") {
+    return {
+      fishVisibility: clamp(cue.fishVisibility * 0.72, 0, 1),
+      lensVisibility: clamp(cue.lensVisibility * 0.78, 0, 1),
     };
   }
   return {

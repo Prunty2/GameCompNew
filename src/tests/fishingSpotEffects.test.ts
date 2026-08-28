@@ -49,14 +49,17 @@ describe("surface fishing-spot effects", () => {
     expect(surfaceFishingCue(0, 0.3, 0.027).fishCount).toBe(12);
   });
 
-  it("brightens Beach fishing locations without changing lake visibility", () => {
+  it("separates lake, clear coastal, and oil-spill surface visibility", () => {
     const cue = surfaceFishingCue(0.1, 0.3, 0.027);
-    const lake = surfaceFishingLocationVisibility(cue, false);
-    const beach = surfaceFishingLocationVisibility(cue, true);
+    const lake = surfaceFishingLocationVisibility(cue, "lake");
+    const clear = surfaceFishingLocationVisibility(cue, "clear");
+    const spill = surfaceFishingLocationVisibility(cue, "spill");
 
     expect(lake).toEqual({ fishVisibility: 0.3, lensVisibility: 0 });
-    expect(beach.fishVisibility).toBeCloseTo(0.465);
-    expect(beach.lensVisibility).toBe(0.18);
+    expect(clear.fishVisibility).toBeCloseTo(0.465);
+    expect(clear.lensVisibility).toBe(0.18);
+    expect(spill.fishVisibility).toBeCloseTo(0.216);
+    expect(spill.lensVisibility).toBe(0);
   });
 
   it("produces deterministic bounded poses and freezes them for reduced motion", () => {

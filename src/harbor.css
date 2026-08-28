@@ -29,6 +29,17 @@
   background-position: center, 54% center;
 }
 
+.harbor-screen.is-first-voyage[data-world="oil-rig"],
+.harbor-screen.is-first-voyage[data-world="oil-rig"]::before {
+  background-position: center, 22% center;
+  background-size: auto, auto 125%;
+}
+
+.harbor-screen.is-first-voyage[data-world="oil-rig"][data-dock="gloam"],
+.harbor-screen.is-first-voyage[data-world="oil-rig"][data-dock="gloam"]::before {
+  background-position: center, 88% center;
+}
+
 .harbor-screen.is-first-voyage > .harbor-panel {
   position: relative;
   z-index: 1;

@@ -18,6 +18,7 @@ import {
   startFishing,
   syncUpgradeTutorial,
   trackMarketSpecies,
+  travelToWorld,
   undock,
 } from "../game/simulation";
 import { strongerHarborFor } from "../game/market";
@@ -206,6 +207,28 @@ describe("first-assignment quest prototype", () => {
     const dock = questPresentation(simulation, playView);
     expect(dock.uiTargetSelector).toBe("#context-action");
     expect(questFollowArrows(simulation)).toEqual([]);
+  });
+
+  test("routes an unfinished Bluegill lesson home from Oil Rig", () => {
+    const simulation = createSimulation();
+    expect(travelToWorld(simulation, "oil-rig")).toBe(true);
+
+    const underway = questPresentation(simulation, playView);
+    expect(underway).toMatchObject({
+      title: "Return to Lake",
+      worldFollow: true,
+      uiTargetSelector: null,
+    });
+    expect(underway.instruction).toContain("Dogwatch Rig");
+
+    moveBoatForTesting(simulation, harborById("brindle"));
+    expect(questPresentation(simulation, playView).uiTargetSelector).toBe("#context-action");
+    interact(simulation);
+
+    const docked = questPresentation(simulation, harborView);
+    expect(docked.title).toBe("Return to Lake");
+    expect(docked.instruction).toContain("Use Departures");
+    expect(docked.uiTargetSelector).toBe('[data-action="travel-world"][data-world="lake"]');
   });
 
   test("hides the assignment while pause and title overlays are open", () => {

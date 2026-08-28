@@ -84,6 +84,7 @@ import {
   surfaceFishingLocationVisibility,
   surfaceFishPose,
   type SurfaceFishingCue,
+  type SurfaceWaterClarity,
 } from "./fishingSpotEffects";
 import {
   BEACH_AUTHORED_WATERLINE_RATIO,
@@ -243,6 +244,8 @@ const SURFACE_HOOK_OPTICAL_CENTER = {
 } as const;
 const SURFACE_HOOK_SCALE = 1.05;
 const SURFACE_HOOK_RAISE_PX = 12;
+const BOAT_SPRITE_BOTTOM_RATIO = 0.14;
+const BOAT_IMMERSION_RATIO = 0.18;
 // Optical top-center of the exhaust stack in the keyed 1132 × 545 boat crop.
 const BOAT_STACK_ANCHOR_X = -0.133;
 const BOAT_STACK_ANCHOR_Y = -0.71;
@@ -537,7 +540,7 @@ export class CanvasRenderer {
         elapsed: simulation.elapsed,
         reducedMotion: settings.reducedMotion,
         highContrast: settings.highContrast,
-        beach: simulation.world !== "lake",
+        waterClarity: surfaceWaterClarity(simulation.world, spot.id),
         opacity: 1,
       });
       if (cue.hookVisibility > 0) {
@@ -627,13 +630,13 @@ export class CanvasRenderer {
     elapsed: number;
     reducedMotion: boolean;
     highContrast: boolean;
-    beach: boolean;
+    waterClarity: SurfaceWaterClarity;
     opacity: number;
   }): void {
     const { context } = this;
     const shoalWidth = clamp(options.height * 0.55, 250, 480);
     const shoalDepth = clamp((options.height - options.waterline) * 0.82, 130, 290);
-    const locationVisibility = surfaceFishingLocationVisibility(options.cue, options.beach);
+    const locationVisibility = surfaceFishingLocationVisibility(options.cue, options.waterClarity);
     const lensStrength = locationVisibility.lensVisibility * (options.locked ? 0.62 : 1);
 
     if (lensStrength > 0.01) {
@@ -644,7 +647,7 @@ export class CanvasRenderer {
       context.save();
       context.globalCompositeOperation = "screen";
       context.globalAlpha = clamp(
-        lensStrength * (options.highContrast ? 0.96 : options.beach ? 0.98 : 0.84) * options.opacity,
+        lensStrength * (options.highContrast ? 0.96 : options.waterClarity === "clear" ? 0.98 : 0.84) * options.opacity,
         0,
         1,
       );
@@ -1196,7 +1199,7 @@ export class CanvasRenderer {
           elapsed: simulation.elapsed,
           reducedMotion: settings.reducedMotion,
           highContrast: settings.highContrast,
-          beach: simulation.world !== "lake",
+          waterClarity: surfaceWaterClarity(simulation.world, spot.id),
           opacity: surfaceBlend,
         });
         if (cue.hookVisibility > 0) activeFishingCue = { cue, x };
@@ -1380,8 +1383,11 @@ export class CanvasRenderer {
     const steamSpeedRatio = Math.min(1, Math.abs(this.surfaceSteamVelocity) / BALANCE.maxSurfaceSpeed);
     const bob = settings.reducedMotion ? 0 : Math.sin(simulation.elapsed * (2 + speedRatio)) * (1.1 + speedRatio * 0.8);
     const tilt = settings.reducedMotion ? 0 : clamp(simulation.boat.speed * 0.16, -0.02, 0.02);
-    const boatLift = clamp(boatHeight * 0.04, 4, 9);
-    const boatY = waterline + bob - boatLift;
+    const boatY = waterline + bob + boatHeight * (BOAT_IMMERSION_RATIO - BOAT_SPRITE_BOTTOM_RATIO);
+    const boatSpriteBottom = boatY + boatHeight * BOAT_SPRITE_BOTTOM_RATIO;
+    this.canvas.dataset.surfaceWaterlineY = (waterline + bob).toFixed(2);
+    this.canvas.dataset.surfaceBoatBottomY = boatSpriteBottom.toFixed(2);
+    this.canvas.dataset.surfaceBoatImmersion = ((boatSpriteBottom - (waterline + bob)) / boatHeight).toFixed(3);
     const stackLocalX = boatWidth * BOAT_STACK_ANCHOR_X;
     const stackLocalY = boatHeight * BOAT_STACK_ANCHOR_Y;
     const targetStackOffsetX = simulation.boat.facing
@@ -2197,6 +2203,12 @@ function fishingFightAriaLabel(
 
 function fishShortName(species: FishSpecies): string {
   return FISH[species].name.toUpperCase();
+}
+
+function surfaceWaterClarity(world: WorldId, spotId: SpotId): SurfaceWaterClarity {
+  if (world === "lake") return "lake";
+  if (world === "oil-rig" && spotId === "sunwardShoal") return "spill";
+  return "clear";
 }
 
 function isNearScreen(x: number, width: number, margin: number): boolean {

@@ -914,7 +914,7 @@ export class Game {
       : this.simulation.world === "oil-rig"
         ? { day: oilRigChartUrl, night: oilRigChartNightUrl }
         : DOCK_BACKGROUND_URL[harborId];
-    return `data-dock="${harborId}" data-time-of-day="${timeOfDay}" style="--dock-day-background: url(&quot;${background.day}&quot;); --dock-night-background: url(&quot;${background.night}&quot;); --dock-night-opacity: ${nightOpacity}"`;
+    return `data-world="${this.simulation.world}" data-dock="${harborId}" data-time-of-day="${timeOfDay}" style="--dock-day-background: url(&quot;${background.day}&quot;); --dock-night-background: url(&quot;${background.night}&quot;); --dock-night-opacity: ${nightOpacity}"`;
   }
 
   private upgradeCard(upgrade: UpgradeId, title: string, detail: string): string {
