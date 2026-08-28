@@ -823,12 +823,13 @@ test("Oil Rig has spillwater and bluewater fishing scenes plus a six-fish market
   );
 });
 
-test("Oil Rig seats the player boat visibly into the water", async ({ page }) => {
+test("Oil Rig seats the expanded-cargo boat visibly into the water", async ({ page }) => {
+  await page.setViewportSize({ width: 1912, height: 1015 });
   await page.goto("/?e2e=1");
   await page.evaluate(() => {
     window.localStorage.setItem("gamecomp-new.save", JSON.stringify({
       version: 14,
-      progress: {},
+      progress: { upgrades: { cargo: 4 } },
       settings: { reducedMotion: true },
     }));
   });
@@ -838,7 +839,8 @@ test("Oil Rig seats the player boat visibly into the water", async ({ page }) =>
 
   const canvas = page.locator("#game-canvas");
   await expect(canvas).toHaveAttribute("data-world", "oil-rig");
-  await expect.poll(async () => Number(await canvas.getAttribute("data-surface-boat-immersion"))).toBeGreaterThanOrEqual(0.16);
+  await expect(canvas).toHaveAttribute("data-surface-boat-variant", "expanded-cargo");
+  await expect.poll(async () => Number(await canvas.getAttribute("data-surface-boat-immersion"))).toBeGreaterThanOrEqual(0.26);
 });
 
 test("Oil Rig docks frame their own ends of the platform", async ({ page }) => {

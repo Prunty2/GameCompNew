@@ -245,7 +245,7 @@ const SURFACE_HOOK_OPTICAL_CENTER = {
 const SURFACE_HOOK_SCALE = 1.05;
 const SURFACE_HOOK_RAISE_PX = 12;
 const BOAT_SPRITE_BOTTOM_RATIO = 0.14;
-const BOAT_IMMERSION_RATIO = 0.18;
+const BOAT_IMMERSION_RATIO = 0.26;
 // Optical top-center of the exhaust stack in the keyed 1132 × 545 boat crop.
 const BOAT_STACK_ANCHOR_X = -0.133;
 const BOAT_STACK_ANCHOR_Y = -0.71;
