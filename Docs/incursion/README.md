@@ -13,6 +13,8 @@ This folder contains the source evidence used to prepare the Year 10 Computing G
 
 - `screenshots/` contains fresh captures from the local `v0.9.0 (PR #114)` build at 1600 x 900.
 - `assets/working-boat-hero.png` is a supporting portfolio illustration generated with OpenAI's built-in image-generation tool. It is based on `src/assets/player-boat.png` and `src/assets/lake-chart.png`. It is not presented as gameplay and is not imported by the game.
+- `assets/working-boat-transparent.png` is a true-alpha presentation derivative of the production boat sprite. Its chroma background was removed without repainting the vessel.
+- `assets/fshing-wordmark-dark.png` is a dark-teal presentation derivative of the production wordmark. It preserves the orange `i` accent and is used on light slides for contrast.
 - The production FSHING wordmark, logo, and icon atlas are reused from `src/assets/`.
 - The GDD's peer-feedback and feedback-to-change pages are intentionally blank. They are designed to record evidence during and after the incursion rather than inventing feedback before it happens.
 
