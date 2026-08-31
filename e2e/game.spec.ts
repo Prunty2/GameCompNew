@@ -749,6 +749,10 @@ test("dockside Departures unlocks Beach and keeps Oil Rig unavailable", async ({
   await expect(page.locator("#game-canvas")).toHaveAttribute("data-world", "beach");
   await page.evaluate(() => window.__FSHING_TEST__?.sailToHarbor("brindle"));
   await page.getByRole("button", { name: "Dock · Brindle Harbor" }).click();
+  const lake = page.getByRole("complementary", { name: "Departures" }).locator('[data-destination="lake"]');
+  await expect(lake.locator(".departure-copy strong")).toHaveCSS("font-size", "21.6px");
+  await expect(lake.locator(".departure-copy small")).toHaveCount(0);
+  await expect(lake).not.toContainText("Working harbors");
   await page.getByRole("button", { name: "Travel to Lake" }).click();
   await expect(page.locator("#game-canvas")).toHaveAttribute("data-world", "lake");
 });
