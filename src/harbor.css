@@ -2202,6 +2202,29 @@ button.departure-card:active:not(:disabled) {
   line-height: 1.15;
 }
 
+@media (min-width: 901px) and (max-width: 1620px) {
+  .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-dock-layout {
+    display: grid;
+    width: min(
+      calc(100vw - 32px),
+      calc(900px + clamp(18px, 2.4vw, 34px) + clamp(276px, 18vw, 320px))
+    );
+    max-width: none;
+    grid-template-columns: minmax(0, 900px) clamp(276px, 18vw, 320px);
+    gap: clamp(18px, 2.4vw, 34px);
+    margin: auto;
+  }
+
+  .departures-board {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: 100%;
+    align-self: center;
+    transform: rotate(0.35deg);
+  }
+}
+
 .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .upgrade-feature-grid.is-single-feature {
   grid-template-columns: minmax(0, 1fr);
 }
@@ -2263,7 +2286,19 @@ button.departure-card:active:not(:disabled) {
   }
 }
 
-@media (max-width: 1620px) {
+@media (min-width: 901px) and (max-width: 1620px) {
+  .reduced-motion .departures-board {
+    transform: none;
+  }
+}
+
+@media (min-width: 901px) and (max-width: 1620px) and (prefers-reduced-motion: reduce) {
+  .departures-board {
+    transform: none;
+  }
+}
+
+@media (max-width: 900px) {
   .harbor-screen.is-first-voyage.is-expanded-harbor {
     align-items: flex-start;
     overflow-y: auto;
@@ -2346,7 +2381,7 @@ button.departure-card:active:not(:disabled) {
   }
 }
 
-@media (max-width: 1620px) and (prefers-reduced-motion: reduce) {
+@media (max-width: 900px) and (prefers-reduced-motion: reduce) {
   .departures-board {
     transform: none;
   }
