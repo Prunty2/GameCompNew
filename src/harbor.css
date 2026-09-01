@@ -2118,8 +2118,7 @@ button.departure-card:active:not(:disabled) {
   line-height: 1.05;
 }
 
-.departures-board .departure-card[data-destination="beach"] .departure-copy strong,
-.departures-board .departure-card[data-destination="oil-rig"] .departure-copy strong {
+.departures-board .departure-card .departure-copy strong {
   font-size: 1.35rem;
 }
 

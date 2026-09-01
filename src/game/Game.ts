@@ -867,19 +867,16 @@ export class Game {
     const destination: WorldId = this.simulation.world === "beach" ? "lake" : "beach";
     const destinationName = capitalise(destination);
     const destinationIcon = destination === "beach" ? upgradeBeachUrl : destinationLakeUrl;
-    const destinationDetail = destination === "lake"
-      ? "Working harbors · freshwater grounds"
-      : null;
     const beachLocked = destination === "beach" && !this.simulation.progress.beachUnlocked;
     const destinationAction = beachLocked
       ? `<button class="departure-card is-locked" type="button" data-action="buy-beach" data-destination="beach" aria-label="Unlock Beach for ${BALANCE.beachAccessCost} shells" ${this.simulation.progress.money < BALANCE.beachAccessCost ? "disabled" : ""}>
           <span class="departure-art"><img src="${destinationIcon}" alt="" aria-hidden="true" /></span>
-          <span class="departure-copy"><strong>${destinationName}</strong>${destinationDetail ? `<small>${destinationDetail}</small>` : ""}</span>
+          <span class="departure-copy"><strong>${destinationName}</strong></span>
           <span class="departure-fare"><span class="ui-icon icon-shells" aria-hidden="true"></span><b>${BALANCE.beachAccessCost}</b></span>
         </button>`
       : `<button class="departure-card" type="button" data-action="travel-world" data-world="${destination}" data-destination="${destination}" aria-label="Travel to ${destinationName}">
           <span class="departure-art"><img src="${destinationIcon}" alt="" aria-hidden="true" /></span>
-          <span class="departure-copy"><strong>${destinationName}</strong>${destinationDetail ? `<small>${destinationDetail}</small>` : ""}</span>
+          <span class="departure-copy"><strong>${destinationName}</strong></span>
           <span class="departure-fare is-route"><b>SAIL</b><span aria-hidden="true">→</span></span>
         </button>`;
     return `<aside class="departures-board" aria-labelledby="departures-title">
