@@ -10,6 +10,26 @@ async function expectHorizontallyCentered(page: import("@playwright/test").Page,
   expect(offset).toBeLessThanOrEqual(1);
 }
 
+async function expectDeparturesBesideHarborPanel(page: import("@playwright/test").Page): Promise<void> {
+  await expect(page.locator(".departures-board")).toBeVisible();
+  const layout = await page.locator(".harbor-panel, .departures-board").evaluateAll((elements) => elements.map((element) => {
+    const bounds = element.getBoundingClientRect();
+    return {
+      x: bounds.x,
+      y: bounds.y,
+      width: bounds.width,
+      height: bounds.height,
+      right: bounds.right,
+    };
+  }));
+  const panel = layout[0]!;
+  const departures = layout[1]!;
+
+  expect(departures.x).toBeGreaterThan(panel.x + panel.width);
+  expect(departures.y).toBeLessThan(panel.y + panel.height);
+  expect(departures.right).toBeLessThanOrEqual(await page.evaluate(() => window.innerWidth));
+}
+
 async function gameMusicState(page: import("@playwright/test").Page): Promise<{
   loop: boolean;
   paused: boolean;
@@ -712,16 +732,21 @@ test("dockside Departures unlocks Beach and keeps Oil Rig unavailable", async ({
   });
   await page.reload();
   await page.getByRole("button", { name: "Play", exact: true }).click();
+  await expectDeparturesBesideHarborPanel(page);
+
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.reload();
+  await page.getByRole("button", { name: "Play", exact: true }).click();
 
   const departures = page.getByRole("complementary", { name: "Departures" });
   const oilRig = departures.locator('[data-destination="oil-rig"]');
   await expect(departures).toBeVisible();
+  await expectDeparturesBesideHarborPanel(page);
   const dockLayout = await page.locator(".harbor-panel, .departures-board").evaluateAll((elements) => elements.map((element) => {
     const box = element.getBoundingClientRect();
     return { x: box.x, width: box.width };
   }));
   expect(dockLayout[0]!.width).toBeCloseTo(900, 0);
-  expect(dockLayout[0]!.x + dockLayout[0]!.width / 2).toBeCloseTo(900, 0);
   expect(dockLayout[1]!.x).toBeGreaterThan(dockLayout[0]!.x + dockLayout[0]!.width);
   await expect(departures).toHaveCSS("border-radius", "20px");
   await expect(departures.locator(".departure-copy strong").first()).toHaveCSS("font-family", /Trebuchet MS/);
@@ -1541,7 +1566,7 @@ test("settings, keyboard pause, and local SDK fallback remain usable", async ({ 
   await expect(reducedMotionPlayButton).toHaveCSS("animation-name", "none");
   await reducedMotionPlayButton.click();
   await expect(page.locator("#scene-transition")).not.toHaveClass(/is-(covering|revealing)/);
-  await expectHorizontallyCentered(page, ".harbor-panel");
+  await expectDeparturesBesideHarborPanel(page);
   await page.locator('[data-action="undock"]').click();
   await page.keyboard.press("o");
   await expect(page.getByRole("heading", { name: "Paused" })).toBeVisible();
