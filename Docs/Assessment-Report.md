@@ -137,8 +137,8 @@ renderer.ts              Canvas drawing only
 input.ts / controls.ts   browser input → game intent
 saveGame.ts              version 14 validation and migration
 platformService.ts       only CrazyGames SDK boundary
-feedbackService.ts       looping game music, synthesized audio, and haptics
-gameMusic.ts             title-screen music playback
+feedbackService.ts       scene music mixing, synthesized audio, and haptics
+gameMusic.ts              menu/game music playback and crossfade
 ```
 
 Fishing presentation, camera, panorama, steam, and the destination badge are separate modules so `renderer.ts` does not own motion rules.
@@ -200,7 +200,7 @@ Lake and Beach each have a 3×3 base UI atlas and three base 4-frame swim sheets
 
 ### Audio
 
-`src/audio/Game Music.mp3` loops quietly on the title screen after the first pointer or key gesture, including Settings and Credits opened from the menu. It stops when a voyage starts and resumes on return to the title screen. Mute, music volume, and a hidden tab pause it. Sound-effects volume independently controls the cues synthesised by `FeedbackService`.
+`src/audio/Intro music.mp3` loops quietly through the title-screen flow after the first pointer or key gesture, including Settings and Credits opened from the menu. `src/audio/Game Music.mp3` crossfades in when gameplay starts and remains the gameplay soundtrack across the lake and Beach, including their harbors and water. Both tracks loop; mute, music volume, and a hidden tab pause them. Sound-effects volume independently controls the cues synthesised by `FeedbackService`.
 
 | Cue | Purpose | Non-audio equivalent |
 | --- | --- | --- |
@@ -210,7 +210,7 @@ Lake and Beach each have a 3×3 base UI atlas and three base 4-frame swim sheets
 | Collision / deny | Damage or a blocked action | Toast and disabled copy |
 | Dock | Arrival | Harbor overlay |
 
-Mute affects both outputs. Music volume drives the looping music element, while sound-effects volume drives synthesized master gain. Vibration is never required to understand state.
+Mute affects both music tracks and synthesized cues. Music volume drives the scene music mixer, while sound-effects volume drives synthesized master gain. Vibration is never required to understand state.
 
 ### Implemented visual evidence
 
