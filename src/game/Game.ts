@@ -23,6 +23,7 @@ import { defaultSave, saveGame, type SaveData } from "../services/saveGame";
 import {
   DISPLAY_RESOLUTIONS,
   isDisplayResolution,
+  isResolutionControlDisabled,
   WindowService,
   type DisplayResolution,
 } from "../services/windowService";
@@ -1057,9 +1058,15 @@ export class Game {
     const resolutionOptions = DISPLAY_RESOLUTIONS.map((resolution) => (
       `<option value="${resolution.id}" ${settings.resolution === resolution.id ? "selected" : ""}>${resolution.label}</option>`
     )).join("");
-    const resolutionNote = this.windowService.supportsResolution
-      ? "Changes the desktop game window size."
-      : "Window sizing is available in the Tauri desktop app.";
+    const resolutionDisabled = isResolutionControlDisabled(
+      this.windowService.supportsResolution,
+      settings.fullscreen,
+    );
+    const resolutionNote = !this.windowService.supportsResolution
+      ? "Window sizing is available in the Tauri desktop app."
+      : settings.fullscreen
+        ? "Exit fullscreen to change the game window size."
+        : "Changes the desktop game window size.";
     return `
       <div class="settings-tabpanel settings-display${animationClass}" id="settings-display-panel" role="tabpanel" aria-labelledby="settings-tab-display">
         <section class="settings-category" aria-labelledby="settings-display-heading">
@@ -1069,7 +1076,7 @@ export class Game {
           <div class="setting-group">
             <label class="setting-option setting-select">
               <span class="setting-copy"><strong>Resolution</strong><small>${resolutionNote}</small></span>
-              <select class="setting-select-input" data-setting="resolution" aria-label="Display resolution" ${this.windowService.supportsResolution ? "" : "disabled"}>${resolutionOptions}</select>
+              <select class="setting-select-input" data-setting="resolution" aria-label="Display resolution" ${resolutionDisabled ? "disabled" : ""}>${resolutionOptions}</select>
             </label>
             <label class="setting-option setting-toggle">
               <span class="setting-copy"><strong>Fullscreen</strong><small>Use the entire screen for FSHING.</small></span>
