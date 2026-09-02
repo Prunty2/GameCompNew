@@ -19,6 +19,13 @@ Vite `publicDir` is `false`. Only these files are imported.
 | `src/audio/Intro music.mp3` | Looping main-menu music |
 | `src/audio/Game Music.mp3` | Looping gameplay music for the lake and Beach |
 
+**Tauri packaging (`src-tauri/tauri.conf.json`)**
+
+| File | Role |
+| --- | --- |
+| `src-tauri/fshing-icon-source.png` | Authoring source for the FSHING macOS/app icon: the distressed cream F from the wordmark on a navy textured ground with an orange accent |
+| `src-tauri/icons/` | Tauri-generated macOS, Windows, iOS, Android, and size-specific icon variants |
+
 **Canvas (`src/game/renderer.ts`)**
 
 | File | Role |

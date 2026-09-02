@@ -2,6 +2,11 @@ import { defineConfig } from "vitest/config";
 import packageJson from "./package.json" with { type: "json" };
 
 export default defineConfig({
+  server: {
+    watch: {
+      ignored: ["**/src-tauri/**"],
+    },
+  },
   publicDir: false,
   define: {
     __APP_VERSION__: JSON.stringify(packageJson.version),
