@@ -122,6 +122,7 @@ const FIGHT_IDLE_REEL_SECONDS = 2.4;
 const FIGHT_HIGH_TENSION_COACH = 0.78;
 const FIGHT_HIGH_TENSION_HOLD_SECONDS = 0.35;
 const FIGHT_REST_TOO_LONG_SECONDS = 2.6;
+const FISHING_CONTROL_FADE_DURATION = 180;
 
 function isFullyVisibleWithinClippingParents(element: HTMLElement, rect: DOMRect): boolean {
   if (
@@ -244,6 +245,8 @@ export class Game {
   private fightHadReel = false;
   private fightRestSince = 0;
   private fightHighTensionSince = 0;
+  private fishingCueHideTimer: number | undefined;
+  private fishingReelControlHideTimer: number | undefined;
   private readonly visualTestSpot = import.meta.env.DEV
     ? new URLSearchParams(window.location.search).get("e2eSpot") as SpotId | null
     : null;
@@ -394,6 +397,10 @@ export class Game {
         </div>
 
         <button class="context-action" id="context-action" type="button" data-action="interact" data-control="action" hidden>Interact</button>
+        <div class="fishing-reel-control" id="fishing-reel-control" role="status" aria-live="polite" hidden>
+          <span class="fishing-reel-mouse" aria-hidden="true"></span>
+          <span class="fishing-reel-copy"></span>
+        </div>
 
         <div class="overlay-host" id="overlay-host"></div>
         <div class="scene-transition" id="scene-transition" aria-hidden="true">
@@ -635,17 +642,54 @@ export class Game {
   private refreshContextAction(): void {
     const action = this.uiRoot.querySelector<HTMLButtonElement>("#context-action");
     const prompt = getInteractionPrompt(this.simulation);
-    if (action) {
-      const fishingCue = prompt?.kind === "fishing";
-      const label = prompt?.label ?? "Interact";
-      action.hidden = !prompt || this.overlay !== null || this.simulation.mode === "fishing";
+    if (!action) return;
+    const fishingCue = prompt?.kind === "fishing";
+    const label = prompt?.label ?? "Interact";
+    const visible = Boolean(prompt) && this.overlay === null && this.simulation.mode !== "fishing";
+    action.setAttribute("aria-label", label);
+    action.title = label;
+
+    if (fishingCue && visible) {
+      if (this.fishingCueHideTimer !== undefined) {
+        window.clearTimeout(this.fishingCueHideTimer);
+        this.fishingCueHideTimer = undefined;
+      }
+      const wasHidden = action.hidden;
+      action.hidden = false;
+      action.disabled = !prompt.enabled;
+      const markup = '<span class="fishing-control-mouse" aria-hidden="true"></span>';
+      if (action.innerHTML !== markup) action.innerHTML = markup;
+      action.classList.add("is-fishing-cue");
+      action.classList.remove("is-fading-out");
+      if (wasHidden) {
+        requestAnimationFrame(() => {
+          if (!action.hidden && !action.classList.contains("is-fading-out")) {
+            action.classList.add("is-callout-visible");
+          }
+        });
+      } else {
+        action.classList.add("is-callout-visible");
+      }
+    } else if (action.classList.contains("is-fishing-cue") && !action.hidden) {
+      action.disabled = true;
+      action.classList.remove("is-callout-visible");
+      action.classList.add("is-fading-out");
+      if (this.fishingCueHideTimer === undefined) {
+        this.fishingCueHideTimer = window.setTimeout(() => {
+          this.fishingCueHideTimer = undefined;
+          action.hidden = true;
+          action.classList.remove("is-fishing-cue", "is-fading-out");
+          this.refreshContextAction();
+        }, FISHING_CONTROL_FADE_DURATION);
+      }
+    } else {
+      action.hidden = !visible;
       action.disabled = prompt ? !prompt.enabled : true;
       action.textContent = label;
-      action.setAttribute("aria-label", label);
-      action.title = label;
-      action.classList.toggle("is-fishing-cue", fishingCue);
-      this.syncContextActionAnchor(action);
+      action.classList.remove("is-fishing-cue", "is-callout-visible", "is-fading-out");
     }
+    this.syncContextActionAnchor(action);
+    this.syncFishingReelControl();
   }
 
   private questViewContext(): QuestViewContext {
@@ -759,7 +803,55 @@ export class Game {
         action.style.removeProperty("top");
       }
     }
+    this.syncFishingReelControl();
     this.syncQuestArrow();
+  }
+
+  private syncFishingReelControl(): void {
+    const control = this.uiRoot.querySelector<HTMLElement>("#fishing-reel-control");
+    const fight = this.simulation.fishing?.reeling;
+    const active = this.overlay === null
+      && fight !== null
+      && fight !== undefined
+      && fight.landingAt === null
+      && fight.lostAt === null;
+    if (!control) return;
+    if (!active || !fight) {
+      control.classList.remove("is-callout-visible");
+      if (!control.hidden && this.fishingReelControlHideTimer === undefined) {
+        this.fishingReelControlHideTimer = window.setTimeout(() => {
+          this.fishingReelControlHideTimer = undefined;
+          control.hidden = true;
+          control.style.removeProperty("left");
+          control.style.removeProperty("top");
+        }, FISHING_CONTROL_FADE_DURATION);
+      }
+      return;
+    }
+    if (this.fishingReelControlHideTimer !== undefined) {
+      window.clearTimeout(this.fishingReelControlHideTimer);
+      this.fishingReelControlHideTimer = undefined;
+    }
+    const wasHidden = control.hidden;
+    control.hidden = false;
+    control.classList.toggle("is-releasing", fight.behaviour !== "calm");
+    const copy = control.querySelector<HTMLElement>(".fishing-reel-copy");
+    if (copy) copy.textContent = fight.behaviour === "calm" ? "HOLD TO REEL" : "RELEASE TO LET IT RUN";
+    if (wasHidden) {
+      requestAnimationFrame(() => {
+        if (!control.hidden) control.classList.add("is-callout-visible");
+      });
+    } else {
+      control.classList.add("is-callout-visible");
+    }
+    const anchor = this.renderer.fishingLineControlPoint();
+    if (!anchor) return;
+    const width = control.offsetWidth;
+    const height = control.offsetHeight;
+    const left = Math.min(Math.max(anchor.x + 26, 12), window.innerWidth - width - 12);
+    const top = Math.min(Math.max(anchor.y - height / 2, 12), window.innerHeight - height - 12);
+    control.style.left = `${left}px`;
+    control.style.top = `${top}px`;
   }
 
   private renderOverlay(): void {

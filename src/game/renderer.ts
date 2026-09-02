@@ -227,6 +227,7 @@ export class CanvasRenderer {
   private readonly surfaceLayer = document.createElement("canvas");
   private art: LoadedArt | null = null;
   private interactionAnchor: WorldPoint | null = null;
+  private fishingLineControlAnchor: WorldPoint | null = null;
   private surfaceCameraCenter: number | null = null;
   private surfaceCameraWasCinematic = false;
   private surfaceMotionElapsed: number | null = null;
@@ -374,8 +375,13 @@ export class CanvasRenderer {
     return this.interactionAnchor ? { ...this.interactionAnchor } : null;
   }
 
+  fishingLineControlPoint(): WorldPoint | null {
+    return this.fishingLineControlAnchor ? { ...this.fishingLineControlAnchor } : null;
+  }
+
   render(simulation: Simulation, settings: RenderSettings): void {
     this.interactionAnchor = null;
+    this.fishingLineControlAnchor = null;
     delete this.canvas.dataset.questFollow;
     delete this.canvas.dataset.questHookFollow;
     this.resize();
@@ -910,6 +916,14 @@ export class CanvasRenderer {
     const lineEnd = lineCurve.points[lineCurve.points.length - 1]!;
     context.quadraticCurveTo(lineEnd.x, lineEnd.y, lineEnd.x, lineEnd.y);
     context.stroke();
+    if (
+      fishing.reeling
+      && fishing.reeling.landingAt === null
+      && fishing.reeling.lostAt === null
+    ) {
+      const controlPoint = lineCurve.points[Math.floor(lineCurve.points.length * 0.56)] ?? lineStart;
+      this.fishingLineControlAnchor = { x: controlPoint.x, y: controlPoint.y };
+    }
     if (!loss) this.drawTackleCell(1, 1, hook.x, hookDrawY, hookSize, hookSize);
     if (fishing.reeling) {
       const wriggle = fishingFightWriggle(

@@ -35,7 +35,7 @@ Market → Track → Sail → Fish → Reel → Sell → Upgrade → Market
 | How to play | Harbor Help or pause | Four cards: read the market, track and catch, manage cargo, sell and invest |
 There is no field guide, no title How to play button, no on-water money HUD, and no on-screen movement pads.
 
-On-water chrome is the night moon indicator, the boost gauge after unlock, the context action (dock or drop line), toasts, the sale popup, the colour of the fishing line during a fight, and the tutorial pill until it is finished or skipped. A destination badge on the canvas points at the current market, fishing ground, or sell harbor. Screen-reader status repeats that guidance. After the first assignment, that badge is hidden unless a fish is tracked.
+On-water chrome is the night moon indicator, the boost gauge after unlock, the context action (dock or drop line), toasts, the sale popup, the colour of the fishing line during a fight, and the tutorial pill until it is finished or skipped. The fishing-ground hook fades in a right-side tooltip containing a white mouse with its left button pressed; it has no text label. During a calm fight, the same mouse appears beside the fishing line with **Hold to reel**. When the fish runs, the mouse smoothly disappears and the cue becomes **Release to let it run**. A destination badge on the canvas points at the current market, fishing ground, or sell harbor. Screen-reader status repeats that guidance. After the first assignment, that badge is hidden unless a fish is tracked.
 
 Scene changes between title, harbor, and the water use a waterline cover/reveal.
 
@@ -118,7 +118,7 @@ Sale payout for one catch:
 payout = quote
 ```
 
-Selling a listing sells every cargo catch of that species at the current harbor. Catches do not decay or become unsellable.
+Selling a listing sells every cargo catch of that species at the current harbor. Selling all cargo clears any tracked fish. Catches do not decay or become unsellable.
 
 The detail view shows the **docked harbor's** price, trend, and seven-day graph. Hovering a graph point shows that day's price as a number. It does not list the other harbor. After a tracked catch, on-water guidance points at whichever harbor currently quotes higher.
 
@@ -199,7 +199,7 @@ Cargo can be released from an occupied slot. An undo toast restores that catch f
 
 ## First Assignment
 
-Saved as `marketTutorialStep`. Skip is always available. The prompt is a top-centre pill: step number, a small **Tutorial** label, a short action title, and a close control. One target at a time gets the amber glow. Lake arrows mark the route while travelling; a hook arrow leads to Bluegill while fishing.
+Saved as `marketTutorialStep`. Skip is always available. The prompt is a larger top-centre pill: step number, a small **Tutorial** label, a short action title, and a close control. One target at a time gets the amber glow. Lake arrows mark the route while travelling; a hook arrow leads to Bluegill while fishing.
 
 | Step | Prompt |
 | --- | --- |

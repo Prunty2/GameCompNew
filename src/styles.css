@@ -699,8 +699,98 @@ input:focus-visible {
   box-shadow: none;
   color: transparent;
   letter-spacing: 0;
-  overflow: hidden;
-  transform: translate(-50%, -50%);
+  overflow: visible;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, calc(-50% + 8px)) scale(0.94);
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.context-action.is-fishing-cue.is-callout-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.context-action.is-fishing-cue.is-fading-out {
+  pointer-events: none;
+}
+
+.fishing-control-mouse {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 8px);
+  display: block;
+  width: 44px;
+  height: 44px;
+  padding: 4px;
+  border: 1px solid rgb(247 241 227 / 52%);
+  border-radius: 12px;
+  background-color: rgb(5 24 33 / 92%);
+  background-image: url("./assets/mouse-left-click.png");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 31px;
+  box-shadow: 0 4px 12px rgb(2 15 21 / 38%);
+  transform: translateY(-50%);
+}
+
+.fishing-reel-control {
+  position: absolute;
+  z-index: 6;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
+  border: 1px solid rgb(247 241 227 / 52%);
+  border-radius: 12px;
+  background: rgb(5 24 33 / 92%);
+  box-shadow: 0 5px 14px rgb(2 15 21 / 40%);
+  color: var(--cream);
+  opacity: 0;
+  pointer-events: none;
+  text-align: center;
+  transform: translateY(6px) scale(0.96);
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.fishing-reel-control.is-callout-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.fishing-reel-mouse {
+  display: block;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  border-radius: 9px;
+  background-image: url("./assets/mouse-left-click.png");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 27px;
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 180ms ease, flex-basis 180ms ease, margin 180ms ease, transform 180ms ease, width 180ms ease;
+}
+
+.fishing-reel-control.is-releasing .fishing-reel-mouse {
+  width: 0;
+  flex-basis: 0;
+  margin-inline: 0;
+  opacity: 0;
+  transform: scale(0.8);
+}
+
+.fishing-reel-copy {
+  color: rgb(247 241 227 / 82%);
+  font-family: var(--display-face);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1.15;
+  white-space: nowrap;
 }
 
 .context-action.is-fishing-cue:hover:not(:disabled) {
@@ -753,6 +843,12 @@ input:focus-visible {
 }
 
 .reduced-motion .context-action:not(.is-fishing-cue) {
+  transition: none;
+}
+
+.reduced-motion .context-action.is-fishing-cue,
+.reduced-motion .fishing-reel-control,
+.reduced-motion .fishing-reel-mouse {
   transition: none;
 }
 
