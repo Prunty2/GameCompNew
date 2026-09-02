@@ -607,6 +607,7 @@ export function sellAllFishAtMarket(simulation: Simulation): MarketBulkSaleResul
     simulation.progress.marketTutorialStep = "done";
     syncUpgradeTutorial(simulation);
   }
+  simulation.progress.marketTarget = null;
   simulation.events.push({ type: "sold", result });
   if (!simulation.progress.seasonCompleted && simulation.progress.marketSales >= SEASON_SALES) {
     simulation.progress.seasonCompleted = true;

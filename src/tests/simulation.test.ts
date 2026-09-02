@@ -1030,6 +1030,7 @@ describe("FSHING side-on simulation", () => {
     expect(simulation.progress.marketSales).toBe(3);
     expect(simulation.progress.marketEarnings).toBe(10 + result!.payment);
     expect(simulation.progress.marketTutorialStep).toBe("done");
+    expect(simulation.progress.marketTarget).toBeNull();
     expect(simulation.cargo).toEqual([]);
     expect(simulation.events).toContainEqual({ type: "sold", result });
   });

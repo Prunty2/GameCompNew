@@ -394,6 +394,7 @@ export class Game {
         </div>
 
         <button class="context-action" id="context-action" type="button" data-action="interact" data-control="action" hidden>Interact</button>
+        <div class="fishing-reel-control" id="fishing-reel-control" role="status" aria-live="polite" hidden></div>
 
         <div class="overlay-host" id="overlay-host"></div>
         <div class="scene-transition" id="scene-transition" aria-hidden="true">
@@ -640,12 +641,15 @@ export class Game {
       const label = prompt?.label ?? "Interact";
       action.hidden = !prompt || this.overlay !== null || this.simulation.mode === "fishing";
       action.disabled = prompt ? !prompt.enabled : true;
-      action.textContent = label;
+      action.innerHTML = fishingCue
+        ? `<span class="fishing-control-key">LEFT CLICK</span><span class="fishing-control-copy">${prompt?.enabled ? "START FISHING" : "SLOW TO FISH"}</span>`
+        : label;
       action.setAttribute("aria-label", label);
       action.title = label;
       action.classList.toggle("is-fishing-cue", fishingCue);
       this.syncContextActionAnchor(action);
     }
+    this.syncFishingReelControl();
   }
 
   private questViewContext(): QuestViewContext {
@@ -759,7 +763,36 @@ export class Game {
         action.style.removeProperty("top");
       }
     }
+    this.syncFishingReelControl();
     this.syncQuestArrow();
+  }
+
+  private syncFishingReelControl(): void {
+    const control = this.uiRoot.querySelector<HTMLElement>("#fishing-reel-control");
+    const fight = this.simulation.fishing?.reeling;
+    const active = this.overlay === null
+      && fight !== null
+      && fight !== undefined
+      && fight.landingAt === null
+      && fight.lostAt === null;
+    if (!control) return;
+    control.hidden = !active;
+    if (!active || !fight) {
+      control.style.removeProperty("left");
+      control.style.removeProperty("top");
+      return;
+    }
+    const instruction = fight.behaviour === "calm" ? "HOLD TO REEL" : "RELEASE TO LET IT RUN";
+    const markup = `<strong>${fight.behaviour === "calm" ? "HOLD LEFT CLICK" : "RELEASE LEFT CLICK"}</strong><span>${instruction}</span>`;
+    if (control.innerHTML !== markup) control.innerHTML = markup;
+    const anchor = this.renderer.fishingLineControlPoint();
+    if (!anchor) return;
+    const width = control.offsetWidth;
+    const height = control.offsetHeight;
+    const left = Math.min(Math.max(anchor.x + 26, 12), window.innerWidth - width - 12);
+    const top = Math.min(Math.max(anchor.y - height / 2, 12), window.innerHeight - height - 12);
+    control.style.left = `${left}px`;
+    control.style.top = `${top}px`;
   }
 
   private renderOverlay(): void {

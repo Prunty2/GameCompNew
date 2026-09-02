@@ -413,6 +413,10 @@ test("hooked fish require active reel and release tension control", async ({ pag
   await expect(canvas).toHaveAttribute("data-fishing-fight-cue", "release");
   await expect(canvas).toHaveAttribute("data-fishing-fight-style", "kick-glide");
   await expect(page.locator("#context-action")).toBeHidden();
+  const reelControl = page.locator("#fishing-reel-control");
+  await expect(reelControl).toBeVisible();
+  await expect(reelControl).toContainText("RELEASE LEFT CLICK");
+  await expect(reelControl).toHaveCSS("pointer-events", "none");
   await expect(canvas).toHaveAttribute("data-fishing-background-fish-opacity", "0.680");
   const startingBackgroundPoseTime = Number(await canvas.getAttribute("data-fishing-background-pose-elapsed"));
   const startingProgress = Number(await canvas.getAttribute("data-fishing-reel-progress"));
@@ -1329,6 +1333,8 @@ test("surface shoals anchor the interaction to the fishing hook", async ({ page 
   await expect(action).toHaveClass(/is-fishing-cue/);
   await expect(action).toHaveCSS("width", "78px");
   await expect(action).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expect(action).toContainText("LEFT CLICK");
+  await expect(action).toContainText("START FISHING");
 
   const canvasBounds = await page.locator("#game-canvas").boundingBox();
   const initialHookBounds = await action.boundingBox();
