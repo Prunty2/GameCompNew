@@ -1573,6 +1573,15 @@ test("settings, keyboard pause, and local SDK fallback remain usable", async ({ 
   const audioAnchors = await anchoredSettingsElements();
   expectAnchorsUnmoved(audioAnchors, generalAnchors);
 
+  await page.getByRole("tab", { name: "Display" }).click();
+  await expect(page.getByRole("tab", { name: "Display" })).toHaveAttribute("aria-selected", "true");
+  await expect(page.locator(".settings-display")).toHaveCSS("animation-name", "settings-tab-forward-in");
+  await expect(page.getByRole("heading", { name: "Display" })).toBeVisible();
+  await expect(page.getByRole("combobox", { name: "Display resolution" })).toHaveValue("1280x720");
+  await expect(page.getByRole("combobox", { name: "Display resolution" })).toBeDisabled();
+  await expect(page.getByRole("checkbox", { name: "Fullscreen" })).toBeVisible();
+  expectAnchorsUnmoved(await anchoredSettingsElements(), generalAnchors);
+
   await page.getByRole("tab", { name: "General" }).click();
   await expect(page.locator(".settings-general")).toHaveCSS("animation-name", "settings-tab-backward-in");
   expectAnchorsUnmoved(await anchoredSettingsElements(), generalAnchors);

@@ -21,6 +21,12 @@ import type { MusicScene } from "../services/gameMusic";
 import type { PlatformService } from "../services/platformService";
 import { defaultSave, saveGame, type SaveData } from "../services/saveGame";
 import {
+  DISPLAY_RESOLUTIONS,
+  isDisplayResolution,
+  WindowService,
+  type DisplayResolution,
+} from "../services/windowService";
+import {
   BALANCE,
   FISH,
   engineSpeedMultiplier,
@@ -163,10 +169,10 @@ type OverlayScreen =
   | null;
 
 type HarborSection = "market" | "cargo" | "upgrades";
-type SettingsTab = "general" | "audio" | "controls";
+type SettingsTab = "general" | "audio" | "display" | "controls";
 type SettingsTabDirection = "forward" | "backward";
 
-const SETTINGS_TABS: SettingsTab[] = ["general", "audio", "controls"];
+const SETTINGS_TABS: SettingsTab[] = ["general", "audio", "display", "controls"];
 
 const HARBOR_SECTION_ICON: Record<HarborSection, string> = {
   market: "objective",
@@ -200,6 +206,7 @@ export class Game {
   private readonly renderer: CanvasRenderer;
   private readonly input: InputController;
   private readonly feedback: FeedbackService;
+  private readonly windowService = new WindowService();
   private readonly menuSeagulls = new MenuSeagulls();
   private simulation: Simulation;
   private previousRenderMotion: RenderMotionSnapshot;
@@ -279,6 +286,7 @@ export class Game {
 
   start(): void {
     this.applySettings();
+    void this.applyDisplaySettings();
     requestAnimationFrame((time) => this.frame(time));
   }
 
@@ -399,6 +407,7 @@ export class Game {
     this.uiRoot.addEventListener("change", this.onChange);
     window.addEventListener("blur", this.onFocusLost);
     document.addEventListener("visibilitychange", this.onVisibilityChanged);
+    document.addEventListener("fullscreenchange", this.onFullscreenChanged);
     this.input.bindPointerAction(this.uiRoot);
     this.renderOverlay();
     this.refreshHud();
@@ -985,6 +994,7 @@ export class Game {
   private settingsTabContent(direction?: SettingsTabDirection): string {
     const animationClass = direction ? ` is-switching is-${direction}` : "";
     if (this.settingsTab === "audio") return this.audioSettingsTab(animationClass);
+    if (this.settingsTab === "display") return this.displaySettingsTab(animationClass);
     if (this.settingsTab === "controls") return this.controlsSettingsTab(animationClass);
     const settings = this.save.settings;
     return `
@@ -1036,6 +1046,35 @@ export class Game {
             <label class="setting-option setting-volume">
               <span class="setting-copy"><strong>Sound effects</strong><small>Interface and gameplay sound volume.</small></span>
               <input type="range" min="0" max="1" step="0.05" value="${settings.volume}" data-setting="volume" aria-label="Sound effects volume">
+            </label>
+          </div>
+        </section>
+      </div>`;
+  }
+
+  private displaySettingsTab(animationClass: string): string {
+    const settings = this.save.settings;
+    const resolutionOptions = DISPLAY_RESOLUTIONS.map((resolution) => (
+      `<option value="${resolution.id}" ${settings.resolution === resolution.id ? "selected" : ""}>${resolution.label}</option>`
+    )).join("");
+    const resolutionNote = this.windowService.supportsResolution
+      ? "Changes the desktop game window size."
+      : "Window sizing is available in the Tauri desktop app.";
+    return `
+      <div class="settings-tabpanel settings-display${animationClass}" id="settings-display-panel" role="tabpanel" aria-labelledby="settings-tab-display">
+        <section class="settings-category" aria-labelledby="settings-display-heading">
+          <div class="settings-category-heading">
+            <h3 id="settings-display-heading">Display</h3>
+          </div>
+          <div class="setting-group">
+            <label class="setting-option setting-select">
+              <span class="setting-copy"><strong>Resolution</strong><small>${resolutionNote}</small></span>
+              <select class="setting-select-input" data-setting="resolution" aria-label="Display resolution" ${this.windowService.supportsResolution ? "" : "disabled"}>${resolutionOptions}</select>
+            </label>
+            <label class="setting-option setting-toggle">
+              <span class="setting-copy"><strong>Fullscreen</strong><small>Use the entire screen for FSHING.</small></span>
+              <input class="setting-input" type="checkbox" data-setting="fullscreen" aria-label="Fullscreen" ${settings.fullscreen ? "checked" : ""} ${this.windowService.supportsFullscreen ? "" : "disabled"}>
+              <span class="setting-switch" aria-hidden="true"><span></span></span>
             </label>
           </div>
         </section>
@@ -1380,6 +1419,19 @@ export class Game {
     document.body.classList.toggle("reduced-motion", this.save.settings.reducedMotion);
     this.feedback.updateSettings(this.save.settings);
     this.syncMusicScene();
+  }
+
+  private async applyDisplaySettings(): Promise<void> {
+    try {
+      if (this.windowService.supportsResolution && !this.save.settings.fullscreen) {
+        await this.windowService.setResolution(this.save.settings.resolution);
+      }
+      if (this.windowService.supportsFullscreen) {
+        await this.windowService.setFullscreen(this.save.settings.fullscreen);
+      }
+    } catch (error) {
+      console.warn("Saved display settings could not be applied.", error);
+    }
   }
 
   private syncMusicScene(nextOverlay = this.overlay): void {
@@ -1781,6 +1833,10 @@ export class Game {
     const input = (event.target as HTMLElement).closest<HTMLInputElement>("[data-setting]");
     if (!input) return;
     const setting = input.dataset.setting;
+    if (setting === "resolution" || setting === "fullscreen") {
+      void this.changeDisplaySetting(setting, input);
+      return;
+    }
     if (setting === "volume") this.save.settings.volume = Number(input.value);
     if (setting === "musicVolume") this.save.settings.musicVolume = Number(input.value);
     if (setting === "muted") this.save.settings.muted = input.checked;
@@ -1788,6 +1844,44 @@ export class Game {
     if (setting === "reducedMotion") this.save.settings.reducedMotion = input.checked;
     this.applySettings();
     saveGame(this.platform.saveStorage, this.save);
+  };
+
+  private async changeDisplaySetting(setting: "resolution" | "fullscreen", input: HTMLInputElement): Promise<void> {
+    const previousResolution = this.save.settings.resolution;
+    const previousFullscreen = this.save.settings.fullscreen;
+    const nextResolution = setting === "resolution" ? input.value : previousResolution;
+    const nextFullscreen = setting === "fullscreen" ? input.checked : previousFullscreen;
+
+    if (setting === "resolution" && !this.windowService.supportsResolution) {
+      this.renderOverlay();
+      this.showToast("Window resolution is available in the Tauri desktop app.");
+      return;
+    }
+    if (setting === "resolution" && !isDisplayResolution(nextResolution)) {
+      this.renderOverlay();
+      this.showToast("That resolution is not supported.");
+      return;
+    }
+    this.save.settings.resolution = nextResolution as DisplayResolution;
+    this.save.settings.fullscreen = nextFullscreen;
+    try {
+      if (setting === "resolution" && !this.save.settings.fullscreen) {
+        await this.windowService.setResolution(this.save.settings.resolution);
+      }
+      if (setting === "fullscreen") {
+        await this.windowService.setFullscreen(this.save.settings.fullscreen);
+        if (!this.save.settings.fullscreen && this.windowService.supportsResolution) {
+          await this.windowService.setResolution(this.save.settings.resolution);
+        }
+      }
+      saveGame(this.platform.saveStorage, this.save);
+    } catch (error) {
+      this.save.settings.resolution = previousResolution;
+      this.save.settings.fullscreen = previousFullscreen;
+      this.renderOverlay();
+      this.showToast("That display setting could not be applied.");
+      console.warn("Display setting could not be applied.", error);
+    }
   };
 
   private readonly onFocusLost = (): void => {
@@ -1799,6 +1893,15 @@ export class Game {
 
   private readonly onVisibilityChanged = (): void => {
     if (document.hidden) this.onFocusLost();
+  };
+
+  private readonly onFullscreenChanged = (): void => {
+    if (this.windowService.supportsResolution) return;
+    const fullscreen = document.fullscreenElement !== null;
+    if (this.save.settings.fullscreen === fullscreen) return;
+    this.save.settings.fullscreen = fullscreen;
+    saveGame(this.platform.saveStorage, this.save);
+    if (this.overlay === "settings" && this.settingsTab === "display") this.renderOverlay();
   };
 
   private fishingViewport(): { width: number; height: number } {

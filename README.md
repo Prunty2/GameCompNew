@@ -12,7 +12,7 @@ The playable game includes:
 - A five-step First Assignment, four-card How to play, and credits
 - Keyboard sailing and hook steering, keyboard/pointer/touch reeling, and pause on focus loss
 - Quiet looping scene music, mute, separate music and sound-effects volume, high contrast, reduced motion, and remappable controls
-- Version 14 validated persistence and a local-safe CrazyGames SDK v3 adapter
+- Version 15 validated persistence, Tauri display settings, and a local-safe CrazyGames SDK v3 adapter
 - Generated runtime art documented in [`Docs/Asset-Manifest.md`](Docs/Asset-Manifest.md)
 
 ## Run locally
