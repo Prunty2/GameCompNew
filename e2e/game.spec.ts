@@ -415,7 +415,8 @@ test("hooked fish require active reel and release tension control", async ({ pag
   await expect(page.locator("#context-action")).toBeHidden();
   const reelControl = page.locator("#fishing-reel-control");
   await expect(reelControl).toBeVisible();
-  await expect(reelControl).toContainText("RELEASE LEFT CLICK");
+  await expect(reelControl).toContainText("RELEASE TO LET IT RUN");
+  await expect(reelControl.locator(".fishing-reel-mouse")).toHaveCSS("opacity", "0");
   await expect(reelControl).toHaveCSS("pointer-events", "none");
   await expect(canvas).toHaveAttribute("data-fishing-background-fish-opacity", "0.680");
   const startingBackgroundPoseTime = Number(await canvas.getAttribute("data-fishing-background-pose-elapsed"));
@@ -436,6 +437,10 @@ test("hooked fish require active reel and release tension control", async ({ pag
   await page.waitForTimeout(500);
   const restedTension = Number(await canvas.getAttribute("data-fishing-line-tension"));
   expect(restedTension).toBeLessThan(pulledTension);
+  await expect.poll(async () => canvas.getAttribute("data-fishing-fight-behaviour")).toBe("calm");
+  await expect(reelControl).toContainText("HOLD TO REEL");
+  await expect(reelControl.locator(".fishing-reel-mouse")).toHaveCSS("background-image", /mouse-left-click/);
+  await expect(reelControl.locator(".fishing-reel-mouse")).toHaveCSS("opacity", "1");
 
   const motionSamples = await canvas.evaluate(async (element) => {
     const samples: Array<{ x: number; y: number }> = [];
@@ -1333,8 +1338,14 @@ test("surface shoals anchor the interaction to the fishing hook", async ({ page 
   await expect(action).toHaveClass(/is-fishing-cue/);
   await expect(action).toHaveCSS("width", "78px");
   await expect(action).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
-  await expect(action).toContainText("LEFT CLICK");
-  await expect(action).toContainText("START FISHING");
+  await expect(action).not.toContainText("START FISHING");
+  const mouseControl = action.locator(".fishing-control-mouse");
+  await expect(mouseControl).toBeVisible();
+  await expect(mouseControl).toHaveCSS("background-image", /mouse-left-click/);
+  const [actionBounds, mouseBounds] = await Promise.all([action.boundingBox(), mouseControl.boundingBox()]);
+  expect(actionBounds).not.toBeNull();
+  expect(mouseBounds).not.toBeNull();
+  expect(mouseBounds!.x).toBeGreaterThan(actionBounds!.x + actionBounds!.width);
 
   const canvasBounds = await page.locator("#game-canvas").boundingBox();
   const initialHookBounds = await action.boundingBox();

@@ -700,78 +700,97 @@ input:focus-visible {
   color: transparent;
   letter-spacing: 0;
   overflow: visible;
-  transform: translate(-50%, -50%);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, calc(-50% + 8px)) scale(0.94);
+  transition: opacity 180ms ease, transform 180ms ease;
 }
 
-.fishing-control-key,
-.fishing-control-copy {
+.context-action.is-fishing-cue.is-callout-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.context-action.is-fishing-cue.is-fading-out {
+  pointer-events: none;
+}
+
+.fishing-control-mouse {
   position: absolute;
-  left: 50%;
+  top: 50%;
+  left: calc(100% + 8px);
   display: block;
-  width: max-content;
-  max-width: min(180px, 52vw);
-  padding-inline: 10px;
+  width: 44px;
+  height: 44px;
+  padding: 4px;
   border: 1px solid rgb(247 241 227 / 52%);
-  background: rgb(5 24 33 / 92%);
+  border-radius: 12px;
+  background-color: rgb(5 24 33 / 92%);
+  background-image: url("./assets/mouse-left-click.png");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 31px;
   box-shadow: 0 4px 12px rgb(2 15 21 / 38%);
-  color: var(--cream);
-  text-align: center;
-  transform: translateX(-50%);
-  white-space: nowrap;
-}
-
-.fishing-control-key {
-  bottom: calc(100% + 9px);
-  padding-block: 7px 5px;
-  border-bottom: 0;
-  border-radius: 12px 12px 0 0;
-  color: #ffd27a;
-  font-family: var(--display-face);
-  font-size: 0.75rem;
-  font-weight: 900;
-  letter-spacing: 0.06em;
-}
-
-.fishing-control-copy {
-  bottom: calc(100% - 13px);
-  padding-block: 4px 7px;
-  border-top: 1px solid rgb(247 241 227 / 18%);
-  border-radius: 0 0 12px 12px;
-  font-size: 0.62rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
+  transform: translateY(-50%);
 }
 
 .fishing-reel-control {
   position: absolute;
   z-index: 6;
-  display: grid;
-  min-width: 136px;
-  gap: 2px;
-  padding: 8px 11px;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
   border: 1px solid rgb(247 241 227 / 52%);
   border-radius: 12px;
   background: rgb(5 24 33 / 92%);
   box-shadow: 0 5px 14px rgb(2 15 21 / 40%);
   color: var(--cream);
+  opacity: 0;
   pointer-events: none;
   text-align: center;
+  transform: translateY(6px) scale(0.96);
+  transition: opacity 180ms ease, transform 180ms ease;
 }
 
-.fishing-reel-control strong {
-  color: #ffd27a;
-  font-family: var(--display-face);
-  font-size: 0.77rem;
-  letter-spacing: 0.045em;
-  line-height: 1;
+.fishing-reel-control.is-callout-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
 }
 
-.fishing-reel-control span {
+.fishing-reel-mouse {
+  display: block;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  border-radius: 9px;
+  background-image: url("./assets/mouse-left-click.png");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 27px;
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 180ms ease, flex-basis 180ms ease, margin 180ms ease, transform 180ms ease, width 180ms ease;
+}
+
+.fishing-reel-control.is-releasing .fishing-reel-mouse {
+  width: 0;
+  flex-basis: 0;
+  margin-inline: 0;
+  opacity: 0;
+  transform: scale(0.8);
+}
+
+.fishing-reel-copy {
   color: rgb(247 241 227 / 82%);
-  font-size: 0.62rem;
+  font-family: var(--display-face);
+  font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.04em;
   line-height: 1.15;
+  white-space: nowrap;
 }
 
 .context-action.is-fishing-cue:hover:not(:disabled) {
@@ -827,7 +846,9 @@ input:focus-visible {
   transition: none;
 }
 
-.reduced-motion .fishing-reel-control {
+.reduced-motion .context-action.is-fishing-cue,
+.reduced-motion .fishing-reel-control,
+.reduced-motion .fishing-reel-mouse {
   transition: none;
 }
 

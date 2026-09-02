@@ -61,6 +61,7 @@ Vite `publicDir` is `false`. Only these files are imported.
 | `dock-brindle-day.jpg` / `dock-brindle-night.jpg` | Brindle harbor backdrops |
 | `dock-gloam-day.jpg` / `dock-gloam-night.jpg` | Gloam harbor backdrops |
 | `ui-panel.png` / `ui-button.png` / `ui-icons.png` | Panel, primary button, 13 pictograms |
+| `mouse-left-click.png` | White left-click mouse tooltip icon for fishing controls |
 | `bin-icon.png` | Cargo release |
 | `padlock-icon.png` | Locked cargo slots |
 
@@ -392,6 +393,13 @@ Vite `publicDir` is `false`. Only these files are imported.
 - Deliver prompt: “Use case: stylized-concept. Asset type: standalone game UI pictogram for the FSHING browser game. Create one original freshwater harbor delivery beacon: a compact wooden navigation tower with a small roof, warm lantern window, short platform rails, and two restrained water strokes at its base. Bold hand-painted screen-print treatment matching the supplied FSHING menu: warm cream body, safety-orange light and accents, limited deep ink-navy outline, slightly irregular crafted edges, crisp silhouette readable at 50–90 pixels. Front-facing with a very slight three-quarter angle, centered with generous equal padding on a perfectly flat solid #FF00FF chroma-key background. No tile, circle, medallion, label, text, extra objects, boat, fish, shadow, reflection, border, frame, watermark, or checkerboard.”
 - Processing: the flat chroma key was removed with a soft matte and despill. The full generated source is retained as `output/imagegen/job-deliver-beacon-source.png`.
 - Presentation: retained only as an authoring record; the job-route markup is no longer emitted
+
+### `mouse-left-click.png`
+
+- Runtime role: white left-click mouse icon shown beside a fishable surface-hook cue and while the player should hold to reel
+- Generated size: 1233 × 1275 transparent PNG
+- Generation mode: OpenAI built-in image generation on 2 September 2026
+- Prompt: “Use case: logo-brand. Asset type: tiny game HUD mouse-control icon, rendered at 36–48 pixels. Create exactly one simplified white computer mouse symbol with a clearly visibly depressed left button. Show the left button as a darker cool-gray inset panel positioned lower than the right button; make the right button white and unpressed. The difference must remain obvious at 36 pixels. Genuinely transparent background; clean, minimal flat 2D game UI glyph; centered upright mouse with generous transparent padding. No text, border, badge, cursor arrow, hand, black background, drop shadow, or watermark.”
 
 ### `bin-icon.png`
 
