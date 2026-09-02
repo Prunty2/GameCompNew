@@ -30,14 +30,17 @@ async function expectDeparturesBesideHarborPanel(page: import("@playwright/test"
   expect(departures.right).toBeLessThanOrEqual(await page.evaluate(() => window.innerWidth));
 }
 
-async function gameMusicState(page: import("@playwright/test").Page): Promise<{
+async function musicState(
+  page: import("@playwright/test").Page,
+  scene: "menu" | "game",
+): Promise<{
   loop: boolean;
   paused: boolean;
   muted: boolean;
   volume: number;
   currentTime: number;
 } | null> {
-  const audio = page.locator("audio[data-game-music]");
+  const audio = page.locator(`audio[data-music-scene="${scene}"]`);
   if (await audio.count() === 0) return null;
   return audio.evaluate((element) => {
     const music = element as HTMLAudioElement;
@@ -49,6 +52,14 @@ async function gameMusicState(page: import("@playwright/test").Page): Promise<{
       currentTime: music.currentTime,
     };
   });
+}
+
+async function menuMusicState(page: import("@playwright/test").Page) {
+  return musicState(page, "menu");
+}
+
+async function gameMusicState(page: import("@playwright/test").Page) {
+  return musicState(page, "game");
 }
 
 test.beforeEach(async ({ page }) => {
@@ -147,12 +158,14 @@ test("main menu seagulls do not build up while the page is unfocused", async ({ 
   await expect(flocks).toHaveCount(1, { timeout: 3_000 });
 });
 
-test("game music plays only in the main-menu flow", async ({ page }) => {
+test("scene music loops and crossfades between the menu and gameplay", async ({ page }) => {
   await page.goto("/");
-  await expect.poll(() => gameMusicState(page)).toEqual(expect.objectContaining({ loop: true }));
+  await expect(page.locator('audio[data-music-scene="menu"]')).toHaveCount(1);
+  await expect(page.locator('audio[data-music-scene="game"]')).toHaveCount(1);
+  await expect.poll(() => menuMusicState(page)).toEqual(expect.objectContaining({ loop: true }));
 
   await page.getByRole("button", { name: "Credits" }).click();
-  await expect.poll(() => gameMusicState(page)).toEqual(expect.objectContaining({
+  await expect.poll(() => menuMusicState(page)).toEqual(expect.objectContaining({
     loop: true,
     paused: false,
     muted: false,
@@ -160,43 +173,68 @@ test("game music plays only in the main-menu flow", async ({ page }) => {
   await page.getByRole("button", { name: "Back" }).click();
 
   await page.getByRole("button", { name: "Settings" }).click();
-  await expect.poll(() => gameMusicState(page)).toEqual(expect.objectContaining({ loop: true, paused: false, muted: false }));
+  await expect.poll(() => menuMusicState(page)).toEqual(expect.objectContaining({ loop: true, paused: false, muted: false }));
 
   await page.getByRole("button", { name: "Done" }).click();
   await page.getByRole("button", { name: "Play", exact: true }).click();
   await expect(page.locator('[data-action="undock"]')).toBeVisible();
-  await expect.poll(() => gameMusicState(page)).toEqual(expect.objectContaining({
+  await expect.poll(() => menuMusicState(page)).toEqual(expect.objectContaining({
     loop: true,
     paused: true,
-    muted: true,
     volume: 0,
     currentTime: 0,
+  }));
+  await expect.poll(() => gameMusicState(page)).toEqual(expect.objectContaining({
+    loop: true,
+    paused: false,
+    muted: false,
   }));
 
   await page.locator('[data-action="undock"]').click();
   await expect(page.locator('[data-action="undock"]')).toHaveCount(0);
-  await expect.poll(() => gameMusicState(page)).toEqual(expect.objectContaining({ paused: true, volume: 0 }));
+  await expect.poll(() => gameMusicState(page)).toEqual(expect.objectContaining({ paused: false, muted: false }));
 
   await page.keyboard.press("Escape");
   await page.getByRole("button", { name: "Settings" }).click();
   await expect.poll(() => gameMusicState(page)).toEqual(expect.objectContaining({
-    paused: true,
-    muted: true,
-    volume: 0,
-    currentTime: 0,
+    paused: false,
+    muted: false,
   }));
   await page.getByRole("button", { name: "Done" }).click();
   await page.getByRole("button", { name: "Title screen" }).click();
   await expect(page.getByRole("button", { name: "Play", exact: true })).toBeVisible();
-  await expect.poll(() => gameMusicState(page)).toEqual(expect.objectContaining({ loop: true, paused: false, muted: false }));
+  await expect.poll(() => menuMusicState(page)).toEqual(expect.objectContaining({ loop: true, paused: false, muted: false }));
+  await expect.poll(() => gameMusicState(page)).toEqual(expect.objectContaining({ paused: true, volume: 0, currentTime: 0 }));
+});
+
+test("game music continues when travelling to the Beach", async ({ page }) => {
+  await page.goto("/?e2e=1");
+  await page.evaluate(() => {
+    window.localStorage.setItem("gamecomp-new.save", JSON.stringify({
+      version: 11,
+      progress: { money: 1_000, beachUnlocked: true },
+      settings: {},
+    }));
+  });
+  await page.reload();
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Travel to Beach" })).toBeVisible();
+  await page.getByRole("button", { name: "Travel to Beach" }).click();
+  await expect(page.locator("#game-canvas")).toHaveAttribute("data-world", "beach");
+  await expect.poll(() => gameMusicState(page)).toEqual(expect.objectContaining({
+    loop: true,
+    paused: false,
+    muted: false,
+  }));
 });
 
 test("mute and music volume control game music independently of sound effects", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Settings" }).click();
-  await expect.poll(() => gameMusicState(page)).toEqual(expect.objectContaining({ loop: true, paused: false, muted: false }));
+  await expect.poll(() => menuMusicState(page)).toEqual(expect.objectContaining({ loop: true, paused: false, muted: false }));
   await page.getByRole("tab", { name: "Audio" }).click();
-  const defaultVolume = (await gameMusicState(page))!.volume;
+  await expect.poll(async () => (await menuMusicState(page))?.volume).toBeCloseTo(0.045, 2);
+  const defaultVolume = (await menuMusicState(page))!.volume;
   expect(defaultVolume).toBeCloseTo(0.045, 2);
   expect(defaultVolume).toBeLessThan(0.08);
 
@@ -205,35 +243,35 @@ test("mute and music volume control game music independently of sound effects", 
     input.value = "0.2";
     input.dispatchEvent(new Event("input", { bubbles: true }));
   });
-  await expect.poll(async () => (await gameMusicState(page))?.volume).toBeCloseTo(0.012, 3);
+  await expect.poll(async () => (await menuMusicState(page))?.volume).toBeCloseTo(0.012, 3);
 
   await page.locator('[data-setting="volume"]').evaluate((element) => {
     const input = element as HTMLInputElement;
     input.value = "0.1";
     input.dispatchEvent(new Event("input", { bubbles: true }));
   });
-  await expect.poll(async () => (await gameMusicState(page))?.volume).toBeCloseTo(0.012, 3);
+  await expect.poll(async () => (await menuMusicState(page))?.volume).toBeCloseTo(0.012, 3);
 
   const mute = page.locator("label.setting-toggle").filter({ hasText: "Mute" });
   await mute.click();
-  await expect.poll(() => gameMusicState(page)).toEqual(expect.objectContaining({ loop: true, paused: true, muted: true, volume: 0 }));
+  await expect.poll(() => menuMusicState(page)).toEqual(expect.objectContaining({ loop: true, paused: true, muted: true, volume: 0 }));
 
   await mute.click();
-  await expect.poll(() => gameMusicState(page)).toEqual(expect.objectContaining({
+  await expect.poll(() => menuMusicState(page)).toEqual(expect.objectContaining({
     loop: true,
     paused: false,
     muted: false,
   }));
-  await expect.poll(async () => (await gameMusicState(page))?.volume).toBeCloseTo(0.012, 3);
+  await expect.poll(async () => (await menuMusicState(page))?.volume).toBeCloseTo(0.012, 3);
 
   await page.reload();
   await page.getByRole("button", { name: "Settings" }).click();
   await page.getByRole("tab", { name: "Audio" }).click();
   await expect(page.getByRole("slider", { name: "Music volume" })).toHaveValue("0.2");
-  await expect.poll(async () => (await gameMusicState(page))?.volume).toBeCloseTo(0.012, 3);
+  await expect.poll(async () => (await menuMusicState(page))?.volume).toBeCloseTo(0.012, 3);
 
   await page.getByRole("slider", { name: "Music volume" }).fill("0");
-  await expect.poll(() => gameMusicState(page)).toEqual(expect.objectContaining({
+  await expect.poll(() => menuMusicState(page)).toEqual(expect.objectContaining({
     paused: true,
     volume: 0,
   }));

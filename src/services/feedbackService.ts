@@ -1,4 +1,4 @@
-import { createGameMusicElement, musicOutputVolume, syncGameMusic } from "./gameMusic";
+import { MusicMixer, type MusicScene } from "./gameMusic";
 
 export type FeedbackCue =
   | "ui"
@@ -23,11 +23,10 @@ export class FeedbackService {
   private engine: OscillatorNode | null = null;
   private engineGain: GainNode | null = null;
   private engineFilter: BiquadFilterNode | null = null;
-  private music: HTMLAudioElement | null = null;
-  private mainMenuActive = false;
+  private readonly music: MusicMixer;
 
   constructor(private settings: FeedbackSettings) {
-    this.ensureMusic();
+    this.music = new MusicMixer(settings);
     window.addEventListener("pointerdown", this.unlock, { capture: true });
     window.addEventListener("keydown", this.unlock, { capture: true });
     document.addEventListener("visibilitychange", this.onVisibilityChanged);
@@ -38,12 +37,11 @@ export class FeedbackService {
     if (this.context && this.master) {
       this.master.gain.setTargetAtTime(this.outputVolume(), this.context.currentTime, 0.025);
     }
-    this.syncMusic();
+    this.music.updateSettings(settings);
   }
 
-  setMainMenuActive(active: boolean): void {
-    this.mainMenuActive = active;
-    this.syncMusic();
+  setMusicScene(scene: MusicScene | null): void {
+    this.music.setScene(scene);
   }
 
   updateEngine(speedRatio: number, active: boolean): void {
@@ -110,24 +108,11 @@ export class FeedbackService {
   private readonly unlock = (): void => {
     const context = this.ensureContext();
     if (context?.state === "suspended") void context.resume();
-    this.syncMusic();
+    this.music.sync();
   };
 
   private readonly onVisibilityChanged = (): void => {
-    this.syncMusic();
-  };
-
-  private ensureMusic(): HTMLAudioElement {
-    if (this.music) return this.music;
-    const music = createGameMusicElement();
-    music.volume = musicOutputVolume(this.settings);
-    document.body.append(music);
-    this.music = music;
-    return music;
-  }
-
-  private syncMusic(): void {
-    syncGameMusic(this.ensureMusic(), this.settings, document.hidden, this.mainMenuActive);
+    this.music.sync();
   }
 
   private ensureContext(): AudioContext | null {

@@ -233,7 +233,7 @@ Development shortcuts: `B` grants a temporary boost. In `npm run dev`, `G` jumps
 
 ## Accessibility
 
-- Mute plus separate saved music and sound-effects volume sliders controlling the title music and synthesized cues. Music plays only in the main-menu flow (the title plus Settings or Credits opened from it), never in the harbor, on the water, while paused, or in Settings opened from pause.
+- Mute plus separate saved music and sound-effects volume sliders controlling the looping scene music and synthesized cues. Intro music plays in the main-menu flow (the title plus Settings or Credits opened from it); game music crossfades in for gameplay, including harbor, lake water, Beach harbor, and Beach water. Both tracks loop, pause when the tab is hidden, and follow the saved music volume and mute setting. Settings opened from pause remain in the game-music scene.
 - High contrast: stronger shoals and outlines
 - Reduced motion: skips decorative pulses, menu/scene motion, boost camera pull, and fish body flex. Gameplay movement remains
 - Pause when the window blurs or the tab hides
@@ -289,8 +289,8 @@ CrazyGames HTML5 SDK v3 is loaded from the page. Local play works if the script 
 | `src/game/stem.ts` | Habitat readings and leftover survey/route helpers |
 | `src/services/saveGame.ts` | Version 14 validation and migration |
 | `src/services/platformService.ts` | CrazyGames boundary |
-| `src/services/feedbackService.ts` | Title-screen music, synthesized cues, and optional vibration |
-| `src/services/gameMusic.ts` | Title-menu music element, mute/music-volume, and tab-hidden pause |
+| `src/services/feedbackService.ts` | Scene music mixer, synthesized cues, and optional vibration |
+| `src/services/gameMusic.ts` | Menu/game music elements, crossfade, mute/music-volume, and tab-hidden pause |
 
 Balance numbers live in `src/game/balance.ts`. Runtime art is listed in [`Asset-Manifest.md`](Asset-Manifest.md).
 

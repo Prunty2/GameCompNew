@@ -17,6 +17,7 @@ import uiPanelUrl from "../assets/ui-panel.png";
 import upgradeBeachUrl from "../assets/upgrade-beach.png";
 import upgradeEngineBoostUrl from "../assets/upgrade-engine-boost.png";
 import { FeedbackService, type FeedbackCue } from "../services/feedbackService";
+import type { MusicScene } from "../services/gameMusic";
 import type { PlatformService } from "../services/platformService";
 import { defaultSave, saveGame, type SaveData } from "../services/saveGame";
 import {
@@ -1277,7 +1278,7 @@ export class Game {
     if (!wasPlaying && willPlay) this.platform.gameplayStart();
     this.renderOverlay();
     this.overlayEntering = false;
-    this.syncMenuMusic();
+    this.syncMusicScene();
     this.refreshHud();
     if (next !== null) {
       requestAnimationFrame(() => {
@@ -1319,13 +1320,13 @@ export class Game {
     this.replaceResetSaveSetting();
     this.refreshHud();
     this.refreshQuestGuide();
-    this.syncMenuMusic();
+    this.syncMusicScene();
     this.showToast("Save reset. Play to start the first assignment.");
   }
 
   private beginVoyage(): void {
     this.started = true;
-    this.syncMenuMusic();
+    this.syncMusicScene();
     this.harborSection = "market";
     this.marketDetailOpen = false;
     if (this.simulation.dockedAt) this.setOverlay("harbor", true);
@@ -1378,15 +1379,16 @@ export class Game {
     document.body.classList.toggle("high-contrast", this.save.settings.highContrast);
     document.body.classList.toggle("reduced-motion", this.save.settings.reducedMotion);
     this.feedback.updateSettings(this.save.settings);
-    this.syncMenuMusic();
+    this.syncMusicScene();
   }
 
-  private syncMenuMusic(): void {
+  private syncMusicScene(nextOverlay = this.overlay): void {
     const mainMenuActive = !this.started && (
-      this.overlay === "title"
-      || (this.overlay === "settings" || this.overlay === "credits") && this.overlayReturn === "title"
+      nextOverlay === "title"
+      || (nextOverlay === "settings" || nextOverlay === "credits") && this.overlayReturn === "title"
     );
-    this.feedback.setMainMenuActive(mainMenuActive);
+    const scene: MusicScene | null = this.started ? "game" : mainMenuActive ? "menu" : null;
+    this.feedback.setMusicScene(scene);
   }
 
   private pulseFeedback(cue: FeedbackCue): void {
@@ -1601,7 +1603,11 @@ export class Game {
         });
         break;
       case "back": this.setOverlay(this.overlayReturn); break;
-      case "title": this.started = false; this.setOverlay("title", true); break;
+      case "title":
+        this.started = false;
+        this.syncMusicScene("title");
+        this.setOverlay("title", true);
+        break;
       case "harbor-section": {
         const section = target.dataset.harborSection as HarborSection | undefined;
         if (!section || !(["market", "cargo", "upgrades"] as HarborSection[]).includes(section)) break;

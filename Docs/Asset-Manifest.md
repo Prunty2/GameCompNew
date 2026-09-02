@@ -16,7 +16,8 @@ Vite `publicDir` is `false`. Only these files are imported.
 
 | File | Role |
 | --- | --- |
-| `src/audio/Game Music.mp3` | Looping title-screen music |
+| `src/audio/Intro music.mp3` | Looping main-menu music |
+| `src/audio/Game Music.mp3` | Looping gameplay music for the lake and Beach |
 
 **Canvas (`src/game/renderer.ts`)**
 
@@ -395,12 +396,20 @@ Vite `publicDir` is `false`. Only these files are imported.
 
 ## Audio assets
 
+### `Intro music.mp3`
+
+- Runtime path: `src/audio/Intro music.mp3`
+- Runtime role: looping music in the main-menu flow (title, menu-origin Settings, and menu-origin Credits)
+- Format: MP3, 44.1 kHz stereo, 320 kb/s, duration 2:14
+- Playback: `src/services/gameMusic.ts` creates a hidden looping `HTMLAudioElement` and crossfades it out when gameplay starts. `FeedbackService` starts it after the first pointer or key gesture while the main-menu flow is open. It follows saved mute and the live Music volume slider, and pauses while the tab is hidden. The Sound effects slider independently controls synthesized cues.
+- Browser autoplay policy: the file is preloaded at boot but does not play until a user gesture unlocks audio.
+
 ### `Game Music.mp3`
 
 - Runtime path: `src/audio/Game Music.mp3`
-- Runtime role: looping music on the title screen only
+- Runtime role: looping music across gameplay in the lake and Beach, including harbor and water scenes
 - Format: MP3, 44.1 kHz stereo, 320 kb/s, duration 3:14
-- Playback: `src/services/gameMusic.ts` creates a hidden looping `HTMLAudioElement` mixed very quietly (`GAME_MUSIC_GAIN` 0.06). `FeedbackService` starts it after the first pointer or key gesture while the main-menu flow is open, including Settings and Credits reached from the title. It follows saved mute and the live Music volume slider, and pauses and rewinds it in the harbor, on the water, while paused, in pause-origin Settings, while muted, silent, or hidden. The Sound effects slider independently controls synthesized cues.
+- Playback: `src/services/gameMusic.ts` creates a hidden looping `HTMLAudioElement` mixed very quietly (`GAME_MUSIC_GAIN` 0.06). `FeedbackService` crossfades it in when gameplay starts and crossfades it out when returning to the main menu. It follows saved mute and the live Music volume slider, and pauses while the tab is hidden. The Sound effects slider independently controls synthesized cues.
 - Browser autoplay policy: the file is preloaded at boot but does not play until a user gesture unlocks audio.
 
 ## Procedural audio assets
@@ -420,7 +429,7 @@ Vite `publicDir` is `false`. Only these files are imported.
 | Upgrade | Two rising tones | Confirm permanent progression | New tier/class text |
 | Haptics | Optional `navigator.vibrate` patterns per cue | Reinforce action category | Never required to understand state |
 
-The saved mute and volume controls apply to the synthesized master gain and to the looping music element. Cue sounds are original parameterised synthesis, not recordings or adaptations of another game.
+The saved mute and volume controls apply to the synthesized master gain and to both looping music elements. Cue sounds are original parameterised synthesis, not recordings or adaptations of another game.
 
 ## Runtime constraints
 
