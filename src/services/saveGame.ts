@@ -7,6 +7,7 @@ import {
 } from "../game/controls";
 import type { MarketTutorialStep, ProgressState, UpgradeProgress, UpgradeTutorialStep } from "../game/simulation";
 import type { SaveStorage } from "./platformService";
+import { isDisplayResolution, type DisplayResolution } from "./windowService";
 
 const SAVE_KEY = "gamecomp-new.save";
 
@@ -16,18 +17,20 @@ export interface GameSettings {
   musicVolume: number;
   highContrast: boolean;
   reducedMotion: boolean;
+  resolution: DisplayResolution;
+  fullscreen: boolean;
   controls: ControlBindings;
 }
 
 export interface SaveData {
-  version: 14;
+  version: 15;
   progress: ProgressState;
   settings: GameSettings;
 }
 
 export function defaultSave(): SaveData {
   return {
-    version: 14,
+    version: 15,
     progress: {
       money: 0,
       upgrades: { cargo: 0, engine: 0, lamp: 0, line: 0, reel: 0 },
@@ -54,6 +57,8 @@ export function defaultSave(): SaveData {
       musicVolume: 0.75,
       highContrast: false,
       reducedMotion: false,
+      resolution: "1280x720",
+      fullscreen: false,
       controls: { ...DEFAULT_CONTROL_BINDINGS },
     },
   };
@@ -70,7 +75,7 @@ export function loadSave(storage: SaveStorage): SaveData {
     const learning = objectValue(progress.learning);
     const settings = objectValue(candidate.settings);
     return {
-      version: 14,
+      version: 15,
       progress: {
         money: finiteInteger(progress.money, 0, 999_999),
         upgrades: readUpgrades(upgrades),
@@ -105,6 +110,8 @@ export function loadSave(storage: SaveStorage): SaveData {
         ),
         highContrast: settings.highContrast === true,
         reducedMotion: settings.reducedMotion === true,
+        resolution: isDisplayResolution(settings.resolution) ? settings.resolution : "1280x720",
+        fullscreen: settings.fullscreen === true,
         controls: readControlBindings(settings.controls),
       },
     };

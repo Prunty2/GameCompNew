@@ -4973,6 +4973,32 @@ kbd {
   width: min(132px, 15vw);
 }
 
+.settings-select-input {
+  width: min(160px, 15vw);
+  min-width: 0;
+  min-height: 38px;
+  padding: 7px 28px 7px 10px;
+  border: 1px solid var(--menu-signal);
+  border-radius: 9px;
+  background: rgb(7 31 40 / 88%);
+  color: var(--menu-paper);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.75rem;
+}
+
+.settings-select-input:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+
+.settings-select-input:disabled {
+  border-color: rgb(247 241 227 / 34%);
+  color: var(--menu-fog);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
 .settings-panel.settings-menu .settings-link,
 .settings-panel.settings-menu .setting-reset {
   grid-column: 1 / -1;
@@ -5092,6 +5118,10 @@ kbd {
   }
 
   .settings-panel.settings-menu .setting-volume input[type="range"] {
+    width: min(150px, 34vw);
+  }
+
+  .settings-panel.settings-menu .settings-select-input {
     width: min(150px, 34vw);
   }
 }
@@ -5362,7 +5392,7 @@ kbd {
 
 .settings-tabs {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 4px;
   margin-bottom: 14px;
   padding: 4px;
@@ -5376,7 +5406,7 @@ kbd {
 .settings-panel.settings-menu .settings-tab {
   min-height: 36px;
   margin: 3px 6px;
-  padding: 8px 18px;
+  padding: 8px 10px;
   border: 0;
   border-radius: 999px;
   background: transparent;
