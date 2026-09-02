@@ -5,6 +5,9 @@ import beachChartNightUrl from "../assets/beach-chart-night.png";
 import binIconUrl from "../assets/bin-icon.png";
 import destinationLakeUrl from "../assets/destination-lake.png";
 import destinationOilRigUrl from "../assets/destination-oil-rig.png";
+import dockBuyerBlinkUrl from "../assets/dock-buyer-blink.png";
+import dockBuyerNameplateUrl from "../assets/dock-buyer-nameplate.png";
+import dockRequestBubbleUrl from "../assets/dock-request-bubble.png";
 import gloamDockDayUrl from "../assets/dock-gloam-day.jpg";
 import gloamDockNightUrl from "../assets/dock-gloam-night.jpg";
 import fishAtlasUiUrl from "../assets/fish-atlas-ui.png";
@@ -49,6 +52,11 @@ import {
   rebindControl,
   type ControlAction,
 } from "./controls";
+import {
+  cargoCountForDockRequest,
+  dockRequestFor,
+  fulfillDockRequest,
+} from "./dockRequest";
 import { FISHING_FIGHT_RESUME_TENSION } from "./fishingFight";
 import { InputController } from "./input";
 import {
@@ -255,6 +263,9 @@ export class Game {
     preloadImage(gloamDockDayUrl),
     preloadImage(gloamDockNightUrl),
     preloadImage(binIconUrl),
+    preloadImage(dockBuyerBlinkUrl),
+    preloadImage(dockBuyerNameplateUrl),
+    preloadImage(dockRequestBubbleUrl),
     preloadImage(padlockIconUrl),
     preloadImage(seagullFlightUrl),
     preloadImage(wordmarkUrl),
@@ -544,6 +555,14 @@ export class Game {
         this.showDeliveryNotification(
           `Sold, ${event.result.quantity} fish`,
           "Close sale notification",
+        );
+        break;
+      case "dock-request-traded":
+        this.feedback.cue("delivery");
+        this.pulseFeedback("delivery");
+        this.showDeliveryNotification(
+          `${event.buyerName} paid ${event.payment} shells for ${event.quantity} ${FISH[event.species].name}`,
+          "Close dockside trade notification",
         );
         break;
       case "market-day":
@@ -870,8 +889,35 @@ export class Game {
           <footer class="panel-actions"><div><button class="text-button harbor-utility-button" type="button" data-action="open-help" aria-label="How to play"><span class="ui-icon icon-objective" aria-hidden="true"></span><strong>Help</strong></button></div>${mainFooterAction}</footer>
         </div>
         ${this.departuresBoard()}
+        ${this.dockBuyer()}
       </div>
     </section>`;
+  }
+
+  private dockBuyer(): string {
+    const request = dockRequestFor(this.simulation);
+    if (!request) return "";
+    const carried = cargoCountForDockRequest(this.simulation, request);
+    const ready = carried >= request.quantity;
+    const remaining = Math.max(0, request.quantity - carried);
+    const modifier = formatSignedPercent(request.modifierPercent);
+    const requestFish = fishIcon(
+      request.species,
+      fishAtlasUiUrl,
+      beachFishAtlasUiUrl,
+      "dock-request-fish",
+    );
+    const bubbleContent = request.fulfilled
+      ? `<span class="dock-request-kicker">DEAL COMPLETE</span><strong>Thanks, skipper.</strong><small>${request.payment} shells paid</small>`
+      : `<span class="dock-request-kicker">TODAY'S REQUEST</span><span class="dock-request-line">${requestFish}<strong>${request.quantity} × ${FISH[request.species].name}</strong></span><span class="dock-request-value"><b>${request.payment} shells</b><small>${modifier} vs market</small></span><span class="dock-request-progress">${ready ? "TRADE NOW" : `${carried}/${request.quantity} ABOARD · ${remaining} TO GO`}</span>`;
+    const bubble = request.fulfilled
+      ? `<div class="dock-request-bubble is-fulfilled" role="status" aria-label="Milo's request complete. ${request.payment} shells paid." data-request-id="${request.id}"><span class="dock-request-copy">${bubbleContent}</span></div>`
+      : `<button class="dock-request-bubble${ready ? " is-ready" : ""}" type="button" data-action="fulfill-dock-request" data-request-id="${request.id}" data-species="${request.species}" data-quantity="${request.quantity}" data-offer-percent="${request.modifierPercent}" data-payment="${request.payment}" data-ready="${ready}" aria-label="Trade ${request.quantity} ${FISH[request.species].name} with Milo for ${request.payment} shells. ${carried} aboard, ${remaining} still needed."><span class="dock-request-copy">${bubbleContent}</span></button>`;
+    return `<aside class="dock-buyer" aria-label="Milo's fish request" style="--dock-buyer-sheet: url(&quot;${dockBuyerBlinkUrl}&quot;); --dock-request-sheet: url(&quot;${dockRequestBubbleUrl}&quot;)">
+      <span class="dock-buyer-character" aria-hidden="true"></span>
+      <span class="dock-buyer-nameplate"><img src="${dockBuyerNameplateUrl}" alt="" aria-hidden="true" /><strong>MILO</strong></span>
+      ${bubble}
+    </aside>`;
   }
 
   private departuresBoard(): string {
@@ -1413,6 +1459,7 @@ export class Game {
       marketDay: this.simulation.progress.marketDay,
       marketSales: this.simulation.progress.marketSales,
       marketEarnings: this.simulation.progress.marketEarnings,
+      fulfilledDockRequests: [...this.simulation.progress.fulfilledDockRequests],
       marketTarget: this.simulation.progress.marketTarget,
       marketTutorialStep: this.simulation.progress.marketTutorialStep,
       upgradeTutorialStep: this.simulation.progress.upgradeTutorialStep,
@@ -1671,6 +1718,22 @@ export class Game {
         const section = target.dataset.harborSection as HarborSection | undefined;
         if (!section || !(["market", "cargo", "upgrades"] as HarborSection[]).includes(section)) break;
         this.openHarborSection(section);
+        break;
+      }
+      case "fulfill-dock-request": {
+        const request = dockRequestFor(this.simulation);
+        if (!request || request.id !== target.dataset.requestId || request.fulfilled) break;
+        const carried = cargoCountForDockRequest(this.simulation, request);
+        if (carried < request.quantity) {
+          const remaining = request.quantity - carried;
+          this.feedback.cue("deny");
+          this.showToast(`${request.buyerName} still needs ${remaining} ${FISH[request.species].name}.`);
+          break;
+        }
+        if (fulfillDockRequest(this.simulation, request)) {
+          this.handleSimulationEvents();
+          this.renderOverlay();
+        }
         break;
       }
       case "select-market-fish": {
@@ -1992,6 +2055,10 @@ function upgradeName(upgrade: UpgradeId): string {
 
 function capitalise(value: string): string {
   return value.length === 0 ? value : `${value[0]?.toUpperCase()}${value.slice(1)}`;
+}
+
+function formatSignedPercent(value: number): string {
+  return `${value > 0 ? "+" : ""}${value}%`;
 }
 
 function preloadImage(source: string): Promise<void> {

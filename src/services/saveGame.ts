@@ -23,14 +23,14 @@ export interface GameSettings {
 }
 
 export interface SaveData {
-  version: 15;
+  version: 16;
   progress: ProgressState;
   settings: GameSettings;
 }
 
 export function defaultSave(): SaveData {
   return {
-    version: 15,
+    version: 16,
     progress: {
       money: 0,
       upgrades: { cargo: 0, engine: 0, lamp: 0, line: 0, reel: 0 },
@@ -46,6 +46,7 @@ export function defaultSave(): SaveData {
       marketDay: 1,
       marketSales: 0,
       marketEarnings: 0,
+      fulfilledDockRequests: [],
       marketTarget: null,
       marketTutorialStep: "inspect",
       upgradeTutorialStep: "locked",
@@ -75,7 +76,7 @@ export function loadSave(storage: SaveStorage): SaveData {
     const learning = objectValue(progress.learning);
     const settings = objectValue(candidate.settings);
     return {
-      version: 15,
+      version: 16,
       progress: {
         money: finiteInteger(progress.money, 0, 999_999),
         upgrades: readUpgrades(upgrades),
@@ -91,6 +92,7 @@ export function loadSave(storage: SaveStorage): SaveData {
         marketDay: finiteInteger(progress.marketDay, 1, 99_999),
         marketSales: finiteInteger(progress.marketSales, 0, 99_999),
         marketEarnings: finiteInteger(progress.marketEarnings, 0, 999_999_999),
+        fulfilledDockRequests: readFulfilledDockRequests(progress.fulfilledDockRequests),
         marketTarget: readMarketTarget(progress.marketTarget),
         marketTutorialStep: readTutorialStep(
           progress.marketTutorialStep,
@@ -188,6 +190,13 @@ function ensureStartingSpecies(discovered: FishSpecies[]): FishSpecies[] {
 
 function readMarketTarget(value: unknown): FishSpecies | null {
   return typeof value === "string" && value in FISH ? value as FishSpecies : null;
+}
+
+function readFulfilledDockRequests(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return [...new Set(value.filter((id): id is string => (
+    typeof id === "string" && /^(lake|beach):(brindle|gloam):[1-9]\d{0,4}$/.test(id)
+  )))].slice(-64);
 }
 
 function readTutorialStep(value: unknown, legacyDeliveries: number): MarketTutorialStep {
