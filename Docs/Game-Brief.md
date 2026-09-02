@@ -29,7 +29,7 @@ Market → Track → Sail → Fish → Reel → Sell → Upgrade → Market
 | Pause | Escape or Pause on the water | Resume, Settings, How to play, Title screen |
 | Settings | Title or pause | General, Audio, Display, and Controls tabs; accessibility, save, sound, resolution, and fullscreen preferences |
 | Settings · Audio | Audio tab | Mute plus separate music and sound-effects volume sliders |
-| Settings · Display | Display tab | Tauri window resolution selector and fullscreen toggle; the browser fallback keeps fullscreen support and explains that window sizing is desktop-only |
+| Settings · Display | Display tab | Tauri window resolution selector and fullscreen toggle; resolution is disabled while fullscreen is active, and the browser fallback explains that window sizing is desktop-only |
 | Settings · Controls | Controls tab | Seven remappable actions shown directly, Reset defaults |
 | Credits | Title | Liam, Saxon, Harrison, David |
 | How to play | Harbor Help or pause | Four cards: read the market, track and catch, manage cargo, sell and invest |

@@ -15,6 +15,10 @@ export function isDisplayResolution(value: unknown): value is DisplayResolution 
     && DISPLAY_RESOLUTIONS.some((resolution) => resolution.id === value);
 }
 
+export function isResolutionControlDisabled(supportsResolution: boolean, fullscreen: boolean): boolean {
+  return !supportsResolution || fullscreen;
+}
+
 function isTauriRuntime(): boolean {
   return typeof window !== "undefined"
     && Object.prototype.hasOwnProperty.call(window, "__TAURI_INTERNALS__");
