@@ -4538,7 +4538,8 @@ kbd {
 
 .title-actions .title-play-button,
 .title-actions .title-settings-button,
-.title-actions .title-credits-button {
+.title-actions .title-credits-button,
+.title-actions .title-quit-button {
   width: 100%;
   border-radius: 14px;
 }
@@ -4580,7 +4581,8 @@ kbd {
 }
 
 .title-actions .title-settings-button,
-.title-actions .title-credits-button {
+.title-actions .title-credits-button,
+.title-actions .title-quit-button {
   display: flex;
   min-height: 52px;
   align-items: center;
@@ -4594,7 +4596,8 @@ kbd {
 }
 
 .title-actions .title-settings-button strong,
-.title-actions .title-credits-button strong {
+.title-actions .title-credits-button strong,
+.title-actions .title-quit-button strong {
   font-size: 0.88rem;
   font-weight: 800;
   letter-spacing: 0.02em;
@@ -4604,7 +4607,9 @@ kbd {
 .title-actions .title-settings-button:hover,
 .title-actions .title-settings-button:focus-visible,
 .title-actions .title-credits-button:hover,
-.title-actions .title-credits-button:focus-visible {
+.title-actions .title-credits-button:focus-visible,
+.title-actions .title-quit-button:hover,
+.title-actions .title-quit-button:focus-visible {
   border-color: var(--menu-signal);
   background: rgb(7 31 40 / 80%);
 }
@@ -4649,7 +4654,8 @@ kbd {
   }
 
   .title-actions .title-settings-button,
-  .title-actions .title-credits-button {
+  .title-actions .title-credits-button,
+  .title-actions .title-quit-button {
     min-height: 46px;
   }
 }
@@ -5069,11 +5075,21 @@ kbd {
   width: min(132px, 15vw);
 }
 
-.settings-select-input {
-  width: min(160px, 15vw);
+.settings-resolution-picker {
+  position: relative;
+  width: min(210px, 19vw);
+  min-width: 168px;
+}
+
+.settings-resolution-trigger {
+  display: flex;
+  width: 100%;
   min-width: 0;
   min-height: 38px;
-  padding: 7px 28px 7px 10px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 10px 7px 12px;
   border: 1px solid var(--menu-signal);
   border-radius: 9px;
   background: rgb(7 31 40 / 88%);
@@ -5081,18 +5097,85 @@ kbd {
   cursor: pointer;
   font: inherit;
   font-size: 0.75rem;
+  text-align: left;
 }
 
-.settings-select-input:focus-visible {
+.settings-resolution-trigger:focus-visible,
+.settings-resolution-option:focus-visible {
   outline: 2px solid #fff;
   outline-offset: 3px;
 }
 
-.settings-select-input:disabled {
+.settings-resolution-trigger:disabled {
   border-color: rgb(247 241 227 / 34%);
   color: var(--menu-fog);
   cursor: not-allowed;
   opacity: 0.7;
+}
+
+.settings-resolution-chevron {
+  color: var(--menu-signal);
+  font-size: 1rem;
+  line-height: 1;
+  transition: transform 140ms ease;
+}
+
+.settings-resolution-trigger[aria-expanded="true"] .settings-resolution-chevron {
+  transform: rotate(180deg);
+}
+
+.settings-resolution-menu {
+  z-index: 20;
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  display: grid;
+  width: 100%;
+  padding: 6px;
+  border: 1px solid rgb(247 241 227 / 52%);
+  border-radius: 10px;
+  background: rgb(4 20 27 / 97%);
+  box-shadow: 0 15px 30px rgb(1 10 18 / 45%);
+}
+
+.settings-resolution-menu[hidden] {
+  display: none;
+}
+
+.settings-resolution-option {
+  display: flex;
+  min-height: 34px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 9px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--menu-paper);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.72rem;
+  text-align: left;
+}
+
+.settings-resolution-option:hover,
+.settings-resolution-option:focus-visible,
+.settings-resolution-option[aria-selected="true"] {
+  background: rgb(240 163 61 / 18%);
+  color: #fff;
+}
+
+.settings-resolution-option[aria-selected="true"] {
+  color: var(--menu-signal);
+}
+
+.settings-resolution-check {
+  visibility: hidden;
+}
+
+.settings-resolution-option[aria-selected="true"] .settings-resolution-check {
+  visibility: visible;
 }
 
 .settings-panel.settings-menu .settings-link,
@@ -7227,6 +7310,10 @@ kbd {
 /* Credits reads like a simple crew roll-call over the title lake. */
 .title-actions .title-secondary-actions {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.title-actions .title-secondary-actions.has-quit {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .credits-overlay {
