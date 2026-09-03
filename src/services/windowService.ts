@@ -40,7 +40,7 @@ export class WindowService {
 
   async setFullscreen(fullscreen: boolean): Promise<void> {
     if (this.appWindow) {
-      await this.appWindow.setFullscreen(fullscreen);
+      await this.appWindow.setSimpleFullscreen(fullscreen);
       return;
     }
     if (fullscreen) {

@@ -23,14 +23,14 @@ export interface GameSettings {
 }
 
 export interface SaveData {
-  version: 15;
+  version: 16;
   progress: ProgressState;
   settings: GameSettings;
 }
 
-export function defaultSave(): SaveData {
+export function defaultSave(fullscreenByDefault = false): SaveData {
   return {
-    version: 15,
+    version: 16,
     progress: {
       money: 0,
       upgrades: { cargo: 0, engine: 0, lamp: 0, line: 0, reel: 0 },
@@ -58,24 +58,24 @@ export function defaultSave(): SaveData {
       highContrast: false,
       reducedMotion: false,
       resolution: "1280x720",
-      fullscreen: false,
+      fullscreen: fullscreenByDefault,
       controls: { ...DEFAULT_CONTROL_BINDINGS },
     },
   };
 }
 
-export function loadSave(storage: SaveStorage): SaveData {
+export function loadSave(storage: SaveStorage, fullscreenByDefault = false): SaveData {
   try {
     const raw: unknown = JSON.parse(storage.getItem(SAVE_KEY) ?? "null");
-    if (!raw || typeof raw !== "object") return defaultSave();
+    if (!raw || typeof raw !== "object") return defaultSave(fullscreenByDefault);
     const candidate = raw as Record<string, unknown>;
-    if (candidate.version === 1) return migrateVersionOne(candidate);
+    if (candidate.version === 1) return migrateVersionOne(candidate, fullscreenByDefault);
     const progress = objectValue(candidate.progress);
     const upgrades = objectValue(progress.upgrades);
     const learning = objectValue(progress.learning);
     const settings = objectValue(candidate.settings);
     return {
-      version: 15,
+      version: 16,
       progress: {
         money: finiteInteger(progress.money, 0, 999_999),
         upgrades: readUpgrades(upgrades),
@@ -111,12 +111,14 @@ export function loadSave(storage: SaveStorage): SaveData {
         highContrast: settings.highContrast === true,
         reducedMotion: settings.reducedMotion === true,
         resolution: isDisplayResolution(settings.resolution) ? settings.resolution : "1280x720",
-        fullscreen: settings.fullscreen === true,
+        fullscreen: candidate.version === 16
+          ? settings.fullscreen === true
+          : fullscreenByDefault,
         controls: readControlBindings(settings.controls),
       },
     };
   } catch {
-    return defaultSave();
+    return defaultSave(fullscreenByDefault);
   }
 }
 
@@ -128,8 +130,8 @@ export function saveGame(storage: SaveStorage, save: SaveData): void {
   }
 }
 
-function migrateVersionOne(candidate: Record<string, unknown>): SaveData {
-  const migrated = defaultSave();
+function migrateVersionOne(candidate: Record<string, unknown>, fullscreenByDefault: boolean): SaveData {
+  const migrated = defaultSave(fullscreenByDefault);
   migrated.settings.muted = candidate.muted === true;
   return migrated;
 }

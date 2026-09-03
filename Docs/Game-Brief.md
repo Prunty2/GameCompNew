@@ -29,7 +29,7 @@ Market → Track → Sail → Fish → Reel → Sell → Upgrade → Market
 | Pause | Escape or Pause on the water | Resume, Settings, How to play, Title screen |
 | Settings | Title or pause | General, Audio, Display, and Controls tabs; accessibility, save, sound, resolution, and fullscreen preferences |
 | Settings · Audio | Audio tab | Mute plus separate music and sound-effects volume sliders |
-| Settings · Display | Display tab | Tauri window resolution selector and fullscreen toggle; resolution is disabled while fullscreen is active, and the browser fallback explains that window sizing is desktop-only |
+| Settings · Display | Display tab | Tauri window resolution selector and fullscreen toggle; the desktop app defaults to fullscreen, resolution is disabled while fullscreen is active, and the browser fallback explains that window sizing is desktop-only |
 | Settings · Controls | Controls tab | Seven remappable actions shown directly, Reset defaults |
 | Credits | Title | Liam, Saxon, Harrison, David |
 | How to play | Harbor Help or pause | Four cards: read the market, track and catch, manage cargo, sell and invest |
@@ -248,9 +248,9 @@ The in-fishing “W A S D MOVE HOOK” cue presents all four movement keys in on
 
 ## Persistence
 
-Save key `gamecomp-new.save`. Schema version **15**. Storage is CrazyGames `sdk.data` when the SDK initializes, otherwise `localStorage`. Malformed JSON becomes a new save.
+Save key `gamecomp-new.save`. Schema version **16**. Storage is CrazyGames `sdk.data` when the SDK initializes, otherwise `localStorage`. Malformed JSON becomes a new save.
 
-Saved: money, upgrade tiers, beach/boost unlocks, discovered species, market day/sales/earnings/target, first-assignment and upgrade tutorial steps, season-complete flag, leftover learning counters, and settings (mute, music volume, sound-effects volume, contrast, reduced motion, resolution, fullscreen, bindings). Version 15 adds validated Tauri display settings, defaulting to `1280 × 720` windowed mode. Version 14 replaces the music toggle with a validated volume level; disabled music from version 13 migrates to zero. Version 12 added a validated Reel power tier defaulting to zero, ignored the retired `outerUnlocked` field from older saves, and preserved existing line tiers against the current world's spot requirements.
+Saved: money, upgrade tiers, beach/boost unlocks, discovered species, market day/sales/earnings/target, first-assignment and upgrade tutorial steps, season-complete flag, leftover learning counters, and settings (mute, music volume, sound-effects volume, contrast, reduced motion, resolution, fullscreen, bindings). Version 16 makes fullscreen the desktop default and migrates older desktop saves to it; browser saves remain windowed by default because browser fullscreen requires a player action. Version 15 adds validated Tauri display settings and the `1280 × 720` windowed resolution. Version 14 replaces the music toggle with a validated volume level; disabled music from version 13 migrates to zero. Version 12 added a validated Reel power tier defaulting to zero, ignored the retired `outerUnlocked` field from older saves, and preserved existing line tiers against the current world's spot requirements.
 
 Not saved: world, cargo, elapsed time, boat pose, damage, boost heat, docked harbor.
 

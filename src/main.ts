@@ -5,6 +5,7 @@ import "./menu-motion.css";
 import { Game } from "./game/Game";
 import { PlatformService } from "./services/platformService";
 import { loadSave } from "./services/saveGame";
+import { WindowService } from "./services/windowService";
 
 async function bootstrap(): Promise<void> {
   const canvas = document.querySelector<HTMLCanvasElement>("#game-canvas");
@@ -16,7 +17,9 @@ async function bootstrap(): Promise<void> {
   await platform.initialize();
   platform.loadingStart();
 
-  const game = new Game(canvas, uiRoot, platform, loadSave(platform.saveStorage));
+  const windowService = new WindowService();
+  const save = loadSave(platform.saveStorage, windowService.supportsResolution);
+  const game = new Game(canvas, uiRoot, platform, save, windowService);
   await game.prepare();
   platform.loadingStop();
   game.start();
