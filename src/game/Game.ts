@@ -335,8 +335,7 @@ export class Game {
 
     if (this.started && this.overlay === null && !this.sceneTransitioning) {
       while (this.accumulator >= FIXED_STEP) {
-        this.previousRenderMotion = captureRenderMotion(this.simulation);
-        updateSimulation(this.simulation, this.input.read(), FIXED_STEP);
+        this.advanceSimulationStep();
         this.accumulator -= FIXED_STEP;
       }
       if (this.input.consumeAction()) this.handleInteract();
@@ -2013,6 +2012,11 @@ export class Game {
     return { width: window.innerWidth, height: window.innerHeight };
   }
 
+  private advanceSimulationStep(): void {
+    this.previousRenderMotion = captureRenderMotion(this.simulation);
+    updateSimulation(this.simulation, this.input.read(), FIXED_STEP);
+  }
+
   private installTestingBridge(): void {
     if (!import.meta.env.DEV || !new URLSearchParams(window.location.search).has("e2e")) return;
     const renderTestingFrame = (): void => {
@@ -2075,10 +2079,9 @@ export class Game {
       stepFishing: (steps) => {
         const stepCount = Math.max(0, Math.min(600, Math.floor(steps)));
         for (let index = 0; index < stepCount; index += 1) {
-          this.previousRenderMotion = captureRenderMotion(this.simulation);
-          updateSimulation(this.simulation, this.input.read(), FIXED_STEP);
-          this.handleSimulationEvents();
+          this.advanceSimulationStep();
         }
+        this.handleSimulationEvents();
         renderTestingFrame();
       },
       snapLine: () => {
