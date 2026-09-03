@@ -5,8 +5,9 @@ export type MusicScene = "menu" | "game";
 
 export const MAIN_MENU_MUSIC_URL = mainMenuMusicUrl;
 export const GAME_MUSIC_URL = gameMusicUrl;
-export const MAIN_MENU_MUSIC_GAIN = 0.06;
-export const GAME_MUSIC_GAIN = 0.06;
+export const MAIN_MENU_MUSIC_GAIN = 0.078;
+export const GAME_MUSIC_GAIN = 0.078;
+export const MAIN_MENU_MUSIC_START_TIME = 5;
 export const MUSIC_FADE_DURATION = 0.75;
 
 export interface MusicSettings {
@@ -28,6 +29,10 @@ export function musicOutputVolume(settings: MusicSettings): number {
 
 export function mainMenuMusicOutputVolume(settings: MusicSettings): number {
   return settings.muted ? 0 : clamp(settings.musicVolume, 0, 1) * MAIN_MENU_MUSIC_GAIN;
+}
+
+export function musicSceneStartTime(scene: MusicScene): number {
+  return scene === "menu" ? MAIN_MENU_MUSIC_START_TIME : 0;
 }
 
 export function createMainMenuMusicElement(): HTMLAudioElement {
@@ -84,7 +89,7 @@ export class MusicMixer {
         track.pause();
         track.volume = 0;
         track.muted = this.settings.muted || hidden || this.scene === null;
-        if (this.scene === null) track.currentTime = 0;
+        if (this.scene === null) track.currentTime = musicSceneStartTime(track.dataset.musicScene as MusicScene);
       }
       return;
     }
@@ -100,7 +105,10 @@ export class MusicMixer {
     for (const trackScene of Object.keys(this.tracks) as MusicScene[]) {
       const track = this.tracks[trackScene];
       if (trackScene === this.scene || track.volume > 0) track.muted = false;
-      if (trackScene === this.scene && track.paused) void track.play().catch(() => undefined);
+      if (trackScene === this.scene && track.paused) {
+        if (track.currentTime === 0) track.currentTime = musicSceneStartTime(trackScene);
+        void track.play().catch(() => undefined);
+      }
     }
 
     if (!needsFade) return;
@@ -134,7 +142,7 @@ export class MusicMixer {
       if (this.fadeTo[trackScene] !== 0) continue;
       track.pause();
       track.muted = true;
-      track.currentTime = 0;
+      track.currentTime = musicSceneStartTime(trackScene);
     }
   };
 

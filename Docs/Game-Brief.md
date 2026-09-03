@@ -234,7 +234,7 @@ Development shortcuts: `B` grants a temporary boost. In `npm run dev`, `G` jumps
 
 ## Accessibility
 
-- Mute plus separate saved music and sound-effects volume sliders controlling the looping scene music and synthesized cues. Intro music plays in the main-menu flow (the title plus Settings or Credits opened from it); game music crossfades in for gameplay, including harbor, lake water, Beach harbor, and Beach water. Both tracks loop, pause when the tab is hidden, and follow the saved music volume and mute setting. Settings opened from pause remain in the game-music scene.
+- Mute plus separate saved music and sound-effects volume sliders controlling the looping scene music and synthesized cues. Intro music starts five seconds into its track and plays in the main-menu flow (the title plus Settings or Credits opened from it); game music crossfades in for gameplay, including harbor, lake water, Beach harbor, and Beach water. Both tracks loop, pause when the tab is hidden, and follow the saved music volume and mute setting. Settings opened from pause remain in the game-music scene. Both tracks use a base gain of 0.078 before the saved music-volume multiplier.
 - High contrast: stronger shoals and outlines
 - Reduced motion: skips decorative pulses, menu/scene motion, boost camera pull, and fish body flex. Gameplay movement remains
 - Pause when the window blurs or the tab hides
