@@ -196,6 +196,8 @@ declare global {
       grantMoney(amount: number): void;
       discoverAllFish(): void;
       hookSpecies(species: FishSpecies): void;
+      primeFishingRun(tension: number): void;
+      stepFishing(steps: number): void;
       snapLine(): void;
       damage(amount: number): void;
       setElapsed(seconds: number): void;
@@ -2013,6 +2015,12 @@ export class Game {
 
   private installTestingBridge(): void {
     if (!import.meta.env.DEV || !new URLSearchParams(window.location.search).has("e2e")) return;
+    const renderTestingFrame = (): void => {
+      this.renderer.render(this.simulation, {
+        ...this.save.settings,
+        cinematic: false,
+      });
+    };
     window.__FSHING_TEST__ = {
       sailToSpot: (id) => moveBoatForTesting(this.simulation, spotById(id)),
       sailToHarbor: (id) => moveBoatForTesting(this.simulation, harborById(id)),
@@ -2055,6 +2063,23 @@ export class Game {
         this.simulation.fishing.hook = { x: target.x, y: target.y };
         updateSimulation(this.simulation, { travel: 0, hookX: 0, hookY: 0, boost: false, actionHeld: false }, 0);
         this.refreshHud();
+      },
+      primeFishingRun: (tension) => {
+        const fight = this.simulation.fishing?.reeling;
+        if (!fight || fight.landingAt !== null || fight.lostAt !== null) return;
+        fight.hookedAt = this.simulation.elapsed;
+        fight.behaviour = "run";
+        fight.tension = Math.max(0, Math.min(1, tension));
+        renderTestingFrame();
+      },
+      stepFishing: (steps) => {
+        const stepCount = Math.max(0, Math.min(600, Math.floor(steps)));
+        for (let index = 0; index < stepCount; index += 1) {
+          this.previousRenderMotion = captureRenderMotion(this.simulation);
+          updateSimulation(this.simulation, this.input.read(), FIXED_STEP);
+          this.handleSimulationEvents();
+        }
+        renderTestingFrame();
       },
       snapLine: () => {
         const fight = this.simulation.fishing?.reeling;
