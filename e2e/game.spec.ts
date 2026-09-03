@@ -86,6 +86,7 @@ test("main menu presents centered play, settings, and credits actions", async ({
   await page.waitForTimeout(250);
   await expect(page.getByRole("button", { name: "Settings" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Credits" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Quit" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Reset save" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "How to play" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Field guide" })).toHaveCount(0);
@@ -1594,8 +1595,11 @@ test("settings, keyboard pause, and local SDK fallback remain usable", async ({ 
   await expect(page.getByRole("tab", { name: "Display" })).toHaveAttribute("aria-selected", "true");
   await expect(page.locator(".settings-display")).toHaveCSS("animation-name", "settings-tab-forward-in");
   await expect(page.getByRole("heading", { name: "Display" })).toBeVisible();
-  await expect(page.getByRole("combobox", { name: "Display resolution" })).toHaveValue("1280x720");
-  await expect(page.getByRole("combobox", { name: "Display resolution" })).toBeDisabled();
+  const resolutionPicker = page.getByRole("combobox", { name: "Display resolution" });
+  await expect(resolutionPicker).toContainText("1280 × 720");
+  await expect(resolutionPicker).toBeDisabled();
+  await expect(page.locator("select[data-setting='resolution']")).toHaveCount(0);
+  await expect(page.getByRole("listbox", { name: "Display resolution options" })).toBeHidden();
   await expect(page.getByRole("checkbox", { name: "Fullscreen" })).toBeVisible();
   expectAnchorsUnmoved(await anchoredSettingsElements(), generalAnchors);
 

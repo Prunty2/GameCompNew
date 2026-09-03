@@ -21,7 +21,6 @@ import type { MusicScene } from "../services/gameMusic";
 import type { PlatformService } from "../services/platformService";
 import { defaultSave, saveGame, type SaveData } from "../services/saveGame";
 import {
-  DISPLAY_RESOLUTIONS,
   isDisplayResolution,
   isResolutionControlDisabled,
   WindowService,
@@ -283,14 +282,16 @@ export class Game {
   }
 
   async prepare(): Promise<void> {
-    await Promise.all([this.renderer.ready(), this.interfaceReady]);
+    await Promise.all([this.renderer.ready(), this.interfaceReady, this.windowService.prepare()]);
     this.buildUi();
     this.installTestingBridge();
   }
 
   start(): void {
     this.applySettings();
-    void this.applyDisplaySettings();
+    void this.applyDisplaySettings()
+      .then(() => this.windowService.subscribeFullscreenChanges(this.onFullscreenChanged))
+      .catch((error) => console.warn("Fullscreen changes could not be monitored.", error));
     requestAnimationFrame((time) => this.frame(time));
   }
 
@@ -413,9 +414,9 @@ export class Game {
     this.uiRoot.addEventListener("click", this.onClick);
     this.uiRoot.addEventListener("input", this.onSettingInput);
     this.uiRoot.addEventListener("change", this.onChange);
+    this.uiRoot.addEventListener("keydown", this.onUiKeyDown);
     window.addEventListener("blur", this.onFocusLost);
     document.addEventListener("visibilitychange", this.onVisibilityChanged);
-    document.addEventListener("fullscreenchange", this.onFullscreenChanged);
     this.input.bindPointerAction(this.uiRoot);
     this.renderOverlay();
     this.refreshHud();
@@ -891,6 +892,9 @@ export class Game {
     const returnClass = this.overlaySource === "settings" || this.overlaySource === "credits"
       ? " is-settings-return"
       : "";
+    const quitButton = this.windowService.supportsQuit
+      ? `<button class="menu-button title-quit-button" type="button" data-action="quit"><strong>Quit</strong></button>`
+      : "";
     return `
       <section class="screen-overlay title-screen${returnClass}" role="dialog" aria-label="FSHING main menu">
         <div class="menu-seagull-sky" aria-hidden="true"></div>
@@ -901,9 +905,10 @@ export class Game {
               <span class="title-play-icon" aria-hidden="true">▶</span>
               <strong>Play</strong>
             </button>
-            <div class="title-secondary-actions">
+            <div class="title-secondary-actions${this.windowService.supportsQuit ? " has-quit" : ""}">
               <button class="menu-button title-settings-button" type="button" data-action="open-settings"><strong>Settings</strong></button>
               <button class="menu-button title-credits-button" type="button" data-action="open-credits"><strong>Credits</strong></button>
+              ${quitButton}
             </div>
           </div>
         </div>
@@ -1147,8 +1152,13 @@ export class Game {
 
   private displaySettingsTab(animationClass: string): string {
     const settings = this.save.settings;
-    const resolutionOptions = DISPLAY_RESOLUTIONS.map((resolution) => (
-      `<option value="${resolution.id}" ${settings.resolution === resolution.id ? "selected" : ""}>${resolution.label}</option>`
+    const displayResolutions = this.windowService.displayResolutions;
+    const selectedResolution = displayResolutions.find((resolution) => resolution.id === settings.resolution);
+    const selectedResolutionLabel = selectedResolution?.label ?? "Native display";
+    const resolutionOptions = displayResolutions.map((resolution) => (
+      `<button class="settings-resolution-option" id="settings-resolution-${resolution.id}" type="button" role="option" data-action="select-resolution" data-resolution="${resolution.id}" aria-selected="${settings.resolution === resolution.id}">
+        <span>${resolution.label}</span><span class="settings-resolution-check" aria-hidden="true">✓</span>
+      </button>`
     )).join("");
     const resolutionDisabled = isResolutionControlDisabled(
       this.windowService.supportsResolution,
@@ -1166,10 +1176,15 @@ export class Game {
             <h3 id="settings-display-heading">Display</h3>
           </div>
           <div class="setting-group">
-            <label class="setting-option setting-select">
+            <div class="setting-option setting-resolution">
               <span class="setting-copy"><strong>Resolution</strong><small>${resolutionNote}</small></span>
-              <select class="setting-select-input" data-setting="resolution" aria-label="Display resolution" ${resolutionDisabled ? "disabled" : ""}>${resolutionOptions}</select>
-            </label>
+              <div class="settings-resolution-picker">
+                <button class="settings-resolution-trigger" type="button" role="combobox" data-action="toggle-resolution-menu" aria-label="Display resolution" aria-controls="settings-resolution-menu" aria-expanded="false" aria-haspopup="listbox" ${resolutionDisabled ? "disabled" : ""}>
+                  <span>${selectedResolutionLabel}</span><span class="settings-resolution-chevron" aria-hidden="true">⌄</span>
+                </button>
+                <div class="settings-resolution-menu" id="settings-resolution-menu" role="listbox" aria-label="Display resolution options" hidden>${resolutionOptions}</div>
+              </div>
+            </div>
             <label class="setting-option setting-toggle">
               <span class="setting-copy"><strong>Fullscreen</strong><small>Use the entire screen for FSHING.</small></span>
               <input class="setting-input" type="checkbox" data-setting="fullscreen" aria-label="Fullscreen" ${settings.fullscreen ? "checked" : ""} ${this.windowService.supportsFullscreen ? "" : "disabled"}>
@@ -1672,16 +1687,84 @@ export class Game {
     }, this.save.settings.reducedMotion ? 0 : DELIVERY_NOTIFICATION_EXIT_DURATION);
   }
 
+  private setResolutionMenuOpen(open: boolean): void {
+    const trigger = this.uiRoot.querySelector<HTMLButtonElement>(".settings-resolution-trigger");
+    const menu = this.uiRoot.querySelector<HTMLElement>(".settings-resolution-menu");
+    if (!trigger || !menu || trigger.disabled) return;
+    trigger.setAttribute("aria-expanded", String(open));
+    menu.hidden = !open;
+    if (open) {
+      requestAnimationFrame(() => {
+        menu.querySelector<HTMLButtonElement>('[role="option"][aria-selected="true"]')
+          ?.focus({ preventScroll: true });
+      });
+    }
+  }
+
+  private readonly onUiKeyDown = (event: KeyboardEvent): void => {
+    const trigger = (event.target as HTMLElement).closest<HTMLButtonElement>(".settings-resolution-trigger");
+    const option = (event.target as HTMLElement).closest<HTMLButtonElement>(".settings-resolution-option");
+    const menu = this.uiRoot.querySelector<HTMLElement>(".settings-resolution-menu");
+    if (event.key === "Escape" && menu && !menu.hidden) {
+      event.preventDefault();
+      this.setResolutionMenuOpen(false);
+      this.uiRoot.querySelector<HTMLButtonElement>(".settings-resolution-trigger")?.focus({ preventScroll: true });
+      return;
+    }
+    if (trigger && ["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) {
+      event.preventDefault();
+      this.setResolutionMenuOpen(true);
+      const options = Array.from(menu?.querySelectorAll<HTMLButtonElement>(".settings-resolution-option") ?? []);
+      const focusIndex = event.key === "ArrowUp" || event.key === "End" ? options.length - 1 : 0;
+      requestAnimationFrame(() => options[focusIndex]?.focus({ preventScroll: true }));
+      return;
+    }
+    if (!option || !menu || !["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
+    event.preventDefault();
+    const options = Array.from(menu.querySelectorAll<HTMLButtonElement>(".settings-resolution-option"));
+    const currentIndex = options.indexOf(option);
+    const nextIndex = event.key === "Home"
+      ? 0
+      : event.key === "End"
+        ? options.length - 1
+        : (currentIndex + (event.key === "ArrowDown" ? 1 : -1) + options.length) % options.length;
+    options[nextIndex]?.focus({ preventScroll: true });
+  };
+
   private readonly onClick = (event: MouseEvent): void => {
     const target = (event.target as HTMLElement).closest<HTMLElement>("[data-action]");
-    if (!target || target instanceof HTMLButtonElement && target.disabled) return;
+    if (!target || target instanceof HTMLButtonElement && target.disabled) {
+      this.setResolutionMenuOpen(false);
+      return;
+    }
     const action = target.dataset.action;
+    if (action !== "toggle-resolution-menu" && action !== "select-resolution") {
+      this.setResolutionMenuOpen(false);
+    }
     this.feedback.cue("ui");
     switch (action) {
       case "dismiss-delivery-notification":
         this.dismissDeliveryNotification();
         break;
       case "start": this.beginVoyage(); break;
+      case "quit":
+        void this.windowService.quit().catch((error) => {
+          this.showToast("The game could not be closed.");
+          console.warn("The game window could not be closed.", error);
+        });
+        break;
+      case "toggle-resolution-menu": {
+        const open = target.getAttribute("aria-expanded") !== "true";
+        this.setResolutionMenuOpen(open);
+        break;
+      }
+      case "select-resolution": {
+        const resolution = target.dataset.resolution;
+        if (!isDisplayResolution(resolution)) break;
+        this.setResolutionMenuOpen(false);
+        void this.changeDisplaySetting({ setting: "resolution", value: resolution });
+        break;
+      }
       case "confirm-reset-save":
         this.resetConfirming = true;
         this.replaceResetSaveSetting();
@@ -1932,8 +2015,8 @@ export class Game {
     const input = (event.target as HTMLElement).closest<HTMLInputElement>("[data-setting]");
     if (!input) return;
     const setting = input.dataset.setting;
-    if (setting === "resolution" || setting === "fullscreen") {
-      void this.changeDisplaySetting(setting, input);
+    if (setting === "fullscreen") {
+      void this.changeDisplaySetting({ setting, value: input.checked });
       return;
     }
     if (setting === "volume") this.save.settings.volume = Number(input.value);
@@ -1945,35 +2028,37 @@ export class Game {
     saveGame(this.platform.saveStorage, this.save);
   };
 
-  private async changeDisplaySetting(setting: "resolution" | "fullscreen", input: HTMLInputElement): Promise<void> {
+  private async changeDisplaySetting(update: {
+    setting: "resolution";
+    value: DisplayResolution;
+  } | {
+    setting: "fullscreen";
+    value: boolean;
+  }): Promise<void> {
     const previousResolution = this.save.settings.resolution;
     const previousFullscreen = this.save.settings.fullscreen;
-    const nextResolution = setting === "resolution" ? input.value : previousResolution;
-    const nextFullscreen = setting === "fullscreen" ? input.checked : previousFullscreen;
+    const nextResolution = update.setting === "resolution" ? update.value : previousResolution;
+    const nextFullscreen = update.setting === "fullscreen" ? update.value : previousFullscreen;
 
-    if (setting === "resolution" && !this.windowService.supportsResolution) {
+    if (update.setting === "resolution" && !this.windowService.supportsResolution) {
       this.renderOverlay();
       this.showToast("Window resolution is available in the Tauri desktop app.");
       return;
     }
-    if (setting === "resolution" && !isDisplayResolution(nextResolution)) {
-      this.renderOverlay();
-      this.showToast("That resolution is not supported.");
-      return;
-    }
-    this.save.settings.resolution = nextResolution as DisplayResolution;
+    this.save.settings.resolution = nextResolution;
     this.save.settings.fullscreen = nextFullscreen;
     try {
-      if (setting === "resolution" && !this.save.settings.fullscreen) {
+      if (update.setting === "resolution" && !this.save.settings.fullscreen) {
         await this.windowService.setResolution(this.save.settings.resolution);
       }
-      if (setting === "fullscreen") {
+      if (update.setting === "fullscreen") {
         await this.windowService.setFullscreen(this.save.settings.fullscreen);
         if (!this.save.settings.fullscreen && this.windowService.supportsResolution) {
           await this.windowService.setResolution(this.save.settings.resolution);
         }
       }
       saveGame(this.platform.saveStorage, this.save);
+      if (this.overlay === "settings" && this.settingsTab === "display") this.renderOverlay();
     } catch (error) {
       this.save.settings.resolution = previousResolution;
       this.save.settings.fullscreen = previousFullscreen;
@@ -1994,9 +2079,7 @@ export class Game {
     if (document.hidden) this.onFocusLost();
   };
 
-  private readonly onFullscreenChanged = (): void => {
-    if (this.windowService.supportsResolution) return;
-    const fullscreen = document.fullscreenElement !== null;
+  private readonly onFullscreenChanged = (fullscreen: boolean): void => {
     if (this.save.settings.fullscreen === fullscreen) return;
     this.save.settings.fullscreen = fullscreen;
     saveGame(this.platform.saveStorage, this.save);
