@@ -1,4 +1,10 @@
-import type { FishSpecies, SpotId, WorldPoint } from "./balance";
+import {
+  residentsForSpot,
+  type FishSpecies,
+  type SpotId,
+  type WorldId,
+  type WorldPoint,
+} from "./balance";
 import {
   fishingFightCue,
   type FishingFightBehaviour,
@@ -98,6 +104,15 @@ export function describeFishingSession(
     schoolOpacity: 1 - surfaceProgress,
     lossProgress,
   };
+}
+
+export function fishingHighlightSpecies(
+  marketTarget: FishSpecies | null,
+  world: WorldId,
+  spotId: SpotId,
+): FishSpecies | null {
+  if (!marketTarget) return null;
+  return residentsForSpot(world, spotId).includes(marketTarget) ? marketTarget : null;
 }
 
 function fishingSessionPhase(

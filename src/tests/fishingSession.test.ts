@@ -4,6 +4,7 @@ import {
   FISHING_LOSS_SWIM_DURATION,
   FISHING_SURFACE_DURATION,
   describeFishingSession,
+  fishingHighlightSpecies,
   type FishingFightState,
   type FishingSessionState,
 } from "../game/fishingSession";
@@ -41,6 +42,14 @@ function fight(overrides: Partial<FishingFightState> = {}): FishingFightState {
 }
 
 describe("fishing session", () => {
+  test("highlights a tracked fish only when it lives at the fishing ground", () => {
+    expect(fishingHighlightSpecies(null, "lake", "sunwardShoal")).toBeNull();
+    expect(fishingHighlightSpecies("bluegill", "lake", "sunwardShoal")).toBe("bluegill");
+    expect(fishingHighlightSpecies("northernPike", "lake", "sunwardShoal")).toBeNull();
+    expect(fishingHighlightSpecies("seaMullet", "beach", "sunwardShoal")).toBe("seaMullet");
+    expect(fishingHighlightSpecies("bluegill", "beach", "sunwardShoal")).toBeNull();
+  });
+
   test("describes steering and fighting through one interface", () => {
     expect(describeFishingSession(session(), 10)).toMatchObject({
       phase: "steering",

@@ -50,7 +50,10 @@ import {
   type ControlAction,
 } from "./controls";
 import { FISHING_FIGHT_RESUME_TENSION } from "./fishingFight";
-import { describeFishingSession } from "./fishingSession";
+import {
+  describeFishingSession,
+  type FishingSessionDescription,
+} from "./fishingSession";
 import { InputController } from "./input";
 import {
   captureRenderMotion,
@@ -336,8 +339,10 @@ export class Game {
       }
       if (this.input.consumeAction()) this.handleInteract();
       this.handleSimulationEvents();
-      this.updateFishingStrainFeedback();
-      this.updateFishingFightCoaching();
+      const fishing = this.simulation.fishing;
+      const session = fishing ? describeFishingSession(fishing, this.simulation.elapsed) : null;
+      this.updateFishingStrainFeedback(session);
+      this.updateFishingFightCoaching(session);
     } else {
       this.accumulator = 0;
       this.previousRenderMotion = captureRenderMotion(this.simulation);
@@ -446,10 +451,8 @@ export class Game {
     }
   }
 
-  private updateFishingStrainFeedback(): void {
-    const fishing = this.simulation.fishing;
-    const fight = fishing?.reeling;
-    const session = fishing ? describeFishingSession(fishing, this.simulation.elapsed) : null;
+  private updateFishingStrainFeedback(session: FishingSessionDescription | null): void {
+    const fight = this.simulation.fishing?.reeling;
     const critical = session?.phase === "fighting"
       && fight !== undefined
       && fight !== null
@@ -462,10 +465,8 @@ export class Game {
     this.lineWasCritical = critical;
   }
 
-  private updateFishingFightCoaching(): void {
-    const fishing = this.simulation.fishing;
-    const fight = fishing?.reeling;
-    const session = fishing ? describeFishingSession(fishing, this.simulation.elapsed) : null;
+  private updateFishingFightCoaching(session: FishingSessionDescription | null): void {
+    const fight = this.simulation.fishing?.reeling;
     if (!fight || session?.phase !== "fighting") {
       this.fightCoachKind = null;
       this.fightCoachHookedAt = null;
@@ -693,7 +694,6 @@ export class Game {
       action.classList.remove("is-fishing-cue", "is-callout-visible", "is-fading-out");
     }
     this.syncContextActionAnchor(action);
-    this.syncFishingReelControl();
   }
 
   private questViewContext(): QuestViewContext {
@@ -813,12 +813,11 @@ export class Game {
 
   private syncFishingReelControl(): void {
     const control = this.uiRoot.querySelector<HTMLElement>("#fishing-reel-control");
-    const fight = this.simulation.fishing?.reeling;
+    const fishing = this.simulation.fishing;
+    const fight = fishing?.reeling;
+    const session = fishing ? describeFishingSession(fishing, this.simulation.elapsed) : null;
     const active = this.overlay === null
-      && fight !== null
-      && fight !== undefined
-      && fight.landingAt === null
-      && fight.lostAt === null;
+      && session?.phase === "fighting";
     if (!control) return;
     if (!active || !fight) {
       control.classList.remove("is-callout-visible");
@@ -1913,9 +1912,10 @@ export class Game {
   };
 
   private exitFishing(): void {
+    const fishing = this.simulation.fishing;
     if (this.simulation.mode !== "fishing"
-      || this.simulation.fishing?.reeling
-      || this.simulation.fishing?.exitingAt !== null) return;
+      || !fishing
+      || describeFishingSession(fishing, this.simulation.elapsed).phase !== "steering") return;
     this.feedback.cue("cast");
     if (this.save.settings.reducedMotion) leaveFishing(this.simulation);
     else beginFishingExit(this.simulation);
