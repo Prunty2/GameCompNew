@@ -50,6 +50,7 @@ import {
   type ControlAction,
 } from "./controls";
 import { FISHING_FIGHT_RESUME_TENSION } from "./fishingFight";
+import { describeFishingSession } from "./fishingSession";
 import { InputController } from "./input";
 import {
   captureRenderMotion,
@@ -446,11 +447,12 @@ export class Game {
   }
 
   private updateFishingStrainFeedback(): void {
-    const fight = this.simulation.fishing?.reeling;
-    const critical = fight !== undefined
+    const fishing = this.simulation.fishing;
+    const fight = fishing?.reeling;
+    const session = fishing ? describeFishingSession(fishing, this.simulation.elapsed) : null;
+    const critical = session?.phase === "fighting"
+      && fight !== undefined
       && fight !== null
-      && fight.landingAt === null
-      && fight.lostAt === null
       && fight.tension >= BALANCE.fishingCriticalTension;
     if (critical && !this.lineWasCritical) {
       this.feedback.cue("line-strain");
@@ -461,8 +463,10 @@ export class Game {
   }
 
   private updateFishingFightCoaching(): void {
-    const fight = this.simulation.fishing?.reeling;
-    if (!fight || fight.landingAt !== null || fight.lostAt !== null) {
+    const fishing = this.simulation.fishing;
+    const fight = fishing?.reeling;
+    const session = fishing ? describeFishingSession(fishing, this.simulation.elapsed) : null;
+    if (!fight || session?.phase !== "fighting") {
       this.fightCoachKind = null;
       this.fightCoachHookedAt = null;
       this.fightHadReel = false;

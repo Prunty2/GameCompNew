@@ -64,13 +64,12 @@ import {
   fishingViewLayout,
   type FishingViewLayout,
 } from "./fishingPresentation";
-import { fishingFightCue, fishingFightWriggle } from "./fishingFight";
+import { fishingFightWriggle, type FishingFightCue } from "./fishingFight";
 import { FISHING_SPECIES_FIGHT_PROFILES } from "./fishingBehaviour";
 import {
-  fishingLossProgress,
-  fishingReelProgress,
-  fishingReelSchoolOpacity,
-} from "./fishingReeling";
+  describeFishingSession,
+  type FishingFightState,
+} from "./fishingSession";
 import {
   surfaceFishingCue,
   surfaceFishingLocationVisibility,
@@ -684,18 +683,13 @@ export class CanvasRenderer {
     );
     const maximumDepth = maxFishingDepth(simulation);
     const entryDiveProgress = fishingDiveProgress(simulation.elapsed, fishing.startedAt, settings.reducedMotion);
-    const reelProgress = fishing.reeling && fishing.reeling.landingAt !== null
-      ? fishingReelProgress(simulation.elapsed, fishing.reeling.landingAt)
-      : 0;
-    const loss = fishing.reeling?.lostAt == null
-      ? null
-      : fishingLossProgress(simulation.elapsed, fishing.reeling.lostAt);
-    const exitProgress = fishing.exitingAt === null
-      ? 0
-      : fishingReelProgress(simulation.elapsed, fishing.exitingAt);
-    const surfaceProgress = fishing.reeling?.landingAt != null ? reelProgress : exitProgress;
-    const surfacing = fishing.reeling?.landingAt != null || fishing.exitingAt !== null;
-    const schoolOpacity = surfacing ? fishingReelSchoolOpacity(surfaceProgress) : 1;
+    const session = describeFishingSession(fishing, simulation.elapsed);
+    const reelProgress = session.landingProgress;
+    const loss = session.lossProgress;
+    const exitProgress = session.exitProgress;
+    const surfaceProgress = session.surfaceProgress;
+    const schoolOpacity = session.schoolOpacity;
+    const surfacing = session.phase === "landing" || session.phase === "exiting";
     const focus = fishingFocusPresentation(
       simulation.elapsed,
       schoolOpacity,
@@ -728,10 +722,7 @@ export class CanvasRenderer {
     } else {
       delete this.canvas.dataset.targetRarity;
     }
-    this.canvas.dataset.fishingState = fishing.reeling
-      ? fishing.reeling.lostAt !== null ? loss?.retract === 0 ? "fish-escaping" : "line-retracting"
-        : fishing.reeling.landingAt === null ? "fighting" : "landing"
-      : fishing.exitingAt !== null ? "exiting" : "steering";
+    this.canvas.dataset.fishingState = session.phase;
     this.canvas.dataset.fishingHookVisible = String(fishing.reeling?.lostAt == null);
     if (loss) {
       this.canvas.dataset.fishingLossSwimProgress = loss.swim.toFixed(3);
@@ -746,7 +737,7 @@ export class CanvasRenderer {
     if (fishing.reeling) {
       this.canvas.dataset.fishingReelProgress = fishing.reeling.progress.toFixed(3);
       this.canvas.dataset.fishingLineTension = fishing.reeling.tension.toFixed(3);
-      this.canvas.dataset.fishingFightCue = fishingFightCue(fishing.reeling);
+      this.canvas.dataset.fishingFightCue = session.fightCue ?? "reel";
       this.canvas.dataset.fishingFightBehaviour = fishing.reeling.behaviour;
       this.canvas.dataset.fishingFightStyle = FISHING_SPECIES_FIGHT_PROFILES[fishing.reeling.species].style;
       this.canvas.dataset.fishingFightMotionX = fishing.reeling.motionX.toFixed(4);
@@ -767,7 +758,7 @@ export class CanvasRenderer {
       fishing.reeling
         ? loss
           ? `Fishing at ${spot.name}. The line snapped. The fish is swimming free while the bare line retracts.`
-          : fishingFightAriaLabel(spot.name, fishing.reeling)
+          : fishingFightAriaLabel(spot.name, fishing.reeling, session.fightCue)
         : fishing.exitingAt !== null
           ? `Leaving ${spot.name} and returning to the lake surface.`
         : targetSpecies
@@ -2113,9 +2104,9 @@ function tintAlpha(source: HTMLCanvasElement, colour: string): HTMLCanvasElement
 
 function fishingFightAriaLabel(
   spotName: string,
-  fight: NonNullable<NonNullable<Simulation["fishing"]>["reeling"]>,
+  fight: FishingFightState,
+  cue: FishingFightCue | null,
 ): string {
-  const cue = fishingFightCue(fight);
   const tensionPercent = Math.round(fight.tension * 100);
   const tensionState = cue === "critical"
     ? "critical, release now"

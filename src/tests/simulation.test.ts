@@ -18,7 +18,7 @@ import {
 import {
   FISHING_LOSS_DEPTH_TOLERANCE,
   FISHING_LOSS_SWIM_DURATION,
-} from "../game/fishingReeling";
+} from "../game/fishingSession";
 import {
   buyBeachAccess,
   beginFishingExit,
