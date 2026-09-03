@@ -70,7 +70,7 @@ test("main menu presents centered play, settings, and credits actions", async ({
   await page.goto("/");
 
   const version = page.locator(".title-build-version");
-  await expect(version).toHaveText("v0.9.0 (PR #114)");
+  await expect(version).toHaveText("v0.10.0 (PR #140)");
   const versionBounds = await version.boundingBox();
   expect(versionBounds).not.toBeNull();
   expect(versionBounds!.x).toBeLessThan(24);
@@ -827,6 +827,94 @@ test("dockside Departures unlocks Beach and keeps Oil Rig unavailable", async ({
   await expect(lake).not.toContainText("Working harbors");
   await page.getByRole("button", { name: "Travel to Lake" }).click();
   await expect(page.locator("#game-canvas")).toHaveAttribute("data-world", "lake");
+});
+
+test("Milo animates a reachable dockside fish request and trades it once", async ({ page }) => {
+  await page.setViewportSize({ width: 1800, height: 900 });
+  await page.goto("/?e2e=1");
+  await page.evaluate(() => {
+    window.localStorage.setItem("gamecomp-new.save", JSON.stringify({
+      version: 15,
+      progress: {
+        money: 0,
+        upgrades: {},
+        marketTutorialStep: "done",
+        upgradeTutorialStep: "done",
+      },
+      settings: {},
+    }));
+  });
+  await page.reload();
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+
+  const buyer = page.getByRole("complementary", { name: "Milo's fish request" });
+  const character = buyer.locator(".dock-buyer-character");
+  const nameplate = buyer.locator(".dock-buyer-nameplate");
+  const bubble = buyer.locator('[data-action="fulfill-dock-request"]');
+  await expect(buyer).toBeVisible();
+  await expect(nameplate).toContainText("MILO");
+  await expect(nameplate.locator("img")).toBeVisible();
+  await expect(character).toHaveCSS("animation-name", "dock-buyer-blink");
+  await expect(bubble).toHaveCSS("animation-name", "dock-request-float");
+
+  const relativeLayout = await buyer.locator(".dock-buyer-character, .dock-request-bubble").evaluateAll(
+    (elements) => elements.map((element) => {
+      const bounds = element.getBoundingClientRect();
+      return { x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height };
+    }),
+  );
+  expect(relativeLayout[1]!.x).toBeGreaterThan(relativeLayout[0]!.x + relativeLayout[0]!.width * 0.5);
+  expect(relativeLayout[1]!.y).toBeLessThan(relativeLayout[0]!.y + relativeLayout[0]!.height * 0.35);
+
+  const quantity = Number(await bubble.getAttribute("data-quantity"));
+  const modifier = Number(await bubble.getAttribute("data-offer-percent"));
+  const payment = Number(await bubble.getAttribute("data-payment"));
+  const species = await bubble.getAttribute("data-species");
+  expect(quantity).toBeGreaterThanOrEqual(2);
+  expect(quantity).toBeLessThanOrEqual(4);
+  expect(modifier).toBeGreaterThanOrEqual(-10);
+  expect(modifier).toBeLessThanOrEqual(25);
+  expect(payment).toBeGreaterThan(0);
+  expect(species).not.toBeNull();
+
+  await bubble.click();
+  await expect(page.locator("#toast")).toContainText("Milo still needs");
+  await page.locator('[data-action="undock"]').click();
+  await page.evaluate(({ requestedSpecies, requestedQuantity }) => {
+    for (let index = 0; index < requestedQuantity; index += 1) {
+      window.__FSHING_TEST__?.catchSpecies(requestedSpecies as Parameters<NonNullable<typeof window.__FSHING_TEST__>["catchSpecies"]>[0]);
+    }
+    window.__FSHING_TEST__?.sailToHarbor("brindle");
+  }, { requestedSpecies: species, requestedQuantity: quantity });
+  await page.getByRole("button", { name: "Dock · Brindle Harbor" }).click();
+
+  const readyBubble = buyer.locator('[data-action="fulfill-dock-request"]');
+  await expect(readyBubble).toContainText("TRADE NOW");
+  await readyBubble.click();
+  await expect(page.locator("#delivery-notification")).toContainText(`Milo paid ${payment} shells`);
+  await expect(page.locator(".shell-balance strong")).toHaveText(String(payment));
+  await expect(buyer.locator(".dock-request-bubble.is-fulfilled")).toContainText("Thanks, skipper.");
+
+  await page.reload();
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await expect(page.getByRole("complementary", { name: "Milo's fish request" })
+    .locator(".dock-request-bubble.is-fulfilled")).toContainText("DEAL COMPLETE");
+});
+
+test("Milo's sprite sheets respect reduced motion", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/?e2e=1");
+  await page.evaluate(() => {
+    window.localStorage.setItem("gamecomp-new.save", JSON.stringify({
+      version: 15,
+      progress: { marketTutorialStep: "done", upgradeTutorialStep: "done" },
+      settings: {},
+    }));
+  });
+  await page.reload();
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await expect(page.locator(".dock-buyer-character")).toHaveCSS("animation-name", "none");
+  await expect(page.locator(".dock-request-bubble")).toHaveCSS("animation-name", "none");
 });
 
 test("Beach fishing requires line tier 3 in the middle and tier 4 at the far right", async ({ page }) => {

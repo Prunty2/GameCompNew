@@ -1,6 +1,6 @@
 # FSHING — game brief
 
-This brief is the product source of truth. It describes the playable game in `v0.8.0` (build label `v0.8.0 (PR #115)`), not leftover simulation APIs.
+This brief is the product source of truth. It describes the playable game in `v0.10.0` (build label `v0.10.0 (PR #140)`), not leftover simulation APIs.
 
 FSHING is a single-player side-on fishing market game for desktop and mobile browsers. The player pilots a working boat across a lake, and later an unlockable Beach, then sells catches at two harbors whose prices move each in-game day.
 
@@ -11,7 +11,8 @@ FSHING is a single-player side-on fishing market game for desktop and mobile bro
 3. Sail to that species' fishing ground. Slow down until the hook cue appears, then drop the line.
 4. Steer the hook onto a reachable fish. Hold left click on the water (or touch / the Reel key) while the fish is calm to pull it closer. When it races away, release so it can take line — that is what drops tension. Reeling against a run turns the line red. Landed catches are stored in cargo until sold or released.
 5. Dock at the harbor that currently pays more and sell every catch of that species for the displayed quote.
-6. Spend shells on cargo, engine, line, or boost, and unlock Beach from the dockside **Departures** board. Line upgrades unlock the middle and far-right grounds at world-specific tiers.
+6. When Milo is visiting the dock, optionally fill his specific two-to-four-fish request and trade it at his displayed adjustment to the local market quote.
+7. Spend shells on cargo, engine, line, or boost, and unlock Beach from the dockside **Departures** board. Line upgrades unlock the middle and far-right grounds at world-specific tiers.
 
 A new save starts docked at Brindle Harbor on the lake with Bluegill already discovered. The first run is a four-step **First Assignment** that walks through inspect → track → catch → sell. Each tutorial pill includes a short instruction that changes with the player's current screen. During the catch the title first shows **Let it run**, then switches to **Hold left click** in the first lull, explains that a racing fish slacks the line, and toasts if the player horses a run, never reels a lull, or rests too long. The sale ends that assignment. When the player can afford a dock upgrade, a second tutorial walks through Upgrades.
 
@@ -23,8 +24,8 @@ Market → Track → Sail → Fish → Reel → Sell → Upgrade → Market
 
 | Screen | How it opens | What it contains |
 | --- | --- | --- |
-| Title | Launch, or Title screen from pause | Wordmark, Play, Settings, Credits, `v0.8.0 (PR #115)` |
-| Harbor | Play from a docked start, or docking | Market / Cargo / Upgrades tabs, shell balance, Help, Return to the current world, and a wooden Departures board for world travel |
+| Title | Launch, or Title screen from pause | Wordmark, Play, Settings, Credits, `v0.10.0 (PR #140)` |
+| Harbor | Play from a docked start, or docking | Market / Cargo / Upgrades tabs, shell balance, Help, Return to the current world, a wooden Departures board for world travel, and Milo's occasional dockside fish request after First Assignment |
 | Market detail | Selecting a discovered listing | Species art, current-harbor price, Track, Sell, 7-day graph |
 | Pause | Escape or Pause on the water | Resume, Settings, How to play, Title screen |
 | Settings | Title or pause | General, Audio, Display, and Controls tabs; accessibility, save, sound, resolution, and fullscreen preferences |
@@ -121,6 +122,14 @@ payout = quote
 Selling a listing sells every cargo catch of that species at the current harbor. Selling all cargo clears any tracked fish. Catches do not decay or become unsellable.
 
 The detail view shows the **docked harbor's** price, trend, and seven-day graph. Hovering a graph point shows that day's price as a number. It does not list the other harbor. After a tracked catch, on-water guidance points at whichever harbor currently quotes higher.
+
+### Dockside requests
+
+After First Assignment, Milo visits exactly one of the two harbors each market day. The active harbor alternates deterministically by seed, day, and world; the starter seed places him at Brindle on day 1. His offer is stable for that market day and world.
+
+Milo requests one fish species that the player's current line tier can reach in the current world. Quantity is a deterministic integer from 2 to 4, capped by the player's unlocked cargo capacity so the request is always possible to carry. His offered unit price is the current harbor quote adjusted by a deterministic integer from −10% to +25%, rounded to the nearest shell. The thought bubble shows fish type, quantity, total payout, market adjustment, and carried progress. Completing the trade removes exactly the requested catches, adds the displayed payout, and records that offer as fulfilled so it cannot be repeated after reload.
+
+Milo is a generated full-body dock sprite with an animated four-frame blink atlas. A generated nameplate sits above him, and a generated four-frame thought-bubble atlas sits north-east of his head. The bubble's empty painted interior carries live HTML text and the matching fish icon. Reduced motion freezes both atlases on their first frame.
 
 Hidden market conditions still change quotes, availability, and fog math:
 
@@ -236,7 +245,7 @@ Development shortcuts: `B` grants a temporary boost. In `npm run dev`, `G` jumps
 
 - Mute plus separate saved music and sound-effects volume sliders controlling the looping scene music and synthesized cues. Intro music plays in the main-menu flow (the title plus Settings or Credits opened from it); game music crossfades in for gameplay, including harbor, lake water, Beach harbor, and Beach water. Both tracks loop, pause when the tab is hidden, and follow the saved music volume and mute setting. Settings opened from pause remain in the game-music scene.
 - High contrast: stronger shoals and outlines
-- Reduced motion: skips decorative pulses, menu/scene motion, boost camera pull, and fish body flex. Gameplay movement remains
+- Reduced motion: skips decorative pulses, menu/scene motion, Milo's blink and thought-bubble loops, boost camera pull, and fish body flex. Gameplay movement remains
 - Pause when the window blurs or the tab hides
 - Keyboard menus with focus outlines
 - Live regions for toasts, sales, tutorial, and navigation
@@ -248,9 +257,9 @@ The in-fishing “W A S D MOVE HOOK” cue presents all four movement keys in on
 
 ## Persistence
 
-Save key `gamecomp-new.save`. Schema version **15**. Storage is CrazyGames `sdk.data` when the SDK initializes, otherwise `localStorage`. Malformed JSON becomes a new save.
+Save key `gamecomp-new.save`. Schema version **16**. Storage is CrazyGames `sdk.data` when the SDK initializes, otherwise `localStorage`. Malformed JSON becomes a new save.
 
-Saved: money, upgrade tiers, beach/boost unlocks, discovered species, market day/sales/earnings/target, first-assignment and upgrade tutorial steps, season-complete flag, leftover learning counters, and settings (mute, music volume, sound-effects volume, contrast, reduced motion, resolution, fullscreen, bindings). Version 15 adds validated Tauri display settings, defaulting to `1280 × 720` windowed mode. Version 14 replaces the music toggle with a validated volume level; disabled music from version 13 migrates to zero. Version 12 added a validated Reel power tier defaulting to zero, ignored the retired `outerUnlocked` field from older saves, and preserved existing line tiers against the current world's spot requirements.
+Saved: money, upgrade tiers, beach/boost unlocks, discovered species, market day/sales/earnings/target, fulfilled dock-request ids, first-assignment and upgrade tutorial steps, season-complete flag, leftover learning counters, and settings (mute, music volume, sound-effects volume, contrast, reduced motion, resolution, fullscreen, bindings). Version 16 adds a validated, deduplicated, 64-entry-bounded list of fulfilled Milo offers. Version 15 adds validated Tauri display settings, defaulting to `1280 × 720` windowed mode. Version 14 replaces the music toggle with a validated volume level; disabled music from version 13 migrates to zero. Version 12 added a validated Reel power tier defaulting to zero, ignored the retired `outerUnlocked` field from older saves, and preserved existing line tiers against the current world's spot requirements.
 
 Not saved: world, cargo, elapsed time, boat pose, damage, boost heat, docked harbor.
 
@@ -280,6 +289,7 @@ CrazyGames HTML5 SDK v3 is loaded from the page. Local play works if the script 
 | `src/game/balance.ts` | Species, spots, harbors, costs, motion constants |
 | `src/game/market.ts` | Quotes, history, sale math |
 | `src/game/marketView.ts` | Market HTML |
+| `src/game/dockRequest.ts` | Deterministic Milo availability, reachable offers, adjusted payout, and one-time fulfillment |
 | `src/game/renderer.ts` | Canvas draw only |
 | `src/game/input.ts` / `controls.ts` | Browser input and remapping |
 | `src/game/camera.ts` / `panorama.ts` | Surface framing |
@@ -288,7 +298,7 @@ CrazyGames HTML5 SDK v3 is loaded from the page. Local play works if the script 
 | `src/game/objectiveIndicator.ts` | Destination badge layout |
 | `src/game/quest.ts` | First-assignment and upgrade tutorial presentation |
 | `src/game/stem.ts` | Habitat readings and leftover survey/route helpers |
-| `src/services/saveGame.ts` | Version 14 validation and migration |
+| `src/services/saveGame.ts` | Version 16 validation and migration |
 | `src/services/platformService.ts` | CrazyGames boundary |
 | `src/services/feedbackService.ts` | Scene music mixer, synthesized cues, and optional vibration |
 | `src/services/gameMusic.ts` | Menu/game music elements, crossfade, mute/music-volume, and tab-hidden pause |
@@ -317,8 +327,9 @@ A build matches this brief when:
 - A new save can complete First Assignment: inspect Bluegill, track, catch at Sunward Shoal, sell
 - Market lists twelve Lake species or eleven Beach species, with undiscovered cards locked
 - Quotes differ by harbor and day, and every catch sells for the displayed quote
+- Milo appears at one deterministic harbor after First Assignment, requests 2–4 currently reachable fish, offers −10% to +25% of the local quote, and cannot pay the same daily offer twice
 - Line tier gates the Lake middle/right spots at tiers 1/3 and the Beach middle/right spots at tiers 3/4
 - The Departures board unlocks Beach for 300 shells, travels between Beach and Lake, and leaves Oil Rig visibly unavailable
 - Keyboard sailing, hook steering, pause, mute, high contrast, and reduced motion work
-- Reloading keeps money, unlocks, discoveries, tutorial completion, and settings
+- Reloading keeps money, unlocks, discoveries, fulfilled Milo offers, tutorial completion, and settings
 - Local play still works with the CrazyGames SDK blocked

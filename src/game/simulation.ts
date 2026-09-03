@@ -85,6 +85,7 @@ export interface ProgressState {
   marketDay: number;
   marketSales: number;
   marketEarnings: number;
+  fulfilledDockRequests: string[];
   marketTarget: FishSpecies | null;
   marketTutorialStep: MarketTutorialStep;
   upgradeTutorialStep: UpgradeTutorialStep;
@@ -151,6 +152,7 @@ export type SimulationEvent =
   | { type: "caught"; species: FishSpecies }
   | { type: "line-broke"; species: FishSpecies }
   | { type: "sold"; result: Pick<MarketSaleResult, "quantity" | "payment"> }
+  | { type: "dock-request-traded"; buyerName: string; species: FishSpecies; quantity: number; payment: number }
   | { type: "market-day"; day: number }
   | { type: "docked"; harbor: HarborId }
   | { type: "full-cargo" }
@@ -252,6 +254,7 @@ export function createSimulation(seed = 1, progress?: Partial<ProgressState>): S
     marketDay: clampInteger(progress?.marketDay ?? 1, 1, 99_999),
     marketSales: clampInteger(progress?.marketSales, 0, 99_999),
     marketEarnings: clampInteger(progress?.marketEarnings, 0, 999_999_999),
+    fulfilledDockRequests: readFulfilledDockRequests(progress?.fulfilledDockRequests),
     marketTarget: progress?.marketTarget && progress.marketTarget in FISH
       ? progress.marketTarget
       : null,
@@ -1227,6 +1230,13 @@ function hasPurchasedProgression(progress: Partial<ProgressState> | undefined): 
     || (upgrades?.line ?? 0) > 0
     || progress.boostUnlocked === true
     || progress.beachUnlocked === true;
+}
+
+function readFulfilledDockRequests(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return [...new Set(value.filter((id): id is string => (
+    typeof id === "string" && /^(lake|beach):(brindle|gloam):[1-9]\d{0,4}$/.test(id)
+  )))].slice(-64);
 }
 
 function pushEventOnce(simulation: Simulation, event: SimulationEvent): void {

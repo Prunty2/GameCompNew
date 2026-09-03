@@ -35,7 +35,7 @@ describe("versioned save data", () => {
       },
     }));
     expect(loadSave(storage)).toEqual({
-      version: 15,
+      version: 16,
       progress: {
         money: 999_999,
         upgrades: { cargo: 7, engine: 0, lamp: 1, line: 0, reel: 0 },
@@ -51,6 +51,7 @@ describe("versioned save data", () => {
         marketDay: 1,
         marketSales: 0,
         marketEarnings: 0,
+        fulfilledDockRequests: [],
         marketTarget: null,
         marketTutorialStep: "inspect",
         upgradeTutorialStep: "done",
@@ -74,7 +75,7 @@ describe("versioned save data", () => {
     const migrated = loadSave(storage);
     expect(migrated.progress.money).toBe(0);
     expect(migrated.settings.muted).toBe(true);
-    expect(migrated.version).toBe(15);
+    expect(migrated.version).toBe(16);
   });
 
   test("adds a safe line-depth default to older saves", () => {
@@ -89,7 +90,7 @@ describe("versioned save data", () => {
       settings: defaultSave().settings,
     }));
     const migrated = loadSave(storage);
-    expect(migrated.version).toBe(15);
+    expect(migrated.version).toBe(16);
     expect(migrated.progress.upgrades).toEqual({ cargo: 2, engine: 1, lamp: 2, line: 0, reel: 0 });
     expect("outerUnlocked" in migrated.progress).toBe(false);
     expect(migrated.progress.money).toBe(140);
@@ -118,7 +119,7 @@ describe("versioned save data", () => {
       },
     }));
     const loaded = loadSave(storage);
-    expect(loaded.version).toBe(15);
+    expect(loaded.version).toBe(16);
     expect(loaded.settings.resolution).toBe("1280x720");
     expect(loaded.settings.fullscreen).toBe(false);
 
@@ -148,7 +149,7 @@ describe("versioned save data", () => {
     }));
 
     const migrated = loadSave(storage);
-    expect(migrated.version).toBe(15);
+    expect(migrated.version).toBe(16);
     expect(migrated.settings.controls).toEqual(DEFAULT_CONTROL_BINDINGS);
   });
 
@@ -224,7 +225,7 @@ describe("versioned save data", () => {
     }));
 
     const migrated = loadSave(storage);
-    expect(migrated.version).toBe(15);
+    expect(migrated.version).toBe(16);
     expect(migrated.settings.musicVolume).toBe(0);
   });
 });
