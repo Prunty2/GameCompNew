@@ -208,7 +208,6 @@ export class Game {
   private readonly renderer: CanvasRenderer;
   private readonly input: InputController;
   private readonly feedback: FeedbackService;
-  private readonly windowService = new WindowService();
   private readonly menuSeagulls = new MenuSeagulls();
   private simulation: Simulation;
   private previousRenderMotion: RenderMotionSnapshot;
@@ -273,6 +272,7 @@ export class Game {
     private readonly uiRoot: HTMLElement,
     private readonly platform: PlatformService,
     private readonly save: SaveData,
+    private readonly windowService: WindowService,
   ) {
     this.renderer = new CanvasRenderer(canvas);
     this.input = new InputController(save.settings.controls);
@@ -1522,12 +1522,9 @@ export class Game {
 
   private async applyDisplaySettings(): Promise<void> {
     try {
-      if (this.windowService.supportsResolution && !this.save.settings.fullscreen) {
-        await this.windowService.setResolution(this.save.settings.resolution);
-      }
-      if (this.windowService.supportsFullscreen) {
-        await this.windowService.setFullscreen(this.save.settings.fullscreen);
-      }
+      if (!this.windowService.supportsResolution) return;
+      await this.windowService.setFullscreen(this.save.settings.fullscreen);
+      if (!this.save.settings.fullscreen) await this.windowService.setResolution(this.save.settings.resolution);
     } catch (error) {
       console.warn("Saved display settings could not be applied.", error);
     }
