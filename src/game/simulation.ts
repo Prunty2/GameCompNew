@@ -1,6 +1,5 @@
 import { clamp, createRandom, type RandomSource } from "./math";
 import { fishingSpeciesMotion, stepFishingTargetMotion } from "./fishingMovement";
-import { fishingHighlightSpecies } from "./fishingPresentation";
 import {
   BEACH_SUNWARD_POPULATION_BONUS,
   DEFAULT_POPULATION_DENSITY_MULTIPLIER,
@@ -8,12 +7,15 @@ import {
   responsiveResidentCount,
   type FishingViewport,
 } from "./fishingPopulation";
+import { fishingFightBehaviour, RESTING_FIGHT_MOTION, stepFishingFight } from "./fishingFight";
 import {
+  describeFishingSession,
   FISHING_LOSS_DEPTH_TOLERANCE,
-  FISHING_LOSS_DURATION,
-  FISHING_REEL_DURATION,
-} from "./fishingReeling";
-import { fishingFightBehaviour, fishingFightCue, RESTING_FIGHT_MOTION, stepFishingFight } from "./fishingFight";
+  fishingHighlightSpecies,
+  type FishingFightState,
+  type FishingSessionState,
+  type FishingTarget,
+} from "./fishingSession";
 import {
   BALANCE,
   FISH,
@@ -110,43 +112,6 @@ export interface MarketBulkSaleResult {
   payment: number;
 }
 
-export interface FishingTarget extends WorldPoint {
-  species: FishSpecies;
-  direction: -1 | 1;
-  speed: number;
-  homeY: number;
-  phase: number;
-  velocityX: number;
-  velocityY: number;
-}
-
-export interface FishingState {
-  spot: SpotId;
-  startedAt: number;
-  hook: WorldPoint;
-  targets: FishingTarget[];
-  reeling: FishingReelState | null;
-  exitingAt: number | null;
-}
-
-export interface FishingReelState {
-  species: FishSpecies;
-  targetIndex: number;
-  hookedAt: number;
-  direction: -1 | 1;
-  progress: number;
-  tension: number;
-  stamina: number;
-  behaviour: "calm" | "run" | "thrash";
-  struggle: number;
-  motionX: number;
-  motionY: number;
-  motionVx: number;
-  motionVy: number;
-  landingAt: number | null;
-  lostAt: number | null;
-}
-
 export type SimulationEvent =
   | { type: "caught"; species: FishSpecies }
   | { type: "line-broke"; species: FishSpecies }
@@ -166,7 +131,7 @@ export interface Simulation {
   cargo: CargoItem[];
   dockedAt: HarborId | null;
   mode: "cruising" | "fishing";
-  fishing: FishingState | null;
+  fishing: FishingSessionState | null;
   elapsed: number;
   seed: number;
   random: RandomSource;
@@ -931,9 +896,10 @@ export function navigationGuidance(simulation: Simulation): NavigationGuidance |
 export function tutorialPrompt(simulation: Simulation): string | null {
   if (simulation.progress.marketTutorialStep === "done" || simulation.progress.marketTutorialStep === "complete") return null;
   if (simulation.mode === "fishing" && simulation.fishing) {
+    const session = describeFishingSession(simulation.fishing, simulation.elapsed);
     if (simulation.fishing.reeling) {
       const name = FISH[simulation.fishing.reeling.species].name;
-      switch (fishingFightCue(simulation.fishing.reeling)) {
+      switch (session.fightCue) {
         case "landed":
           return `Landing the ${name}.`;
         case "critical":
@@ -948,7 +914,7 @@ export function tutorialPrompt(simulation: Simulation): string | null {
           return `Hold left click or Reel to pull in the ${name} while it is calm; release when it runs.`;
       }
     }
-    if (simulation.fishing.exitingAt !== null) return "Reeling in the line and returning to the surface.";
+    if (session.phase === "exiting") return "Reeling in the line and returning to the surface.";
     const target = fishingHighlightSpecies(
       simulation.progress.marketTarget,
       simulation.world,
@@ -1001,8 +967,9 @@ function coolBoost(simulation: Simulation, dt: number): void {
 function updateFishing(simulation: Simulation, input: InputState, dt: number): void {
   const fishing = simulation.fishing;
   if (!fishing) return;
-  if (fishing.exitingAt !== null) {
-    if (simulation.elapsed - fishing.exitingAt >= FISHING_REEL_DURATION) leaveFishing(simulation);
+  const session = describeFishingSession(fishing, simulation.elapsed);
+  if (session.phase === "exiting") {
+    if (session.exitProgress >= 1) leaveFishing(simulation);
     return;
   }
   const hookedTargetIndex = fishing.reeling?.targetIndex ?? null;
@@ -1055,7 +1022,8 @@ function updateFishingFight(simulation: Simulation, input: InputState, dt: numbe
   const fishing = simulation.fishing;
   const fight = fishing?.reeling;
   if (!fishing || !fight) return;
-  if (fight.lostAt !== null) {
+  const session = describeFishingSession(fishing, simulation.elapsed);
+  if (session.phase === "fish-escaping" || session.phase === "line-retracting") {
     const escapedTarget = fishing.targets[fight.targetIndex];
     if (escapedTarget) {
       const movement = stepFishingTargetMotion(
@@ -1073,14 +1041,14 @@ function updateFishingFight(simulation: Simulation, input: InputState, dt: numbe
     }
     const reachedHabitatDepth = !escapedTarget
       || Math.abs(escapedTarget.y - escapedTarget.homeY) <= FISHING_LOSS_DEPTH_TOLERANCE;
-    if (simulation.elapsed - fight.lostAt >= FISHING_LOSS_DURATION && reachedHabitatDepth) {
+    if (session.lossProgress?.retract === 1 && reachedHabitatDepth) {
       fishing.hook = { x: 0.5, y: 0.08 };
       fishing.reeling = null;
     }
     return;
   }
-  if (fight.landingAt !== null) {
-    if (simulation.elapsed - fight.landingAt >= FISHING_REEL_DURATION) {
+  if (session.phase === "landing") {
+    if (session.landingProgress >= 1) {
       resolveCatch(simulation, fight.species);
     }
     return;
@@ -1135,6 +1103,8 @@ function updateFishingFight(simulation: Simulation, input: InputState, dt: numbe
   }
   if (next.landed) fight.landingAt = simulation.elapsed;
 }
+
+export type { FishingFightState, FishingSessionState, FishingTarget };
 
 function multiplyDirection(first: -1 | 1, second: -1 | 1): -1 | 1 {
   return first === second ? 1 : -1;

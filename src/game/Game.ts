@@ -49,6 +49,10 @@ import {
   type ControlAction,
 } from "./controls";
 import { FISHING_FIGHT_RESUME_TENSION } from "./fishingFight";
+import {
+  describeFishingSession,
+  type FishingSessionDescription,
+} from "./fishingSession";
 import { InputController } from "./input";
 import {
   captureRenderMotion,
@@ -191,6 +195,8 @@ declare global {
       grantMoney(amount: number): void;
       discoverAllFish(): void;
       hookSpecies(species: FishSpecies): void;
+      primeFishingRun(tension: number): void;
+      stepFishing(steps: number): void;
       snapLine(): void;
       damage(amount: number): void;
       setElapsed(seconds: number): void;
@@ -330,14 +336,15 @@ export class Game {
 
     if (this.started && this.overlay === null && !this.sceneTransitioning) {
       while (this.accumulator >= FIXED_STEP) {
-        this.previousRenderMotion = captureRenderMotion(this.simulation);
-        updateSimulation(this.simulation, this.input.read(), FIXED_STEP);
+        this.advanceSimulationStep();
         this.accumulator -= FIXED_STEP;
       }
       if (this.input.consumeAction()) this.handleInteract();
       this.handleSimulationEvents();
-      this.updateFishingStrainFeedback();
-      this.updateFishingFightCoaching();
+      const fishing = this.simulation.fishing;
+      const session = fishing ? describeFishingSession(fishing, this.simulation.elapsed) : null;
+      this.updateFishingStrainFeedback(session);
+      this.updateFishingFightCoaching(session);
     } else {
       this.accumulator = 0;
       this.previousRenderMotion = captureRenderMotion(this.simulation);
@@ -446,12 +453,11 @@ export class Game {
     }
   }
 
-  private updateFishingStrainFeedback(): void {
+  private updateFishingStrainFeedback(session: FishingSessionDescription | null): void {
     const fight = this.simulation.fishing?.reeling;
-    const critical = fight !== undefined
+    const critical = session?.phase === "fighting"
+      && fight !== undefined
       && fight !== null
-      && fight.landingAt === null
-      && fight.lostAt === null
       && fight.tension >= BALANCE.fishingCriticalTension;
     if (critical && !this.lineWasCritical) {
       this.feedback.cue("line-strain");
@@ -461,9 +467,9 @@ export class Game {
     this.lineWasCritical = critical;
   }
 
-  private updateFishingFightCoaching(): void {
+  private updateFishingFightCoaching(session: FishingSessionDescription | null): void {
     const fight = this.simulation.fishing?.reeling;
-    if (!fight || fight.landingAt !== null || fight.lostAt !== null) {
+    if (!fight || session?.phase !== "fighting") {
       this.fightCoachKind = null;
       this.fightCoachHookedAt = null;
       this.fightHadReel = false;
@@ -690,7 +696,6 @@ export class Game {
       action.classList.remove("is-fishing-cue", "is-callout-visible", "is-fading-out");
     }
     this.syncContextActionAnchor(action);
-    this.syncFishingReelControl();
   }
 
   private questViewContext(): QuestViewContext {
@@ -810,12 +815,11 @@ export class Game {
 
   private syncFishingReelControl(): void {
     const control = this.uiRoot.querySelector<HTMLElement>("#fishing-reel-control");
-    const fight = this.simulation.fishing?.reeling;
+    const fishing = this.simulation.fishing;
+    const fight = fishing?.reeling;
+    const session = fishing ? describeFishingSession(fishing, this.simulation.elapsed) : null;
     const active = this.overlay === null
-      && fight !== null
-      && fight !== undefined
-      && fight.landingAt === null
-      && fight.lostAt === null;
+      && session?.phase === "fighting";
     if (!control) return;
     if (!active || !fight) {
       control.classList.remove("is-callout-visible");
@@ -1992,9 +1996,10 @@ export class Game {
   };
 
   private exitFishing(): void {
+    const fishing = this.simulation.fishing;
     if (this.simulation.mode !== "fishing"
-      || this.simulation.fishing?.reeling
-      || this.simulation.fishing?.exitingAt !== null) return;
+      || !fishing
+      || describeFishingSession(fishing, this.simulation.elapsed).phase !== "steering") return;
     this.feedback.cue("cast");
     if (this.save.settings.reducedMotion) leaveFishing(this.simulation);
     else beginFishingExit(this.simulation);
@@ -2090,8 +2095,19 @@ export class Game {
     return { width: window.innerWidth, height: window.innerHeight };
   }
 
+  private advanceSimulationStep(): void {
+    this.previousRenderMotion = captureRenderMotion(this.simulation);
+    updateSimulation(this.simulation, this.input.read(), FIXED_STEP);
+  }
+
   private installTestingBridge(): void {
     if (!import.meta.env.DEV || !new URLSearchParams(window.location.search).has("e2e")) return;
+    const renderTestingFrame = (): void => {
+      this.renderer.render(this.simulation, {
+        ...this.save.settings,
+        cinematic: false,
+      });
+    };
     window.__FSHING_TEST__ = {
       sailToSpot: (id) => moveBoatForTesting(this.simulation, spotById(id)),
       sailToHarbor: (id) => moveBoatForTesting(this.simulation, harborById(id)),
@@ -2134,6 +2150,22 @@ export class Game {
         this.simulation.fishing.hook = { x: target.x, y: target.y };
         updateSimulation(this.simulation, { travel: 0, hookX: 0, hookY: 0, boost: false, actionHeld: false }, 0);
         this.refreshHud();
+      },
+      primeFishingRun: (tension) => {
+        const fight = this.simulation.fishing?.reeling;
+        if (!fight || fight.landingAt !== null || fight.lostAt !== null) return;
+        fight.hookedAt = this.simulation.elapsed;
+        fight.behaviour = "run";
+        fight.tension = Math.max(0, Math.min(1, tension));
+        renderTestingFrame();
+      },
+      stepFishing: (steps) => {
+        const stepCount = Math.max(0, Math.min(600, Math.floor(steps)));
+        for (let index = 0; index < stepCount; index += 1) {
+          this.advanceSimulationStep();
+        }
+        this.handleSimulationEvents();
+        renderTestingFrame();
       },
       snapLine: () => {
         const fight = this.simulation.fishing?.reeling;

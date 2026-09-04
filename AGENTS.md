@@ -123,7 +123,7 @@ Run `npm run check` before finishing code changes. Also run `npm run build` for 
 - `src/game/balance.ts` owns species, spots, harbors, costs, and motion constants.
 - `src/game/market.ts` owns quotes, history, and sale math; `src/game/marketView.ts` owns market HTML.
 - `src/game/input.ts` and `src/game/controls.ts` translate browser input into game-level intent.
-- `src/game/renderer.ts` draws state but must not change it. Surface framing lives in `camera.ts` and `panorama.ts`; fishing presentation lives in `fishingMovement.ts`, `fishingPresentation.ts`, and `fishingReeling.ts`.
+- `src/game/renderer.ts` draws state but must not change it. Surface framing lives in `camera.ts` and `panorama.ts`; fishing-session state and phases live in `fishingSession.ts`, while fishing presentation lives in `fishingMovement.ts` and `fishingPresentation.ts`.
 - `src/services/platformService.ts` is the only CrazyGames SDK boundary.
 - `src/services/saveGame.ts` owns versioned, validated persistence.
 - `src/tests/` contains model and simulation tests; `e2e/` contains user-flow tests.

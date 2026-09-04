@@ -283,7 +283,7 @@ CrazyGames HTML5 SDK v3 is loaded from the page. Local play works if the script 
 | `src/game/renderer.ts` | Canvas draw only |
 | `src/game/input.ts` / `controls.ts` | Browser input and remapping |
 | `src/game/camera.ts` / `panorama.ts` | Surface framing |
-| `src/game/fishingMovement.ts` / `fishingBehaviour.ts` / `fishingFight.ts` / `fishingPresentation.ts` / `fishingReeling.ts` | Underwater motion, researched species profiles, deterministic line fights, and camera |
+| `src/game/fishingSession.ts` / `fishingMovement.ts` / `fishingBehaviour.ts` / `fishingFight.ts` / `fishingPresentation.ts` | Fishing-session state and phases, underwater motion, researched species profiles, deterministic line fights, and camera |
 | `src/game/fishingSpotEffects.ts` / `surfaceEffects.ts` / `boatSteam.ts` | Surface presentation |
 | `src/game/objectiveIndicator.ts` | Destination badge layout |
 | `src/game/quest.ts` | First-assignment and upgrade tutorial presentation |
