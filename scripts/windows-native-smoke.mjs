@@ -2,11 +2,13 @@ import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { homedir } from "node:os";
 import { setTimeout as delay } from "node:timers/promises";
 
 assert.equal(process.platform, "win32", "Run the native smoke test on Windows.");
-const application = process.env.FSHING_APP ?? resolve("src-tauri/target/x86_64-pc-windows-msvc/release/FSHING.exe");
-const driver = spawn("tauri-driver", process.env.EDGE_DRIVER ? ["--native-driver", process.env.EDGE_DRIVER] : [], {
+const application = process.argv[2] ?? process.env.FSHING_APP ?? resolve("src-tauri/target/x86_64-pc-windows-msvc/release/FSHING.exe");
+const edgeDriver = process.argv[3] ?? process.env.EDGE_DRIVER;
+const driver = spawn(resolve(homedir(), ".cargo/bin/tauri-driver.exe"), edgeDriver ? ["--native-driver", edgeDriver] : [], {
   stdio: ["ignore", "pipe", "pipe"],
 });
 let driverLog = "";
@@ -20,7 +22,7 @@ async function request(method, path, body) {
     method,
     headers: { "Content-Type": "application/json" },
     body: body === undefined ? undefined : JSON.stringify(body),
-    signal: AbortSignal.timeout(30_000),
+    signal: AbortSignal.timeout(path === "/session" ? 90_000 : 30_000),
   });
   const result = await response.json();
   if (!response.ok || result.value?.error) throw new Error(JSON.stringify(result));
@@ -135,7 +137,9 @@ try {
     }
   }, "Quit did not close the native window");
   console.log("PASS: installed Windows app, offline assets, audio, native resize/fullscreen/monitor, keyboard, pause, save across relaunch, Quit.");
+  await writeFile("native-test-results/result.json", JSON.stringify({ passed: true, application }, null, 2));
 } catch (error) {
+  await writeFile("native-test-results/result.json", JSON.stringify({ passed: false, error: error.stack }, null, 2));
   if (session) {
     try {
       await writeFile("native-test-results/failure.png", Buffer.from(await request("GET", `/session/${session}/screenshot`), "base64"));
