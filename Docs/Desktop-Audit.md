@@ -43,6 +43,7 @@ No gameplay, balance, save schema, asset, or dependency upgrades are intended.
 | Windows path scan | 251 tracked paths; no reserved filenames, invalid characters, or case collisions |
 | Full browser regression after music integration | 43/44 passed; reel-control test failed its wall-clock progress assertion, then passed 3/3 focused repeats |
 | Windows CI | 179 unit tests and production Chromium passed on Windows; x64 release build and silent installer execution passed |
+| Full Windows browser regression | **44/44 passed** in [run 35488971289](https://github.com/Prunty2/GameCompNew/actions/runs/35488971289), including catch/sell, travel, upgrades, audio/settings, and input |
 | Windows native WebDriver | Blocked before session creation: `DevToolsActivePort file doesn't exist`; no native control assertions ran |
 
 The delivered Windows installer comes from [run 35487993522](https://github.com/Prunty2/GameCompNew/actions/runs/35487993522)
@@ -58,8 +59,10 @@ No runtime downgrade or machine-policy override was used.
 **Windows native sign-off remains outstanding.** Run the installer on a normal
 Windows 10/11 x64 desktop and verify Play, catch/sell, keyboard and pointer input,
 mute/volume, fullscreen/resize, quit/reopen persistence, and an offline relaunch.
-The Windows full browser suite was skipped after the native-driver failure;
-the 43/44 full-suite result above is from Chromium on macOS. PR #144 remains draft.
+The initial Windows full browser suite was skipped after the native-driver failure.
+It was then moved into an independent Windows job and passed all 44 tests at
+`ab4d0f5`. The 43/44 result above is from Chromium on macOS. PR #144 remains draft
+because native Windows sign-off is still outstanding.
 
 Local deliverables:
 
