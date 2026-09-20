@@ -34,9 +34,26 @@ No gameplay, balance, save schema, asset, or dependency upgrades are intended.
 
 The requested submission version is 1.0.0. The npm package, Rust package, native
 bundle metadata, and title-screen assertion are aligned; the build label is
-`v1.0.0 (PR #144)`. Both desktop packages must be rebuilt for this version.
+`v1.0.0 (PR #144)`. Both desktop packages are rebuilt from `7e5ff73` for this version.
 The user requested merging PR #144 with the native Windows verification limit
 below still documented. The original 0.9.0 deliverables are preserved separately.
+
+Local release checks: `npm run check` passed all 179 tests; `npm run build` and
+`npm run desktop:mac` passed; `npm run test:desktop-web` passed both Chromium and
+WebKit checks; `E2E_PORT=4327 npm run test:e2e` passed all 44 tests. The macOS app
+passed `codesign --verify --deep --strict`, reports native bundle version 1.0.0,
+and was opened to confirm the title label and Play into Brindle Harbor.
+
+[Windows release run 35489454822](https://github.com/Prunty2/GameCompNew/actions/runs/35489454822)
+at `7e5ff73` passed all 179 unit tests, all 44 browser gameplay tests, the production
+Chromium smoke check, the Windows x64 release build, and silent installation of
+the resulting 1.0.0 package. Native WebDriver again failed before session creation
+with `DevToolsActivePort file doesn't exist`; the job's failure does not represent
+a build or installer failure, and native Windows gameplay remains unverified.
+
+Release deliverables are `FSHING.app` (Apple Silicon macOS 13.3+) and
+`FSHING_1.0.0_x64-setup.exe` (Windows x64, including offline WebView2 setup), copied
+to `/Users/liam/Desktop/FSHING 1.0.0/` after the PR merge.
 
 ## Initial 0.9.0 verification
 
