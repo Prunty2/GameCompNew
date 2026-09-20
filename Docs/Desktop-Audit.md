@@ -30,7 +30,15 @@ No gameplay, balance, save schema, asset, or dependency upgrades are intended.
   controls use event.code; pointer capture and blur handling are platform neutral.
 - macOS minimum version is 13.3 to cover the game's Canvas roundRect API.
 
-## Verification
+## Version 1.0.0 release
+
+The requested submission version is 1.0.0. The npm package, Rust package, native
+bundle metadata, and title-screen assertion are aligned; the build label is
+`v1.0.0 (PR #144)`. Both desktop packages must be rebuilt for this version.
+The user requested merging PR #144 with the native Windows verification limit
+below still documented. The original 0.9.0 deliverables are preserved separately.
+
+## Initial 0.9.0 verification
 
 | Check | Result |
 | --- | --- |
@@ -46,7 +54,7 @@ No gameplay, balance, save schema, asset, or dependency upgrades are intended.
 | Full Windows browser regression | **44/44 passed** in [run 35488971289](https://github.com/Prunty2/GameCompNew/actions/runs/35488971289), including catch/sell, travel, upgrades, audio/settings, and input |
 | Windows native WebDriver | Blocked before session creation: `DevToolsActivePort file doesn't exist`; no native control assertions ran |
 
-The delivered Windows installer comes from [run 35487993522](https://github.com/Prunty2/GameCompNew/actions/runs/35487993522)
+The initial 0.9.0 Windows installer comes from [run 35487993522](https://github.com/Prunty2/GameCompNew/actions/runs/35487993522)
 at `de95e0e`. Later changes affect macOS signing, test infrastructure, and this report;
 the Windows game payload has not changed. A [second run](https://github.com/Prunty2/GameCompNew/actions/runs/35488638403)
 reinstalled that exact artifact and attempted native automation through a scheduled
@@ -61,10 +69,10 @@ Windows 10/11 x64 desktop and verify Play, catch/sell, keyboard and pointer inpu
 mute/volume, fullscreen/resize, quit/reopen persistence, and an offline relaunch.
 The initial Windows full browser suite was skipped after the native-driver failure.
 It was then moved into an independent Windows job and passed all 44 tests at
-`ab4d0f5`. The 43/44 result above is from Chromium on macOS. PR #144 remains draft
-because native Windows sign-off is still outstanding.
+`ab4d0f5`. The 43/44 result above is from Chromium on macOS. Native Windows
+sign-off remains outstanding independently of the requested PR merge.
 
-Local deliverables:
+Initial local 0.9.0 deliverables:
 
 - `/Users/liam/Downloads/FSHING-PR144-macOS/FSHING.app` (Apple Silicon, local ad-hoc signature)
 - `/Users/liam/Downloads/FSHING-PR144-Windows/FSHING_0.9.0_x64-setup.exe` (unsigned x64 installer, includes offline WebView2 setup)
