@@ -18,6 +18,6 @@ export default defineConfig({
     target: "es2022",
   },
   test: {
-    exclude: ["e2e/**", "node_modules/**", "dist/**"],
+    exclude: ["e2e/**", "desktop-tests/**", "src-tauri/**", "node_modules/**", "dist/**"],
   },
 });

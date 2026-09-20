@@ -1,0 +1,61 @@
+name: Desktop compatibility
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+      - run: npm ci
+      - run: npm run check
+      - run: npx playwright install chromium webkit
+      - run: npm run test:desktop-web
+      - run: npm run desktop:windows -- --ci
+      - name: Install the packaged app
+        shell: pwsh
+        run: |
+          $installer = Get-ChildItem src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/*-setup.exe | Select-Object -First 1
+          $destination = Join-Path $env:RUNNER_TEMP 'FSHING test install'
+          $process = Start-Process -FilePath $installer.FullName -ArgumentList '/S', "/D=$destination" -Wait -PassThru
+          if ($process.ExitCode -ne 0) { throw "Installer failed: $($process.ExitCode)" }
+          $binary = Join-Path $destination 'FSHING.exe'
+          if (!(Test-Path $binary)) { throw "Installed app missing: $binary" }
+          "FSHING_APP=$binary" >> $env:GITHUB_ENV
+      - name: Set up native WebView2 testing
+        shell: pwsh
+        run: |
+          cargo install tauri-driver --locked
+          if ($LASTEXITCODE -ne 0) { throw 'tauri-driver install failed' }
+          $runtime = Get-ChildItem "${env:ProgramFiles(x86)}/Microsoft/EdgeWebView/Application/*/msedgewebview2.exe" | Sort-Object { [version]$_.VersionInfo.FileVersion } -Descending | Select-Object -First 1
+          if (!$runtime) { throw 'WebView2 runtime was not installed' }
+          $version = $runtime.VersionInfo.FileVersion
+          Invoke-WebRequest "https://msedgedriver.microsoft.com/$version/edgedriver_win64.zip" -OutFile "$env:RUNNER_TEMP/edgedriver.zip"
+          Expand-Archive "$env:RUNNER_TEMP/edgedriver.zip" "$env:RUNNER_TEMP/edgedriver"
+          "EDGE_DRIVER=$env:RUNNER_TEMP/edgedriver/msedgedriver.exe" >> $env:GITHUB_ENV
+      - run: npm run test:windows-native
+      - run: npm run test:e2e
+      - name: Keep Windows installer and test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: FSHING-Windows-x64
+          path: |
+            src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/*-setup.exe
+            test-results/
+            native-test-results/
+          if-no-files-found: warn
