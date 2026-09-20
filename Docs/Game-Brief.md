@@ -1,6 +1,6 @@
 # FSHING — game brief
 
-This brief is the product source of truth. It describes the playable game in `v0.8.0` (build label `v0.8.0 (PR #115)`), not leftover simulation APIs.
+This brief is the product source of truth. It describes the playable game in `v1.0.0` (build label `v1.0.0 (PR #144)`), not leftover simulation APIs.
 
 FSHING is a single-player side-on fishing market game for desktop and mobile browsers. The player pilots a working boat across a lake, and later an unlockable Beach, then sells catches at two harbors whose prices move each in-game day.
 
@@ -23,7 +23,7 @@ Market → Track → Sail → Fish → Reel → Sell → Upgrade → Market
 
 | Screen | How it opens | What it contains |
 | --- | --- | --- |
-| Title | Launch, or Title screen from pause | Wordmark, Play, Settings, Credits, desktop-app Quit, `v0.8.0 (PR #115)` |
+| Title | Launch, or Title screen from pause | Wordmark, Play, Settings, Credits, desktop-app Quit, `v1.0.0 (PR #144)` |
 | Harbor | Play from a docked start, or docking | Market / Cargo / Upgrades tabs, shell balance, Help, Return to the current world, and a wooden Departures board for world travel |
 | Market detail | Selecting a discovered listing | Species art, current-harbor price, Track, Sell, 7-day graph |
 | Pause | Escape or Pause on the water | Resume, Settings, How to play, Title screen |
@@ -234,7 +234,7 @@ Development shortcuts: `B` grants a temporary boost. In `npm run dev`, `G` jumps
 
 ## Accessibility
 
-- Mute plus separate saved music and sound-effects volume sliders controlling the looping scene music and synthesized cues. Intro music starts five seconds into its track and plays in the main-menu flow (the title plus Settings or Credits opened from it); game music crossfades in for gameplay, including harbor, lake water, Beach harbor, and Beach water. Both tracks loop, pause when the tab is hidden, and follow the saved music volume and mute setting. Settings opened from pause remain in the game-music scene. Both tracks use a base gain of 0.078 before the saved music-volume multiplier.
+- Mute plus separate saved music and sound-effects volume sliders controlling the looping scene music and synthesized cues. Intro music starts five seconds into its track and plays in the main-menu flow (the title plus Settings or Credits opened from it); game music crossfades in for gameplay, including harbor, lake water, Beach harbor, and Beach water. Both tracks loop, pause when the tab is hidden, and follow the saved music volume and mute setting. Settings opened from pause remain in the game-music scene. Both tracks use a base gain of 0.117 before the saved music-volume multiplier.
 - High contrast: stronger shoals and outlines
 - Reduced motion: skips decorative pulses, menu/scene motion, boost camera pull, and fish body flex. Gameplay movement remains
 - Pause when the window blurs or the tab hides

@@ -10,7 +10,7 @@ export default defineConfig({
   publicDir: false,
   define: {
     __APP_VERSION__: JSON.stringify(packageJson.version),
-    __PR_NUMBER__: JSON.stringify("114"),
+    __PR_NUMBER__: JSON.stringify("144"),
   },
   build: {
     outDir: "dist",
@@ -18,6 +18,6 @@ export default defineConfig({
     target: "es2022",
   },
   test: {
-    exclude: ["e2e/**", "node_modules/**", "dist/**"],
+    exclude: ["e2e/**", "desktop-tests/**", "src-tauri/**", "node_modules/**", "dist/**"],
   },
 });

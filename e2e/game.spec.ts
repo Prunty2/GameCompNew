@@ -70,7 +70,7 @@ test("main menu presents centered play, settings, and credits actions", async ({
   await page.goto("/");
 
   const version = page.locator(".title-build-version");
-  await expect(version).toHaveText("v0.9.0 (PR #114)");
+  await expect(version).toHaveText("v1.0.0 (PR #144)");
   const versionBounds = await version.boundingBox();
   expect(versionBounds).not.toBeNull();
   expect(versionBounds!.x).toBeLessThan(24);
@@ -183,7 +183,7 @@ test("scene music loops and crossfades between the menu and gameplay", async ({ 
     loop: true,
     paused: true,
     volume: 0,
-    currentTime: 0,
+    currentTime: 5,
   }));
   await expect.poll(() => gameMusicState(page)).toEqual(expect.objectContaining({
     loop: true,
@@ -234,24 +234,24 @@ test("mute and music volume control game music independently of sound effects", 
   await page.getByRole("button", { name: "Settings" }).click();
   await expect.poll(() => menuMusicState(page)).toEqual(expect.objectContaining({ loop: true, paused: false, muted: false }));
   await page.getByRole("tab", { name: "Audio" }).click();
-  await expect.poll(async () => (await menuMusicState(page))?.volume).toBeCloseTo(0.045, 2);
+  await expect.poll(async () => (await menuMusicState(page))?.volume).toBeCloseTo(0.08775, 4);
   const defaultVolume = (await menuMusicState(page))!.volume;
-  expect(defaultVolume).toBeCloseTo(0.045, 2);
-  expect(defaultVolume).toBeLessThan(0.08);
+  expect(defaultVolume).toBeCloseTo(0.08775, 4);
+  expect(defaultVolume).toBeLessThan(0.1);
 
   await page.locator('[data-setting="musicVolume"]').evaluate((element) => {
     const input = element as HTMLInputElement;
     input.value = "0.2";
     input.dispatchEvent(new Event("input", { bubbles: true }));
   });
-  await expect.poll(async () => (await menuMusicState(page))?.volume).toBeCloseTo(0.012, 3);
+  await expect.poll(async () => (await menuMusicState(page))?.volume).toBeCloseTo(0.0234, 4);
 
   await page.locator('[data-setting="volume"]').evaluate((element) => {
     const input = element as HTMLInputElement;
     input.value = "0.1";
     input.dispatchEvent(new Event("input", { bubbles: true }));
   });
-  await expect.poll(async () => (await menuMusicState(page))?.volume).toBeCloseTo(0.012, 3);
+  await expect.poll(async () => (await menuMusicState(page))?.volume).toBeCloseTo(0.0234, 4);
 
   const mute = page.locator("label.setting-toggle").filter({ hasText: "Mute" });
   await mute.click();
@@ -263,13 +263,13 @@ test("mute and music volume control game music independently of sound effects", 
     paused: false,
     muted: false,
   }));
-  await expect.poll(async () => (await menuMusicState(page))?.volume).toBeCloseTo(0.012, 3);
+  await expect.poll(async () => (await menuMusicState(page))?.volume).toBeCloseTo(0.0234, 4);
 
   await page.reload();
   await page.getByRole("button", { name: "Settings" }).click();
   await page.getByRole("tab", { name: "Audio" }).click();
   await expect(page.getByRole("slider", { name: "Music volume" })).toHaveValue("0.2");
-  await expect.poll(async () => (await menuMusicState(page))?.volume).toBeCloseTo(0.012, 3);
+  await expect.poll(async () => (await menuMusicState(page))?.volume).toBeCloseTo(0.0234, 4);
 
   await page.getByRole("slider", { name: "Music volume" }).fill("0");
   await expect.poll(() => menuMusicState(page)).toEqual(expect.objectContaining({
