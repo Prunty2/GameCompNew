@@ -2117,7 +2117,7 @@ export class Game {
   };
 
   private fishingViewport(): { width: number; height: number } {
-    return { width: this.uiRoot.clientWidth, height: this.uiRoot.clientHeight };
+    return this.viewport.size;
   }
 
   private installTestingBridge(): void {

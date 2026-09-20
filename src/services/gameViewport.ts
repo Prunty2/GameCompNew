@@ -69,6 +69,13 @@ export class GameViewport {
     return this.notice.open;
   }
 
+  get size(): { width: number; height: number } {
+    // A native resize can change innerWidth before its resize event is delivered.
+    // New fishing sessions must use the current intended canvas size immediately.
+    const { width, height } = gameViewportRect(window.innerWidth, window.innerHeight, this.mode);
+    return { width: Math.round(width), height: Math.round(height) };
+  }
+
   start(): void {
     this.active = true;
     this.resize();

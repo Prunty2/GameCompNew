@@ -45,3 +45,11 @@ migration when combining its separate fullscreen-startup changes.
 
 Checks so far: 185 unit tests, five focused display/audio browser tests, and four
 production Chromium/WebKit checks passed. The browser production build passed.
+
+The first full browser run passed 47/49. It exposed a resize-event ordering bug:
+an immediately started fishing session could read the previous container size.
+The viewport now calculates current intended dimensions before creating the
+session; the existing population-size regression then passed 3/3 repeats.
+The other failure is the existing reel-control test's fixed-time line-colour
+assertion (also failed 1/3 focused repeats). No fishing rules were changed to
+work around it; PR #142 owns the separate fishing determinism work.
