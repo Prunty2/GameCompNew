@@ -5,8 +5,8 @@ export type MusicScene = "menu" | "game";
 
 export const MAIN_MENU_MUSIC_URL = mainMenuMusicUrl;
 export const GAME_MUSIC_URL = gameMusicUrl;
-export const MAIN_MENU_MUSIC_GAIN = 0.078;
-export const GAME_MUSIC_GAIN = 0.078;
+export const MAIN_MENU_MUSIC_GAIN = 0.117;
+export const GAME_MUSIC_GAIN = 0.117;
 export const MAIN_MENU_MUSIC_START_TIME = 5;
 export const MUSIC_FADE_DURATION = 0.75;
 
