@@ -31,3 +31,33 @@ checks passed in Chromium and WebKit, including every option's hit-test at
 Escape/focus restoration, and the neighboring ratio control after closing.
 Native window IPC is stubbed in these browser tests; native app checks are
 recorded separately below. `npm run check` passed all 185 unit tests.
+
+## Release verification
+
+Release code: `74320b8` (PR #146). `npm run build` passed.
+`E2E_PORT=4333 npm run test:e2e -- --output=/tmp/fishing-1.0.2-e2e-results`
+passed all 49 browser tests. `npm run desktop:mac` built the Apple Silicon app.
+The copy in `Desktop/Fishing 1.0.2/FSHING.app` has bundle version 1.0.2 and
+passes `codesign --verify --deep --strict`.
+
+The delivered native app displayed `v1.0.2 (PR #146)`. Its open resolution menu
+was visually above the 16:9 row at 2560×1440 and 1280×720. Pointer selection of
+the formerly covered 1280×720 option resized the native window successfully;
+keyboard selection restored the original 2560×1440 preference. Escape closed
+the menu and restored trigger focus, and Done returned to the title. Fullscreen
+remained off and 16:9 remained enabled. Audio settings and progress were not
+changed during this release's native check.
+
+Windows run `35492446824` tested release code `74320b8`. All 185 unit tests,
+all five production Chromium tests, and all 49 browser tests passed. The x64
+NSIS build and silent installation passed. Native WebDriver session creation
+failed with `DevToolsActivePort file doesn't exist`, the same hosted-runner
+limitation as 1.0.0/1.0.1, before any native gameplay assertions. The overall
+workflow is red for that failure; native Windows gameplay remains unverified.
+
+Both packages are delivered in `/Users/liam/Desktop/Fishing 1.0.2/`:
+`FSHING.app` and `FSHING_1.0.2_x64-setup.exe`. The installer has embedded product
+version 1.0.2.0 and matches the downloaded CI artifact byte-for-byte. The Mac
+executable also matches its build output. The final documentation-only commit
+does not change release code `74320b8`. Older Desktop deliveries are preserved;
+PR #146 remains open and unmerged, following PR #145.
