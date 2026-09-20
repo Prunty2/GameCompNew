@@ -41,8 +41,30 @@ No gameplay, balance, save schema, asset, or dependency upgrades are intended.
 | `codesign --verify --deep --strict` | Passed on the delivered app copy |
 | Native macOS UI | Launch, 720p/900p resize, monitor discovery, fullscreen enter/exit, Help, harbor, keyboard pause, Quit, relaunch and saved reduced-motion checked |
 | Windows path scan | 251 tracked paths; no reserved filenames, invalid characters, or case collisions |
-| Full browser regression after music integration | 43/44 passed; existing reel-control test failed its wall-clock progress assertion |
-| Windows CI | Production Chromium and unit checks passed; native installer/runtime checks pending |
+| Full browser regression after music integration | 43/44 passed; reel-control test failed its wall-clock progress assertion, then passed 3/3 focused repeats |
+| Windows CI | 179 unit tests and production Chromium passed on Windows; x64 release build and silent installer execution passed |
+| Windows native WebDriver | Blocked before session creation: `DevToolsActivePort file doesn't exist`; no native control assertions ran |
+
+The delivered Windows installer comes from [run 35487993522](https://github.com/Prunty2/GameCompNew/actions/runs/35487993522)
+at `de95e0e`. Later changes affect macOS signing, test infrastructure, and this report;
+the Windows game payload has not changed. A [second run](https://github.com/Prunty2/GameCompNew/actions/runs/35488638403)
+reinstalled that exact artifact and attempted native automation through a scheduled
+task with a limited token. It still failed at WebDriver session creation. This is
+consistent with the [documented WebView2 150 elevated-host automation restriction](https://github.com/MicrosoftEdge/WebView2Feedback/issues/5645),
+but the precise runner token/runtime cause was not established. It is not evidence
+that the game's native controls passed or that the game itself failed to launch.
+No runtime downgrade or machine-policy override was used.
+
+**Windows native sign-off remains outstanding.** Run the installer on a normal
+Windows 10/11 x64 desktop and verify Play, catch/sell, keyboard and pointer input,
+mute/volume, fullscreen/resize, quit/reopen persistence, and an offline relaunch.
+The Windows full browser suite was skipped after the native-driver failure;
+the 43/44 full-suite result above is from Chromium on macOS. PR #144 remains draft.
+
+Local deliverables:
+
+- `/Users/liam/Downloads/FSHING-PR144-macOS/FSHING.app` (Apple Silicon, local ad-hoc signature)
+- `/Users/liam/Downloads/FSHING-PR144-Windows/FSHING_0.9.0_x64-setup.exe` (unsigned x64 installer, includes offline WebView2 setup)
 
 Initial checks: `npm run check` passed 175 tests. The initial full Chromium suite
 passed 40/44. Failures were stale music gain/start-position assertions, a short

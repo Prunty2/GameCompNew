@@ -63,8 +63,10 @@ browser's save. Progress and settings persist, while cargo, position, and the
 current voyage reset according to the existing save design.
 
 `npm run test:desktop-web` checks the built desktop frontend in Chromium and WebKit.
-The Windows workflow also installs the actual `.exe` package and checks the native
-WebView2 app's display controls, audio, input, persistence, and Quit action.
+The Windows workflow also installs the actual `.exe` package and attempts native
+WebView2 checks of display controls, audio, input, persistence, and Quit. The current
+hosted-runner test is blocked during WebDriver session creation; native Windows
+playtesting remains required before submission.
 See [`Docs/Desktop-Audit.md`](Docs/Desktop-Audit.md) for scope, evidence, and limits.
 
 Product, scope, balance, and acceptance live in [`Docs/Game-Brief.md`](Docs/Game-Brief.md). The design, testing, and reflection portfolio is in [`Docs/Assessment-Report.md`](Docs/Assessment-Report.md).
