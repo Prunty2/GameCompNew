@@ -11,6 +11,7 @@ export class InputController {
   private debugTimeJumpQueued: DebugTimeJump | null = null;
   private debugBoostUnlockQueued = false;
   private pointerActionHeld = false;
+  private suspended = false;
   private bindings = new AbortController();
   private fishingSurfaceBindings = new AbortController();
   private fishingSurface: HTMLElement | null = null;
@@ -34,6 +35,16 @@ export class InputController {
     };
   }
 
+  setSuspended(suspended: boolean): void {
+    this.suspended = suspended;
+    this.onBlur();
+    this.actionQueued = false;
+    this.escapeQueued = false;
+    this.pauseQueued = false;
+    this.debugTimeJumpQueued = null;
+    this.debugBoostUnlockQueued = false;
+  }
+
   bindPointerAction(root: HTMLElement): void {
     this.bindings.abort();
     this.pointerActionHeld = false;
@@ -41,6 +52,7 @@ export class InputController {
     const { signal } = this.bindings;
     for (const control of root.querySelectorAll<HTMLElement>("[data-control=\"action\"]")) {
       const press = (event: PointerEvent): void => {
+        if (this.suspended) return;
         event.preventDefault();
         control.setPointerCapture(event.pointerId);
         control.classList.add("is-pressed");
@@ -71,6 +83,7 @@ export class InputController {
       this.pointerActionHeld = false;
     };
     surface.addEventListener("pointerdown", (event) => {
+      if (this.suspended) return;
       if (!event.isPrimary || event.button !== 0) return;
       event.preventDefault();
       surface.setPointerCapture(event.pointerId);
@@ -135,6 +148,7 @@ export class InputController {
   }
 
   private readonly onKeyDown = (event: KeyboardEvent): void => {
+    if (this.suspended) return;
     if (this.pendingRebind) {
       event.preventDefault();
       event.stopImmediatePropagation();

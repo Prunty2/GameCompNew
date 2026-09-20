@@ -17,6 +17,7 @@ import uiPanelUrl from "../assets/ui-panel.png";
 import upgradeBeachUrl from "../assets/upgrade-beach.png";
 import upgradeEngineBoostUrl from "../assets/upgrade-engine-boost.png";
 import { FeedbackService, type FeedbackCue } from "../services/feedbackService";
+import { GameViewport } from "../services/gameViewport";
 import type { MusicScene } from "../services/gameMusic";
 import type { PlatformService } from "../services/platformService";
 import { defaultSave, saveGame, type SaveData } from "../services/saveGame";
@@ -207,6 +208,7 @@ export class Game {
   private readonly renderer: CanvasRenderer;
   private readonly input: InputController;
   private readonly feedback: FeedbackService;
+  private readonly viewport: GameViewport;
   private readonly windowService = new WindowService();
   private readonly menuSeagulls = new MenuSeagulls();
   private simulation: Simulation;
@@ -279,6 +281,14 @@ export class Game {
     this.feedback = new FeedbackService(save.settings);
     this.simulation = createSimulation(7, save.progress);
     this.previousRenderMotion = captureRenderMotion(this.simulation);
+    this.viewport = new GameViewport(uiRoot.parentElement!, save.settings.aspectRatio, (mode) => {
+      this.save.settings.aspectRatio = mode;
+      saveGame(this.platform.saveStorage, this.save);
+      if (this.overlay === "settings" && this.settingsTab === "display") this.renderOverlay();
+    }, (open) => {
+      this.input.setSuspended(open);
+      this.accumulator = 0;
+    });
   }
 
   async prepare(): Promise<void> {
@@ -290,7 +300,10 @@ export class Game {
   start(): void {
     this.applySettings();
     void this.applyDisplaySettings()
-      .then(() => this.windowService.subscribeFullscreenChanges(this.onFullscreenChanged))
+      .then(() => {
+        this.viewport.start();
+        return this.windowService.subscribeFullscreenChanges(this.onFullscreenChanged);
+      })
       .catch((error) => console.warn("Fullscreen changes could not be monitored.", error));
     requestAnimationFrame((time) => this.frame(time));
   }
@@ -302,7 +315,7 @@ export class Game {
 
     const escapeRequested = this.input.consumeEscape();
     const pauseRequested = this.input.consumePause();
-    if ((escapeRequested || pauseRequested) && this.started) {
+    if ((escapeRequested || pauseRequested) && this.started && !this.viewport.noticeOpen) {
       if (escapeRequested && this.overlay === null && this.simulation.mode === "fishing") {
         this.exitFishing();
       } else if (this.overlay === null || this.sceneTransitioning && this.sceneTransitionTarget === null) {
@@ -328,7 +341,7 @@ export class Game {
       this.handleSimulationEvents();
     }
 
-    if (this.started && this.overlay === null && !this.sceneTransitioning) {
+    if (this.started && this.overlay === null && !this.sceneTransitioning && !this.viewport.noticeOpen) {
       while (this.accumulator >= FIXED_STEP) {
         this.previousRenderMotion = captureRenderMotion(this.simulation);
         updateSimulation(this.simulation, this.input.read(), FIXED_STEP);
@@ -347,7 +360,7 @@ export class Game {
     const engineMaximum = BALANCE.maxSurfaceSpeed * engineSpeedMultiplier(this.simulation.progress.upgrades.engine);
     this.feedback.updateEngine(
       Math.abs(this.simulation.boat.speed) / engineMaximum,
-      this.started && this.overlay === null && !this.sceneTransitioning && this.simulation.mode === "cruising",
+      this.started && this.overlay === null && !this.sceneTransitioning && !this.viewport.noticeOpen && this.simulation.mode === "cruising",
     );
     const renderSimulation = interpolateSimulationForRender(
       this.simulation,
@@ -766,11 +779,12 @@ export class Game {
       return;
     }
     const radius = getComputedStyle(target).borderRadius;
+    const origin = this.uiRoot.getBoundingClientRect();
     glow.hidden = false;
     glow.style.width = `${targetRect.width}px`;
     glow.style.height = `${targetRect.height}px`;
     glow.style.borderRadius = radius;
-    glow.style.transform = `translate(${targetRect.left}px, ${targetRect.top}px)`;
+    glow.style.transform = `translate(${targetRect.left - origin.left}px, ${targetRect.top - origin.top}px)`;
     if (target.closest("#market-tutorial")) {
       arrow.hidden = true;
       return;
@@ -778,10 +792,10 @@ export class Game {
     const tutorial = this.uiRoot.querySelector<HTMLElement>("#market-tutorial");
     const avoidBox = tutorial && !tutorial.hidden ? tutorial.getBoundingClientRect() : null;
     const avoid = avoidBox
-      ? { left: avoidBox.left, top: avoidBox.top, width: avoidBox.width, height: avoidBox.height }
+      ? { left: avoidBox.left - origin.left, top: avoidBox.top - origin.top, width: avoidBox.width, height: avoidBox.height }
       : null;
-    const viewport = { width: window.innerWidth, height: window.innerHeight };
-    const targetBox = { left: targetRect.left, top: targetRect.top, width: targetRect.width, height: targetRect.height };
+    const viewport = this.fishingViewport();
+    const targetBox = { left: targetRect.left - origin.left, top: targetRect.top - origin.top, width: targetRect.width, height: targetRect.height };
     const side = chooseQuestArrowSide(targetBox, viewport, avoid);
     const layout = questUiArrowLayout(targetBox, side);
     arrow.hidden = false;
@@ -849,8 +863,9 @@ export class Game {
     if (!anchor) return;
     const width = control.offsetWidth;
     const height = control.offsetHeight;
-    const left = Math.min(Math.max(anchor.x + 26, 12), window.innerWidth - width - 12);
-    const top = Math.min(Math.max(anchor.y - height / 2, 12), window.innerHeight - height - 12);
+    const viewport = this.fishingViewport();
+    const left = Math.min(Math.max(anchor.x + 26, 12), viewport.width - width - 12);
+    const top = Math.min(Math.max(anchor.y - height / 2, 12), viewport.height - height - 12);
     control.style.left = `${left}px`;
     control.style.top = `${top}px`;
   }
@@ -913,6 +928,7 @@ export class Game {
           </div>
         </div>
         <small class="title-build-version">v${__APP_VERSION__} (PR #${__PR_NUMBER__})</small>
+        ${this.save.settings.muted ? '<button class="title-audio-status" type="button" data-action="enable-sound">Sound muted · Turn on</button>' : ""}
       </section>`;
   }
 
@@ -1188,6 +1204,11 @@ export class Game {
             <label class="setting-option setting-toggle">
               <span class="setting-copy"><strong>Fullscreen</strong><small>Use the entire screen for FSHING.</small></span>
               <input class="setting-input" type="checkbox" data-setting="fullscreen" aria-label="Fullscreen" ${settings.fullscreen ? "checked" : ""} ${this.windowService.supportsFullscreen ? "" : "disabled"}>
+              <span class="setting-switch" aria-hidden="true"><span></span></span>
+            </label>
+            <label class="setting-option setting-toggle">
+              <span class="setting-copy"><strong>Force 16:9 aspect ratio</strong><small>Keep the intended view with black bars.</small></span>
+              <input class="setting-input" type="checkbox" data-setting="aspectRatio" aria-label="Force 16:9 aspect ratio" ${settings.aspectRatio === "16:9" ? "checked" : ""}>
               <span class="setting-switch" aria-hidden="true"><span></span></span>
             </label>
           </div>
@@ -1532,6 +1553,7 @@ export class Game {
     document.body.classList.toggle("high-contrast", this.save.settings.highContrast);
     document.body.classList.toggle("reduced-motion", this.save.settings.reducedMotion);
     this.feedback.updateSettings(this.save.settings);
+    this.viewport.setMode(this.save.settings.aspectRatio);
     this.syncMusicScene();
   }
 
@@ -1743,6 +1765,13 @@ export class Game {
     }
     this.feedback.cue("ui");
     switch (action) {
+      case "enable-sound":
+        this.save.settings.muted = false;
+        this.applySettings();
+        saveGame(this.platform.saveStorage, this.save);
+        this.renderOverlay();
+        this.uiRoot.querySelector<HTMLButtonElement>("[data-action='start']")?.focus();
+        break;
       case "dismiss-delivery-notification":
         this.dismissDeliveryNotification();
         break;
@@ -2024,6 +2053,7 @@ export class Game {
     if (setting === "muted") this.save.settings.muted = input.checked;
     if (setting === "highContrast") this.save.settings.highContrast = input.checked;
     if (setting === "reducedMotion") this.save.settings.reducedMotion = input.checked;
+    if (setting === "aspectRatio") this.save.settings.aspectRatio = input.checked ? "16:9" : "fill";
     this.applySettings();
     saveGame(this.platform.saveStorage, this.save);
   };
@@ -2087,7 +2117,7 @@ export class Game {
   };
 
   private fishingViewport(): { width: number; height: number } {
-    return { width: window.innerWidth, height: window.innerHeight };
+    return { width: this.uiRoot.clientWidth, height: this.uiRoot.clientHeight };
   }
 
   private installTestingBridge(): void {

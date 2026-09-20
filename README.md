@@ -12,7 +12,7 @@ The playable game includes:
 - A five-step First Assignment, four-card How to play, and credits
 - Keyboard sailing and hook steering, keyboard/pointer/touch reeling, and pause on focus loss
 - Quiet looping scene music, mute, separate music and sound-effects volume, high contrast, reduced motion, and remappable controls
-- Version 16 validated persistence, native-aware Tauri display settings, and a local-safe CrazyGames SDK v3 adapter
+- Version 17 validated persistence, native-aware Tauri display settings, and a local-safe CrazyGames SDK v3 adapter
 - Generated runtime art documented in [`Docs/Asset-Manifest.md`](Docs/Asset-Manifest.md)
 
 ## Run locally
@@ -61,6 +61,11 @@ Both desktop bundles include all game images and music and skip the online
 CrazyGames SDK. Saves are local to the app and OS user; they do not share the
 browser's save. Progress and settings persist, while cargo, position, and the
 current voyage reset according to the existing save design.
+
+For ultrawide or other window shapes, the game offers a recommended 16:9 view
+with black bars. The choice is saved and can be changed under Settings → Display.
+If sound is muted, the title screen shows **Sound muted · Turn on**. The Audio
+settings retain separate music and sound-effects levels.
 
 `npm run test:desktop-web` checks the built desktop frontend in Chromium and WebKit.
 The Windows workflow also installs the actual `.exe` package and attempts native

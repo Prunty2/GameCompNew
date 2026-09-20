@@ -1,5 +1,20 @@
 import { expect, test } from "@playwright/test";
 
+test("production 16:9 framing works on an ultrawide display", async ({ page }) => {
+  await page.setViewportSize({ width: 3440, height: 1440 });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Use 16:9", exact: true }).click();
+  await expect.poll(() => page.locator("#game-canvas").boundingBox())
+    .toEqual({ x: 440, y: 0, width: 2560, height: 1440 });
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
+  await page.getByRole("tab", { name: "Display", exact: true }).click();
+  await expect(page.getByRole("checkbox", { name: "Force 16:9 aspect ratio", exact: true })).toBeChecked();
+  await page.reload();
+  await expect.poll(() => page.locator("#game-canvas").boundingBox())
+    .toEqual({ x: 440, y: 0, width: 2560, height: 1440 });
+  await expect(page.locator(".title-build-version")).toHaveText("v1.0.1 (PR #145)");
+});
+
 test("packaged frontend starts offline, renders assets, plays audio, and saves settings", async ({ page }) => {
   const externalRequests: string[] = [];
   const failedAssets: string[] = [];

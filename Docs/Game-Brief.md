@@ -1,6 +1,6 @@
 # FSHING — game brief
 
-This brief is the product source of truth. It describes the playable game in `v1.0.0` (build label `v1.0.0 (PR #144)`), not leftover simulation APIs.
+This brief is the product source of truth. It describes the playable game in `v1.0.1` (build label `v1.0.1 (PR #145)`), not leftover simulation APIs.
 
 FSHING is a single-player side-on fishing market game for desktop and mobile browsers. The player pilots a working boat across a lake, and later an unlockable Beach, then sells catches at two harbors whose prices move each in-game day.
 
@@ -23,17 +23,26 @@ Market → Track → Sail → Fish → Reel → Sell → Upgrade → Market
 
 | Screen | How it opens | What it contains |
 | --- | --- | --- |
-| Title | Launch, or Title screen from pause | Wordmark, Play, Settings, Credits, desktop-app Quit, `v1.0.0 (PR #144)` |
+| Title | Launch, or Title screen from pause | Wordmark, Play, Settings, Credits, desktop-app Quit, `v1.0.1 (PR #145)` |
 | Harbor | Play from a docked start, or docking | Market / Cargo / Upgrades tabs, shell balance, Help, Return to the current world, and a wooden Departures board for world travel |
 | Market detail | Selecting a discovered listing | Species art, current-harbor price, Track, Sell, 7-day graph |
 | Pause | Escape or Pause on the water | Resume, Settings, How to play, Title screen |
 | Settings | Title or pause | General, Audio, Display, and Controls tabs; accessibility, save, sound, resolution, and fullscreen preferences |
 | Settings · Audio | Audio tab | Mute plus separate music and sound-effects volume sliders |
-| Settings · Display | Display tab | Game-styled Tauri window resolution dropdown with fixed sizes plus the active monitor's native mode, and a fullscreen toggle; resolution is disabled while fullscreen is active, and the browser fallback explains that window sizing is desktop-only |
+| Settings · Display | Display tab | Game-styled Tauri window resolution dropdown with fixed sizes plus the active monitor's native mode, fullscreen, and Force 16:9 aspect ratio; resolution is disabled while fullscreen is active, and the browser fallback explains that window sizing is desktop-only |
 | Settings · Controls | Controls tab | Seven remappable actions shown directly, Reset defaults |
 | Credits | Title | Liam, Saxon, Harrison, David |
 | How to play | Harbor Help or pause | Four cards: read the market, track and catch, manage cargo, sell and invest |
 There is no field guide, no title How to play button, no on-water money HUD, and no on-screen movement pads.
+
+The game recommends 16:9. On the first window shape more than 2% away from that
+ratio, a dialog offers **Use 16:9** or **Keep current ratio**. The choice is saved
+and can be changed in Display settings. The 16:9 option centers the entire game
+and its interface inside black bars, without stretching, and adapts to resizing
+or fullscreen changes. Gameplay and game input pause while the dialog is open.
+Responsive menus and tutorial markers use the playable area inside the bars.
+When mute is saved, the title shows **Sound muted · Turn on**; this clears mute
+without changing the player's volume levels or progress.
 
 On-water chrome is the night moon indicator, the boost gauge after unlock, the context action (dock or drop line), toasts, the sale popup, the colour of the fishing line during a fight, and the tutorial pill until it is finished or skipped. The fishing-ground hook fades in a right-side tooltip containing a white mouse with its left button pressed; it has no text label. During a calm fight, the same mouse appears beside the fishing line with **Hold to reel**. When the fish runs, the mouse smoothly disappears and the cue becomes **Release to let it run**. A destination badge on the canvas points at the current market, fishing ground, or sell harbor. Screen-reader status repeats that guidance. After the first assignment, that badge is hidden unless a fish is tracked.
 
@@ -250,7 +259,7 @@ The in-fishing “W A S D MOVE HOOK” cue presents all four movement keys in on
 
 Save key `gamecomp-new.save`. Schema version **16**. Storage is CrazyGames `sdk.data` when the SDK initializes, otherwise `localStorage`. Malformed JSON becomes a new save.
 
-Saved: money, upgrade tiers, beach/boost unlocks, discovered species, market day/sales/earnings/target, first-assignment and upgrade tutorial steps, season-complete flag, leftover learning counters, and settings (mute, music volume, sound-effects volume, contrast, reduced motion, resolution, fullscreen, bindings). Version 16 adds the validated `native` display mode, which uses the active monitor's physical resolution label and usable logical work area. Version 15 added validated Tauri display settings, defaulting to `1280 × 720` windowed mode. Version 14 replaces the music toggle with a validated volume level; disabled music from version 13 migrates to zero. Version 12 added a validated Reel power tier defaulting to zero, ignored the retired `outerUnlocked` field from older saves, and preserved existing line tiers against the current world's spot requirements.
+Saved: money, upgrade tiers, beach/boost unlocks, discovered species, market day/sales/earnings/target, first-assignment and upgrade tutorial steps, season-complete flag, leftover learning counters, and settings (mute, music volume, sound-effects volume, contrast, reduced motion, resolution, fullscreen, aspect ratio, bindings). Version 17 adds a validated aspect-ratio choice (`ask`, `16:9`, or `fill`), defaulting older saves to `ask` while preserving audio and progress. Version 16 adds the validated `native` display mode, which uses the active monitor's physical resolution label and usable logical work area. Version 15 added validated Tauri display settings, defaulting to `1280 × 720` windowed mode. Version 14 replaces the music toggle with a validated volume level; disabled music from version 13 migrates to zero. Version 12 added a validated Reel power tier defaulting to zero, ignored the retired `outerUnlocked` field from older saves, and preserved existing line tiers against the current world's spot requirements.
 
 Not saved: world, cargo, elapsed time, boat pose, damage, boost heat, docked harbor.
 
