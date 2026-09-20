@@ -14,7 +14,27 @@ permissions:
   actions: read
 
 jobs:
+  windows-browser:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install chromium
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: Windows-browser-test-results
+          path: test-results/
   windows:
+    # Draft iterations run the broad browser suite; request native packaging
+    # explicitly while the hosted WebView2 automation limitation is unresolved.
+    if: github.event_name == 'workflow_dispatch' || !github.event.pull_request.draft
     runs-on: windows-latest
     timeout-minutes: 35
     steps:
@@ -89,7 +109,6 @@ jobs:
             Stop-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
             Unregister-ScheduledTask -TaskName $taskName -Confirm:$false
           }
-      - run: npm run test:e2e
       - name: Keep Windows installer and test evidence
         if: always()
         uses: actions/upload-artifact@v4
