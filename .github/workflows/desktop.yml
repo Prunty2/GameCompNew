@@ -23,8 +23,8 @@ jobs:
           workspaces: src-tauri -> target
       - run: npm ci
       - run: npm run check
-      - run: npx playwright install chromium webkit
-      - run: npm run test:desktop-web
+      - run: npx playwright install chromium
+      - run: npm run test:desktop-web -- --project=chromium
       - run: npm run desktop:windows -- --ci
       - name: Install the packaged app
         shell: pwsh

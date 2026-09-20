@@ -5,8 +5,9 @@ native API permissions, display, persistence, audio, input, and regression check
 Baseline: `d082cae`, 20 September 2026. Acceptance: a standalone local macOS app,
 a Windows x64 installer built on Windows, and recorded checks of the shipped app.
 
-Changes use an isolated branch. Existing music edits in the primary checkout and
-open gameplay/fullscreen PRs (#140, #141, #142) are not incorporated into this audit.
+Changes use an isolated branch. After the separate music task completed, its
+committed local main (`6c0f812`) was merged, preserving its louder mix and corrected
+music assertions. Open gameplay/fullscreen PRs (#140, #141, #142) remain separate.
 Shared files touched: package scripts, Vite test configuration, PlatformService.
 No gameplay, balance, save schema, asset, or dependency upgrades are intended.
 
