@@ -25,8 +25,8 @@ describe("scene music playback rules", () => {
   });
 
   it("scales both tracks by the music gain and saved volume", () => {
-    expect(GAME_MUSIC_GAIN).toBeCloseTo(0.06 * 1.3);
-    expect(MAIN_MENU_MUSIC_GAIN).toBeCloseTo(0.06 * 1.3);
+    expect(GAME_MUSIC_GAIN).toBeCloseTo(0.078 * 1.5);
+    expect(MAIN_MENU_MUSIC_GAIN).toBeCloseTo(0.078 * 1.5);
     expect(MUSIC_FADE_DURATION).toBeGreaterThan(0);
     expect(musicOutputVolume({ muted: false, musicVolume: 1 })).toBeCloseTo(GAME_MUSIC_GAIN);
     expect(mainMenuMusicOutputVolume({ muted: false, musicVolume: 1 })).toBeCloseTo(MAIN_MENU_MUSIC_GAIN);
