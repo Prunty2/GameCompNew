@@ -1,0 +1,73 @@
+html,
+body {
+  background: #000;
+}
+
+#app {
+  position: absolute;
+  contain: size layout paint;
+  container: game / size;
+}
+
+.aspect-ratio-notice {
+  width: min(520px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  padding: 28px;
+  border: 1px solid #e9b65f;
+  border-radius: 18px;
+  background: #10283a;
+  color: var(--cream);
+  box-shadow: 0 12px 48px #0009;
+  overflow: auto;
+}
+
+.aspect-ratio-notice::backdrop {
+  background: #000a;
+}
+
+.aspect-ratio-notice h2 {
+  margin: 0 0 16px;
+  font-family: var(--display-face);
+}
+
+.aspect-ratio-notice p {
+  line-height: 1.5;
+}
+
+.aspect-ratio-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.aspect-ratio-actions button,
+.title-audio-status {
+  padding: 12px 16px;
+  border: 1px solid #e9b65f;
+  border-radius: 10px;
+  background: #10283a;
+  color: var(--cream);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.aspect-ratio-actions [data-aspect-choice="16:9"] {
+  background: #e9b65f;
+  color: var(--ink);
+}
+
+.title-audio-status {
+  position: absolute;
+  z-index: 5;
+  right: 14px;
+  bottom: 14px;
+  max-width: calc(100% - 28px);
+  pointer-events: auto;
+}
+
+@container game (max-width: 600px) {
+  .title-audio-status {
+    bottom: 42px;
+  }
+}

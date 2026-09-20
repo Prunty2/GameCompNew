@@ -1,7 +1,7 @@
 .harbor-screen.is-harbor-market .market-harbor-panel {
-  width: min(1080px, calc(100vw - 32px));
+  width: min(1080px, calc(100cqw - 32px));
   max-width: 1080px;
-  height: min(800px, calc(100dvh - 32px));
+  height: min(800px, calc(100cqh - 32px));
 }
 
 .harbor-screen.is-harbor-market .harbor-tabs {
@@ -45,7 +45,7 @@
 
 .market-board-heading h3 {
   margin-top: 4px;
-  font-size: clamp(1.35rem, 2.5vw, 1.75rem);
+  font-size: clamp(1.35rem, 2.5cqw, 1.75rem);
   line-height: 1;
 }
 
@@ -357,7 +357,7 @@
 
 .market-detail-fish {
   width: min(230px, 92%);
-  height: clamp(136px, 23vh, 188px);
+  height: clamp(136px, 23cqh, 188px);
   margin: 0 auto;
   filter: drop-shadow(0 12px 9px rgb(0 9 14 / 54%));
 }
@@ -368,7 +368,7 @@
 
 .market-fish-heading h3 {
   margin-top: 4px;
-  font-size: clamp(1.55rem, 3vw, 2.15rem);
+  font-size: clamp(1.55rem, 3cqw, 2.15rem);
   line-height: 1;
 }
 
@@ -461,7 +461,7 @@
 
 .market-chart-heading h4 {
   margin-top: 4px;
-  font-size: clamp(1.25rem, 2.5vw, 1.65rem);
+  font-size: clamp(1.25rem, 2.5cqw, 1.65rem);
 }
 
 .market-trend {
@@ -567,7 +567,7 @@
   left: 50%;
   display: grid;
   box-sizing: border-box;
-  width: min(640px, calc(100vw - 28px));
+  width: min(640px, calc(100cqw - 28px));
   min-height: 96px;
   grid-template-columns: 48px minmax(0, 1fr) 44px;
   align-items: center;
@@ -594,15 +594,15 @@
 .game-ui:has(.market-tutorial:not([hidden])) .harbor-screen.is-first-voyage .harbor-panel,
 .game-ui:has(.market-tutorial:not([hidden])) .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-panel,
 .game-ui:has(.market-tutorial:not([hidden])) .harbor-screen.is-harbor-market .market-harbor-panel {
-  height: min(760px, calc(100dvh - 118px));
-  max-height: calc(100dvh - 118px);
+  height: min(760px, calc(100cqh - 118px));
+  max-height: calc(100cqh - 118px);
 }
 
 .game-ui:has(#delivery-notification:not([hidden])) .market-tutorial {
   top: calc(max(18px, env(safe-area-inset-top)) + 76px);
 }
 
-@media (max-height: 720px) and (min-width: 701px) {
+@container game (max-height: 720px) and (min-width: 701px) {
   .game-ui:has(.market-tutorial:not([hidden])) .harbor-screen.is-first-voyage {
     padding-top: 16px;
   }
@@ -610,8 +610,8 @@
   .game-ui:has(.market-tutorial:not([hidden])) .harbor-screen.is-first-voyage .harbor-panel,
   .game-ui:has(.market-tutorial:not([hidden])) .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-panel,
   .game-ui:has(.market-tutorial:not([hidden])) .harbor-screen.is-harbor-market .market-harbor-panel {
-    height: min(760px, calc(100dvh - 32px));
-    max-height: calc(100dvh - 32px);
+    height: min(760px, calc(100cqh - 32px));
+    max-height: calc(100cqh - 32px);
   }
 }
 
@@ -647,7 +647,7 @@
 .market-tutorial-copy strong {
   overflow: hidden;
   font-family: var(--display-face);
-  font-size: clamp(1.16rem, 3.2vw, 1.36rem);
+  font-size: clamp(1.16rem, 3.2cqw, 1.36rem);
   font-weight: 850;
   letter-spacing: 0.02em;
   line-height: 1;
@@ -798,9 +798,9 @@
   }
 }
 
-@media (max-height: 760px) and (min-width: 701px) {
+@container game (max-height: 760px) and (min-width: 701px) {
   .harbor-screen.is-harbor-market .market-harbor-panel {
-    height: calc(100dvh - 20px);
+    height: calc(100cqh - 20px);
   }
 
   .market-board-heading {
@@ -836,11 +836,11 @@
 
   .market-tutorial {
     top: 10px;
-    width: min(600px, calc(100vw - 20px));
+    width: min(600px, calc(100cqw - 20px));
   }
 }
 
-@media (max-width: 900px) {
+@container game (max-width: 900px) {
   .market-list {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -850,10 +850,10 @@
   }
 }
 
-@media (max-width: 700px) {
+@container game (max-width: 700px) {
   .harbor-screen.is-harbor-market .market-harbor-panel {
-    width: calc(100vw - 20px);
-    height: calc(100dvh - 20px);
+    width: calc(100cqw - 20px);
+    height: calc(100cqh - 20px);
   }
 
   .market-board-heading {
@@ -921,13 +921,13 @@
 
   .market-tutorial {
     top: 10px;
-    width: min(300px, calc(100vw - 20px));
+    width: min(300px, calc(100cqw - 20px));
   }
 
   .game-ui:has(.harbor-screen):has(.market-tutorial:not([hidden])) .market-tutorial {
     right: 10px;
     left: 10px;
-    width: calc(100vw - 20px);
+    width: calc(100cqw - 20px);
     transform: none;
   }
 
@@ -938,8 +938,8 @@
   .game-ui:has(.market-tutorial:not([hidden])) .harbor-screen.is-first-voyage .harbor-panel,
   .game-ui:has(.market-tutorial:not([hidden])) .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-panel,
   .game-ui:has(.market-tutorial:not([hidden])) .harbor-screen.is-harbor-market .market-harbor-panel {
-    height: calc(100dvh - 148px);
-    max-height: calc(100dvh - 148px);
+    height: calc(100cqh - 148px);
+    max-height: calc(100cqh - 148px);
   }
 
   .game-ui:has(.market-tutorial:not([hidden])) .toast {
@@ -949,7 +949,7 @@
   }
 }
 
-@media (max-width: 460px) {
+@container game (max-width: 460px) {
   .market-board-heading {
     align-items: stretch;
     flex-direction: column;
@@ -984,7 +984,7 @@
   }
 
   .market-tutorial {
-    width: min(360px, calc(100vw - 16px));
+    width: min(360px, calc(100cqw - 16px));
     min-height: 68px;
     gap: 8px;
     padding: 6px 7px 6px 10px;

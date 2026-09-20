@@ -8,6 +8,7 @@ import {
 import type { MarketTutorialStep, ProgressState, UpgradeProgress, UpgradeTutorialStep } from "../game/simulation";
 import type { SaveStorage } from "./platformService";
 import { isDisplayResolution, type DisplayResolution } from "./windowService";
+import { isAspectRatioMode, type AspectRatioMode } from "./gameViewport";
 
 const SAVE_KEY = "gamecomp-new.save";
 
@@ -19,18 +20,19 @@ export interface GameSettings {
   reducedMotion: boolean;
   resolution: DisplayResolution;
   fullscreen: boolean;
+  aspectRatio: AspectRatioMode;
   controls: ControlBindings;
 }
 
 export interface SaveData {
-  version: 16;
+  version: 17;
   progress: ProgressState;
   settings: GameSettings;
 }
 
 export function defaultSave(): SaveData {
   return {
-    version: 16,
+    version: 17,
     progress: {
       money: 0,
       upgrades: { cargo: 0, engine: 0, lamp: 0, line: 0, reel: 0 },
@@ -59,6 +61,7 @@ export function defaultSave(): SaveData {
       reducedMotion: false,
       resolution: "1280x720",
       fullscreen: false,
+      aspectRatio: "ask",
       controls: { ...DEFAULT_CONTROL_BINDINGS },
     },
   };
@@ -75,7 +78,7 @@ export function loadSave(storage: SaveStorage): SaveData {
     const learning = objectValue(progress.learning);
     const settings = objectValue(candidate.settings);
     return {
-      version: 16,
+      version: 17,
       progress: {
         money: finiteInteger(progress.money, 0, 999_999),
         upgrades: readUpgrades(upgrades),
@@ -112,6 +115,7 @@ export function loadSave(storage: SaveStorage): SaveData {
         reducedMotion: settings.reducedMotion === true,
         resolution: isDisplayResolution(settings.resolution) ? settings.resolution : "1280x720",
         fullscreen: settings.fullscreen === true,
+        aspectRatio: isAspectRatioMode(settings.aspectRatio) ? settings.aspectRatio : "ask",
         controls: readControlBindings(settings.controls),
       },
     };

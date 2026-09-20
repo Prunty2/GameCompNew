@@ -2,6 +2,7 @@ import "./styles.css";
 import "./harbor.css";
 import "./market.css";
 import "./menu-motion.css";
+import "./viewport.css";
 import { Game } from "./game/Game";
 import { PlatformService } from "./services/platformService";
 import { loadSave } from "./services/saveGame";

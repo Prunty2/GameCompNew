@@ -70,7 +70,7 @@ test("main menu presents centered play, settings, and credits actions", async ({
   await page.goto("/");
 
   const version = page.locator(".title-build-version");
-  await expect(version).toHaveText("v1.0.0 (PR #144)");
+  await expect(version).toHaveText("v1.0.1 (PR #145)");
   const versionBounds = await version.boundingBox();
   expect(versionBounds).not.toBeNull();
   expect(versionBounds!.x).toBeLessThan(24);
@@ -645,6 +645,7 @@ test("upgrade tutorial walks through Upgrades after the player can afford one", 
   expect(desktopOverflow.scrollHeight).toBeLessThanOrEqual(desktopOverflow.clientHeight + 1);
 
   await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole("button", { name: "Keep current ratio", exact: true }).click();
   const mobileFeatureLayout = await featureCards.evaluateAll((cards) => cards.map((card) => {
     const box = card.getBoundingClientRect();
     return { x: box.x, y: box.y, height: box.height };
@@ -779,6 +780,7 @@ test("dockside Departures unlocks Beach and keeps Oil Rig unavailable", async ({
     }));
   });
   await page.reload();
+  await page.getByRole("button", { name: "Keep current ratio", exact: true }).click();
   await page.getByRole("button", { name: "Play", exact: true }).click();
   await expectDeparturesBesideHarborPanel(page);
 
@@ -989,6 +991,7 @@ test("market uses a scrollable fish-card grid and a focused detail view", async 
   await sturgeonCard.click();
 
   await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole("button", { name: "Keep current ratio", exact: true }).click();
   await expect(detail).toBeVisible();
   const mobileLayout = await detail.evaluate((element) => {
     const summary = element.querySelector<HTMLElement>(".market-fish-summary")?.getBoundingClientRect();
@@ -1560,6 +1563,10 @@ test("settings, keyboard pause, and local SDK fallback remain usable", async ({ 
     done: { x: number; y: number };
     logo: { x: number; y: number };
   }> => {
+    // Compare layout positions after the panel's entrance transform has settled.
+    await page.locator(".settings-panel").evaluate(async (panel) => {
+      await Promise.all(panel.getAnimations().map((animation) => animation.finished));
+    });
     const logo = (await page.locator(".settings-wordmark").boundingBox())!;
     const done = (await page.locator(".settings-done").boundingBox())!;
     return { logo: { x: logo.x, y: logo.y }, done: { x: done.x, y: done.y } };
@@ -1693,6 +1700,7 @@ test("how to play instructions advance one card at a time", async ({ page }) => 
 test("mobile button controls are absent at responsive viewports", async ({ page }) => {
   await page.setViewportSize({ width: 844, height: 390 });
   await page.goto("/");
+  await page.getByRole("button", { name: "Keep current ratio", exact: true }).click();
   await page.getByRole("button", { name: "Play", exact: true }).click();
   await page.locator('[data-action="undock"]').click();
   await expect(page.locator(".touch-controls, [data-hook-pad]")).toHaveCount(0);

@@ -12,6 +12,32 @@ function memoryStorage(initial: string | null = null): SaveStorage {
 }
 
 describe("versioned save data", () => {
+  test("migrates v16 display preferences without changing audio or progress", () => {
+    const baseline = defaultSave();
+    baseline.progress.money = 275;
+    baseline.settings.muted = true;
+    baseline.settings.musicVolume = 0.6;
+    const settings: Record<string, unknown> = { ...baseline.settings };
+    delete settings.aspectRatio;
+    const loaded = loadSave(memoryStorage(JSON.stringify({ ...baseline, version: 16, settings })));
+    expect(loaded.version).toBe(17);
+    expect(loaded.progress).toEqual(baseline.progress);
+    expect(loaded.settings).toEqual({ ...baseline.settings, aspectRatio: "ask" });
+  });
+
+  test("persists validated aspect-ratio choices and rejects malformed values", () => {
+    for (const aspectRatio of ["16:9", "fill", "ask"] as const) {
+      const baseline = defaultSave();
+      baseline.settings.aspectRatio = aspectRatio;
+      const storage = memoryStorage();
+      saveGame(storage, baseline);
+      expect(loadSave(storage).settings.aspectRatio).toBe(aspectRatio);
+    }
+    for (const aspectRatio of [true, "stretch", 16, null]) {
+      expect(loadSave(memoryStorage(JSON.stringify({ version: 17, settings: { aspectRatio } }))).settings.aspectRatio).toBe("ask");
+    }
+  });
+
   test("falls back safely for invalid data", () => {
     expect(loadSave(memoryStorage("not-json"))).toEqual(defaultSave());
   });
@@ -35,7 +61,7 @@ describe("versioned save data", () => {
       },
     }));
     expect(loadSave(storage)).toEqual({
-      version: 16,
+      version: 17,
       progress: {
         money: 999_999,
         upgrades: { cargo: 7, engine: 0, lamp: 1, line: 0, reel: 0 },
@@ -64,6 +90,7 @@ describe("versioned save data", () => {
         reducedMotion: false,
         resolution: "1280x720",
         fullscreen: false,
+        aspectRatio: "ask",
         controls: { ...DEFAULT_CONTROL_BINDINGS, left: "ArrowLeft" },
       },
     });
@@ -74,7 +101,7 @@ describe("versioned save data", () => {
     const migrated = loadSave(storage);
     expect(migrated.progress.money).toBe(0);
     expect(migrated.settings.muted).toBe(true);
-    expect(migrated.version).toBe(16);
+    expect(migrated.version).toBe(17);
   });
 
   test("adds a safe line-depth default to older saves", () => {
@@ -89,7 +116,7 @@ describe("versioned save data", () => {
       settings: defaultSave().settings,
     }));
     const migrated = loadSave(storage);
-    expect(migrated.version).toBe(16);
+    expect(migrated.version).toBe(17);
     expect(migrated.progress.upgrades).toEqual({ cargo: 2, engine: 1, lamp: 2, line: 0, reel: 0 });
     expect("outerUnlocked" in migrated.progress).toBe(false);
     expect(migrated.progress.money).toBe(140);
@@ -118,7 +145,7 @@ describe("versioned save data", () => {
       },
     }));
     const loaded = loadSave(storage);
-    expect(loaded.version).toBe(16);
+    expect(loaded.version).toBe(17);
     expect(loaded.settings.resolution).toBe("1280x720");
     expect(loaded.settings.fullscreen).toBe(false);
 
@@ -152,7 +179,7 @@ describe("versioned save data", () => {
     }));
 
     const migrated = loadSave(storage);
-    expect(migrated.version).toBe(16);
+    expect(migrated.version).toBe(17);
     expect(migrated.settings.controls).toEqual(DEFAULT_CONTROL_BINDINGS);
   });
 
@@ -228,7 +255,7 @@ describe("versioned save data", () => {
     }));
 
     const migrated = loadSave(storage);
-    expect(migrated.version).toBe(16);
+    expect(migrated.version).toBe(17);
     expect(migrated.settings.musicVolume).toBe(0);
   });
 });

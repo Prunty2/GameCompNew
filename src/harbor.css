@@ -38,10 +38,10 @@
 .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-panel,
 .harbor-screen.is-first-voyage.is-first-job-offer .harbor-panel {
   box-sizing: border-box;
-  width: min(900px, calc(100vw - 32px));
+  width: min(900px, calc(100cqw - 32px));
   max-width: 900px;
-  height: min(760px, calc(100dvh - 32px));
-  max-height: calc(100dvh - 32px);
+  height: min(760px, calc(100cqh - 32px));
+  max-height: calc(100cqh - 32px);
   margin: auto;
   padding: 21px 24px 20px;
   border: 1px solid rgb(145 169 176 / 34%);
@@ -55,7 +55,7 @@
 }
 
 .harbor-screen.is-first-voyage.is-first-job-offer .harbor-panel {
-  height: min(620px, calc(100dvh - 32px));
+  height: min(620px, calc(100cqh - 32px));
 }
 
 .harbor-screen.is-first-voyage .harbor-panel .harbor-header {
@@ -1098,7 +1098,7 @@
   transform: none;
 }
 
-@media (max-height: 720px) and (min-width: 701px) {
+@container game (max-height: 720px) and (min-width: 701px) {
   .harbor-screen.is-first-voyage .harbor-panel,
   .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-panel,
   .harbor-screen.is-first-voyage.is-first-job-offer .harbor-panel {
@@ -1176,7 +1176,7 @@
   }
 }
 
-@media (max-width: 700px) {
+@container game (max-width: 700px) {
   .harbor-screen.is-first-voyage,
   .harbor-screen.is-first-voyage.is-expanded-harbor {
     padding: 10px;
@@ -1185,9 +1185,9 @@
   .harbor-screen.is-first-voyage .harbor-panel,
   .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-panel,
   .harbor-screen.is-first-voyage.is-first-job-offer .harbor-panel {
-    width: calc(100vw - 20px);
-    height: calc(100dvh - 20px);
-    max-height: calc(100dvh - 20px);
+    width: calc(100cqw - 20px);
+    height: calc(100cqh - 20px);
+    max-height: calc(100cqh - 20px);
     padding: 14px 16px;
     border-radius: 16px;
   }
@@ -1580,10 +1580,10 @@
 /* Help uses the same dockside instrument language as the harbor menu. */
 .help-screen.is-first-voyage .help-panel {
   display: flex;
-  width: min(760px, calc(100vw - 32px));
+  width: min(760px, calc(100cqw - 32px));
   max-width: 760px;
   height: auto;
-  max-height: calc(100dvh - 32px);
+  max-height: calc(100cqh - 32px);
   flex-direction: column;
   padding: 21px 24px 20px;
   border: 1px solid rgb(145 169 176 / 34%);
@@ -1627,7 +1627,7 @@
   min-height: 180px;
   margin: 0;
   align-items: center;
-  padding: clamp(24px, 4vw, 34px);
+  padding: clamp(24px, 4cqw, 34px);
   border: 1px solid rgb(145 169 176 / 34%);
   border-left: 4px solid var(--menu-signal);
   border-radius: 16px;
@@ -1638,7 +1638,7 @@
 .help-screen.is-first-voyage .help-card h3 {
   margin-top: 0;
   font-family: var(--display-face);
-  font-size: clamp(1.45rem, 3vw, 2rem);
+  font-size: clamp(1.45rem, 3cqw, 2rem);
   text-transform: uppercase;
 }
 
@@ -1692,7 +1692,7 @@
   min-width: 150px;
 }
 
-@media (max-width: 600px) {
+@container game (max-width: 600px) {
   .help-screen.is-first-voyage .help-panel {
     padding: 16px;
   }
@@ -1722,7 +1722,7 @@
 .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .upgrades {
   display: flex;
   flex-direction: column;
-  gap: clamp(8px, 1.4vh, 12px);
+  gap: clamp(8px, 1.4cqh, 12px);
   min-height: 0;
   padding: 0 4px;
   overflow: hidden;
@@ -1730,7 +1730,7 @@
 
 .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .service-grid {
   grid-template-columns: minmax(0, 1fr);
-  gap: clamp(6px, 1vh, 8px);
+  gap: clamp(6px, 1cqh, 8px);
 }
 
 .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .service-grid .service-card {
@@ -1843,7 +1843,7 @@
   grid-row: 3;
 }
 
-@media (max-height: 720px) and (min-width: 701px) {
+@container game (max-height: 720px) and (min-width: 701px) {
   .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .service-grid .service-card {
     min-height: 64px;
   }
@@ -1859,7 +1859,7 @@
   }
 }
 
-@media (max-width: 700px) {
+@container game (max-width: 700px) {
   .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-content .upgrades {
     gap: 6px;
     padding: 0;
@@ -1959,9 +1959,9 @@
 /* A bolted timber departures board keeps world travel separate from equipment. */
 .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-dock-layout {
   position: relative;
-  width: min(900px, calc(100vw - 32px));
+  width: min(900px, calc(100cqw - 32px));
   max-width: 900px;
-  max-height: calc(100dvh - 32px);
+  max-height: calc(100cqh - 32px);
   margin: auto;
 }
 
@@ -1974,8 +1974,8 @@
   position: absolute;
   box-sizing: border-box;
   top: 50%;
-  left: calc(100% + clamp(18px, 2.4vw, 34px));
-  width: clamp(276px, 18vw, 320px);
+  left: calc(100% + clamp(18px, 2.4cqw, 34px));
+  width: clamp(276px, 18cqw, 320px);
   padding: 22px 18px 20px;
   overflow: hidden;
   border: 2px solid #46331f;
@@ -2036,7 +2036,7 @@
   margin: 0;
   color: #0b2431;
   font-family: inherit;
-  font-size: clamp(1.35rem, 2.2vw, 1.72rem);
+  font-size: clamp(1.35rem, 2.2cqw, 1.72rem);
   font-weight: 950;
   letter-spacing: 0.025em;
   line-height: 1;
@@ -2201,16 +2201,16 @@ button.departure-card:active:not(:disabled) {
   line-height: 1.15;
 }
 
-@media (min-width: 901px) and (max-width: 1620px) {
+@container game (min-width: 901px) and (max-width: 1620px) {
   .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-dock-layout {
     display: grid;
     width: min(
-      calc(100vw - 32px),
-      calc(900px + clamp(18px, 2.4vw, 34px) + clamp(276px, 18vw, 320px))
+      calc(100cqw - 32px),
+      calc(900px + clamp(18px, 2.4cqw, 34px) + clamp(276px, 18cqw, 320px))
     );
     max-width: none;
-    grid-template-columns: minmax(0, 900px) clamp(276px, 18vw, 320px);
-    gap: clamp(18px, 2.4vw, 34px);
+    grid-template-columns: minmax(0, 900px) clamp(276px, 18cqw, 320px);
+    gap: clamp(18px, 2.4cqw, 34px);
     margin: auto;
   }
 
@@ -2285,19 +2285,21 @@ button.departure-card:active:not(:disabled) {
   }
 }
 
-@media (min-width: 901px) and (max-width: 1620px) {
+@container game (min-width: 901px) and (max-width: 1620px) {
   .reduced-motion .departures-board {
     transform: none;
   }
 }
 
-@media (min-width: 901px) and (max-width: 1620px) and (prefers-reduced-motion: reduce) {
-  .departures-board {
-    transform: none;
+@media (prefers-reduced-motion: reduce) {
+  @container game (min-width: 901px) and (max-width: 1620px) {
+    .departures-board {
+      transform: none;
+    }
   }
 }
 
-@media (max-width: 900px) {
+@container game (max-width: 900px) {
   .harbor-screen.is-first-voyage.is-expanded-harbor {
     align-items: flex-start;
     overflow-y: auto;
@@ -2305,7 +2307,7 @@ button.departure-card:active:not(:disabled) {
 
   .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-dock-layout {
     display: grid;
-    width: min(900px, calc(100vw - 32px));
+    width: min(900px, calc(100cqw - 32px));
     min-height: 0;
     max-height: none;
     grid-template-columns: minmax(0, 1fr);
@@ -2380,15 +2382,17 @@ button.departure-card:active:not(:disabled) {
   }
 }
 
-@media (max-width: 900px) and (prefers-reduced-motion: reduce) {
-  .departures-board {
-    transform: none;
+@media (prefers-reduced-motion: reduce) {
+  @container game (max-width: 900px) {
+    .departures-board {
+      transform: none;
+    }
   }
 }
 
-@media (max-width: 600px) {
+@container game (max-width: 600px) {
   .harbor-screen.is-first-voyage.is-expanded-harbor .harbor-dock-layout {
-    width: calc(100vw - 32px);
+    width: calc(100cqw - 32px);
     gap: 10px;
     margin: 0 auto;
   }
