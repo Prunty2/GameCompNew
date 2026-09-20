@@ -61,3 +61,39 @@ repeats passed. Keyboard QA also caught the existing game-level Space handler
 blocking focused settings inputs. Settings checkboxes and sliders now retain
 their native keyboard behavior, including Space on the new 16:9 option, and the
 five display/audio tests pass with that keyboard path covered.
+
+## Final release verification
+
+Release code: `4a64c7e` (PR #145). `npm run check` passed 185 tests across
+21 files. `npm run build` and `npm run desktop:mac` passed. All four
+`npm run test:desktop-web` checks passed in Chromium and WebKit.
+`E2E_PORT=4331 npm run test:e2e` passed **49/49** after the fixes above.
+Earlier timing failures remain recorded as test history rather than being
+reclassified as successful runs.
+
+Native macOS checks exercised the recommendation popup, fullscreen with side
+bars, Display and Audio settings, title, harbor, lake/dock framing, and quit.
+The final Desktop copy was reopened and showed `v1.0.1 (PR #145)`; its native
+version is 1.0.1, `codesign --verify --deep --strict` passed, and its executable
+matches the build output. Mute is off, volumes remain 0.6/0.75, and 16:9 is enabled
+in the local native save. The old 1.0.0 delivery is preserved.
+
+Windows browser run `35491320567` tested the same release code and passed
+48/49 tests, including all five new display/audio tests. Its only failure was
+the existing fixed-time reel-colour assertion at `e2e/game.spec.ts:434`, matching
+the timing failure recorded above. The Windows unit checks and two production
+Chromium checks passed. This is not a fully green Windows regression run.
+
+In that same run, `npm run desktop:windows -- --ci` built the 1.0.1 x64 NSIS
+installer, and silent installation completed successfully. The native WebView2
+test could not create its WebDriver session (`DevToolsActivePort file doesn't
+exist`), matching the hosted-runner limitation documented for 1.0.0. It never
+reached gameplay assertions. The run is red for this limitation and the browser
+timing assertion above; native Windows gameplay remains a manual follow-up.
+
+Delivered both packages to `/Users/liam/Desktop/Fishing 1.0.1/`: `FSHING.app`
+(Apple Silicon macOS) and `FSHING_1.0.1_x64-setup.exe` (Windows x64). The
+installer's embedded product version is 1.0.1.0; its copied bytes match the
+artifact from run `35491320567`. Both packages were built from release code
+`4a64c7e`; the final documentation-only commit does not change the app.
+PR #145 is open and unmerged.
