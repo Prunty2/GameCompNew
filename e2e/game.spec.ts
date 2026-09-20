@@ -1563,6 +1563,10 @@ test("settings, keyboard pause, and local SDK fallback remain usable", async ({ 
     done: { x: number; y: number };
     logo: { x: number; y: number };
   }> => {
+    // Compare layout positions after the panel's entrance transform has settled.
+    await page.locator(".settings-panel").evaluate(async (panel) => {
+      await Promise.all(panel.getAnimations().map((animation) => animation.finished));
+    });
     const logo = (await page.locator(".settings-wordmark").boundingBox())!;
     const done = (await page.locator(".settings-done").boundingBox())!;
     return { logo: { x: logo.x, y: logo.y }, done: { x: done.x, y: done.y } };

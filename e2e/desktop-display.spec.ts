@@ -36,7 +36,8 @@ test("ultrawide recommendation enables a centered 16:9 game and aligned tutorial
   await page.getByRole("tab", { name: "Display", exact: true }).click();
   const forceRatio = page.getByRole("checkbox", { name: "Force 16:9 aspect ratio", exact: true });
   await expect(forceRatio).toBeChecked();
-  await page.locator("label").filter({ hasText: "Force 16:9 aspect ratio" }).click();
+  await forceRatio.focus();
+  await page.keyboard.press("Space");
   await expectViewport(page, 1920, 1440, 0, 0);
   await page.locator("label").filter({ hasText: "Force 16:9 aspect ratio" }).click();
   await expectViewport(page, 1920, 1080, 0, 180);

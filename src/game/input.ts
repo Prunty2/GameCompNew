@@ -157,6 +157,8 @@ export class InputController {
       pending.callback(event.code === "Escape" ? null : event.code);
       return;
     }
+    // Space and arrow keys belong to focused settings checkboxes and sliders.
+    if (event.target instanceof HTMLInputElement) return;
     const newlyPressed = !event.repeat && !this.pressed.has(event.code);
     this.pressed.add(event.code);
     if (import.meta.env.DEV && newlyPressed) {

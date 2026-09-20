@@ -53,3 +53,11 @@ session; the existing population-size regression then passed 3/3 repeats.
 The other failure is the existing reel-control test's fixed-time line-colour
 assertion (also failed 1/3 focused repeats). No fishing rules were changed to
 work around it; PR #142 owns the separate fishing determinism work.
+
+A subsequent full run passed 48/49 and revealed that the settings layout test
+sampled its entrance animation before it finished (a 0.08 px transient offset).
+The test now waits for that animation before comparing anchors; 3/3 focused
+repeats passed. Keyboard QA also caught the existing game-level Space handler
+blocking focused settings inputs. Settings checkboxes and sliders now retain
+their native keyboard behavior, including Space on the new 16:9 option, and the
+five display/audio tests pass with that keyboard path covered.
