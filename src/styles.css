@@ -5081,6 +5081,11 @@ kbd {
   min-width: 168px;
 }
 
+.setting-resolution:has(.settings-resolution-trigger[aria-expanded="true"]) {
+  /* Each blurred setting row creates a stacking context. Raise the whole row. */
+  z-index: 1;
+}
+
 .settings-resolution-trigger {
   display: flex;
   width: 100%;

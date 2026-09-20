@@ -1,6 +1,6 @@
 # FSHING — game brief
 
-This brief is the product source of truth. It describes the playable game in `v1.0.1` (build label `v1.0.1 (PR #145)`), not leftover simulation APIs.
+This brief is the product source of truth. It describes the playable game in `v1.0.2` (build label `v1.0.2 (PR #146)`), not leftover simulation APIs.
 
 FSHING is a single-player side-on fishing market game for desktop and mobile browsers. The player pilots a working boat across a lake, and later an unlockable Beach, then sells catches at two harbors whose prices move each in-game day.
 
@@ -23,7 +23,7 @@ Market → Track → Sail → Fish → Reel → Sell → Upgrade → Market
 
 | Screen | How it opens | What it contains |
 | --- | --- | --- |
-| Title | Launch, or Title screen from pause | Wordmark, Play, Settings, Credits, desktop-app Quit, `v1.0.1 (PR #145)` |
+| Title | Launch, or Title screen from pause | Wordmark, Play, Settings, Credits, desktop-app Quit, `v1.0.2 (PR #146)` |
 | Harbor | Play from a docked start, or docking | Market / Cargo / Upgrades tabs, shell balance, Help, Return to the current world, and a wooden Departures board for world travel |
 | Market detail | Selecting a discovered listing | Species art, current-harbor price, Track, Sell, 7-day graph |
 | Pause | Escape or Pause on the water | Resume, Settings, How to play, Title screen |
@@ -34,6 +34,9 @@ Market → Track → Sail → Fish → Reel → Sell → Upgrade → Market
 | Credits | Title | Liam, Saxon, Harrison, David |
 | How to play | Harbor Help or pause | Four cards: read the market, track and catch, manage cargo, sell and invest |
 There is no field guide, no title How to play button, no on-water money HUD, and no on-screen movement pads.
+
+The open resolution menu appears above adjacent Display settings so every
+resolution option remains readable and selectable, including above the 16:9 row.
 
 The game recommends 16:9. On the first window shape more than 2% away from that
 ratio, a dialog offers **Use 16:9** or **Keep current ratio**. The choice is saved
