@@ -40,6 +40,6 @@
       "minimumWebview2Version": "110.0.1587.0",
       "nsis": { "installMode": "currentUser" }
     },
-    "macOS": { "minimumSystemVersion": "13.3" }
+    "macOS": { "minimumSystemVersion": "13.3", "signingIdentity": "-" }
   }
 }

@@ -32,13 +32,26 @@ No gameplay, balance, save schema, asset, or dependency upgrades are intended.
 
 ## Verification
 
-Results will be finalized after native and production test runs.
+| Check | Result |
+| --- | --- |
+| `npm run check` | 179 tests passed across 20 files, including desktop and stalled-SDK startup regressions |
+| `npm run build` | Browser production build passed |
+| `npm run test:desktop-web` | Chromium and WebKit production tests passed; no external requests, missing assets, or page errors |
+| `npm run desktop:mac` | Apple Silicon standalone bundle passed; local ad-hoc bundle signing enabled |
+| `codesign --verify --deep --strict` | Passed on the delivered app copy |
+| Native macOS UI | Launch, 720p/900p resize, monitor discovery, fullscreen enter/exit, Help, harbor, keyboard pause, Quit, relaunch and saved reduced-motion checked |
+| Windows path scan | 251 tracked paths; no reserved filenames, invalid characters, or case collisions |
+| Full browser regression after music integration | 43/44 passed; existing reel-control test failed its wall-clock progress assertion |
+| Windows CI | Production Chromium and unit checks passed; native installer/runtime checks pending |
 
 Initial checks: `npm run check` passed 175 tests. The initial full Chromium suite
 passed 40/44. Failures were stale music gain/start-position assertions, a short
 line-retraction state missed by polling, and a help-button transition timeout.
-Music and fishing architecture have separate active work; these results are not
-treated as Windows-specific failures or silently hidden.
+The separate music commit resolves both music assertions. Help and line snap
+passed on the next full run. The reel-control test still uses fixed 900 ms / 500 ms
+waits across changing fight phases; this audit does not claim the suite is green.
+PR #142 already owns deterministic fishing-state/test work. These results are
+not treated as Windows-specific failures or silently hidden.
 
 `npm audit --omit=dev` found zero production npm advisories. The development tree
 reported four advisory entries (three moderate, one high) in Vitest/mocker,
@@ -50,6 +63,10 @@ Unsigned Windows builds can trigger SmartScreen or school application policies;
 this audit cannot establish the teacher's device policy. A school-managed Windows
 device still needs a final install/play check, especially display scaling and
 audio output. Local macOS builds are for testing, not notarized distribution.
+
+WindowService reads monitor geometry at startup; moving between monitors or
+changing OS scaling while the app stays open is not validated. Restart after a
+display change. High DPI and school-device installation remain manual checks.
 
 Saves keep progression/settings but intentionally do not keep cargo, world,
 position, or an in-progress voyage. Do not describe those as desktop persistence.

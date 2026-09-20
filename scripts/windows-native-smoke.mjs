@@ -123,7 +123,17 @@ try {
   assert.equal(settings.reducedMotion, true);
   assert.equal(settings.resolution, "1280x720");
   assert.equal(settings.fullscreen, false);
-  await click('[data-action="quit"]');
+  await click('[data-action="quit"]').catch((error) => {
+    if (!/no such window|invalid session id/.test(String(error))) throw error;
+  });
+  await until(async () => {
+    try {
+      return (await request("GET", `/session/${session}/window/handles`)).length === 0;
+    } catch (error) {
+      if (/no such window|invalid session id/.test(String(error))) return true;
+      throw error;
+    }
+  }, "Quit did not close the native window");
   console.log("PASS: installed Windows app, offline assets, audio, native resize/fullscreen/monitor, keyboard, pause, save across relaunch, Quit.");
 } catch (error) {
   if (session) {
